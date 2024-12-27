@@ -1,22 +1,20 @@
-import { useState } from 'react'
-import './App.css'
-import Login from './layouts/Login'
-import useAuth from './hooks/useAuth'
-import AppRouter from './routes/AppRouter'
+import { useState } from "react";
+import "./App.css";
+import Login from "./layouts/Login";
+import useAuth from "./hooks/useAuth";
+import AppRouter from "./routes/AppRouter";
 
 function App() {
-  const {loading} = useAuth()
-  if(loading) {
-    return (
-      <p className="text-4xl text-primary">Loading..</p>
-    )
+  const { loading } = useAuth();
+  if (loading) {
+    return <p className="text-4xl text-primary">Loading..</p>;
   }
 
   return (
     <>
       <AppRouter />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

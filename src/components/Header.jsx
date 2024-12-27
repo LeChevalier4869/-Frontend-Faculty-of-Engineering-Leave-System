@@ -9,9 +9,8 @@ const guestNav = [
 
 const userNav = [
   { to: "/", text: "หน้าหลัก" },
-  { to: "/1", text: "ยื่นลา" },
-  { to: "/2", text: "ดูสิทธิ์การลา" },
-  { to: "/3", text: "ประวัติการลา" },
+  { to: "/leave", text: "การลา" },
+  { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
 ];
 
 const adminNav = [

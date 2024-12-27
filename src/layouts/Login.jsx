@@ -1,4 +1,3 @@
-import Header from "../components/Header";
 import axios from "axios";
 import { useState } from "react";
 import useAuth from "../hooks/useAuth";
@@ -77,17 +76,6 @@ export default function Login() {
             >
               Login
             </button>
-
-            {/* Footer */}
-            <p className="text-center text-gray-600 mt-6">
-              Don’t have an account?{" "}
-              <a
-                href="#signup"
-                className="text-[#8B0000] font-semibold hover:underline"
-              >
-                Sign up
-              </a>
-            </p>
           </form>
         </div>
       </div>
