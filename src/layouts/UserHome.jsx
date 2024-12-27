@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 import { Link } from "react-router-dom";
 
 function UserHome() {
@@ -46,8 +46,15 @@ function UserHome() {
           <p>ดูและแก้ไขข้อมูลผู้ใช้</p>
         </Link>
       </div>
+      <Link
+        to="/export-pdf"
+        className="block bg-gray-100 p-6 rounded shadow hover:bg-gray-200 transition mt-6"
+      >
+        <h2 className="text-xl font-bold mb-2">สร้าง PDF</h2>
+        <p>ดาวน์โหลดข้อมูลของคุณในรูปแบบ PDF</p>
+      </Link>
     </div>
   );
 }
 
-export default UserHome
+export default UserHome;

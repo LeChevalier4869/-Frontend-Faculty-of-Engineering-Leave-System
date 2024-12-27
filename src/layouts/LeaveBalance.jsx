@@ -9,48 +9,50 @@ function LeaveBalance() {
   ]);
 
   return (
-    <div className="max-w-5xl mx-auto mt-8 p-4">
-      <h1 className="text-3xl font-bold mb-6">สิทธิลาการลา</h1>
+    <>
+      <div className="max-w-5xl mx-auto mt-8 p-4">
+        <h1 className="text-3xl font-bold mb-6">สิทธิลาการลา</h1>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                ประเภทการลา
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-right">
-                จำนวนวันทั้งหมด
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-right">
-                วันที่ใช้ไป
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-right">
-                วันที่เหลือ
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {entitlements.map((entitlement, index) => (
-              <tr key={index}>
-                <td className="border border-gray-300 px-4 py-2">
-                  {entitlement.type}
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-right">
-                  {entitlement.total}
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-right">
-                  {entitlement.used}
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-right">
-                  {entitlement.total - entitlement.used}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 px-4 py-2 text-left">
+                  ประเภทการลา
+                </th>
+                <th className="border border-gray-300 px-4 py-2 text-right">
+                  จำนวนวันทั้งหมด
+                </th>
+                <th className="border border-gray-300 px-4 py-2 text-right">
+                  วันที่ใช้ไป
+                </th>
+                <th className="border border-gray-300 px-4 py-2 text-right">
+                  วันที่เหลือ
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {entitlements.map((entitlement, index) => (
+                <tr key={index}>
+                  <td className="border border-gray-300 px-4 py-2">
+                    {entitlement.type}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-right">
+                    {entitlement.total}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-right">
+                    {entitlement.used}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-right">
+                    {entitlement.total - entitlement.used}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
