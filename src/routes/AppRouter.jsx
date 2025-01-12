@@ -7,7 +7,7 @@ import Leave from '../layouts/Leave'
 import AddLeave from '../layouts/AddLeave'
 import LeaveBalance from '../layouts/LeaveBalance'
 import UserProfile from '../layouts/UserProfile'
-
+import UserProfile2 from '../layouts/UserProfile2'
 
 
 
@@ -37,7 +37,7 @@ const userRouter = createBrowserRouter([
       { path: '/leave', element: <Leave />},
       { path: '/leave/add', element: <AddLeave />},
       { path: '/leave/balance', element: <LeaveBalance />},
-      { path: '/profile', element: <UserProfile />},
+      { path: '/profile', element: <UserProfile2 />},
     ]
   }
 ])
@@ -45,7 +45,7 @@ const userRouter = createBrowserRouter([
 export default function AppRouter() {
   const {user} = useAuth()
   const finalRouter = user?.id ? userRouter : guestRouter
-  console.log(user)
+  //console.log(user)
   return (
     <RouterProvider router={finalRouter} />
   )
