@@ -7,7 +7,10 @@ import Leave from '../layouts/Leave'
 import AddLeave from '../layouts/AddLeave'
 import LeaveBalance from '../layouts/LeaveBalance'
 import UserProfile from '../layouts/UserProfile'
+
 import UserProfile2 from '../layouts/UserProfile2'
+import Leave2 from '../layouts/Leave2'
+import AddLeave2 from '../layouts/AddLeave2'
 
 
 
@@ -34,8 +37,8 @@ const userRouter = createBrowserRouter([
     </>,
     children : [
       { index: true, element: <UserHome /> },
-      { path: '/leave', element: <Leave />},
-      { path: '/leave/add', element: <AddLeave />},
+      { path: '/leave', element: <Leave2 />},
+      { path: '/leave/add', element: <AddLeave2 />},
       { path: '/leave/balance', element: <LeaveBalance />},
       { path: '/profile', element: <UserProfile2 />},
     ]

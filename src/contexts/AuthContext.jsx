@@ -21,7 +21,7 @@ function AuthContextProvider(props) {
           headers : { Authorization : `Bearer ${token}` }
         })
         setUser(result.data)
-        console.log(result.data)
+        //console.log(result.data)
       }catch(err) {
         console.log(err.message)
       }finally {

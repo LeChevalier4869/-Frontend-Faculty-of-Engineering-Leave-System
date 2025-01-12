@@ -34,6 +34,10 @@ function Header() {
   if (user?.id && user?.role === "USER") {
     finalNav = userNav;
   }
+  //add role 12 pm
+  if (user?.id && user?.role === "APPROVER") {
+    finalNav = adminNav;
+  }
 
   const navigate = useNavigate();
 

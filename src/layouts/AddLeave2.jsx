@@ -1,15 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiEndpoints } from "../utils/api";
+import getApiUrl from "../utils/apiUtils";
+import axios from "axios";
 
 function AddLeave() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    leaveType: "",
+    leaveTypeId: "",
     startDate: "",
     endDate: "",
     reason: "",
   });
+
+  const endpoint = 'leave-requests/';
+  const url = getApiUrl(endpoint);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,17 +22,30 @@ function AddLeave() {
   };
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      e.preventDefault();
-      // const token = localStorage.getItem("token");
-      // const res = await axios.post(apiEndpoints.leaveRequest, input, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-      console.log("Submitted Data:", formData);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("กรุณาเข้าสู่ระบบก่อน");
+        return;
+      }
+      const res = await axios.post(
+        url, {
+            leaveTypeId: formData.leaveTypeId,
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            reason: formData.reason,
+        },
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+      console.log("Submitted Data:", res.data);
       alert("บันทึกข้อมูลสำเร็จ!");
       navigate("/leave");
     } catch (err) {
       console.log(err.message);
+      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     }
   };
 
@@ -44,18 +62,18 @@ function AddLeave() {
             ประเภทการลา
           </label>
           <select
-            id="leaveType"
-            name="leaveType"
+            id="leaveTypeId"
+            name="leaveTypeId"
             value={formData.leaveTypeId}
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             required
           >
             <option value="">เลือกประเภทการลา</option>
-            <option value="sick">ลาป่วย</option>
-            <option value="personal">ลากิจ</option>
-            <option value="vacation">ลาพักผ่อน</option>
-            <option value="vacation">ลาคลอดบุตร</option>
+            <option value="1">ลาป่วย</option>
+            <option value="2">ลากิจส่วนตัว</option>
+            <option value="3">ลาพักผ่อน</option>
+            <option value="4">ลาคลอดบุตร</option>
           </select>
         </div>
 
