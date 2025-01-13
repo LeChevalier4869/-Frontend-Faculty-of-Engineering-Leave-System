@@ -16,15 +16,14 @@ const userNav = [
 const adminNav = [
   { to: "/admin", text: "ADMIN" },
   { to: "/", text: "หน้าหลัก" },
-  { to: "/1", text: "ยื่นลา" },
-  { to: "/2", text: "ดูสิทธิ์การลา" },
-  { to: "/3", text: "ประวัติการลา" },
+  { to: "/leave", text: "การลา" },
+  { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
 ];
 
 function Header() {
   const { user, logout } = useAuth();
 
-  let finalNav = null;
+  let finalNav = [];
   if (!user?.id) {
     finalNav = guestNav;
   }
@@ -43,20 +42,30 @@ function Header() {
   };
 
   return (
-    <nav className="bg-[#8B0000] text-white">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+    <nav className="bg-gradient-to-r from-[#8B0000] via-[#A52A2A] to-[#FF4500] text-white shadow-md">
+      <div className="container mx-auto px-5 py-3 flex items-center justify-between">
         {/* Logo */}
-        <div className="text-lg font-semibold">
-          <Link to="/">ระบบวันลาคณะวิศวกรรมศาสตร์</Link>
+        <div className="text-lg font-semibold tracking-wide">
+          <Link
+            to="/"
+            className="hover:opacity-90 transition-opacity duration-200"
+          >
+            ระบบวันลาคณะวิศวกรรมศาสตร์
+          </Link>
         </div>
 
         {/* Navigation Menu - Centered */}
-        <ul className="flex-1 flex justify-center space-x-8 text-sm">
+        <ul className="flex-1 flex justify-center space-x-4 text-sm font-bold">
           {finalNav.map((el) => (
-            <li key={el.to}>
-              <Link to={el.to} className="hover:text-gray-300">
+            <li key={el.to} className="relative group">
+              <Link
+                to={el.to}
+                className="px-4 py-2 block rounded-md text-white hover:text-gray-300 transition-all duration-300"
+              >
                 {el.text}
               </Link>
+              {/* Underline Animation */}
+              <span className="absolute bottom-0 left-1/2 w-0 h-[2px] bg-gray-300 transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
             </li>
           ))}
         </ul>
@@ -66,9 +75,9 @@ function Header() {
           {user?.id && (
             <button
               onClick={hdlLogout}
-              className="hover:text-gray-300 focus:outline-none"
+              className="px-4 py-2 bg-white text-[#8B0000] text-sm font-medium rounded shadow hover:bg-gray-200 transition-colors duration-200 focus:outline-none"
             >
-              Logout
+              ออกจากระบบ
             </button>
           )}
         </div>

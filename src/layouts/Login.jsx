@@ -9,7 +9,7 @@ export default function Login() {
     email: "",
     password: "",
   });
-
+ 
   const hdlChange = (e) => {
     setInput((prv) => ({ ...prv, [e.target.name]: e.target.value }));
   };
@@ -26,7 +26,6 @@ export default function Login() {
       });
       console.log(rs1.data);
       setUser(rs1.data);
-      alert("Login Success");
     } catch (err) {
       console.log(err.response.data.message);
       alert(err.response.data.message);
@@ -36,12 +35,9 @@ export default function Login() {
     <>
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="p-8 border w-[90%] sm:w-[400px] mx-auto rounded-[20px] bg-white shadow-xl">
-          <div className="text-4xl mb-6 font-extrabold text-center text-[#8B0000]">
-            Welcome Back
+          <div className="text-4xl mb-10 font-extrabold text-center text-[#8B0000]">
+            ยินดีต้อนรับ
           </div>
-          <p className="text-center text-gray-600 mb-8">
-            Please login to your account
-          </p>
           <form className="flex flex-col gap-4" onSubmit={hdlSubmit}>
             {/* Email */}
             <label className="form-control w-full">
@@ -52,7 +48,7 @@ export default function Login() {
                 value={input.email}
                 onChange={hdlChange}
                 required
-                placeholder="E-mail"
+                placeholder="อีเมล"
               />
             </label>
 
@@ -65,16 +61,16 @@ export default function Login() {
                 value={input.password}
                 onChange={hdlChange}
                 required
-                placeholder="Password"
+                placeholder="รหัสผ่าน"
               />
             </label>
 
             {/* Login Button */}
             <button
               type="submit"
-              className="btn btn-info rounded-full w-full bg-[#8B0000] hover:bg-[#A52A2A] text-lg text-white mt-4"
+              className="btn btn-info rounded-full w-full bg-[#8B0000] hover:bg-[#A52A2A] text-lg text-white mt-6"
             >
-              Login
+              เข้าสู่ระบบ
             </button>
           </form>
         </div>
