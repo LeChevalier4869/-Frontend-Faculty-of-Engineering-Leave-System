@@ -10,10 +10,10 @@ function LeaveBalance() {
 
   return (
     <>
-      <div className="max-w-5xl mx-auto mt-8 p-4">
-        <h1 className="text-3xl font-bold mb-6">สิทธิลาการลา</h1>
+      <div className="max-w-6xl mx-auto p-6">
+        <h1 className="text-4xl font-semibold text-center">สิทธิลาการลา</h1>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto mt-6">
           <table className="min-w-full border-collapse border border-gray-300">
             <thead>
               <tr className="bg-gray-100">

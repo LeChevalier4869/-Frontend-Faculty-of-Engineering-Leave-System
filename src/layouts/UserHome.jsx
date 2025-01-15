@@ -1,58 +1,56 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
 
 function UserHome() {
+  const [entitlements, setEntitlements] = useState([
+    { type: "ลาป่วย", total: 30, used: 5 },
+    { type: "ลากิจ", total: 10, used: 3 },
+    { type: "ลาพักร้อน", total: 15, used: 7 },
+    { type: "ลาคลอด", total: 90, used: 90 },
+  ]);
+
   return (
-    <div className="max-w-6xl mx-auto mt-8 p-4">
-      <h1 className="text-3xl font-bold mb-6">แดชบอร์ด</h1>
-
-      {/* สถิติ */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-blue-500 text-white p-6 rounded shadow">
-          <h2 className="text-xl font-bold">จำนวนคำขอลา</h2>
-          <p className="text-3xl mt-2">25</p>
-        </div>
-        <div className="bg-green-500 text-white p-6 rounded shadow">
-          <h2 className="text-xl font-bold">คำขอลาที่อนุมัติ</h2>
-          <p className="text-3xl mt-2">20</p>
-        </div>
-        <div className="bg-red-500 text-white p-6 rounded shadow">
-          <h2 className="text-xl font-bold">คำขอลาที่ถูกปฏิเสธ</h2>
-          <p className="text-3xl mt-2">5</p>
+    <div className="container mx-auto p-6">
+      <h1 className="text-4xl font-semibold text-center">หน้าหลัก</h1>
+      <div className="max-w-5xl mx-auto mt-6 p-4">
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 px-4 py-2 text-left">
+                  ประเภทการลา
+                </th>
+                <th className="border border-gray-300 px-4 py-2 text-right">
+                  จำนวนวันทั้งหมด
+                </th>
+                <th className="border border-gray-300 px-4 py-2 text-right">
+                  วันที่ใช้ไป
+                </th>
+                <th className="border border-gray-300 px-4 py-2 text-right">
+                  วันที่เหลือ
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {entitlements.map((entitlement, index) => (
+                <tr key={index}>
+                  <td className="border border-gray-300 px-4 py-2">
+                    {entitlement.type}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-right">
+                    {entitlement.total}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-right">
+                    {entitlement.used}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-right">
+                    {entitlement.total - entitlement.used}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-
-      {/* การนำทาง */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Link
-          to="/leave"
-          className="block bg-gray-100 p-6 rounded shadow hover:bg-gray-200 transition"
-        >
-          <h2 className="text-xl font-bold mb-2">จัดการคำขอลา</h2>
-          <p>ดูและจัดการคำขอลาทั้งหมด</p>
-        </Link>
-        <Link
-          to="/leave/add"
-          className="block bg-gray-100 p-6 rounded shadow hover:bg-gray-200 transition"
-        >
-          <h2 className="text-xl font-bold mb-2">เพิ่มคำขอลา</h2>
-          <p>ยื่นคำขอลาใหม่</p>
-        </Link>
-        <Link
-          to="/profile"
-          className="block bg-gray-100 p-6 rounded shadow hover:bg-gray-200 transition"
-        >
-          <h2 className="text-xl font-bold mb-2">โปรไฟล์ผู้ใช้</h2>
-          <p>ดูและแก้ไขข้อมูลผู้ใช้</p>
-        </Link>
-      </div>
-      <Link
-        to="/export-pdf"
-        className="block bg-gray-100 p-6 rounded shadow hover:bg-gray-200 transition mt-6"
-      >
-        <h2 className="text-xl font-bold mb-2">สร้าง PDF</h2>
-        <p>ดาวน์โหลดข้อมูลของคุณในรูปแบบ PDF</p>
-      </Link>
     </div>
   );
 }

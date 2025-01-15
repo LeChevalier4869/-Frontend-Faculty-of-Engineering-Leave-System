@@ -9,6 +9,7 @@ const guestNav = [
 
 const userNav = [
   { to: "/", text: "หน้าหลัก" },
+  { to: "/dashboard", text: "แดชบอร์ด" },
   { to: "/leave", text: "การลา" },
   { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
 ];
@@ -16,10 +17,19 @@ const userNav = [
 const adminNav = [
   { to: "/admin", text: "ADMIN" },
   { to: "/", text: "หน้าหลัก" },
+  { to: "/approve", text: "การลาที่รอการอนุมัติ" },
+  { to: "/user/landing", text: "บุคลากร" },
   { to: "/leave", text: "การลา" },
   { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
 ];
 
+const aproverNav = [
+  { to: "/", text: "หน้าหลัก" },
+  { to: "/approve", text: "การลาที่รอการอนุมัติ" },
+  { to: "/user/landing", text: "บุคลากร" },
+  { to: "/leave", text: "การลา" },
+  { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
+];
 function Header() {
   const { user, logout } = useAuth();
 
@@ -33,7 +43,9 @@ function Header() {
   if (user?.id && user?.role === "USER") {
     finalNav = userNav;
   }
-
+  if (user?.id && user?.role === "APPROVER") {
+    finalNav = aproverNav;
+  }
   const navigate = useNavigate();
 
   const hdlLogout = () => {

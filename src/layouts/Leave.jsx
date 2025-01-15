@@ -1,116 +1,88 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-
+import React, { useState, useEffect } from "react";
+import axios from "axios"; // เพิ่มการ import axios
+import { apiEndpoints } from "../utils/api"; // ที่อยู่ API
+import { Link, useNavigate } from "react-router-dom";
 
 function Leave() {
-  const [leaves, setLeaves] = useState([
-    {
-      id: 1,
-      type: "ลาป่วย",
-      startDate: "2024-12-26",
-      endDate: "2024-12-27",
-      reason: "เป็นไข้หวัด",
-    },
-    {
-      id: 2,
-      type: "ลากิจ",
-      startDate: "2024-12-30",
-      endDate: "2024-12-31",
-      reason: "ไปทำธุระส่วนตัว",
-    },
-  ]);
+  const [leaveData, setLeaveData] = useState([]);
+  const [error, setError] = useState(null);
 
-  const handleDelete = (id) => {
-    const confirmDelete = window.confirm("คุณต้องการลบรายการนี้หรือไม่?");
-    if (confirmDelete) {
-      setLeaves(leaves.filter((leave) => leave.id !== id));
-    }
-  };
+  useEffect(() => {
+    const fetchLeaveRequests = async () => {
+      try {
+        let token = localStorage.getItem("token");
+        const res = await axios.get(apiEndpoints.leaveRequestMe, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setLeaveData(res.data.data);
+        console.log(res.data.data); // กำหนดข้อมูลใน leaveData
+      } catch (err) {
+        setError(err.response?.data?.message || "Error fetching data");
+        console.log(err.response?.data?.message || "Error fetching data");
+      }
+    };
+
+    fetchLeaveRequests(); // เรียกฟังก์ชันเมื่อ component ถูก mount
+  }, []);
 
   return (
-    <div className="max-w-5xl mx-auto mt-8 p-4">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">รายการการลา</h2>
+    <div className="container mx-auto p-6">
+      <h1 className="text-4xl font-semibold text-center">ประวัติการลา</h1>
+      <div className="flex justify-end mb-4">
         <Link
-          to="/leave/add"
+          to="/leave/add2"
           className="btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
         >
           + เพิ่มคำขอลา
         </Link>
       </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 px-4 py-2 text-left">#</th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                ประเภทการลา
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                วันที่เริ่ม
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                วันที่สิ้นสุด
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                เหตุผล
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-center">
-                การดำเนินการ
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaves.length > 0 ? (
-              leaves.map((leave, index) => (
-                <tr key={leave.id}>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {index + 1}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {leave.type}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {leave.startDate}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {leave.endDate}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {leave.reason}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    <button
-                      onClick={() => handleDelete(leave.id)}
-                      className="btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded mr-2"
-                    >
-                      ยกเลิก
-                    </button>
-                    <Link
-                      to={`/leave/edit/${leave.id}`}
-                      className="btn bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
-                    >
-                      แก้ไข
-                    </Link>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan="6"
-                  className="border border-gray-300 px-4 py-2 text-center text-gray-500"
-                >
-                  ไม่มีข้อมูลการลา
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+      {leaveData.length > 0 ? (
+        leaveData.map((e, index) => (
+          <div
+            key={index}
+            className="bg-white shadow-lg rounded-lg p-6 mb-6 border-l-4 border-indigo-600 hover:shadow-xl transition duration-300 ease-in-out"
+          >
+            <div className="flex justify-between items-center">
+              <div className="flex flex-col">
+                <p className="text-gray-700">
+                  <span className="font-semibold text-indigo-600">
+                    ประเภทการลา:
+                  </span>{" "}
+                  {e.leaveType.name}
+                </p>
+              </div>
+              <div className="flex flex-col text-right">
+                <p className="text-gray-700">
+                  <span className="font-semibold text-indigo-600">
+                    วันที่เริ่ม:
+                  </span>{" "}
+                  {new Date(e.startDate).toLocaleDateString()}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-semibold text-indigo-600">
+                    วันที่สิ้นสุด:
+                  </span>{" "}
+                  {new Date(e.endDate).toLocaleDateString()}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-semibold text-indigo-600">สถานะ:</span>{" "}
+                  {e.status}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-semibold text-indigo-600">
+                    วันที่สร้าง:
+                  </span>{" "}
+                  {new Date(e.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+            <hr className="my-4 border-t-2 border-gray-200" />
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500 text-center">ไม่มีข้อมูลการลา</p>
+      )}
     </div>
   );
 }
