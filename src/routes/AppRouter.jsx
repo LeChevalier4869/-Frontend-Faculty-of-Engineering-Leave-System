@@ -16,6 +16,9 @@ import FormSick from '../layouts/FormSick'
 import FormVacation from '../layouts/FormVacation'
 import AddLeave2 from '../layouts/AddLeave2'
 
+import UserProfile2 from '../layouts/UserProfile2'
+import Leave2 from '../layouts/Leave2'
+import AddLeave2 from '../layouts/AddLeave2'
 
 
 
@@ -42,18 +45,10 @@ const userRouter = createBrowserRouter([
     </>,
     children : [
       { index: true, element: <UserHome /> },
-      { path: '/leave', element: <Leave />},
-      { path: '/leave/add', element: <AddLeave />},
+      { path: '/leave', element: <Leave2 />},
+      { path: '/leave/add', element: <AddLeave2 />},
       { path: '/leave/balance', element: <LeaveBalance />},
       { path: '/profile', element: <UserProfile />},
-      { path: '/approve', element: <Approver />},
-      { path: '/user/landing', element: <UserLanding />},
-      { path: '/dashboard', element: <DashBoard />},
-      { path: '/leave/vacation', element: <FormVacation />},
-      { path: '/leave/giving-birth', element: <FormGivingBirth />},
-      { path: '/leave/personal', element: <FormPersonal />},
-      { path: '/leave/sick', element: <FormSick />},
-      { path: '/leave/add2', element: <AddLeave2 />},
     ]
   }
 ])
@@ -61,6 +56,7 @@ const userRouter = createBrowserRouter([
 export default function AppRouter() {
   const {user} = useAuth()
   const finalRouter = user?.id ? userRouter : guestRouter
+  console.log(user)
   return (
     <RouterProvider router={finalRouter} />
   )

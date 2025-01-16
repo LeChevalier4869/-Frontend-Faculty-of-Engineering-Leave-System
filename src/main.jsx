@@ -5,11 +5,16 @@ import ReactDOM from "react-dom/client";
 import React from "react";
 import './index.css'
 import App from "./App.jsx";
+import { LeaveRequestContextProvider } from "./contexts/LeaveRequestContext.jsx";
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <AuthContextProvider>
-    <App />
-  </AuthContextProvider>
+  <StrictMode>
+    <AuthContextProvider>
+      <LeaveRequestContextProvider>
+        <App />
+      </LeaveRequestContextProvider>
+    </AuthContextProvider>
+  </StrictMode>
 );
 
