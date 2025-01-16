@@ -11,7 +11,7 @@ const userNav = [
   { to: "/", text: "หน้าหลัก" },
   { to: "/dashboard", text: "แดชบอร์ด" },
   { to: "/leave", text: "การลา" },
-  { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
+  // { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
 ];
 
 const adminNav = [
@@ -19,16 +19,18 @@ const adminNav = [
   { to: "/", text: "หน้าหลัก" },
   { to: "/approve", text: "การลาที่รอการอนุมัติ" },
   { to: "/user/landing", text: "บุคลากร" },
+  { to: "/dashboard", text: "แดชบอร์ด" },
   { to: "/leave", text: "การลา" },
-  { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
+  // { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
 ];
 
 const aproverNav = [
   { to: "/", text: "หน้าหลัก" },
   { to: "/approve", text: "การลาที่รอการอนุมัติ" },
   { to: "/user/landing", text: "บุคลากร" },
+  { to: "/dashboard", text: "แดชบอร์ด" },
   { to: "/leave", text: "การลา" },
-  { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
+  // { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
 ];
 function Header() {
   const { user, logout } = useAuth();

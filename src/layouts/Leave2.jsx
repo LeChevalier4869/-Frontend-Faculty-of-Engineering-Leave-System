@@ -40,9 +40,9 @@ function Leave2() {
 
   return (
     <div className="max-w-5xl mx-auto mt-8 p-4">
+      <h2 className="text-3xl font-bold text-center mb-6">รายการการลา</h2>
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">รายการการลา</h2>
+      <div className="flex justify-end items-center mb-6">
         <Link
           to="/leave/add"
           className="btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
@@ -69,6 +69,9 @@ function Leave2() {
               <th className="border border-gray-300 px-4 py-2 text-left">
                 เหตุผล
               </th>
+              <th className="border border-gray-300 px-4 py-2 text-left">
+                สถานะ
+              </th>
               <th className="border border-gray-300 px-4 py-2 text-center">
                 การดำเนินการ
               </th>
@@ -76,43 +79,49 @@ function Leave2() {
           </thead>
           <tbody>
             {Array.isArray(leaveRequest) && leaveRequest.length > 0 ? (
-              leaveRequest.map((leave, index) => (
-                <tr key={leave.id}>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {index + 1}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {leave.leaveType.name}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {formatDate(leave.startDate)}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {formatDate(leave.endDate)}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {leave.reason}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
-                    <button
-                      onClick={() => handleDelete(leave.id)}
-                      className="btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded mr-2"
-                    >
-                      ยกเลิก
-                    </button>
-                    <Link
-                      to={`/leave/edit/${leave.id}`}
-                      className="btn bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
-                    >
-                      แก้ไข
-                    </Link>
-                  </td>
-                </tr>
-              ))
+              // จัดเรียงตามวันที่สร้าง (createAt) จากใหม่ไปเก่า
+              [...leaveRequest]
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // เรียงจากใหม่ไปเก่า
+                .map((leave, index) => (
+                  <tr key={leave.id}>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {index + 1}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {leave.leaveType.name}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {formatDate(leave.startDate)}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {formatDate(leave.endDate)}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {leave.reason}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {leave.status}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 text-center">
+                      <button
+                        onClick={() => handleDelete(leave.id)}
+                        className="btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded mr-2"
+                      >
+                        ยกเลิก
+                      </button>
+                      <Link
+                        to={`/leave/edit/${leave.id}`}
+                        className="btn bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                      >
+                        แก้ไข
+                      </Link>
+                    </td>
+                  </tr>
+                ))
             ) : (
               <tr>
                 <td
-                  colSpan="6"
+                  colSpan="7"
                   className="border border-gray-300 px-4 py-2 text-center text-gray-500"
                 >
                   ไม่มีข้อมูลการลา

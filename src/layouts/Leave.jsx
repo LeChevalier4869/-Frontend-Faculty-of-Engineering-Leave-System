@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 function Leave() {
   const [leaveData, setLeaveData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -19,11 +20,15 @@ function Leave() {
       } catch (err) {
         setError(err.response?.data?.message || "Error fetching data");
         console.log(err.response?.data?.message || "Error fetching data");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchLeaveRequests(); // เรียกฟังก์ชันเมื่อ component ถูก mount
   }, []);
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="container mx-auto p-6">

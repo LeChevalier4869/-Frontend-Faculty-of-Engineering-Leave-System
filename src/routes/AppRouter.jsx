@@ -46,7 +46,7 @@ const userRouter = createBrowserRouter([
       { path: '/leave', element: <Leave2 />},
       { path: '/leave/add', element: <AddLeave2 />},
       { path: '/leave/balance', element: <LeaveBalance />},
-      { path: '/profile', element: <UserProfile />},
+      // { path: '/profile', element: <UserProfile />},
       { path: '/approve', element: <Approver />},
       { path: '/user/landing', element: <UserLanding />},
       { path: '/dashboard', element: <DashBoard />},
