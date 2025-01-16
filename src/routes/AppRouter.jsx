@@ -17,6 +17,7 @@ import FormVacation from '../layouts/FormVacation'
 import AddLeave2 from '../layouts/AddLeave2'
 import UserProfile2 from '../layouts/UserProfile2'
 import Leave2 from '../layouts/Leave2'
+import Admin from '../layouts/admin'
 
 
 
@@ -56,6 +57,7 @@ const userRouter = createBrowserRouter([
       { path: '/leave/sick', element: <FormSick />},
       { path: '/leave/add2', element: <AddLeave2 />},
       { path: '/profile', element: <UserProfile2 />},
+      { path: '/admin', element: <Admin />},
     ]
   }
 ])
