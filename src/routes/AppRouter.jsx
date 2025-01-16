@@ -15,10 +15,8 @@ import FormPersonal from '../layouts/FormPersonal'
 import FormSick from '../layouts/FormSick'
 import FormVacation from '../layouts/FormVacation'
 import AddLeave2 from '../layouts/AddLeave2'
-
 import UserProfile2 from '../layouts/UserProfile2'
 import Leave2 from '../layouts/Leave2'
-import AddLeave2 from '../layouts/AddLeave2'
 
 
 

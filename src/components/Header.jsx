@@ -43,17 +43,10 @@ function Header() {
   if (user?.id && user?.role === "USER") {
     finalNav = userNav;
   }
-<<<<<<< HEAD
   if (user?.id && user?.role === "APPROVER") {
     finalNav = aproverNav;
   }
-=======
-  //add role 12 pm
-  if (user?.id && user?.role === "APPROVER") {
-    finalNav = adminNav;
-  }
 
->>>>>>> bc7a0e602ffa55040202dd2e3de2eadbf538b446
   const navigate = useNavigate();
 
   const hdlLogout = () => {

@@ -20,12 +20,9 @@ function AuthContextProvider(props) {
         const result = await axios.get(url, {
           headers : { Authorization : `Bearer ${token}` }
         })
-<<<<<<< HEAD
-        setUser(rs.data)
-=======
+
         setUser(result.data)
         //console.log(result.data)
->>>>>>> bc7a0e602ffa55040202dd2e3de2eadbf538b446
       }catch(err) {
         console.log(err.message)
       }finally {
