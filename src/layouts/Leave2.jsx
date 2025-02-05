@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import useLeaveRequest from "../hooks/useLeaveRequest";
 import getApiUrl from "../utils/apiUtils";
 
 function Leave2() {
   const { leaveRequest, setLeaveRequest } = useLeaveRequest();
-  console.log(leaveRequest);
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm("คุณต้องการลบรายการนี้หรือไม่?");
@@ -22,25 +21,18 @@ function Leave2() {
     }
   };
 
-  //   const formatDate = (date) => {
-  //     new Date(date).toLocaleDateString("th-TH", {
-  //         year: "numeric",
-  //         month: "numeric",
-  //         day: "numeric",
-  //     });
-  //   };
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // เดือนเริ่มที่ 0
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-    return `${year}/${month}/${day}`;
+    return `${day}/${month}/${year}`; // รูปแบบ วัน/เดือน/ปี
   };
 
   return (
     <div className="max-w-5xl mx-auto mt-8 p-4">
       <h2 className="text-3xl font-bold text-center mb-6">รายการการลา</h2>
+
       {/* Header */}
       <div className="flex justify-end items-center mb-6">
         <Link
@@ -56,7 +48,9 @@ function Leave2() {
         <table className="min-w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border border-gray-300 px-4 py-2 text-left">#</th>
+              <th className="border border-gray-300 px-4 py-2 text-left">
+                วันที่
+              </th>
               <th className="border border-gray-300 px-4 py-2 text-left">
                 ประเภทการลา
               </th>
@@ -65,9 +59,6 @@ function Leave2() {
               </th>
               <th className="border border-gray-300 px-4 py-2 text-left">
                 วันที่สิ้นสุด
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                เหตุผล
               </th>
               <th className="border border-gray-300 px-4 py-2 text-left">
                 สถานะ
@@ -79,13 +70,12 @@ function Leave2() {
           </thead>
           <tbody>
             {Array.isArray(leaveRequest) && leaveRequest.length > 0 ? (
-              // จัดเรียงตามวันที่สร้าง (createAt) จากใหม่ไปเก่า
               [...leaveRequest]
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // เรียงจากใหม่ไปเก่า
-                .map((leave, index) => (
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .map((leave) => (
                   <tr key={leave.id}>
                     <td className="border border-gray-300 px-4 py-2">
-                      {index + 1}
+                      {formatDate(leave.createdAt)}
                     </td>
                     <td className="border border-gray-300 px-4 py-2">
                       {leave.leaveType.name}
@@ -96,10 +86,17 @@ function Leave2() {
                     <td className="border border-gray-300 px-4 py-2">
                       {formatDate(leave.endDate)}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {leave.reason}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td
+                      className={`border border-gray-300 px-4 py-2 font-bold text-center ${
+                        leave.status === "APPROVED"
+                          ? "text-green-500"
+                          : leave.status === "PENDING"
+                          ? "text-yellow-500"
+                          : leave.status === "REJECTED"
+                          ? "text-red-500"
+                          : "text-gray-500"
+                      }`}
+                    >
                       {leave.status}
                     </td>
                     <td className="border border-gray-300 px-4 py-2 text-center">
@@ -109,12 +106,6 @@ function Leave2() {
                       >
                         ยกเลิก
                       </button>
-                      <Link
-                        to={`/leave/edit/${leave.id}`}
-                        className="btn bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
-                      >
-                        แก้ไข
-                      </Link>
                     </td>
                   </tr>
                 ))

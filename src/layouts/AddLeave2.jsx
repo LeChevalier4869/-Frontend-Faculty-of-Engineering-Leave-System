@@ -11,9 +11,10 @@ function AddLeave() {
     startDate: "",
     endDate: "",
     reason: "",
+    isEmergency: "0", // ค่าเริ่มต้นเป็น "0" (ไม่เร่งด่วน)
   });
 
-  const endpoint = 'leave-requests/';
+  const endpoint = "leave-requests/";
   const url = getApiUrl(endpoint);
 
   const handleChange = (e) => {
@@ -30,36 +31,36 @@ function AddLeave() {
         return;
       }
       const res = await axios.post(
-        url, {
-            leaveTypeId: formData.leaveTypeId,
-            startDate: formData.startDate,
-            endDate: formData.endDate,
-            reason: formData.reason,
+        url,
+        {
+          leaveTypeId: formData.leaveTypeId,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          reason: formData.reason,
+          isEmergency: formData.isEmergency === "1", // แปลงค่าจาก string เป็น boolean
         },
         {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log(formData)
-
-
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       console.log("Submitted Data:", res.data);
       alert("บันทึกข้อมูลสำเร็จ!");
       navigate("/leave");
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
       alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto mt-8 p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-xl font-bold mb-4">แบบฟอร์มคำร้องขอการลา2</h2>
+      <h2 className="text-xl font-bold mb-4">แบบฟอร์มคำร้องขอการลา</h2>
 
       <form onSubmit={handleSubmit}>
         {/* ประเภทการลา */}
         <div className="mb-4">
           <label
-            htmlFor="leaveType"
+            htmlFor="leaveTypeId"
             className="block text-sm font-medium text-gray-700"
           >
             ประเภทการลา
@@ -76,7 +77,6 @@ function AddLeave() {
             <option value="1">ลาป่วย</option>
             <option value="2">ลากิจส่วนตัว</option>
             <option value="3">ลาพักผ่อน</option>
-            <option value="4">ลาคลอดบุตร</option>
           </select>
         </div>
 
@@ -135,6 +135,27 @@ function AddLeave() {
             rows="3"
             required
           />
+        </div>
+
+        {/* เร่งด่วนหรือไม่ */}
+        <div className="mb-4">
+          <label
+            htmlFor="isEmergency"
+            className="block text-sm font-medium text-gray-700"
+          >
+            การลาเร่งด่วน
+          </label>
+          <select
+            id="isEmergency"
+            name="isEmergency"
+            value={formData.isEmergency}
+            onChange={handleChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+            required
+          >
+            <option value="0">ไม่เร่งด่วน</option>
+            <option value="1">เร่งด่วน</option>
+          </select>
         </div>
 
         {/* ปุ่ม */}

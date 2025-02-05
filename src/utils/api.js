@@ -4,10 +4,15 @@
 const BASE_URL = "http://localhost:8000";
 
 export const apiEndpoints = {
+  //auth
   login: `${BASE_URL}/auth/login`,
-  getUser: `${BASE_URL}/auth/me`,
-  getUserLanding: `${BASE_URL}/auth/landing`,
-  leaveRequest: `${BASE_URL}/leave`,
+  register: `${BASE_URL}/auth/register`,
+  getMe: `${BASE_URL}/auth/me`,
+  userLanding: `${BASE_URL}/auth/landing`,
+  updateUserRole: `${BASE_URL}/:id/role`,
+
+  //leave request
+  leaveRequest: `${BASE_URL}/leave-requests`,
   leaveRequestMe: `${BASE_URL}/leave-requests/me`,
   leaveRequestLanding: `${BASE_URL}/leave-requests/landing`,
   leaveBalance: `${BASE_URL}/leave-balances`,

@@ -2,52 +2,52 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
-const guestNav = [
-  { to: "/", text: "Login" },
-  { to: "/register", text: "Register" },
-];
+// const guestNav = [
+//   { to: "/", text: "Login" },
+//   { to: "/register", text: "Register" },
+// ];
 
-const userNav = [
-  { to: "/", text: "หน้าหลัก" },
-  { to: "/dashboard", text: "แดชบอร์ด" },
-  { to: "/leave", text: "การลา" },
-  // { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
-];
+// const userNav = [
+//   { to: "/", text: "หน้าหลัก" },
+//   { to: "/dashboard", text: "แดชบอร์ด" },
+//   { to: "/leave", text: "การลา" },
+//   // { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
+// ];
 
-const adminNav = [
-  { to: "/admin", text: "ADMIN" },
-  { to: "/", text: "หน้าหลัก" },
-  { to: "/approve", text: "การลาที่รอการอนุมัติ" },
-  { to: "/user/landing", text: "บุคลากร" },
-  { to: "/dashboard", text: "แดชบอร์ด" },
-  { to: "/leave", text: "การลา" },
-  // { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
-];
+// const adminNav = [
+//   { to: "/admin", text: "ADMIN" },
+//   { to: "/", text: "หน้าหลัก" },
+//   { to: "/approve", text: "การลาที่รอการอนุมัติ" },
+//   { to: "/user/landing", text: "บุคลากร" },
+//   { to: "/dashboard", text: "แดชบอร์ด" },
+//   { to: "/leave", text: "การลา" },
+//   // { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
+// ];
 
-const aproverNav = [
-  { to: "/", text: "หน้าหลัก" },
-  { to: "/approve", text: "การลาที่รอการอนุมัติ" },
-  { to: "/user/landing", text: "บุคลากร" },
-  { to: "/dashboard", text: "แดชบอร์ด" },
-  { to: "/leave", text: "การลา" },
-  // { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
-];
+// const aproverNav = [
+//   { to: "/", text: "หน้าหลัก" },
+//   { to: "/approve", text: "การลาที่รอการอนุมัติ" },
+//   { to: "/user/landing", text: "บุคลากร" },
+//   { to: "/dashboard", text: "แดชบอร์ด" },
+//   { to: "/leave", text: "การลา" },
+//   // { to: "/leave/balance", text: "ดูสิทธิ์การลา" },
+// ];
 function Header() {
   const { user, logout } = useAuth();
 
-  let finalNav = [];
-  if (!user?.id) {
-    finalNav = guestNav;
-  }
-  if (user?.id && user?.role === "ADMIN") {
-    finalNav = adminNav;
-  }
-  if (user?.id && user?.role === "USER") {
-    finalNav = userNav;
-  }
-  if (user?.id && user?.role === "APPROVER") {
-    finalNav = aproverNav;
-  }
+  // let finalNav = [];
+  // if (!user?.id) {
+  //   finalNav = guestNav;
+  // }
+  // if (user?.id && user?.role === "ADMIN") {
+  //   finalNav = adminNav;
+  // }
+  // if (user?.id && user?.role === "USER") {
+  //   finalNav = userNav;
+  // }
+  // if (user?.id && user?.role === "APPROVER") {
+  //   finalNav = aproverNav;
+  // }
 
   const navigate = useNavigate();
 
@@ -70,7 +70,7 @@ function Header() {
         </div>
 
         {/* Navigation Menu - Centered */}
-        <ul className="flex-1 flex justify-center space-x-4 text-sm font-bold">
+        {/* <ul className="flex-1 flex justify-center space-x-4 text-sm font-bold">
           {finalNav.map((el) => (
             <li key={el.to} className="relative group">
               <Link
@@ -78,12 +78,12 @@ function Header() {
                 className="px-4 py-2 block rounded-md text-white hover:text-gray-300 transition-all duration-300"
               >
                 {el.text}
-              </Link>
+              </Link> */}
               {/* Underline Animation */}
-              <span className="absolute bottom-0 left-1/2 w-0 h-[2px] bg-gray-300 transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
+              {/* <span className="absolute bottom-0 left-1/2 w-0 h-[2px] bg-gray-300 transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
             </li>
           ))}
-        </ul>
+        </ul> */}
 
         {/* Logout Button */}
         <div>

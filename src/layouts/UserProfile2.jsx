@@ -13,6 +13,7 @@ function UserProfile2() {
   // });
 
   const { user } = useAuth();
+  console.log(user)
 
   return (
     <div className="max-w-4xl mx-auto mt-8 p-4">
@@ -29,12 +30,6 @@ function UserProfile2() {
           <div>
             <label className="block text-sm font-bold mb-2">อีเมล</label>
             <p className="bg-gray-100 p-3 rounded">{user.email}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-bold mb-2">
-              เบอร์โทรศัพท์
-            </label>
-            <p className="bg-gray-100 p-3 rounded">-</p>
           </div>
           <div>
             <label className="block text-sm font-bold mb-2">แผนก</label>

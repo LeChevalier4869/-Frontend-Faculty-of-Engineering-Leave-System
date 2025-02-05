@@ -10,12 +10,12 @@ function UserLanding() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        let token = localStorage.getItem("token");
-        const res = await axios.get(apiEndpoints.getUserLanding, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        //let token = localStorage.getItem("token");
+        const res = await axios.get(apiEndpoints.userLanding);
         setUsers(res.data.user);
-        console.log(res.data.user);
+        console.log(res);
+        console.log("Response Data:", res.data);
+        console.log("Response Headers:", res.headers);
       } catch (err) {
         setError(err.response?.data?.message || "Error fetching users");
       } finally {
@@ -32,9 +32,7 @@ function UserLanding() {
 
   return (
     <div className="container mx-auto mt-8 p-4">
-      <h2 className="text-3xl font-bold text-center mb-6">
-        รายชื่อบุคลากร
-      </h2>
+      <h2 className="text-3xl font-bold text-center mb-6">รายชื่อบุคลากร</h2>
       {users.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {users.map((user, index) => (
