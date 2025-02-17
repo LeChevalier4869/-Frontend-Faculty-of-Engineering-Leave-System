@@ -11,7 +11,9 @@ function AddLeave() {
     startDate: "",
     endDate: "",
     reason: "",
-    isEmergency: "0", // ค่าเริ่มต้นเป็น "0" (ไม่เร่งด่วน)
+    isEmergency: "0",
+    images: null, // สำหรับใบรับรองแพทย์
+    additionalDetails: "", // สำหรับรายละเอียดเพิ่มเติม
   });
 
   const endpoint = "leave-requests/";
@@ -22,6 +24,10 @@ function AddLeave() {
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, images: e.target.files[0] });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -30,19 +36,29 @@ function AddLeave() {
         alert("กรุณาเข้าสู่ระบบก่อน");
         return;
       }
-      const res = await axios.post(
-        url,
-        {
-          leaveTypeId: formData.leaveTypeId,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          reason: formData.reason,
-          isEmergency: formData.isEmergency === "1", // แปลงค่าจาก string เป็น boolean
+
+      const formDataToSend = new FormData();
+      formDataToSend.append("leaveTypeId", formData.leaveTypeId);
+      formDataToSend.append("startDate", formData.startDate);
+      formDataToSend.append("endDate", formData.endDate);
+      formDataToSend.append("reason", formData.reason);
+      formDataToSend.append("isEmergency", formData.isEmergency === "1");
+
+      if (formData.leaveTypeId === "1" && formData.images) {
+        formDataToSend.append("images", formData.images);
+      }
+
+      // if (formData.leaveTypeId === "2") {
+      //   formDataToSend.append("additionalDetails", formData.additionalDetails);
+      // }
+
+      const res = await axios.post(url, formDataToSend, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      });
+
       console.log("Submitted Data:", res.data);
       alert("บันทึกข้อมูลสำเร็จ!");
       navigate("/leave");
@@ -59,14 +75,10 @@ function AddLeave() {
       <form onSubmit={handleSubmit}>
         {/* ประเภทการลา */}
         <div className="mb-4">
-          <label
-            htmlFor="leaveTypeId"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label className="block text-sm font-medium text-gray-700">
             ประเภทการลา
           </label>
           <select
-            id="leaveTypeId"
             name="leaveTypeId"
             value={formData.leaveTypeId}
             onChange={handleChange}
@@ -82,15 +94,11 @@ function AddLeave() {
 
         {/* วันที่เริ่มต้น */}
         <div className="mb-4">
-          <label
-            htmlFor="startDate"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label className="block text-sm font-medium text-gray-700">
             วันที่เริ่มต้น
           </label>
           <input
             type="date"
-            id="startDate"
             name="startDate"
             value={formData.startDate}
             onChange={handleChange}
@@ -101,15 +109,11 @@ function AddLeave() {
 
         {/* วันที่สิ้นสุด */}
         <div className="mb-4">
-          <label
-            htmlFor="endDate"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label className="block text-sm font-medium text-gray-700">
             วันที่สิ้นสุด
           </label>
           <input
             type="date"
-            id="endDate"
             name="endDate"
             value={formData.endDate}
             onChange={handleChange}
@@ -120,14 +124,10 @@ function AddLeave() {
 
         {/* เหตุผลการลา */}
         <div className="mb-4">
-          <label
-            htmlFor="reason"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label className="block text-sm font-medium text-gray-700">
             เหตุผลการลา
           </label>
           <textarea
-            id="reason"
             name="reason"
             value={formData.reason}
             onChange={handleChange}
@@ -137,16 +137,44 @@ function AddLeave() {
           />
         </div>
 
+        {/* ถ้าลาป่วย ให้แสดงช่องอัปโหลดใบรับรองแพทย์ */}
+        {formData.leaveTypeId === "1" && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              แนบไฟล์ใบรับรองแพทย์
+            </label>
+            <input
+              type="file"
+              name="images"
+              onChange={handleFileChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              accept=".jpg,.png,.pdf"
+            />
+          </div>
+        )}
+
+        {/* ถ้าลากิจส่วนตัว ให้แสดงช่องกรอกรายละเอียดเพิ่มเติม */}
+        {/* {formData.leaveTypeId === "2" && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              รายละเอียดเพิ่มเติม
+            </label>
+            <textarea
+              name="additionalDetails"
+              value={formData.additionalDetails}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              rows="3"
+            />
+          </div>
+        )} */}
+
         {/* เร่งด่วนหรือไม่ */}
         <div className="mb-4">
-          <label
-            htmlFor="isEmergency"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label className="block text-sm font-medium text-gray-700">
             การลาเร่งด่วน
           </label>
           <select
-            id="isEmergency"
             name="isEmergency"
             value={formData.isEmergency}
             onChange={handleChange}

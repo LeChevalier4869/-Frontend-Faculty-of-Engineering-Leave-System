@@ -59,16 +59,16 @@ function UserHome() {
               {leaveBalance.map((e, index) => (
                 <tr key={index}>
                   <td className="border border-gray-300 px-4 py-2">
-                    {e.leaveType.name}
+                    {e.leavetypes.name}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-right">
-                    {e.totalDays}
+                    {e.maxDays}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-right">
                     {e.usedDays}
                   </td>
                   <td className="border border-gray-300 px-4 py-2 text-right">
-                    {e.totalDays - e.usedDays}
+                    {e.remainingDays}
                   </td>
                 </tr>
               ))}

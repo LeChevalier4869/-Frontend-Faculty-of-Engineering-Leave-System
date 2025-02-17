@@ -10,12 +10,9 @@ function UserLanding() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        //let token = localStorage.getItem("token");
         const res = await axios.get(apiEndpoints.userLanding);
-        setUsers(res.data.user);
-        console.log(res);
-        console.log("Response Data:", res.data);
-        console.log("Response Headers:", res.headers);
+        setUsers(res.data.user); // กำหนดข้อมูลผู้ใช้
+        console.log(res); // ล็อกข้อมูลที่ได้รับจาก API
       } catch (err) {
         setError(err.response?.data?.message || "Error fetching users");
       } finally {
@@ -25,37 +22,44 @@ function UserLanding() {
     fetchUsers();
   }, []);
 
-  if (loading) return <div className="text-center mt-8">Loading...</div>;
+  if (loading)
+    return <div className="text-center mt-8">กำลังโหลดข้อมูล...</div>;
 
   if (error)
-    return <div className="text-center text-red-500 mt-8">Error: {error}</div>;
+    return (
+      <div className="text-center text-red-500 mt-8">ข้อผิดพลาด: {error}</div>
+    );
 
   return (
     <div className="container mx-auto mt-8 p-4">
       <h2 className="text-3xl font-bold text-center mb-6">รายชื่อบุคลากร</h2>
       {users.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ul className="space-y-4">
           {users.map((user, index) => (
-            <div
+            <li
               key={index}
-              className="bg-white shadow-lg rounded-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition duration-200"
+              className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
             >
-              <h3 className="text-xl font-semibold text-blue-600 mb-2">
-                {user.prefixName || "ไม่มีข้อมูล"}{" "}
-                {user.firstName || "ไม่มีข้อมูล"}{" "}
-                {user.lastName || "ไม่มีข้อมูล"}
-              </h3>
-              <p className="text-gray-700">
-                <span className="font-semibold">แผนก:</span>{" "}
-                {user.department?.name || "ไม่มีข้อมูล"}
-              </p>
-              <p className="text-gray-700">
-                <span className="font-semibold">ตำแหน่ง:</span>{" "}
-                {user.position || "ไม่มีข้อมูล"}
-              </p>
-            </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    <span className="text-gray-600">
+                      {user.firstName?.charAt(0) || "?"}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {user.prefixName || ""} {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    แผนก: {user.department?.name || "ไม่มีข้อมูล"}
+                  </p>
+                </div>
+              </div>
+            </li>
           ))}
-        </div>
+        </ul>
       ) : (
         <p className="text-center text-gray-500">ไม่มีผู้ใช้ในระบบ</p>
       )}

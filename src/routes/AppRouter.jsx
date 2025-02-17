@@ -12,6 +12,9 @@ import DashBoard from '../layouts/DashBoard';
 import UserProfile2 from '../layouts/UserProfile2';
 import Admin from '../layouts/admin';
 import UserLanding from '../layouts/UserLanding';
+import Register from '../layouts/register';
+import LeaveDetail from '../layouts/LeaveDetails';
+
 
 const guestRouter = createBrowserRouter([
   {
@@ -19,6 +22,8 @@ const guestRouter = createBrowserRouter([
     element: <Outlet />,
     children: [
       { index: true, element: <Login /> },
+      { path: '/register', element: <Register /> },
+      
     ]
   }
 ]);
@@ -55,6 +60,7 @@ const userRouter = createBrowserRouter([
       { path: '/profile', element: <UserProfile2 /> },
       { path: '/admin', element: <Admin /> },
       { path: '/user/landing', element: <UserLanding /> },
+      { path: '/leave/:id', element: <LeaveDetail /> },
     ]
   }
 ]);

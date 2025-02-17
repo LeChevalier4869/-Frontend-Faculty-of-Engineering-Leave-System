@@ -2,79 +2,82 @@ import axios from "axios";
 import { useState } from "react";
 import useAuth from "../hooks/useAuth";
 import { apiEndpoints } from "../utils/api";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const navigate = useNavigate();
   const { setUser } = useAuth();
-  const [input, setInput] = useState({
-    email: "",
-    password: "",
-  });
- 
-  const hdlChange = (e) => {
-    setInput((prv) => ({ ...prv, [e.target.name]: e.target.value }));
+  const [input, setInput] = useState({ email: "", password: "" });
+
+  const handleChange = (e) => {
+    setInput((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const hdlSubmit = async (e) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      e.preventDefault();
-      // validation
       const res = await axios.post(apiEndpoints.login, input);
-      console.log(res.data.token);
-      localStorage.setItem("token", res.data.token);
-      const rs1 = await axios.get(apiEndpoints.getUser, {
-        headers: { Authorization: `Bearer ${res.data.token}` },
+      const token = res.data.token;
+      
+      console.log("Token received:", token);
+      localStorage.setItem("token", token);
+      
+      const userRes = await axios.get(apiEndpoints.getMe, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      console.log(rs1.data);
-      setUser(rs1.data);
+      
+      console.log("User data:", userRes.data);
+      setUser(userRes.data);
     } catch (err) {
-      console.log(err.response.data.message);
-      alert(err.response.data.message);
+      console.error("Login error:", err.response?.data?.message || err.message);
+      alert(err.response?.data?.message || "เกิดข้อผิดพลาด");
     }
   };
+
   return (
-    <>
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="p-8 border w-[90%] sm:w-[400px] mx-auto rounded-[20px] bg-white shadow-xl">
-          <div className="text-4xl mb-10 font-extrabold text-center text-[#8B0000]">
-            ยินดีต้อนรับ
+    <div className="flex flex-col items-center justify-center min-h-screen bg-blue-500">
+      <h1 className="text-6xl font-bold text-white mb-12">ระบบลาคณะวิศกรรมศาสตร์</h1>
+      <div className="bg-white p-8 rounded-lg shadow-lg w-96">
+        <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">เข้าสู่ระบบ</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Email */}
+          <div>
+            <label className="block text-gray-600 font-medium">อีเมล:</label>
+            <input
+              type="email"
+              name="email"
+              value={input.email}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
           </div>
-          <form className="flex flex-col gap-4" onSubmit={hdlSubmit}>
-            {/* Email */}
-            <label className="form-control w-full">
-              <input
-                type="email"
-                className="input input-bordered w-full rounded-full px-4 py-3 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#8B0000]"
-                name="email"
-                value={input.email}
-                onChange={hdlChange}
-                required
-                placeholder="อีเมล"
-              />
-            </label>
 
-            {/* Password */}
-            <label className="form-control w-full">
-              <input
-                type="password"
-                className="input input-bordered w-full rounded-full px-4 py-3 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#8B0000]"
-                name="password"
-                value={input.password}
-                onChange={hdlChange}
-                required
-                placeholder="รหัสผ่าน"
-              />
-            </label>
+          {/* Password */}
+          <div>
+            <label className="block text-gray-600 font-medium">รหัสผ่าน:</label>
+            <input
+              type="password"
+              name="password"
+              value={input.password}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
 
-            {/* Login Button */}
-            <button
-              type="submit"
-              className="btn btn-info rounded-full w-full bg-[#8B0000] hover:bg-[#A52A2A] text-lg text-white mt-6"
-            >
-              เข้าสู่ระบบ
-            </button>
-          </form>
+          {/* Login Button */}
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+          >
+            เข้าสู่ระบบ
+          </button>
+        </form>
+        <div className="mt-4 text-center">
+          <p className="text-gray-600">ยังไม่มีบัญชี? <span className="text-blue-500 cursor-pointer hover:underline" onClick={() => navigate("/register")}>สมัครสมาชิก</span></p>
         </div>
       </div>
-    </>
+    </div>
   );
 }
