@@ -26,6 +26,7 @@ import DepartmentManage from '../layouts/admin/DepartmentManage';
 import UserManage      from '../layouts/admin/UserManage';
 import EditUser        from '../layouts/admin/EditUser';
 import EditProfile     from '../layouts/admin/EditProfile';
+import AddnewUser      from '../layouts/admin/AddnewUser';
 
 
 // Routes สำหรับผู้ที่ยังไม่ล็อกอิน
@@ -66,17 +67,16 @@ const userRouter = createBrowserRouter([
       // กลุ่ม admin (nested)
       {
         path: 'admin',
-        element: <AdminLayout />,  // ใน Admin.jsx ให้มี <Outlet/>
         children: [
-          { index: true,                   element: <DashBoard /> },
+          { path: 'manage-user', element: <UserManage /> },
           { path: 'approve',               element: <Approver /> },
           { path: 'department-manage',     element: <DepartmentManage /> },
           { path: 'manage-user',           element: <UserManage /> },
-          { path: 'manage-user/:id',       element: <EditUser /> },
           { path: 'edit-profile',          element: <EditProfile /> },
+          { path: 'add-user',              element: <AddnewUser/> },
+          { path: 'user/:id',              element: <EditUser/> },     
         ]
       },
-
       // fallback
       { path: '*', element: <Navigate to="/" replace /> },
     ]

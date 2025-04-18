@@ -13,6 +13,7 @@ function UserManage() {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem("token");
+        console.log("🔗 userLanding endpoint:", apiEndpoints.userLanding);
         const res = await axios.get(apiEndpoints.userLanding, {
           headers: { Authorization: `Bearer ${token}` },
         });

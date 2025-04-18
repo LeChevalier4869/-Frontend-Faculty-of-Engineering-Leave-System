@@ -19,15 +19,15 @@ const approverNav = [
 ];
 
 const adminNav = [
-  { to: "/manageuser", text: "จัดการผู้ใช้งาน" },
-  { to: "/departmentmanage", text: "จัดการแผนก"},
-  { to: "/settings", text: "การตั้งค่า" },
+  { to: "/admin/manage-user",       text: "จัดการผู้ใช้งาน" },
+  { to: "/admin/department-manage", text: "จัดการแผนก" },
+  { to: "/admin/edit-profile",      text: "การตั้งค่า" },
 ];
 
 const Menu = () => {
   const { user } = useAuth();
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [isSidebarOpen, setSidebarOpen] = useState(false); // สำหรับ mobile เท่านั้น
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleDropdown = (menu) =>
     setOpenDropdown(openDropdown === menu ? null : menu);
@@ -42,9 +42,8 @@ const Menu = () => {
       >
         <span>{title}</span>
         <HiOutlineChevronDown
-          className={`ml-auto transform ${
-            openDropdown === title ? "rotate-180" : "rotate-0"
-          } transition-transform duration-300`}
+          className={`ml-auto transform ${openDropdown === title ? "rotate-180" : "rotate-0"
+            } transition-transform duration-300`}
         />
       </button>
 
@@ -112,7 +111,8 @@ const Menu = () => {
 
             {/* ADMIN */}
             {user?.role.includes("ADMIN") &&
-              renderDropdown("เมนูผู้ดูแล", adminNav)}
+              renderDropdown("เมนูผู้ดูแล", adminNav)
+            }
           </nav>
         </div>
       </div>

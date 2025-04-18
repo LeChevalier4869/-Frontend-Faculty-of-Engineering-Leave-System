@@ -4,10 +4,13 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 
-function UserEdit() {
+export default function UserEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+
   const [formData, setFormData] = useState({
     prefixName: "",
     firstName: "",
@@ -17,22 +20,31 @@ function UserEdit() {
   });
 
   const fetchUser = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`${apiEndpoints.userLanding}/${id}`, {
+      const res = await axios.get(apiEndpoints.userLanding, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUser(res.data.data);
+      const users = res.data.user || [];
+      const u = users.find((u) => u.id === parseInt(id, 10));
+      if (!u) throw new Error("User not found");
+
+      setUser(u);
       setFormData({
-        prefixName: res.data.data.prefixName,
-        firstName: res.data.data.firstName,
-        lastName: res.data.data.lastName,
-        email: res.data.data.email,
-        phone: res.data.data.phone,
+        prefixName: u.prefixName || "",
+        firstName: u.firstName || "",
+        lastName: u.lastName || "",
+        email: u.email || "",
+        phone: u.phone || "",
       });
     } catch (err) {
       console.error(err);
-      Swal.fire("ไม่พบผู้ใช้งาน", "", "error").then(() => navigate("/manageuser"));
+      Swal.fire("ไม่พบผู้ใช้งาน", "", "error").then(() =>
+        navigate("/manageuser")
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,55 +64,72 @@ function UserEdit() {
       await axios.put(`${apiEndpoints.userLanding}/${id}`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      Swal.fire("อัปเดตสำเร็จ", "ข้อมูลผู้ใช้งานได้รับการอัปเดตแล้ว", "success").then(() =>
-        navigate("/manageuser")
-      );
+
+      Swal.fire(
+        "อัปเดตสำเร็จ",
+        "ข้อมูลผู้ใช้งานได้รับการอัปเดตแล้ว",
+        "success"
+      ).then(() => navigate("/manageuser"));
     } catch (err) {
       console.error(err);
-      Swal.fire("อัปเดตล้มเหลว", err.response?.data?.message || "ไม่สามารถอัปเดตได้", "error");
+      Swal.fire(
+        "อัปเดตล้มเหลว",
+        err.response?.data?.message || "ไม่สามารถอัปเดตได้",
+        "error"
+      );
     }
   };
 
-  if (!user) return <p className="text-center mt-10">กำลังโหลดข้อมูล...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-black text-lg">กำลังโหลดข้อมูล...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-white px-6 py-10 font-kanit">
-      <div className="max-w-2xl mx-auto bg-gray-50 shadow-lg rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          แก้ไขผู้ใช้งาน: {user.prefixName} {user.firstName} {user.lastName}
+    <div className="min-h-screen bg-white px-4 py-10 font-kanit">
+      <div className="max-w-4xl mx-auto bg-gray-50 rounded-2xl shadow-lg p-6 sm:p-8">
+        <h2 className="text-2xl font-bold text-black mb-6 text-center">
+          แก้ไขผู้ใช้งาน
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {[
-            ["คำนำหน้า", "prefixName"],
-            ["ชื่อ", "firstName"],
-            ["นามสกุล", "lastName"],
-            ["อีเมล", "email"],
-            ["เบอร์โทร", "phone"],
-          ].map(([label, name]) => (
-            <div key={name}>
-              <label className="block text-gray-700 mb-1 text-sm">{label}</label>
-              <input
-                type="text"
-                name={name}
-                value={formData[name]}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-          ))}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              ["คำนำหน้า", "prefixName", "text"],
+              ["ชื่อจริง", "firstName", "text"],
+              ["นามสกุล", "lastName", "text"],
+              ["อีเมล", "email", "email"],
+              ["เบอร์โทรศัพท์", "phone", "text"],
+            ].map(([label, name, type]) => (
+              <div key={name}>
+                <label className="block text-sm font-medium text-black mb-1">
+                  {label}
+                </label>
+                <input
+                  type={type}
+                  name={name}
+                  value={formData[name]}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+            ))}
+          </div>
 
-          <div className="flex justify-end gap-2 mt-6">
+          <div className="flex justify-end gap-4">
             <button
               type="button"
-              onClick={() => navigate("/manageuser")}
-              className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded text-gray-800"
+              onClick={() => navigate("/admin/manage-user")}
+              className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg text-black"
             >
-              ย้อนกลับ
+              ยกเลิก
             </button>
             <button
               type="submit"
-              className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded text-white"
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white"
             >
               บันทึกการเปลี่ยนแปลง
             </button>
@@ -110,5 +139,3 @@ function UserEdit() {
     </div>
   );
 }
-
-export default UserEdit;
