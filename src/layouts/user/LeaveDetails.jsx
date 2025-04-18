@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import getApiUrl from "../utils/apiUtils";
+import getApiUrl from "../../utils/apiUtils";
 
 function LeaveDetail() {
   const { id } = useParams();

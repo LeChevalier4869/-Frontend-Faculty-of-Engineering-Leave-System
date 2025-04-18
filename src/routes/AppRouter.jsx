@@ -1,66 +1,84 @@
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
-import Login from '../layouts/Login';
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
+
+/** Auth layouts **/
+import Login from '../layouts/auth/Login';
+import Register from '../layouts/auth/Register';
+
+/** Main wrappers **/
 import Header from '../components/Header';
-import Menu from '../components/Menu';
-import UserHome from '../layouts/UserHome';
-import Leave2 from '../layouts/Leave2';
-import AddLeave2 from '../layouts/AddLeave2';
-import LeaveBalance from '../layouts/LeaveBalance';
-import Approver from '../layouts/approver';
-import DashBoard from '../layouts/DashBoard';
-import UserProfile2 from '../layouts/UserProfile2';
-import Admin from '../layouts/admin';
-import UserLanding from '../layouts/UserLanding';
-import Register from '../layouts/register';
-import LeaveDetail from '../layouts/LeaveDetails';
+import Menu   from '../components/Menu';
+
+/** User pages **/
+import UserHome     from '../layouts/user/UserHome';
+import Leave2       from '../layouts/user/Leave2';
+import AddLeave2    from '../layouts/user/AddLeave2';
+import LeaveBalance from '../layouts/user/LeaveBalance';
+import LeaveDetail  from '../layouts/user/LeaveDetails';
+import UserProfile2 from '../layouts/user/UserProfile2';
+import UserLanding  from '../layouts/user/UserLanding';
+
+/** Admin pages **/
+import AdminLayout     from '../layouts/admin/Admin';
+import DashBoard       from '../layouts/admin/DashBoard';
+import Approver        from '../layouts/admin/Approver';
+import DepartmentManage from '../layouts/admin/DepartmentManage';
+import UserManage      from '../layouts/admin/UserManage';
+import EditUser        from '../layouts/admin/EditUser';
+import EditProfile     from '../layouts/admin/EditProfile';
 
 
+// Routes สำหรับผู้ที่ยังไม่ล็อกอิน
 const guestRouter = createBrowserRouter([
   {
-    path: '/',
     element: <Outlet />,
     children: [
-      { index: true, element: <Login /> },
-      { path: '/register', element: <Register /> },
-      
+      { path: '/',        element: <Login /> },
+      { path: '/register',element: <Register /> },
+      { path: '*',        element: <Navigate to="/" replace /> },
     ]
   }
 ]);
 
+// Routes สำหรับผู้ที่ล็อกอินแล้ว
 const userRouter = createBrowserRouter([
   {
-    path: '/',
     element: (
-      <>
-        <div className="flex flex-col h-screen">
-          {/* Header */}
-          <Header />
-
-          <div className="flex flex-1">
-            {/* Menu */}
-            <div className="w-64 bg-gray-200">
-              <Menu />
-            </div>
-            {/* Outlet for content */}
-            <div className="flex-1 overflow-auto">
-              <Outlet />
-            </div>
-          </div>
+      <div className="flex flex-col h-screen">
+        <Header />
+        <div className="flex flex-1">
+          <div className="w-64 bg-gray-200"><Menu /></div>
+          <div className="flex-1 overflow-auto"><Outlet /></div>
         </div>
-      </>
+      </div>
     ),
     children: [
-      { index: true, element: <UserHome /> },
-      { path: '/leave', element: <Leave2 /> },
-      { path: '/leave/add', element: <AddLeave2 /> },
-      { path: '/leave/balance', element: <LeaveBalance /> },
-      { path: '/approve', element: <Approver /> },
-      { path: '/dashboard', element: <DashBoard /> },
-      { path: '/profile', element: <UserProfile2 /> },
-      { path: '/admin', element: <Admin /> },
-      { path: '/user/landing', element: <UserLanding /> },
-      { path: '/leave/:id', element: <LeaveDetail /> },
+      // หน้า user ปกติ
+      { index: true,        element: <UserHome /> },
+      { path: 'leave',      element: <Leave2 /> },
+      { path: 'leave/add',  element: <AddLeave2 /> },
+      { path: 'leave/balance', element: <LeaveBalance /> },
+      { path: 'leave/:id',  element: <LeaveDetail /> },
+      { path: 'profile',    element: <UserProfile2 /> },
+      { path: 'profile/edit', element: <EditProfile /> },
+      { path: 'user/landing', element: <UserLanding /> },
+
+      // กลุ่ม admin (nested)
+      {
+        path: 'admin',
+        element: <AdminLayout />,  // ใน Admin.jsx ให้มี <Outlet/>
+        children: [
+          { index: true,                   element: <DashBoard /> },
+          { path: 'approve',               element: <Approver /> },
+          { path: 'department-manage',     element: <DepartmentManage /> },
+          { path: 'manage-user',           element: <UserManage /> },
+          { path: 'manage-user/:id',       element: <EditUser /> },
+          { path: 'edit-profile',          element: <EditProfile /> },
+        ]
+      },
+
+      // fallback
+      { path: '*', element: <Navigate to="/" replace /> },
     ]
   }
 ]);
@@ -68,6 +86,5 @@ const userRouter = createBrowserRouter([
 export default function AppRouter() {
   const { user } = useAuth();
   const finalRouter = user?.id ? userRouter : guestRouter;
-
   return <RouterProvider router={finalRouter} />;
 }

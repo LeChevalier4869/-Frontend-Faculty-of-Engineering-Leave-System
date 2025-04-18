@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { apiEndpoints } from "../utils/api";
+import { apiEndpoints } from "../../utils/api";
 
 function UserLanding() {
   const [users, setUsers] = useState([]); // รายชื่อผู้ใช้งานทั้งหมด

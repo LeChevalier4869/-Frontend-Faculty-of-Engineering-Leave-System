@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { apiEndpoints } from "../utils/api";
+import { apiEndpoints } from "../../utils/api";
 
 function Approver() {
   const [pendingRequest, setPendingRequest] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1); // หน้าปัจจุบัน
-  const [itemsPerPage, setItemsPerPage] = useState(5); // จำนวนรายการต่อหน้า
+  const [currentPage, setCurrentPage] = useState(1); 
+  const [itemsPerPage, setItemsPerPage] = useState(5); 
 
   const navigate = useNavigate();
 
