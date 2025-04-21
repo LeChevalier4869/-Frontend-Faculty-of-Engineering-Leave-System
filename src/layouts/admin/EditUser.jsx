@@ -8,48 +8,73 @@ export default function UserEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-
-  const [formData, setFormData] = useState({
+  const initialForm = {
     prefixName: "",
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-  });
-
-  const fetchUser = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(apiEndpoints.userLanding, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const users = res.data.user || [];
-      const u = users.find((u) => u.id === parseInt(id, 10));
-      if (!u) throw new Error("User not found");
-
-      setUser(u);
-      setFormData({
-        prefixName: u.prefixName || "",
-        firstName: u.firstName || "",
-        lastName: u.lastName || "",
-        email: u.email || "",
-        phone: u.phone || "",
-      });
-    } catch (err) {
-      console.error(err);
-      Swal.fire("ไม่พบผู้ใช้งาน", "", "error").then(() =>
-        navigate("/manageuser")
-      );
-    } finally {
-      setLoading(false);
-    }
+    sex: "",
+    personnelTypeId: "",
+    departmentId: "",
+    employmentType: "",
+    hireDate: "",
+    position: "",
+    inActiveRaw: "false",
   };
 
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState(initialForm);
+  const [departments, setDepartments] = useState([]);
+  const [personnelTypes, setPersonnelTypes] = useState([]);
+  const [employmentTypes, setEmploymentTypes] = useState([]);
+
   useEffect(() => {
-    fetchUser();
+    const fetchAll = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const [userRes, deptRes, ptRes, empRes] = await Promise.all([
+          axios.get(apiEndpoints.getUserByIdAdmin(id), {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(apiEndpoints.lookupDepartments),
+          axios.get(apiEndpoints.lookupPersonnelTypes),
+          axios.get(apiEndpoints.lookupEmploymentTypes),
+        ]);
+
+        const u = userRes.data.data;
+
+        setFormData({
+          prefixName: u.prefixName || "",
+          firstName: u.firstName || "",
+          lastName: u.lastName || "",
+          email: u.email || "",
+          phone: u.phone || "",
+          sex: u.sex || "",
+          personnelTypeId: u.personnelTypeId || "",
+          departmentId: u.departmentId || "",
+          employmentType: u.employmentType || "",
+          hireDate: u.hireDate?.substring(0, 10) || "",
+          position: u.position || "",
+          inActiveRaw: u.inActive ? "true" : "false",
+        });
+
+        setDepartments(deptRes.data.data);
+        setPersonnelTypes(ptRes.data.data);
+        const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
+        setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
+      } catch (err) {
+        console.error(err);
+        Swal.fire("ไม่พบผู้ใช้งาน", "", "error").then(() =>
+          navigate("/admin/manage-user")
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
   }, [id]);
 
   const handleChange = (e) => {
@@ -65,11 +90,9 @@ export default function UserEdit() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      Swal.fire(
-        "อัปเดตสำเร็จ",
-        "ข้อมูลผู้ใช้งานได้รับการอัปเดตแล้ว",
-        "success"
-      ).then(() => navigate("/manageuser"));
+      Swal.fire("อัปเดตสำเร็จ", "ข้อมูลผู้ใช้งานได้รับการอัปเดตแล้ว", "success").then(() =>
+        navigate("/admin/manage-user")
+      );
     } catch (err) {
       console.error(err);
       Swal.fire(
@@ -79,6 +102,42 @@ export default function UserEdit() {
       );
     }
   };
+
+  const renderDropdown = (label, name, options) => (
+    <div className="mb-4 relative">
+      <label className="block text-sm font-medium text-black mb-1">{label}</label>
+      <div className="relative">
+        <select
+          name={name}
+          value={formData[name]}
+          onChange={handleChange}
+          required
+          className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">-- เลือก{label} --</option>
+          {options.map((opt) => (
+            <option key={opt.id || opt.value} value={opt.id || opt.value}>
+              {opt.name || opt.label}
+            </option>
+          ))}
+        </select>
+  
+        {/* 🔽 ลูกศร dropdown icon */}
+        <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+          <svg
+            className="w-4 h-4 text-gray-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+  
 
   if (loading) {
     return (
@@ -98,25 +157,46 @@ export default function UserEdit() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              ["คำนำหน้า", "prefixName", "text"],
-              ["ชื่อจริง", "firstName", "text"],
-              ["นามสกุล", "lastName", "text"],
-              ["อีเมล", "email", "email"],
-              ["เบอร์โทรศัพท์", "phone", "text"],
-            ].map(([label, name, type]) => (
+              ["prefixName", "คำนำหน้า"],
+              ["firstName", "ชื่อจริง"],
+              ["lastName", "นามสกุล"],
+              ["email", "อีเมล"],
+              ["phone", "เบอร์โทรศัพท์"],
+              ["position", "ตำแหน่ง"],
+            ].map(([name, label]) => (
               <div key={name}>
-                <label className="block text-sm font-medium text-black mb-1">
-                  {label}
-                </label>
+                <label className="block text-sm font-medium mb-1 text-black">{label}</label>
                 <input
-                  type={type}
+                  type="text"
                   name={name}
                   value={formData[name]}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder={label}
+                  required
                 />
               </div>
             ))}
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-black">วันที่เริ่มงาน</label>
+              <input
+                type="date"
+                name="hireDate"
+                value={formData.hireDate}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
+              />
+            </div>
+
+            {renderDropdown("เพศ", "sex", [
+              { value: "MALE", label: "ชาย" },
+              { value: "FEMALE", label: "หญิง" },
+            ])}
+            {renderDropdown("ประเภทบุคลากร", "personnelTypeId", personnelTypes)}
+            {renderDropdown("แผนก", "departmentId", departments)}
+            {renderDropdown("ประเภทพนักงาน", "employmentType", employmentTypes)}
           </div>
 
           <div className="flex justify-end gap-4">
@@ -129,9 +209,9 @@ export default function UserEdit() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white"
             >
-              บันทึกการเปลี่ยนแปลง
+              บันทึก
             </button>
           </div>
         </form>

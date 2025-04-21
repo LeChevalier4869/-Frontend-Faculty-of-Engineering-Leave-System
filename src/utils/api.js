@@ -11,8 +11,14 @@ export const apiEndpoints = {
   updateUser:      `${BASE_URL}/users`,                 // PUT  /users
 
   // admin
-  addNewUser:      `${BASE_URL}/auth/register`,
-  deleteUserByAdmin: (id) => `${BASE_URL}/admin/user/${id}`,
+  createUserByAdmin:    `${BASE_URL}/admin/users`, 
+  getUserByIdAdmin:     (id) => `${BASE_URL}/admin/users/${id}`,
+  updateUserByIdAdmin:  (id) => `${BASE_URL}/admin/users/${id}`,
+  deleteUserByAdmin:    (id) => `${BASE_URL}/admin/users/${id}`,
+
+  // admin manage department
+  departmentsAdmin:       `${BASE_URL}/admin/departments`,       
+  departmentByIdAdmin:    (id) => `${BASE_URL}/admin/departments/${id}`,
 
   // leave request
   leaveRequest:        `${BASE_URL}/leave-requests`,     // CRUD
@@ -26,7 +32,8 @@ export const apiEndpoints = {
   personnelTypes:  `${BASE_URL}/auth/personnel-types`,
 
   //admin dropdown data
-  departmentsAdmin:           `${BASE_URL}/api/lookups/departments`,
-  organizationsbyAdmin:       `${BASE_URL}/api/lookups/organizations`,
-  personnelTypesbyAdmin:       `${BASE_URL}/api/lookpus/personnel-types`,
+  lookupDepartments:      `${BASE_URL}/api/lookups/departments`,
+  lookupOrganizations:    `${BASE_URL}/api/lookups/organizations`,
+  lookupPersonnelTypes:   `${BASE_URL}/api/lookups/personnel-types`,
+  lookupEmploymentTypes:  `${BASE_URL}/api/lookups/employment-types`,
 };

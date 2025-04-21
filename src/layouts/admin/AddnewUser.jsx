@@ -6,9 +6,6 @@ import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import getApiUrl from "../../utils/apiUtils";
 
-// ฟอร์มเพิ่มผู้ใช้งาน (Admin) – ดึง lookup จาก backend (departments, organizations, personnelTypes, employmentTypes)
-// -----------------------------------------------------------------------------
-
 const initialForm = {
   prefixName: "",
   firstName: "",
@@ -19,12 +16,11 @@ const initialForm = {
   password: "",
   confirmPassword: "",
   personnelTypeId: "",
-  departmentId: "",
   organizationId: "",
+  departmentId: "",
   employmentType: "",
   hireDate: "",
   inActiveRaw: "false",
-  roleNames: "USER",
 };
 
 export default function AddUser() {
@@ -37,26 +33,24 @@ export default function AddUser() {
   const [employmentTypes, setEmploymentTypes] = useState([]); // fallback static จะกำหนดหลัง fetch
   const [loading, setLoading] = useState(false);
 
-  // ───────────────────────────────────────────── fetch lookup
   useEffect(() => {
     const fetchLookup = async () => {
       try {
         const [deptRes, orgRes, ptRes, empRes] = await Promise.all([
-          axios.get(apiEndpoints.departments),
-          axios.get(apiEndpoints.organizations),
-          axios.get(apiEndpoints.personnelTypes),
+          axios.get(apiEndpoints.lookupDepartments),
+          axios.get(apiEndpoints.lookupOrganizations),
+          axios.get(apiEndpoints.lookupPersonnelTypes),
           axios
-            .get(apiEndpoints.employmentTypes)
+            .get(apiEndpoints.lookupEmploymentTypes)
             .catch(() => ({ data: { data: ["ACADEMIC", "SUPPORT"] } })),
         ]);
-        
+
         setDepartments(deptRes.data.data);
         setOrganizations(orgRes.data.data);
         setPersonnelTypes(ptRes.data.data);
         const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
-        setEmploymentTypes(emp.map((e) => (typeof e === "string" ? { value: e, label: e } : e)));
+        setEmploymentTypes(emp.map(e => ({ value: e, label: e })));
       } catch (err) {
-        console.error(err);
         Swal.fire("Error", "โหลดข้อมูล lookup ล้มเหลว", "error");
       }
     };
@@ -79,16 +73,22 @@ export default function AddUser() {
     setLoading(true);
     try {
       const fd = new FormData();
-      Object.entries(formData).forEach(([k, v]) => fd.append(k, v));
+      const keysToExclude = ["confirmPassword", "organizationId"];
+      Object.entries(formData).forEach(([k, v]) => {
+        fd.append(k, v); 
+      });
       if (selectedFile) fd.append("profilePicture", selectedFile);
 
-      await axios.post(apiEndpoints.addNewUser, fd, {
+      const token = localStorage.getItem("token");
+      console.log("🚀 Submit formData: ", formData);
+
+      await axios.post(apiEndpoints.createUserByAdmin, fd, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      
+
       Swal.fire("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว", "success").then(() =>
         navigate("/admin/manage-user")
       );
