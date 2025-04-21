@@ -47,20 +47,21 @@ function UserManage() {
       confirmButtonText: "ลบเลย",
       cancelButtonText: "ยกเลิก",
     });
-
+  
     if (confirm.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`/user/${userId}`, {
+        await axios.delete(apiEndpoints.deleteUserByAdmin(userId), {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUsers((prev) => prev.filter((u) => u.id !== userId));
         Swal.fire("ลบสำเร็จ", "ข้อมูลผู้ใช้งานถูกลบแล้ว", "success");
       } catch (err) {
-        Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถลบผู้ใช้งานได้", "error");
+        console.error("❌ ลบผู้ใช้ไม่สำเร็จ:", err);
+        Swal.fire("เกิดข้อผิดพลาด", err.response?.data?.message || "ไม่สามารถลบผู้ใช้งานได้", "error");
       }
     }
-  };
+  };  
 
   const totalPages = users.length ? Math.ceil(users.length / usersPerPage) : 1;
   const indexOfLastUser = currentPage * usersPerPage;

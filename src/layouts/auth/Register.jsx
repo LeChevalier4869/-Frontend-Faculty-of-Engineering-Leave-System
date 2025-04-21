@@ -34,22 +34,26 @@ export default function Register() {
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        const [posRes, deptRes, orgRes, perTypeRes] = await Promise.all([
-          axios.get(apiEndpoints.positions),
+        const [deptRes, orgRes, perTypeRes] = await Promise.all([
           axios.get(apiEndpoints.departments),
           axios.get(apiEndpoints.organizations),
           axios.get(apiEndpoints.personnelTypes),
         ]);
-        setPositions(posRes.data);
-        setDepartments(deptRes.data);
-        setOrganizations(orgRes.data);
-        setPersonnelTypes(perTypeRes.data);
+    
+        console.log("✅ personnelTypes =", perTypeRes?.data); // Debug ตรงนี้ดูด้วย
+    
+        setDepartments(deptRes.data?.data || []);
+        setOrganizations(orgRes.data?.data || []);
+        setPersonnelTypes(perTypeRes?.data?.data || []); // 🔥 จุดนี้ที่ error
       } catch (err) {
         console.error("❌ ดึงข้อมูล dropdowns ล้มเหลว:", err);
+        Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถโหลดข้อมูล dropdown ได้", "error");
       }
     };
+    
     fetchDropdowns();
   }, []);
+  
 
   const handleChange = (e) => {
     const { name, value, files, type } = e.target;
@@ -60,23 +64,24 @@ export default function Register() {
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+  
     try {
       const formData = new FormData();
       for (let key in input) {
         formData.append(key, input[key]);
       }
+  
       await axios.post(apiEndpoints.register, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      Swal.fire({
-        icon: "success",
-        title: "สมัครสมาชิกสำเร็จ!",
-        text: "กรุณาเข้าสู่ระบบเพื่อใช้งานระบบลา",
-        confirmButtonColor: "#ef4444",
-        confirmButtonText: "เข้าสู่ระบบ",
-      }).then(() => navigate("/login"));
+  
+      navigate("/login");
     } catch (err) {
       Swal.fire({
         icon: "error",
@@ -84,9 +89,11 @@ export default function Register() {
         text: err.response?.data?.message || "ไม่สามารถสมัครสมาชิกได้",
         confirmButtonColor: "#ef4444",
       });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
+  };  
+  
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-rose-100 via-white to-rose-200 px-4 font-kanit">
       <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-2xl my-10">

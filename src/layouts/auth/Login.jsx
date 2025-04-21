@@ -36,7 +36,10 @@ export default function Login() {
         text: "ยินดีต้อนรับ!",
         confirmButtonColor: "#ef4444",
         confirmButtonText: "ไปยังหน้าหลัก",
-      }).then(() => navigate("/dashboard"));
+      }).then(() => {
+        window.location.href = "/dashboard"; 
+      });
+      
     } catch (err) {
       Swal.fire({
         icon: "error",

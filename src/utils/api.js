@@ -1,26 +1,32 @@
-// api.js
-// const BASE_URL = "https://backend-faculty-of-engineering-leave.onrender.com/";
 import axios from "axios";
 const BASE_URL = "http://localhost:8000";
 
 export const apiEndpoints = {
   // auth
-  login: `${BASE_URL}/auth/login`,
-  register: `${BASE_URL}/auth/register`,
-  getMe: `${BASE_URL}/auth/me`,
-  userLanding: `${BASE_URL}/auth/landing`,
-  userUpdate: `${BASE_URL}/auth/user/:id`,
-  updateUserRole: `${BASE_URL}/:id/role`,
+  login:           `${BASE_URL}/auth/login`,            // POST
+  register:        `${BASE_URL}/auth/register`,         // POST
+  getMe:           `${BASE_URL}/auth/me`,               // GET
+  userLanding:     `${BASE_URL}/auth/landing`,          // GET
+  updateUserRole:  `${BASE_URL}/auth/update-role`,      // POST /auth/update-role/:id
+  updateUser:      `${BASE_URL}/users`,                 // PUT  /users
+
+  // admin
+  addNewUser:      `${BASE_URL}/auth/register`,
+  deleteUserByAdmin: (id) => `${BASE_URL}/admin/user/${id}`,
 
   // leave request
-  leaveRequest: `${BASE_URL}/leave-requests`,
-  leaveRequestMe: `${BASE_URL}/leave-requests/me`,
+  leaveRequest:        `${BASE_URL}/leave-requests`,     // CRUD
+  leaveRequestMe:      `${BASE_URL}/leave-requests/me`,  // GET
   leaveRequestLanding: `${BASE_URL}/leave-requests/landing`,
-  leaveBalance: `${BASE_URL}/leave-balances`,
+  leaveBalance:        `${BASE_URL}/leave-balances`,
 
-  // new dropdown endpoints for register form
-  positions: `${BASE_URL}/positions`,        
-  departments: `${BASE_URL}/departments`,     
-  organizations: `${BASE_URL}/organizations`,
-  personalTypes: `${BASE_URL}/personal-types`,
+  // dropdown data
+  departments:     `${BASE_URL}/auth/departments`,
+  organizations:   `${BASE_URL}/auth/organizations`,
+  personnelTypes:  `${BASE_URL}/auth/personnel-types`,
+
+  //admin dropdown data
+  departmentsAdmin:           `${BASE_URL}/api/lookups/departments`,
+  organizationsbyAdmin:       `${BASE_URL}/api/lookups/organizations`,
+  personnelTypesbyAdmin:       `${BASE_URL}/api/lookpus/personnel-types`,
 };
