@@ -82,17 +82,30 @@ export default function UserEdit() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
+
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`${apiEndpoints.userLanding}/${id}`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
 
-      Swal.fire("อัปเดตสำเร็จ", "ข้อมูลผู้ใช้งานได้รับการอัปเดตแล้ว", "success").then(() =>
-        navigate("/admin/manage-user")
+      // convert inActiveRaw → inActive boolean
+      const payload = {
+        ...formData,
+        inActive: formData.inActiveRaw === "true"
+      };
+      delete payload.inActiveRaw;
+
+      await axios.put(
+        apiEndpoints.updateUserByIdAdmin(id),
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      Swal.fire(
+        "อัปเดตสำเร็จ",
+        "ข้อมูลผู้ใช้งานได้รับการอัปเดตแล้ว",
+        "success"
+      ).then(() => navigate("/admin/manage-user"));
     } catch (err) {
       console.error(err);
       Swal.fire(
@@ -121,8 +134,7 @@ export default function UserEdit() {
             </option>
           ))}
         </select>
-  
-        {/* 🔽 ลูกศร dropdown icon */}
+
         <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
           <svg
             className="w-4 h-4 text-gray-500"
@@ -137,7 +149,7 @@ export default function UserEdit() {
       </div>
     </div>
   );
-  
+
 
   if (loading) {
     return (
