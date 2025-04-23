@@ -16,24 +16,24 @@ function Leave2() {
     3: "ลาพักผ่อน",
   };
 
+
   useEffect(() => {
-    const fetchLeaveRequests = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        console.log("📡 เรียก API /leave-requests/me ...");
-  
-        const response = await axios.get(getApiUrl("leave-requests/landing"), {
+    const cached = localStorage.getItem("leaveRequest");
+    if (cached) {
+      setLeaveRequest(JSON.parse(cached));
+    } else {
+      const fetchLeaveRequests = async () => {
+        const res = await axios.get(getApiUrl("leave-requests/landing"), {
           headers: { Authorization: `Bearer ${token}` },
         });
+        setLeaveRequest(res.data.data);
+        localStorage.setItem("leaveRequest", JSON.stringify(res.data.data));
+      };
+      fetchLeaveRequests();
+    }
+  }, []);
   
-        console.log("📥 ข้อมูลที่ได้จาก API:", response.data);
-        setLeaveRequest(Array.isArray(response.data.data) ? response.data.data : []);
-      } catch (error) {
-        console.error("❌ API ERROR:", error);
-      }
-    };
-    fetchLeaveRequests();
-  }, [setLeaveRequest]);  
+  
   
   const formatDate = (dateString) => {
     const date = new Date(dateString);

@@ -14,7 +14,7 @@ const userNav = [
 ];
 
 const approverNav = [
-  { to: "/approve", text: "การลาที่รอการอนุมัติ" },
+  { to: "/admin/leave-request", text: "การลาที่รอการอนุมัติ" },
   { to: "/user/landing", text: "บุคลากร" },
 ];
 
