@@ -55,14 +55,16 @@ const userRouter = createBrowserRouter([
     ),
     children: [
       // หน้า user ปกติ
-      { index: true,        element: <UserHome /> },
-      { path: 'leave',      element: <Leave2 /> },
-      { path: 'leave/add',  element: <AddLeave2 /> },
-      { path: 'leave/balance', element: <LeaveBalance /> },
-      { path: 'leave/:id',  element: <LeaveDetail /> },
-      { path: 'profile',    element: <UserProfile2 /> },
-      { path: 'profile/edit', element: <EditProfile /> },
-      { path: 'user/landing', element: <UserLanding /> },
+      { index: true,            element: <UserHome /> },
+      { path: 'leave',          element: <Leave2 /> },
+      { path: 'leave/add',      element: <AddLeave2 /> },
+      { path: 'leave/balance',  element: <LeaveBalance /> },
+      { path: 'leave/:id',      element: <LeaveDetail /> },
+      { path: 'profile',        element: <UserProfile2 /> },
+      { path: 'profile/edit',   element: <EditProfile /> },
+      { path: 'user/landing',   element: <UserLanding /> },
+      { path: 'dashboard',       element: <DashBoard/> },  
+  
 
       // กลุ่ม admin (nested)
       {
@@ -74,7 +76,7 @@ const userRouter = createBrowserRouter([
           { path: 'manage-user',           element: <UserManage /> },
           { path: 'edit-profile',          element: <EditProfile /> },
           { path: 'add-user',              element: <AddnewUser/> },
-          { path: 'user/:id',              element: <EditUser/> },     
+          { path: 'user/:id',              element: <EditUser/> },  
         ]
       },
       // fallback
