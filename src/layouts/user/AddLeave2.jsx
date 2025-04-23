@@ -5,7 +5,7 @@ import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import Swal from "sweetalert2"; // ✅ เพิ่ม SweetAlert2
 
-function AddLeave() {
+function AddLeave2() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     leaveTypeId: "",
@@ -206,4 +206,4 @@ function AddLeave() {
   );
 }
 
-export default AddLeave;
+export default AddLeave2;

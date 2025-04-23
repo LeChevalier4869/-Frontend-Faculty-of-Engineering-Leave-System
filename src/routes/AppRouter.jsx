@@ -27,7 +27,7 @@ import UserManage      from '../layouts/admin/UserManage';
 import EditUser        from '../layouts/admin/EditUser';
 import EditProfile     from '../layouts/admin/EditProfile';
 import AddnewUser      from '../layouts/admin/AddnewUser';
-
+import LeaveAdmin      from '../layouts/admin/LeaveAdmin';
 
 // Routes สำหรับผู้ที่ยังไม่ล็อกอิน
 const guestRouter = createBrowserRouter([
@@ -70,7 +70,8 @@ const userRouter = createBrowserRouter([
       {
         path: 'admin',
         children: [
-          { path: 'manage-user', element: <UserManage /> },
+          { path: 'manage-user',           element: <UserManage /> },
+          { path: 'leave-request',         element: <LeaveAdmin /> },
           { path: 'approve',               element: <Approver /> },
           { path: 'department-manage',     element: <DepartmentManage /> },
           { path: 'manage-user',           element: <UserManage /> },

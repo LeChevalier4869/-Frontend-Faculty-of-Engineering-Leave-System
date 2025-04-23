@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import getApiUrl from "../../utils/apiUtils";
@@ -16,21 +16,25 @@ function Leave2() {
     3: "ลาพักผ่อน",
   };
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("คุณต้องการลบรายการนี้หรือไม่?");
-    if (confirmDelete) {
+  useEffect(() => {
+    const fetchLeaveRequests = async () => {
       try {
-        let token = localStorage.getItem("token");
-        await axios.delete(getApiUrl(`leave-requests/${id}`), {
+        const token = localStorage.getItem("token");
+        console.log("📡 เรียก API /leave-requests/me ...");
+  
+        const response = await axios.get(getApiUrl("leave-requests/landing"), {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setLeaveRequest(leaveRequest.filter((leave) => leave.id !== id));
-      } catch (err) {
-        console.error("Failed to delete:", err.message);
+  
+        console.log("📥 ข้อมูลที่ได้จาก API:", response.data);
+        setLeaveRequest(Array.isArray(response.data.data) ? response.data.data : []);
+      } catch (error) {
+        console.error("❌ API ERROR:", error);
       }
-    }
-  };
-
+    };
+    fetchLeaveRequests();
+  }, [setLeaveRequest]);  
+  
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("th-TH", {
@@ -62,7 +66,7 @@ function Leave2() {
             <select
               value={itemsPerPage}
               onChange={handleItemsPerPageChange}
-              className="border border-gray-300 rounded px-2 py-1 text-white"
+              className="border border-gray-300 rounded px-2 py-1 text-white bg-gray-700"
             >
               {[5, 10, 20, 50].map((num) => (
                 <option key={num} value={num}>{num}</option>

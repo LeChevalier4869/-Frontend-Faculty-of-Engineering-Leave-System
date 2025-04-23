@@ -108,7 +108,7 @@ export default function UserHome() {
           </Link>
 
           <Link
-            to="/leave"
+            to="/admin/leave-request"
             className="bg-white p-6 rounded-2xl shadow border border-gray-200 hover:shadow-md hover:border-gray-300 transition"
           >
             <h3 className="text-xl font-semibold text-gray-800 mb-2">จัดการคำขอลา</h3>
