@@ -74,7 +74,6 @@ const userRouter = createBrowserRouter([
           { path: 'leave-request',         element: <LeaveAdmin /> },
           { path: 'approve',               element: <Approver /> },
           { path: 'department-manage',     element: <DepartmentManage /> },
-          { path: 'manage-user',           element: <UserManage /> },
           { path: 'edit-profile',          element: <EditProfile /> },
           { path: 'add-user',              element: <AddnewUser/> },
           { path: 'user/:id',              element: <EditUser/> },  

@@ -20,12 +20,7 @@ function Header() {
       <div className="container mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
         <div className="text-xl sm:text-2xl font-bold tracking-wide text-white">
-          <Link
-            to="/"
-            className="hover:opacity-90 transition-opacity duration-200 flex items-center gap-2"
-          >
             ระบบลาคณะวิศวกรรมศาสตร์
-          </Link>
         </div>
 
         {/* Profile Dropdown */}

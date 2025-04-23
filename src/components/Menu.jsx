@@ -19,6 +19,7 @@ const approverNav = [
 ];
 
 const adminNav = [
+  { to: "/",                        text: "เมนูแอดมิน"},
   { to: "/admin/manage-user",       text: "จัดการผู้ใช้งาน" },
   { to: "/admin/department-manage", text: "จัดการแผนก" },
   { to: "/admin/edit-profile",      text: "การตั้งค่า" },
