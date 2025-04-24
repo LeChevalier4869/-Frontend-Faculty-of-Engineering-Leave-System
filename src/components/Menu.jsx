@@ -8,6 +8,7 @@ import {
 
 const userNav = [
   { to: "/dashboard", text: "แดชบอร์ด" },
+  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ" },
   { to: "/leave/add", text: "ยื่นลา" },
   { to: "/leave", text: "การลา" },
   { to: "/profile", text: "โปรไฟล์ผู้ใช้" },
@@ -18,6 +19,24 @@ const approverNav = [
   { to: "/user/landing", text: "บุคลากร" },
 ];
 
+const approverNav1 = [
+  { to: "/approver/leave-request-approver1", text: "การลาที่รอการอนุมัติ" },
+];
+const verifierNav = [
+  { to: "/approver/leave-request-verifier", text: "การลาที่รอการอนุมัติ" },
+];
+const receiverNav = [
+  { to: "/approver/leave-request-receiver", text: "การลาที่รอการอนุมัติ" },
+];
+const approverNav2 = [
+  { to: "/approver/leave-request-approver2", text: "การลาที่รอการอนุมัติ" },
+];
+const approverNav3 = [
+  { to: "/approver/leave-request-approver3", text: "การลาที่รอการอนุมัติ" },
+];
+const approverNav4 = [
+  { to: "/approver/leave-request-approver4", text: "การลาที่รอการอนุมัติ" },
+];
 const adminNav = [
   { to: "/",                        text: "เมนูแอดมิน"},
   { to: "/admin/manage-user",       text: "จัดการผู้ใช้งาน" },
@@ -104,11 +123,31 @@ const Menu = () => {
               ))}
 
             {/* APPROVER */}
-            {(user?.role.includes("APPROVER_1") ||
+            {/* {(user?.role.includes("VERIFIER") ||
+              user?.role.includes("RECEIVER") ||
+              user?.role.includes("APPROVER_1") ||
               user?.role.includes("APPROVER_2") ||
               user?.role.includes("APPROVER_3") ||
               user?.role.includes("APPROVER_4")) &&
-              renderDropdown("เมนูผู้อนุมัติ", approverNav)}
+              renderDropdown("เมนูผู้อนุมัติ", approverNav)} */}
+            {user?.role.includes("APPROVER_1") &&
+              renderDropdown("เมนูหัวหน้าสาขา", approverNav1)
+            }
+            {user?.role.includes("VERIFIER") &&
+              renderDropdown("เมนูผู้ตรวจสอบ", verifierNav)
+            }
+            {user?.role.includes("RECEIVER") &&
+              renderDropdown("เมนูผู้รับหนังสือ", receiverNav)
+            }
+            {user?.role.includes("APPROVER_2") &&
+              renderDropdown("เมนูผู้อนุมัติ2", approverNav2)
+            }
+            {user?.role.includes("APPROVER_3") &&
+              renderDropdown("เมนูผู้อนุมัติ3", approverNav3)
+            }
+            {user?.role.includes("APPROVER_4") &&
+              renderDropdown("เมนูผู้อนุมัติ4", approverNav4)
+            }
 
             {/* ADMIN */}
             {user?.role.includes("ADMIN") &&

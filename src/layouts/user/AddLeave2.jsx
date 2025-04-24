@@ -163,6 +163,7 @@ function AddLeave2() {
           )}
 
           {/* การลาเร่งด่วน */}
+          {/*}
           <div>
             <label className="block text-sm font-medium mb-1">การลาเร่งด่วน</label>
             <div className="relative">
@@ -183,6 +184,7 @@ function AddLeave2() {
               </div>
             </div>
           </div>
+          {*/}
 
           {/* ปุ่ม */}
           <div className="flex justify-end gap-4">
