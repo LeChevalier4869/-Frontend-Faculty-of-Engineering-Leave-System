@@ -29,8 +29,8 @@ import LeaveApprover2 from "../layouts/approver/LeaveApprover2";
 import LeaveApprover1 from "../layouts/approver/LeaveApprover1";
 import LeaveApprover3 from "../layouts/approver/LeaveApprover3";
 import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
-import LeaveReceiver from "../layouts/approver/leaveReceiver";
-import LeaveVerifier from "../layouts/approver/leaveVerifier";
+import LeaveReceiver from "../layouts/approver/LeaveReceiver";
+import LeaveVerifier from "../layouts/approver/LeaveVerifier";
 
 /** Admin pages **/
 import AdminLayout from "../layouts/admin/Admin";
