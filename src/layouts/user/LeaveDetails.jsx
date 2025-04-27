@@ -60,7 +60,7 @@ function LeaveDetail() {
     }
   };
 
-  return (
+  return leaveDetail ? (
     <div className="max-w-4xl mx-auto mt-8 p-6 border rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-4">รายละเอียดการลา</h2>
       <p><strong>วันที่เริ่ม:</strong> {leaveDetail.startDate}</p>
@@ -80,6 +80,8 @@ function LeaveDetail() {
         </div>
       )}
     </div>
+  ) : (
+    <div className="text-center">กำลังอยู่ในขั้นตอนพัฒนา</div>
   );
 }
 
