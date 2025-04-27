@@ -19,15 +19,29 @@ function Leave2() {
   };
 
   const fetchLeaveRequests = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    let token = localStorage.getItem("token");
+    let retryCount = 0;
+
+    // รอ token ถ้ายังไม่มา
+    while (!token && retryCount < 5) {
+      await new Promise((resolve) => setTimeout(resolve, 200)); // รอ 200ms
+      token = localStorage.getItem("token");
+      retryCount++;
+    }
+
+    if (!token) {
+      console.warn("⚠️ ไม่พบ Token หลังจากรอแล้ว");
+      return;
+    }
+
     try {
       const res = await axios.get(getApiUrl("leave-requests/landing"), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setLeaveRequest(Array.isArray(res.data.data) ? res.data.data : []);
+      console.log("✅ API Response:", res.data);
+      setLeaveRequest(Array.isArray(res.data.leaveRequest) ? res.data.leaveRequest : []);
     } catch (error) {
-      console.error("Error fetching leave requests:", error);
+      console.error("❌ Error fetching leave requests:", error);
       setLeaveRequest([]);
     } finally {
       setLoading(false);
@@ -35,8 +49,10 @@ function Leave2() {
   };
 
   useEffect(() => {
+    console.log("📢 useEffect trigger แล้วนะ");
     fetchLeaveRequests();
   }, []);
+
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -122,17 +138,18 @@ function Leave2() {
                     <td className="p-3">{leaveTypes[leave.leaveTypeId] || "-"}</td>
                     <td className="p-3">{formatDate(leave.startDate)}</td>
                     <td className="p-3">{formatDate(leave.endDate)}</td>
-                    <td className="p-3 text-center">
+                    <td className="p-3 text-left">
                       <div
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-semibold
-                          ${leave.status === "APPROVED" ? "bg-green-100 text-green-700"
-                          : leave.status === "PENDING" ? "bg-yellow-100 text-yellow-700"
-                          : leave.status === "REJECTED" ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-700"}`}
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold
+                        ${leave.status === "APPROVED" ? "bg-green-100 text-green-700"
+                            : leave.status === "PENDING" ? "bg-yellow-100 text-yellow-700"
+                              : leave.status === "REJECTED" ? "bg-red-100 text-red-700"
+                                : "bg-gray-100 text-gray-700"}`}
                       >
                         {leave.status}
                       </div>
                     </td>
+
                   </tr>
                 ))
               ) : (

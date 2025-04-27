@@ -80,7 +80,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-2xl relative font-kanit">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-2xl relative font-kanit text-black">
         {/* ปุ่มปิด */}
         <button
           onClick={onClose}
@@ -111,7 +111,9 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
 
           {/* วันที่เริ่มต้น */}
           <div>
-            <label htmlFor="startDate" className="block text-sm font-medium mb-1">วันที่เริ่มต้น</label>
+            <label htmlFor="startDate" className="block text-sm font-medium mb-1">
+              วันที่เริ่มต้น
+            </label>
             <input
               type="date"
               id="startDate"
@@ -125,7 +127,9 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
 
           {/* วันที่สิ้นสุด */}
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
+            <label htmlFor="endDate" className="block text-sm font-medium mb-1">
+              วันที่สิ้นสุด
+            </label>
             <input
               type="date"
               id="endDate"
@@ -150,7 +154,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
             />
           </div>
 
-          {/* แนบไฟล์ */}
+          {/* แนบไฟล์ (เฉพาะลาป่วย) */}
           {formData.leaveTypeId === "1" && (
             <div>
               <label className="block text-sm font-medium mb-1">แนบไฟล์ใบรับรองแพทย์</label>

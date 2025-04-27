@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Swal from "sweetalert2"; // ✅ import sweetalert2
 import { useNavigate } from "react-router-dom";
 import { apiEndpoints } from "../../utils/api";
+import { Check, X, Users, Loader2 } from "lucide-react"; // ✅ เพิ่ม Loader2 (icon หมุน)
 
 function Approver() {
   const [pendingRequest, setPendingRequest] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1); 
-  const [itemsPerPage, setItemsPerPage] = useState(5); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [processingId, setProcessingId] = useState(null); // ✅ เอาไว้บอกว่า Row ไหนกำลังกด Approve/Reject
 
   const navigate = useNavigate();
 
@@ -25,217 +29,257 @@ function Approver() {
         const res = await axios.get(apiEndpoints.leaveRequestLanding, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setPendingRequest(res.data.leaveRequest);
+        console.log("✅ API Response:", res.data);
+  
+        // --- เช็กว่ามันมี leaveRequest ไหม
+        if (Array.isArray(res.data.leaveRequest)) {
+          setPendingRequest(res.data.leaveRequest);
+        } else if (Array.isArray(res.data.data)) {
+          setPendingRequest(res.data.data);
+        } else if (Array.isArray(res.data)) {
+          setPendingRequest(res.data);
+        } else {
+          console.error("❌ ไม่พบข้อมูล leaveRequest ที่ถูกต้อง");
+          setPendingRequest([]);
+        }
       } catch (err) {
-        setError(
-          err.response?.data?.message || "Error fetching leave requests"
-        );
+        setError(err.response?.data?.message || "Error fetching leave requests");
       } finally {
         setLoading(false);
       }
     };
     fetchPendingRequest();
-  }, []);
+  }, []);  
 
   const handleApprove = async (id) => {
-    const confirmApprove = window.confirm("คุณต้องการอนุมัติการลานี้หรือไม่?");
-    if (confirmApprove) {
-      try {
-        let token = localStorage.getItem("token");
-        await axios.post(
-          `http://localhost:8000/leave-requests/${id}/approve`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setPendingRequest((prev) => prev.filter((leave) => leave.id !== id));
-        alert("อนุมัติสำเร็จ!");
-      } catch (err) {
-        alert("เกิดข้อผิดพลาดในการอนุมัติ");
-      }
+    setProcessingId(id);
+    try {
+      let token = localStorage.getItem("token");
+      await axios.post(
+        `${apiEndpoints.leaveRequest}/${id}/approve`,      
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPendingRequest((prev) => prev.filter((leave) => leave.id !== id));
+      Swal.fire({
+        icon: "success",
+        title: "อนุมัติสำเร็จ!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาดในการอนุมัติ",
+      });
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const handleReject = async (id) => {
-    const confirmReject = window.confirm("คุณต้องการปฏิเสธการลานี้หรือไม่?");
-    if (confirmReject) {
-      try {
-        let token = localStorage.getItem("token");
-        await axios.post(
-          `http://localhost:8000/leave-requests/${id}/reject`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setPendingRequest((prev) => prev.filter((leave) => leave.id !== id));
-        alert("ปฏิเสธสำเร็จ!");
-      } catch (err) {
-        alert("เกิดข้อผิดพลาดในการปฏิเสธ");
-      }
+    setProcessingId(id);
+    try {
+      let token = localStorage.getItem("token");
+      await axios.post(
+        `${apiEndpoints.leaveRequest}/${id}/reject`,      
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPendingRequest((prev) => prev.filter((leave) => leave.id !== id));
+      Swal.fire({
+        icon: "success",
+        title: "ปฏิเสธสำเร็จ!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาดในการปฏิเสธ",
+      });
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${day}/${month}/${year}`;
+    return date.toLocaleDateString("th-TH");
   };
 
- // คำนวณข้อมูลที่จะแสดงในหน้าปัจจุบัน
- const indexOfLastItem = currentPage * itemsPerPage;
- const indexOfFirstItem = indexOfLastItem - itemsPerPage;
- const currentItems = pendingRequest.slice(indexOfFirstItem, indexOfLastItem);
+  const filteredRequests = pendingRequest.filter((leave) =>
+    `${leave.users.prefixName}${leave.users.firstName} ${leave.users.lastName}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
 
- // เปลี่ยนหน้า
- const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredRequests.slice(indexOfFirstItem, indexOfLastItem);
 
- // เปลี่ยนจำนวนรายการต่อหน้า
- const handleItemsPerPageChange = (e) => {
-   setItemsPerPage(Number(e.target.value));
-   setCurrentPage(1); // รีเซ็ตกลับไปหน้าที่ 1 เมื่อเปลี่ยนจำนวนรายการต่อหน้า
- };
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  if (loading) return <div className="text-center mt-8">Loading...</div>;
-  if (error)
-    return <div className="text-center text-red-500 mt-8">Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
+        กำลังโหลดข้อมูลการลา...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-kanit text-red-500">
+        Error: {error}
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-5xl mx-auto mt-8 p-4">
-      <h2 className="text-3xl font-bold text-center mb-6">
-        การลาที่รอการอนุมัติ
-      </h2>
-      {/* Dropdown เพื่อเลือกจำนวนรายการต่อหน้า */}
-      <div className="mb-4 flex justify-end">
-        <label className="mr-2">แสดงผลต่อหน้า:</label>
-        <select
-          value={itemsPerPage}
-          onChange={handleItemsPerPageChange}
-          className="border border-gray-300 rounded px-2 py-1"
-        >
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
-        </select>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                วันที่
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                ชื่อผู้ยื่นลา
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                ประเภทการลา
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                วันที่เริ่ม
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                วันที่สิ้นสุด
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
-                สถานะ
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-center">
-                การดำเนินการ
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(currentItems) && currentItems.length > 0 ? (
-              currentItems.map((leave) => (
-                <tr
-                  key={leave.id}
-                  className="cursor-pointer hover:bg-gray-100"
-                  onClick={() => navigate(`/leave/${leave.id}`)}
-                >
-                  <td className="border border-gray-300 px-4 py-2">
-                    {formatDate(leave.createdAt)}
+    <div className="min-h-screen bg-gray-100 p-8 font-kanit">
+      <div className="max-w-7xl mx-auto bg-white text-black rounded-2xl shadow p-8">
+        {/* Header */}
+        <h2 className="text-3xl font-bold mb-6">การลาที่รอการอนุมัติ</h2>
+
+        {/* Search and Actions */}
+        <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border border-gray-300 rounded px-4 py-2 w-full sm:w-72"
+          />
+          <div className="flex gap-2">
+            <button className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded text-sm">
+              Filter
+            </button>
+            <button className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded text-sm">
+              Group By
+            </button>
+            <button className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded text-sm">
+              Actions
+            </button>
+            <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm">
+              + Create
+            </button>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="flex gap-6 text-sm mb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+            <span>Requested</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span>Approved</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+            <span>Cancelled</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span>Rejected</span>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto rounded-lg">
+          <table className="min-w-full table-auto text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-3 text-left">
+                  <input type="checkbox" disabled />
+                </th>
+                <th className="p-3 text-left">Employee</th>
+                <th className="p-3 text-left">Leave Type</th>
+                <th className="p-3 text-left">Start Date</th>
+                <th className="p-3 text-left">End Date</th>
+                <th className="p-3 text-left">Requested Days</th>
+                <th className="p-3 text-center">Leave</th>
+                <th className="p-3 text-center">Confirmation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.map((leave) => (
+                <tr key={leave.id} className="border-t hover:bg-gray-100">
+                  <td className="p-3 text-left">
+                    <input type="checkbox" />
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {leave.users.prefixName}
-                    {leave.users.firstName} {leave.users.lastName}
+                  <td className="p-3 flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">
+                      {leave.users.firstName.charAt(0)}
+                      {leave.users.lastName.charAt(0)}
+                    </div>
+                    <span>{leave.users.prefixName}{leave.users.firstName} {leave.users.lastName}</span>
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {leaveTypes[leave.leaveTypeId] || "ไม่ระบุ"}
+                  <td className="p-3">{leaveTypes[leave.leaveTypeId] || "ไม่ระบุ"}</td>
+                  <td className="p-3">{formatDate(leave.startDate)}</td>
+                  <td className="p-3">{formatDate(leave.endDate)}</td>
+                  <td className="p-3 text-center">{leave.requestedDays || "1.0"}</td>
+                  <td className="p-3 text-center">
+                    <Users size={20} className="mx-auto" />
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {formatDate(leave.startDate)}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {formatDate(leave.endDate)}
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <span
-                      className={`font-bold ${
-                        leave.status === "APPROVED"
-                          ? "text-green-500"
-                          : leave.status === "PENDING"
-                          ? "text-yellow-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      {leave.status}
-                    </span>
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2 text-center">
+                  <td className="p-3 text-center flex justify-center gap-2">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleReject(leave.id);
-                      }}
-                      className="btn bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded mr-2"
+                      onClick={() => handleApprove(leave.id)}
+                      className="bg-green-500 hover:bg-green-600 text-white p-2 rounded disabled:opacity-50"
+                      disabled={processingId === leave.id}
                     >
-                      ปฏิเสธ
+                      {processingId === leave.id ? (
+                        <Loader2 className="animate-spin" size={16} />
+                      ) : (
+                        <Check size={16} />
+                      )}
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleApprove(leave.id);
-                      }}
-                      className="btn bg-green-500 hover:bg-green-700 text-white px-3 py-1 rounded"
+                      onClick={() => handleReject(leave.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white p-2 rounded disabled:opacity-50"
+                      disabled={processingId === leave.id}
                     >
-                      อนุมัติ
+                      {processingId === leave.id ? (
+                        <Loader2 className="animate-spin" size={16} />
+                      ) : (
+                        <X size={16} />
+                      )}
                     </button>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan="7"
-                  className="border border-gray-300 px-4 py-2 text-center text-gray-500"
-                >
-                  ไม่มีข้อมูลการลา
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+              {currentItems.length === 0 && (
+                <tr>
+                  <td colSpan="8" className="p-8 text-center text-gray-400">
+                    ไม่มีข้อมูลการลา
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center mt-6">
-        {Array.from(
-          { length: Math.ceil(pendingRequest.length / itemsPerPage) },
-          (_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => paginate(i + 1)}
-              className={`mx-1 px-4 py-2 rounded ${
-                currentPage === i + 1
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 hover:bg-gray-300"
-              }`}
-            >
-              {i + 1}
-            </button>
-          )
-        )}
+        {/* Pagination */}
+        <div className="flex justify-center mt-6 gap-1">
+          {Array.from(
+            { length: Math.ceil(filteredRequests.length / itemsPerPage) },
+            (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => paginate(i + 1)}
+                className={`px-4 py-2 rounded ${
+                  currentPage === i + 1
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                {i + 1}
+              </button>
+            )
+          )}
+        </div>
       </div>
     </div>
   );
