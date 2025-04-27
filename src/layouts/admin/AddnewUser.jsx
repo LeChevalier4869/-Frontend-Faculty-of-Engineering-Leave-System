@@ -4,7 +4,6 @@ import { HiOutlineChevronDown } from "react-icons/hi";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
-import getApiUrl from "../../utils/apiUtils";
 
 const initialForm = {
   prefixName: "",
