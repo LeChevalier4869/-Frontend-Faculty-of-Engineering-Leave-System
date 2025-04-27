@@ -1,133 +1,98 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import getApiUrl from "../../utils/apiUtils";
-import { useNavigate } from "react-router-dom";
-import { apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
+import { Pencil } from "lucide-react"; // ไอคอนดินสอ
+import getApiUrl from "../../utils/apiUtils";
+import { apiEndpoints } from "../../utils/api";
 
 function LeaveApprover1() {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-  const navigate = useNavigate();
 
   const leaveTypes = {
     1: "ลาป่วย",
     2: "ลากิจส่วนตัว",
     3: "ลาพักผ่อน",
   };
-  const handleApprove = async (leaveRequestId) => {
-    const { value: formValues } = await Swal.fire({
-      title: "อนุมัติคำขอ",
-      html:
-        `<label for="remarks">เหตุผล:</label>` +
-        `<textarea id="remarks" class="swal2-textarea" placeholder="ระบุเหตุผลการอนุมัติ"></textarea><br/>` +
-        `<label for="comment">ความคิดเห็น:</label>` +
-        `<textarea id="comment" class="swal2-textarea" placeholder="ความคิดเห็นเพิ่มเติม"></textarea>`,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "อนุมัติ",
-      cancelButtonText: "ยกเลิก",
-      preConfirm: () => {
-        const remarks = document.getElementById("remarks").value.trim();
-        const comment = document.getElementById("comment").value.trim();
-        if (!remarks || !comment) {
-          Swal.showValidationMessage("กรุณากรอกเหตุผลและความคิดเห็นให้ครบถ้วน");
-          return;
-        }
-        return { remarks, comment };
-      },
-    });
 
-    if (formValues) {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          Swal.fire({
-            icon: "warning",
-            title: "กรุณาเข้าสู่ระบบก่อน",
-            confirmButtonColor: "#ef4444",
-          });
-          return;
-        }
-
-        await axios.patch(
-          apiEndpoints.ApproveleaveRequestsByFirstApprover(leaveRequestId),
-          formValues,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        Swal.fire("สำเร็จ", "อนุมัติคำขอเรียบร้อยแล้ว", "success");
-      } catch (error) {
-        const message =
-          error.response?.data?.message || "เกิดข้อผิดพลาดในการอนุมัติ";
-        Swal.fire("ผิดพลาด", message, "error");
-      }
-    }
+  const statusLabels = {
+    PENDING: "รออนุมัติ",
+    APPROVED: "อนุมัติแล้ว",
+    REJECTED: "ปฏิเสธ",
+    CANCELLED: "ยกเลิก",
   };
 
-  const handleReject = async (leaveRequestId) => {
-    const { value: reason } = await Swal.fire({
-      title: "ปฏิเสธคำขอ",
-      input: "textarea",
-      inputLabel: "เหตุผลในการปฏิเสธ",
-      inputPlaceholder: "กรุณาระบุเหตุผล...",
-      inputAttributes: {
-        "aria-label": "กรุณาระบุเหตุผลในการปฏิเสธคำขอ",
-      },
-      showCancelButton: true,
-      confirmButtonText: "ปฏิเสธ",
-      cancelButtonText: "ยกเลิก",
-      preConfirm: (value) => {
-        if (!value) {
-          Swal.showValidationMessage("กรุณาระบุเหตุผลในการปฏิเสธคำขอ");
-        }
-        return value;
-      },
-    });
-
-    if (reason) {
-      try {
-        const token = localStorage.getItem("token");
-        await axios.patch(
-          apiEndpoints.RejectleaveRequestsByFirstApprover(leaveRequestId),
-          { reason },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        Swal.fire("สำเร็จ", "ปฏิเสธคำขอเรียบร้อยแล้ว", "success");
-        setLeaveRequests((prev) =>
-          prev.filter((request) => request.id !== leaveRequestId)
-        );
-      } catch (error) {
-        const message =
-          error.response?.data?.message || "เกิดข้อผิดพลาดในการปฏิเสธคำขอ";
-        Swal.fire("ผิดพลาด", message, "error");
-      }
+  const fetchLeaveRequests = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(apiEndpoints.leaveRequestForFirstApprover, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setLeaveRequests(res.data || []);
+    } catch (error) {
+      console.error("❌ Error loading leave requests", error);
     }
   };
 
   useEffect(() => {
-    const fetchLeaveRequests = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(apiEndpoints.leaveRequestForFirstApprover, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log("📥 ดึงข้อมูลทั้งหมดสำเร็จ", res.data);
-        setLeaveRequests(res.data || []);
-      } catch (error) {
-        console.error("❌ Error loading leave requests", error);
-      }
-    };
-
     fetchLeaveRequests();
   }, []);
+
+  const handleEditComment = async (itemId) => {
+    const leave = leaveRequests.find((item) => item.id === itemId);
+
+    const result = await Swal.fire({
+      title: "แก้ไขความคิดเห็น",
+      input: "textarea",
+      inputValue: leave?.comment || "",
+      inputPlaceholder: "กรอกความคิดเห็นของคุณ...",
+      showCancelButton: true,
+      confirmButtonText: "บันทึก",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (result.isConfirmed) {
+      const updatedRequests = leaveRequests.map((item) =>
+        item.id === itemId ? { ...item, comment: result.value } : item
+      );
+      setLeaveRequests(updatedRequests);
+    }
+  };
+
+  const handleApprove = async (leaveRequestDetailId, comment) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        apiEndpoints.ApproveleaveRequestsByFirstApprover(leaveRequestDetailId),
+        { remarks: comment || "อนุมัติ", comment: comment || "อนุมัติ" },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      await fetchLeaveRequests();
+      Swal.fire("สำเร็จ", "อนุมัติคำขอเรียบร้อยแล้ว", "success");
+    } catch (error) {
+      console.error("❌ Error approving request", error);
+    }
+  };
+
+  const handleReject = async (leaveRequestDetailId, comment) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        apiEndpoints.RejectleaveRequestsByFirstApprover(leaveRequestDetailId),
+        { reason: comment || "ไม่อนุมัติ", comment: comment || "ไม่อนุมัติ" },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      await fetchLeaveRequests();
+      Swal.fire("สำเร็จ", "ปฏิเสธคำขอเรียบร้อยแล้ว", "success");
+    } catch (error) {
+      console.error("❌ Error rejecting request", error);
+    }
+  };
 
   const formatDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString("th-TH", {
@@ -136,12 +101,10 @@ function LeaveApprover1() {
       day: "numeric",
     });
 
-  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = leaveRequests.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(leaveRequests.length / itemsPerPage);
-  console.log(currentItems);
 
   return (
     <div className="p-6 bg-white min-h-screen text-black font-kanit">
@@ -154,60 +117,57 @@ function LeaveApprover1() {
               <th className="px-4 py-2 border border-gray-200">ชื่อผู้ลา</th>
               <th className="px-4 py-2 border border-gray-200">ประเภทการลา</th>
               <th className="px-4 py-2 border border-gray-200">วันที่เริ่ม</th>
-              <th className="px-4 py-2 border border-gray-200">
-                วันที่สิ้นสุด
-              </th>
+              <th className="px-4 py-2 border border-gray-200">วันที่สิ้นสุด</th>
               <th className="px-4 py-2 border border-gray-200">สถานะ</th>
-              <th className="px-4 py-2 border border-gray-200">การดำเนินการ</th>
+              <th className="px-4 py-2 border border-gray-200">ความคิดเห็น</th>
+              <th className="px-4 py-2 border border-gray-200 text-center">การดำเนินการ</th>
             </tr>
           </thead>
           <tbody>
             {currentItems.length > 0 ? (
-              currentItems.map((item) => (
-                <tr
-                  key={item.id}
-                  // onClick={() => navigate(`/leave/${item.id}`)}
-                  className="hover:bg-gray-50 cursor-pointer"
-                >
-                  <td className="px-4 py-2 border border-gray-200">
-                    {item.user?.prefixName} {item.user?.firstName}{" "}
-                    {item.user?.lastName}
-                  </td>
-                  <td className="px-4 py-2 border border-gray-200">
-                    {leaveTypes[item.leaveTypeId] || "ไม่ระบุ"}
-                  </td>
-                  <td className="px-4 py-2 border border-gray-200">
-                    {formatDate(item.startDate)}
-                  </td>
-                  <td className="px-4 py-2 border border-gray-200">
-                    {formatDate(item.endDate)}
-                  </td>
-                  <td className="px-4 py-2 border border-gray-200 text-center font-semibold">
-                    {item.status}
-                  </td>
-                  <td className="px-6 py-3 border-gray-200 text-center space-x-2">
-                    <button
-                      onClick={() =>
-                        handleApprove(item.leaveRequestDetails?.[0]?.id)
-                      }
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      อนุมัติ
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleReject(item.leaveRequestDetails?.[0]?.id)
-                      }
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      ปฏิเสธ
-                    </button>
-                  </td>
-                </tr>
-              ))
+              currentItems.map((item) => {
+                const statusKey = (item.status || "").toUpperCase();
+                return (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 border border-gray-200">
+                      {item.user?.prefixName} {item.user?.firstName} {item.user?.lastName}
+                    </td>
+                    <td className="px-4 py-2 border border-gray-200">
+                      {leaveTypes[item.leaveTypeId] || "ไม่ระบุ"}
+                    </td>
+                    <td className="px-4 py-2 border border-gray-200">{formatDate(item.startDate)}</td>
+                    <td className="px-4 py-2 border border-gray-200">{formatDate(item.endDate)}</td>
+                    <td className="px-4 py-2 border border-gray-200 text-center font-semibold">
+                      {statusLabels[statusKey] || item.status || "-"}
+                    </td>
+                    <td className="px-4 py-2 border border-gray-200 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <span>{item.comment || "-"}</span>
+                        <button onClick={() => handleEditComment(item.id)}>
+                          <Pencil size={16} className="text-blue-500 hover:text-blue-700" />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 border border-gray-200 text-center space-x-2">
+                      <button
+                        onClick={() => handleApprove(item.leaveRequestDetails?.[0]?.id, item.comment)}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded"
+                      >
+                        อนุมัติ
+                      </button>
+                      <button
+                        onClick={() => handleReject(item.leaveRequestDetails?.[0]?.id, item.comment)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded"
+                      >
+                        ปฏิเสธ
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
-                <td colSpan="6" className="text-center py-4 text-gray-500">
+                <td colSpan="7" className="text-center py-4 text-gray-400">
                   ไม่มีข้อมูลคำขอ
                 </td>
               </tr>

@@ -1,87 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import getApiUrl from "../../utils/apiUtils";
 
 function LeaveDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const [leaveDetail, setLeaveDetail] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const location = useLocation();
+  const [leaveData, setLeaveData] = useState(location.state?.leaveData || null);
+  const [loading, setLoading] = useState(!leaveData);
 
   useEffect(() => {
-    const fetchLeaveDetail = async () => {
+    const fetchLeaveRequest = async () => {
       try {
-        let token = localStorage.getItem("token");
-        const response = await axios.get(getApiUrl(`leave-requests/${id}`), {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(getApiUrl(`leave-requests/${id}`), {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setLeaveDetail(response.data);
-      } catch (err) {
-        setError("ไม่สามารถโหลดข้อมูลได้");
+        setLeaveData(res.data);
+      } catch (error) {
+        console.error("❌ Error fetching leave detail:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchLeaveDetail();
-  }, [id]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
-
-  const handleApprove = async () => {
-    if (window.confirm("คุณต้องการอนุมัติคำขอนี้หรือไม่?")) {
-      try {
-        let token = localStorage.getItem("token");
-        await axios.post(getApiUrl(`leave-requests/${id}/approve`), {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        alert("อนุมัติสำเร็จ!");
-        navigate(-1);
-      } catch {
-        alert("เกิดข้อผิดพลาดในการอนุมัติ");
-      }
+    if (!leaveData) {
+      fetchLeaveRequest();
     }
-  };
+  }, [id, leaveData]);
 
-  const handleReject = async () => {
-    if (window.confirm("คุณต้องการปฏิเสธคำขอนี้หรือไม่?")) {
-      try {
-        let token = localStorage.getItem("token");
-        await axios.post(getApiUrl(`leave-requests/${id}/reject`), {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        alert("ปฏิเสธสำเร็จ!");
-        navigate(-1);
-      } catch {
-        alert("เกิดข้อผิดพลาดในการปฏิเสธ");
-      }
-    }
-  };
+  if (loading) {
+    return <div className="p-6 text-gray-500">กำลังโหลดข้อมูลใบลา...</div>;
+  }
 
-  return leaveDetail ? (
-    <div className="max-w-4xl mx-auto mt-8 p-6 border rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">รายละเอียดการลา</h2>
-      <p><strong>วันที่เริ่ม:</strong> {leaveDetail.startDate}</p>
-      <p><strong>วันที่สิ้นสุด:</strong> {leaveDetail.endDate}</p>
-      <p><strong>ประเภท:</strong> {leaveDetail.leaveType}</p>
-      <p><strong>สถานะ:</strong> {leaveDetail.status}</p>
+  if (!leaveData) {
+    return <div className="p-6 text-red-500">ไม่พบข้อมูลใบลา</div>;
+  }
 
-      {/* เฉพาะผู้อนุมัติเท่านั้นที่เห็นปุ่ม */}
-      {leaveDetail.status === "PENDING" && (
-        <div className="mt-4">
-          <button onClick={handleApprove} className="bg-green-500 text-white px-4 py-2 rounded mr-2">
-            อนุมัติ
-          </button>
-          <button onClick={handleReject} className="bg-red-500 text-white px-4 py-2 rounded">
-            ปฏิเสธ
-          </button>
+  return (
+    <div className="p-8 font-kanit bg-gray-100 min-h-screen">
+      <div className="max-w-3xl mx-auto bg-white rounded-xl shadow p-8">
+        <h1 className="text-2xl font-bold mb-6">รายละเอียดใบลา</h1>
+        <div className="space-y-4 text-black">
+          <p><strong>ประเภทการลา:</strong> {leaveData.leaveTypeName || "-"}</p>
+          <p><strong>วันเริ่มต้น:</strong> {leaveData.startDate || "-"}</p>
+          <p><strong>วันสิ้นสุด:</strong> {leaveData.endDate || "-"}</p>
+          <p><strong>สถานะ:</strong> {leaveData.status || "-"}</p>
+          <p><strong>หมายเหตุ:</strong> {leaveData.comment || "-"}</p>
         </div>
-      )}
+      </div>
     </div>
-  ) : (
-    <div className="text-center">กำลังอยู่ในขั้นตอนพัฒนา</div>
   );
 }
 
