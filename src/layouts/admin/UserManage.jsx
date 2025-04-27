@@ -93,7 +93,6 @@ function UserManage() {
                 <th className="px-6 py-3 text-left">อีเมล</th>
                 <th className="px-6 py-3 text-left">เบอร์โทร</th>
                 <th className="px-6 py-3 text-left">ประเภทบุคลากร</th>
-                <th className="px-6 py-3 text-left">คณะ</th>
                 <th className="px-6 py-3 text-left">แผนก</th>
                 <th className="px-6 py-3 text-center">การจัดการ</th>
               </tr>
@@ -109,7 +108,6 @@ function UserManage() {
                     <td className="px-6 py-3">{user.email}</td>
                     <td className="px-6 py-3">{user.phone}</td>
                     <td className="px-6 py-3">{user.personnelType?.name || "-"}</td>
-                    <td className="px-6 py-3">{user.organization?.name || "-"}</td>
                     <td className="px-6 py-3">{user.department?.name || "-"}</td>
                     <td className="px-6 py-3 text-center space-x-2">
                       <Link

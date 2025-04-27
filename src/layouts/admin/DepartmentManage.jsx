@@ -15,11 +15,28 @@ export default function DepartmentManage() {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const authHeader = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-  });
+  const authHeader = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(() => {
+        window.location.href = "/login";
+      });
+      throw new Error("No token");
+    }
+    return { headers: { Authorization: `Bearer ${token}` } };
+  };
 
-  // Load departments & organizations
+  const handleApiError = (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("token");
+      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(() => {
+        window.location.href = "/login";
+      });
+    } else {
+      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -30,7 +47,7 @@ export default function DepartmentManage() {
       setDepartments(deptRes.data.data);
       setOrganizations(orgRes.data.data);
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      handleApiError(err);
     } finally {
       setLoading(false);
     }
@@ -62,7 +79,7 @@ export default function DepartmentManage() {
       loadData();
       setCurrentPage(1);
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      handleApiError(err);
     }
   };
 
@@ -87,7 +104,7 @@ export default function DepartmentManage() {
       resetForm();
       loadData();
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      handleApiError(err);
     }
   };
 
@@ -104,16 +121,13 @@ export default function DepartmentManage() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await axios.delete(
-        `${BASE_URL}/admin/departments/${id}`,
-        authHeader()
-      );
+      await axios.delete(`${BASE_URL}/admin/departments/${id}`, authHeader());
       Swal.fire("ลบสำเร็จ!", "ข้อมูลแผนกถูกลบแล้ว", "success");
       const pageCount = Math.ceil(departments.length / PAGE_SIZE);
       if (currentPage > pageCount) setCurrentPage(pageCount);
       loadData();
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      handleApiError(err);
     }
   };
 
@@ -138,18 +152,12 @@ export default function DepartmentManage() {
           <div className="relative">
             <select
               value={editId ? editOrgId : newOrgId}
-              onChange={(e) =>
-                editId
-                  ? setEditOrgId(e.target.value)
-                  : setNewOrgId(e.target.value)
-              }
+              onChange={(e) => editId ? setEditOrgId(e.target.value) : setNewOrgId(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-8 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400 appearance-none"
             >
               <option value="">เลือกหน่วยงาน</option>
               {organizations.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name}
-                </option>
+                <option key={org.id} value={org.id}>{org.name}</option>
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -166,11 +174,7 @@ export default function DepartmentManage() {
           </div>
           <button
             onClick={editId ? handleUpdate : handleAdd}
-            className={`col-span-1 ${
-              editId
-                ? "bg-gray-700 hover:bg-gray-800"
-                : "bg-gray-600 hover:bg-gray-700"
-            } text-white px-4 py-2 rounded-lg transition-all`}
+            className={`col-span-1 ${editId ? "bg-gray-700 hover:bg-gray-800" : "bg-gray-600 hover:bg-gray-700"} text-white px-4 py-2 rounded-lg transition-all`}
           >
             {editId ? "อัปเดต" : "เพิ่ม"}
           </button>
@@ -190,9 +194,7 @@ export default function DepartmentManage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="text-center py-6 text-gray-500">
-                    กำลังโหลด...
-                  </td>
+                  <td colSpan="4" className="text-center py-6 text-gray-500">กำลังโหลด...</td>
                 </tr>
               ) : displayed.length > 0 ? (
                 displayed.map((d, idx) => (
@@ -201,26 +203,14 @@ export default function DepartmentManage() {
                     <td className="px-4 py-2">{d.name}</td>
                     <td className="px-4 py-2">{d.organization?.name || '-'}</td>
                     <td className="px-4 py-2 text-center space-x-2">
-                      <button
-                        onClick={() => handleEdit(d.id)}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm"
-                      >
-                        แก้ไข
-                      </button>
-                      <button
-                        onClick={() => handleDelete(d.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
-                      >
-                        ลบ
-                      </button>
+                      <button onClick={() => handleEdit(d.id)} className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm">แก้ไข</button>
+                      <button onClick={() => handleDelete(d.id)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm">ลบ</button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="text-center py-6 text-black">
-                    ยังไม่มีข้อมูลแผนก
-                  </td>
+                  <td colSpan="4" className="text-center py-6 text-black">ยังไม่มีข้อมูลแผนก</td>
                 </tr>
               )}
             </tbody>
@@ -230,23 +220,9 @@ export default function DepartmentManage() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-4">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50"
-            >
-              ก่อนหน้า
-            </button>
-            <span className="px-3 py-1 text-black">
-              หน้า {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50"
-            >
-              ถัดไป
-            </button>
+            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50">ก่อนหน้า</button>
+            <span className="px-3 py-1 text-black">หน้า {currentPage} / {totalPages}</span>
+            <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50">ถัดไป</button>
           </div>
         )}
       </div>

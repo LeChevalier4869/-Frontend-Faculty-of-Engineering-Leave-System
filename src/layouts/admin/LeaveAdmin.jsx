@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import getApiUrl from "../../utils/apiUtils";
 import { useNavigate } from "react-router-dom";
+import { apiEndpoints } from "../../utils/api";
 
 function LeaveAdmin() {
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -13,6 +14,40 @@ function LeaveAdmin() {
     1: "ลาป่วย",
     2: "ลากิจส่วนตัว",
     3: "ลาพักผ่อน",
+  };
+  const handleApprove = async (leaveRequestId) => {
+    const { value: formValues } = await Swal.fire({
+      title: 'อนุมัติคำขอ',
+      html: (
+        `<label for="remarks">เหตุผล:</label>` +
+        `<textarea id="remarks" class="swal2-textarea" placeholder="ระบุเหตุผลการอนุมัติ"></textarea>` +
+        `<label for="comment">ความคิดเห็น:</label>` +
+        `<textarea id="comment" class="swal2-textarea" placeholder="ความคิดเห็นเพิ่มเติม"></textarea>`
+      ),
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'อนุมัติ',
+      cancelButtonText: 'ยกเลิก',
+      preConfirm: () => {
+        const remarks = document.getElementById('remarks').value.trim();
+        const comment = document.getElementById('comment').value.trim();
+        if (!remarks || !comment) {
+          Swal.showValidationMessage('กรุณากรอกเหตุผลและความคิดเห็นให้ครบถ้วน');
+          return;
+        }
+        return { remarks, comment };
+      }
+    });
+  
+    if (formValues) {
+      try {
+        await axios.post(apiEndpoints.ApproveleaveRequests(leaveRequestId), formValues);
+        Swal.fire('สำเร็จ', 'อนุมัติคำขอเรียบร้อยแล้ว', 'success');
+      } catch (error) {
+        const message = error.response?.data?.message || 'เกิดข้อผิดพลาดในการอนุมัติ';
+        Swal.fire('ผิดพลาด', message, 'error');
+      }
+    }
   };
 
   useEffect(() => {
@@ -58,6 +93,7 @@ function LeaveAdmin() {
               <th className="px-4 py-2 border border-gray-200">วันที่เริ่ม</th>
               <th className="px-4 py-2 border border-gray-200">วันที่สิ้นสุด</th>
               <th className="px-4 py-2 border border-gray-200">สถานะ</th>
+              <th className="px-4 py-2 border border-gray-200">การดำเนินการ</th>
             </tr>
           </thead>
           <tbody>
@@ -84,6 +120,20 @@ function LeaveAdmin() {
                   <td className="px-4 py-2 border border-gray-200 text-center font-semibold">
                     {item.status}
                   </td>
+                  <td className="px-6 py-3 text-center space-x-2">
+                  <button
+                        onClick={() => handleApprove(item.id)}
+                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        อนุมัติ
+                      </button>
+                      <button
+                        onClick={() => handleReject(item.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        ลบ
+                      </button>
+                    </td>
                 </tr>
               ))
             ) : (

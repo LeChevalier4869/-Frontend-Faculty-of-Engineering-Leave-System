@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
+import { Plus } from "lucide-react";
+import LeaveRequestModal from "./LeaveRequestModal";
 
 function Leave2() {
   const navigate = useNavigate();
   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [loading, setLoading] = useState(true); // ✅ เพิ่ม loading
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setModalOpen] = useState(false);
 
   const leaveTypes = {
     1: "ลาป่วย",
@@ -17,60 +18,29 @@ function Leave2() {
     3: "ลาพักผ่อน",
   };
 
+  const fetchLeaveRequests = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await axios.get(getApiUrl("leave-requests/landing"), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setLeaveRequest(Array.isArray(res.data.data) ? res.data.data : []);
+    } catch (error) {
+      console.error("Error fetching leave requests:", error);
+      setLeaveRequest([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const tryFetch = () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        // ยังไม่มี token → ลองใหม่ในอีก 500ms
-        setTimeout(tryFetch, 500);
-        return;
-      }
-  
-      // ถ้ามี token แล้ว → ดึงข้อมูลได้เลย
-      const fetchLeaveRequests = async () => {
-        try {
-          const res = await axios.get(getApiUrl("leave-requests/landing"), {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setLeaveRequest(Array.isArray(res.data.data) ? res.data.data : []);
-        } catch (error) {
-          console.error("Error fetching leave requests:", error);
-          setLeaveRequest([]);
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      fetchLeaveRequests();
-    };
-  
-    tryFetch();
-  }, [setLeaveRequest]);
-  
+    fetchLeaveRequests();
+  }, []);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = leaveRequest.slice(indexOfFirstItem, indexOfLastItem);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1);
-  };
-
-  const handleDelete = (id) => {
-    console.log("TODO: ยกเลิกคำขอลา id:", id);
-    // ✅ เพิ่มลบจริงได้ภายหลัง
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("th-TH");
   };
 
   if (loading) {
@@ -82,98 +52,118 @@ function Leave2() {
   }
 
   return (
-    <div className="min-h-screen bg-white px-4 py-10 font-kanit text-black">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-8">รายการการลา</h2>
+    <div className="min-h-screen bg-gray-100 p-8 font-kanit">
+      {/* กล่องขาวตรงกลาง */}
+      <div className="max-w-7xl mx-auto bg-white text-black rounded-2xl shadow p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-4">รายการการลา</h1>
 
-        <div className="bg-gray-50 rounded-2xl shadow p-6 sm:p-8">
-          <div className="mb-4 flex justify-end">
-            <label className="mr-2">แสดงผลต่อหน้า:</label>
-            <select
-              value={itemsPerPage}
-              onChange={handleItemsPerPageChange}
-              className="border border-gray-300 rounded px-2 py-1 bg-white text-black"
+          <div className="flex flex-wrap gap-3">
+            <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-lg text-sm">
+              Filter
+            </button>
+            <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-lg text-sm">
+              Group By
+            </button>
+            <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-lg text-sm">
+              Actions
+            </button>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm"
             >
-              {[5, 10, 20, 50].map((num) => (
-                <option key={num} value={num}>{num}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300 text-sm sm:text-base text-black">
-              <thead className="bg-gray-100">
-                <tr>
-                  {["วันที่", "ประเภทการลา", "วันที่เริ่ม", "วันที่สิ้นสุด", "สถานะ", "การดำเนินการ"].map((header, idx) => (
-                    <th key={idx} className="border border-gray-300 px-4 py-2 text-left">{header}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.length > 0 ? (
-                  currentItems.map((leave) => (
-                    <tr
-                      key={leave.id}
-                      className="hover:bg-gray-100 cursor-pointer"
-                      onClick={() => navigate(`/leave/${leave.id}`)}
-                    >
-                      <td className="border border-gray-300 px-4 py-2">{formatDate(leave.createdAt)}</td>
-                      <td className="border border-gray-300 px-4 py-2">{leaveTypes[leave.leaveTypeId] || "ไม่ระบุ"}</td>
-                      <td className="border border-gray-300 px-4 py-2">{formatDate(leave.startDate)}</td>
-                      <td className="border border-gray-300 px-4 py-2">{formatDate(leave.endDate)}</td>
-                      <td className={`border border-gray-300 px-4 py-2 font-bold text-center ${
-                        leave.status === "APPROVED"
-                          ? "text-green-600"
-                          : leave.status === "PENDING"
-                          ? "text-yellow-600"
-                          : leave.status === "REJECTED"
-                          ? "text-red-600"
-                          : "text-gray-600"
-                      }`}>
-                        {leave.status}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(leave.id);
-                          }}
-                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded transition"
-                        >
-                          ยกเลิก
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="text-center py-4 text-gray-500">
-                      ไม่มีข้อมูลการลา
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex justify-center mt-6 gap-2">
-            {leaveRequest.length > 0 &&
-              Array.from({ length: Math.ceil(leaveRequest.length / itemsPerPage) }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  className={`px-4 py-2 rounded ${
-                    currentPage === i + 1
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 hover:bg-gray-300 text-black"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              + ยื่นลา
+            </button>
           </div>
         </div>
+
+        {/* Status Legend */}
+        <div className="flex gap-6 items-center mb-6 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+            <span>Requested</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span>Approved</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+            <span>Cancelled</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span>Rejected</span>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto rounded-lg">
+          <table className="min-w-full table-auto text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                {["วันที่ยื่น", "ประเภทการลา", "วันเริ่มต้น", "วันสิ้นสุด", "สถานะ"].map((header, idx) => (
+                  <th key={idx} className="p-3 text-left font-semibold whitespace-nowrap">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {leaveRequest.length > 0 ? (
+                leaveRequest.map((leave) => (
+                  <tr
+                    key={leave.id}
+                    className="border-t hover:bg-gray-100 cursor-pointer"
+                    onClick={() => navigate(`/leave/${leave.id}`)}
+                  >
+                    <td className="p-3">{formatDate(leave.createdAt)}</td>
+                    <td className="p-3">{leaveTypes[leave.leaveTypeId] || "-"}</td>
+                    <td className="p-3">{formatDate(leave.startDate)}</td>
+                    <td className="p-3">{formatDate(leave.endDate)}</td>
+                    <td className="p-3 text-center">
+                      <div
+                        className={`inline-block px-2 py-1 rounded-full text-xs font-semibold
+                          ${leave.status === "APPROVED" ? "bg-green-100 text-green-700"
+                          : leave.status === "PENDING" ? "bg-yellow-100 text-yellow-700"
+                          : leave.status === "REJECTED" ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700"}`}
+                      >
+                        {leave.status}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="p-8 text-center text-gray-400">
+                    ไม่มีข้อมูลการลา
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Floating Create Button */}
+      <button
+        onClick={() => setModalOpen(true)}
+        className="fixed bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full shadow-lg transition"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
+
+      {/* Modal */}
+      <LeaveRequestModal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={() => {
+          setModalOpen(false);
+          fetchLeaveRequests();
+        }}
+      />
     </div>
   );
 }

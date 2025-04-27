@@ -56,7 +56,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
     <div className="flex flex-col">
       <button
         onClick={() => toggleDropdown(title)}
-        className="flex items-center justify-between px-4 py-2 hover:bg-gray-700 font-kanit"
+        className="flex items-center justify-between px-4 py-2 hover:bg-gray-700 font-kanit w-full"
       >
         <div className="flex items-center gap-3">
           {menu[0]?.icon}
@@ -97,7 +97,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
         <span className="text-2xl font-bold truncate">
-          {!isMini && "ระบบลาคณะวิศวกรรมศาสตร์"}
+          {!isMini && "เมนูหลัก"}
         </span>
         <button
           onClick={toggleMiniSidebar}
@@ -115,7 +115,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
 
       {/* Menu */}
       <nav className="flex flex-col gap-2 p-4">
-        {/* USER MENU */}
+        {/* USER */}
         {user?.role.includes("USER") &&
           userNav.map((item, idx) => (
             <Link
@@ -128,7 +128,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
             </Link>
           ))}
 
-        {/* APPROVER MENUS */}
+        {/* APPROVER */}
         {user?.role.includes("APPROVER_1") && renderDropdown("เมนูหัวหน้าสาขา", approverNav1)}
         {user?.role.includes("VERIFIER") && renderDropdown("เมนูผู้ตรวจสอบ", verifierNav)}
         {user?.role.includes("RECEIVER") && renderDropdown("เมนูผู้รับหนังสือ", receiverNav)}
@@ -136,7 +136,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
         {user?.role.includes("APPROVER_3") && renderDropdown("เมนูผู้อนุมัติ3", approverNav3)}
         {user?.role.includes("APPROVER_4") && renderDropdown("เมนูผู้อนุมัติ4", approverNav4)}
 
-        {/* ADMIN MENU */}
+        {/* ADMIN */}
         {user?.role.includes("ADMIN") && renderDropdown("เมนูผู้ดูแล", adminNav)}
       </nav>
     </aside>

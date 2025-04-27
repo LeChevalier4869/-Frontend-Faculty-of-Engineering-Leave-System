@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
+import getApiUrl from "../../utils/apiUtils";
 import Swal from "sweetalert2";
-import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+import { CalendarDaysIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
-function AddLeave2() {
-  const navigate = useNavigate();
+function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     leaveTypeId: "",
     startDate: "",
@@ -14,7 +12,6 @@ function AddLeave2() {
     reason: "",
     isEmergency: "0",
     images: null,
-    additionalDetails: "",
   });
 
   const inputStyle =
@@ -66,8 +63,8 @@ function AddLeave2() {
         title: "บันทึกคำขอลาสำเร็จ",
         text: "ระบบได้บันทึกข้อมูลของคุณแล้ว",
         confirmButtonColor: "#3b82f6",
-        confirmButtonText: "ตกลง",
-      }).then(() => navigate("/leave"));
+      });
+      onSuccess();
     } catch (err) {
       console.error("❌ Submit Error:", err.response || err.message || err);
       Swal.fire({
@@ -79,72 +76,65 @@ function AddLeave2() {
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="min-h-screen bg-white px-4 py-10 font-kanit text-black">
-      <div className="max-w-3xl mx-auto bg-gray-50 p-8 rounded-2xl shadow">
-        <h2 className="text-2xl font-bold mb-6 text-center">แบบฟอร์มคำร้องขอการลา</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-2xl relative font-kanit">
+        {/* ปุ่มปิด */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+        >
+          <XMarkIcon className="w-6 h-6" />
+        </button>
+
+        <h2 className="text-2xl font-bold mb-6 text-center">ยื่นคำร้องการลา</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* ประเภทการลา */}
           <div>
             <label className="block text-sm font-medium mb-1">ประเภทการลา</label>
-            <div className="relative">
-              <select
-                name="leaveTypeId"
-                value={formData.leaveTypeId}
-                onChange={handleChange}
-                required
-                className={`${inputStyle} appearance-none pr-10 cursor-pointer`}
-              >
-                <option value="">เลือกประเภทการลา</option>
-                <option value="1">ลาป่วย</option>
-                <option value="2">ลากิจส่วนตัว</option>
-                <option value="3">ลาพักผ่อน</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M7 7l3-3 3 3m0 6l-3 3-3-3" />
-                </svg>
-              </div>
-            </div>
+            <select
+              name="leaveTypeId"
+              value={formData.leaveTypeId}
+              onChange={handleChange}
+              required
+              className={`${inputStyle} appearance-none pr-10 cursor-pointer`}
+            >
+              <option value="">เลือกประเภทการลา</option>
+              <option value="1">ลาป่วย</option>
+              <option value="2">ลากิจส่วนตัว</option>
+              <option value="3">ลาพักผ่อน</option>
+            </select>
           </div>
 
           {/* วันที่เริ่มต้น */}
           <div>
             <label htmlFor="startDate" className="block text-sm font-medium mb-1">วันที่เริ่มต้น</label>
-            <div className="relative w-full">
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={formData.startDate || ""}
-                onChange={handleChange}
-                required
-                className={`${inputStyle} appearance-none pr-12 cursor-pointer`}
-              />
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <CalendarDaysIcon className="w-5 h-5 text-black" />
-              </div>
-            </div>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={formData.startDate}
+              onChange={handleChange}
+              required
+              className={inputStyle}
+            />
           </div>
 
           {/* วันที่สิ้นสุด */}
           <div>
             <label htmlFor="endDate" className="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
-            <div className="relative w-full">
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={formData.endDate || ""}
-                onChange={handleChange}
-                required
-                className={`${inputStyle} appearance-none pr-12 cursor-pointer`}
-              />
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <CalendarDaysIcon className="w-5 h-5 text-black" />
-              </div>
-            </div>
+            <input
+              type="date"
+              id="endDate"
+              name="endDate"
+              value={formData.endDate}
+              onChange={handleChange}
+              required
+              className={inputStyle}
+            />
           </div>
 
           {/* เหตุผลการลา */}
@@ -174,35 +164,11 @@ function AddLeave2() {
             </div>
           )}
 
-          {/* การลาเร่งด่วน */}
-          {/*}
-          <div>
-            <label className="block text-sm font-medium mb-1">การลาเร่งด่วน</label>
-            <div className="relative">
-              <select
-                name="isEmergency"
-                value={formData.isEmergency}
-                onChange={handleChange}
-                required
-                className={`${inputStyle} appearance-none pr-10 cursor-pointer`}
-              >
-                <option value="0">ไม่เร่งด่วน</option>
-                <option value="1">เร่งด่วน</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M7 7l3-3 3 3m0 6l-3 3-3-3" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          {*/}
-
           {/* ปุ่ม */}
           <div className="flex justify-end gap-4">
             <button
               type="button"
-              onClick={() => navigate("/leave")}
+              onClick={onClose}
               className="px-6 py-2 rounded-lg bg-gray-200 text-black hover:bg-gray-300"
             >
               ยกเลิก
@@ -220,4 +186,4 @@ function AddLeave2() {
   );
 }
 
-export default AddLeave2;
+export default LeaveRequestModal;
