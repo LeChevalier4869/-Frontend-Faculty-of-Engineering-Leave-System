@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiEndpoints } from "../../utils/api";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
-import Swal from "sweetalert2"; // ✅ เพิ่ม SweetAlert2
+import Swal from "sweetalert2";
+import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 
 function AddLeave2() {
   const navigate = useNavigate();
@@ -17,31 +17,32 @@ function AddLeave2() {
     additionalDetails: "",
   });
 
-  const endpoint = "leave-requests/";
-  const url = getApiUrl(endpoint);
+  const inputStyle =
+    "w-full bg-white text-black border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, images: e.target.files[0] });
+    setFormData((prev) => ({ ...prev, images: e.target.files[0] }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        Swal.fire({
-          icon: "warning",
-          title: "กรุณาเข้าสู่ระบบก่อน",
-          confirmButtonColor: "#ef4444",
-        });
-        return;
-      }
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire({
+        icon: "warning",
+        title: "กรุณาเข้าสู่ระบบก่อน",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
+    }
+
+    try {
       const formDataToSend = new FormData();
       formDataToSend.append("leaveTypeId", formData.leaveTypeId);
       formDataToSend.append("startDate", formData.startDate);
@@ -53,7 +54,7 @@ function AddLeave2() {
         formDataToSend.append("images", formData.images);
       }
 
-      await axios.post(url, formDataToSend, {
+      await axios.post(getApiUrl("leave-requests/"), formDataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -74,7 +75,6 @@ function AddLeave2() {
         title: "เกิดข้อผิดพลาด",
         text: err.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้",
         confirmButtonColor: "#ef4444",
-        confirmButtonText: "ลองอีกครั้ง",
       });
     }
   };
@@ -94,7 +94,7 @@ function AddLeave2() {
                 value={formData.leaveTypeId}
                 onChange={handleChange}
                 required
-                className="w-full appearance-none border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`${inputStyle} appearance-none pr-10 cursor-pointer`}
               >
                 <option value="">เลือกประเภทการลา</option>
                 <option value="1">ลาป่วย</option>
@@ -102,8 +102,8 @@ function AddLeave2() {
                 <option value="3">ลาพักผ่อน</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M7 7l3-3 3 3m0 6l-3 3-3-3" />
                 </svg>
               </div>
             </div>
@@ -111,28 +111,40 @@ function AddLeave2() {
 
           {/* วันที่เริ่มต้น */}
           <div>
-            <label className="block text-sm font-medium mb-1">วันที่เริ่มต้น</label>
-            <input
-              type="date"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleChange}
-              required
-              className="w-full border border-black rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+            <label htmlFor="startDate" className="block text-sm font-medium mb-1">วันที่เริ่มต้น</label>
+            <div className="relative w-full">
+              <input
+                type="date"
+                id="startDate"
+                name="startDate"
+                value={formData.startDate || ""}
+                onChange={handleChange}
+                required
+                className={`${inputStyle} appearance-none pr-12 cursor-pointer`}
+              />
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                <CalendarDaysIcon className="w-5 h-5 text-black" />
+              </div>
+            </div>
           </div>
 
           {/* วันที่สิ้นสุด */}
           <div>
-            <label className="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
-            <input
-              type="date"
-              name="endDate"
-              value={formData.endDate}
-              onChange={handleChange}
-              required
-              className="w-full border border-black rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+            <label htmlFor="endDate" className="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
+            <div className="relative w-full">
+              <input
+                type="date"
+                id="endDate"
+                name="endDate"
+                value={formData.endDate || ""}
+                onChange={handleChange}
+                required
+                className={`${inputStyle} appearance-none pr-12 cursor-pointer`}
+              />
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                <CalendarDaysIcon className="w-5 h-5 text-black" />
+              </div>
+            </div>
           </div>
 
           {/* เหตุผลการลา */}
@@ -144,7 +156,7 @@ function AddLeave2() {
               onChange={handleChange}
               rows="3"
               required
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className={inputStyle}
             />
           </div>
 
@@ -156,8 +168,8 @@ function AddLeave2() {
                 type="file"
                 name="images"
                 onChange={handleFileChange}
-                accept=".jpg,.png,.pdf"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+                accept=".jpg,.jpeg,.png,.pdf"
+                className={inputStyle}
               />
             </div>
           )}
@@ -171,14 +183,14 @@ function AddLeave2() {
                 value={formData.isEmergency}
                 onChange={handleChange}
                 required
-                className="w-full appearance-none border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`${inputStyle} appearance-none pr-10 cursor-pointer`}
               >
                 <option value="0">ไม่เร่งด่วน</option>
                 <option value="1">เร่งด่วน</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M7 7l3-3 3 3m0 6l-3 3-3-3" />
                 </svg>
               </div>
             </div>
@@ -189,13 +201,13 @@ function AddLeave2() {
             <button
               type="button"
               onClick={() => navigate("/leave")}
-              className="px-6 py-2 rounded-lg bg-gray-200 text-black hover:bg-gray-300 transition"
+              className="px-6 py-2 rounded-lg bg-gray-200 text-black hover:bg-gray-300"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
+              className="px-6 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
             >
               บันทึก
             </button>

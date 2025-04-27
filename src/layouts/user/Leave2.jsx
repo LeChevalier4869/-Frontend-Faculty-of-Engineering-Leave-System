@@ -6,9 +6,10 @@ import axios from "axios";
 
 function Leave2() {
   const navigate = useNavigate();
-  const { leaveRequest, setLeaveRequest } = useLeaveRequest();
+  const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [loading, setLoading] = useState(true); // ✅ เพิ่ม loading
 
   const leaveTypes = {
     1: "ลาป่วย",
@@ -16,25 +17,37 @@ function Leave2() {
     3: "ลาพักผ่อน",
   };
 
-
   useEffect(() => {
-    const cached = localStorage.getItem("leaveRequest");
-    if (cached) {
-      setLeaveRequest(JSON.parse(cached));
-    } else {
+    const tryFetch = () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // ยังไม่มี token → ลองใหม่ในอีก 500ms
+        setTimeout(tryFetch, 500);
+        return;
+      }
+  
+      // ถ้ามี token แล้ว → ดึงข้อมูลได้เลย
       const fetchLeaveRequests = async () => {
-        const res = await axios.get(getApiUrl("leave-requests/landing"), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setLeaveRequest(res.data.data);
-        localStorage.setItem("leaveRequest", JSON.stringify(res.data.data));
+        try {
+          const res = await axios.get(getApiUrl("leave-requests/landing"), {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setLeaveRequest(Array.isArray(res.data.data) ? res.data.data : []);
+        } catch (error) {
+          console.error("Error fetching leave requests:", error);
+          setLeaveRequest([]);
+        } finally {
+          setLoading(false);
+        }
       };
+  
       fetchLeaveRequests();
-    }
-  }, []);
+    };
   
+    tryFetch();
+  }, [setLeaveRequest]);
   
-  
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("th-TH", {
@@ -55,6 +68,19 @@ function Leave2() {
     setCurrentPage(1);
   };
 
+  const handleDelete = (id) => {
+    console.log("TODO: ยกเลิกคำขอลา id:", id);
+    // ✅ เพิ่มลบจริงได้ภายหลัง
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
+        กำลังโหลดข้อมูลการลา...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white px-4 py-10 font-kanit text-black">
       <div className="max-w-6xl mx-auto">
@@ -66,7 +92,7 @@ function Leave2() {
             <select
               value={itemsPerPage}
               onChange={handleItemsPerPageChange}
-              className="border border-gray-300 rounded px-2 py-1 text-white bg-gray-700"
+              className="border border-gray-300 rounded px-2 py-1 bg-white text-black"
             >
               {[5, 10, 20, 50].map((num) => (
                 <option key={num} value={num}>{num}</option>
@@ -84,7 +110,7 @@ function Leave2() {
                 </tr>
               </thead>
               <tbody>
-                {Array.isArray(currentItems) && currentItems.length > 0 ? (
+                {currentItems.length > 0 ? (
                   currentItems.map((leave) => (
                     <tr
                       key={leave.id}
@@ -95,16 +121,15 @@ function Leave2() {
                       <td className="border border-gray-300 px-4 py-2">{leaveTypes[leave.leaveTypeId] || "ไม่ระบุ"}</td>
                       <td className="border border-gray-300 px-4 py-2">{formatDate(leave.startDate)}</td>
                       <td className="border border-gray-300 px-4 py-2">{formatDate(leave.endDate)}</td>
-                      <td
-                        className={`border border-gray-300 px-4 py-2 font-bold text-center ${leave.status === "APPROVED"
-                            ? "text-green-600"
-                            : leave.status === "PENDING"
-                              ? "text-yellow-600"
-                              : leave.status === "REJECTED"
-                                ? "text-red-600"
-                                : "text-gray-600"
-                          }`}
-                      >
+                      <td className={`border border-gray-300 px-4 py-2 font-bold text-center ${
+                        leave.status === "APPROVED"
+                          ? "text-green-600"
+                          : leave.status === "PENDING"
+                          ? "text-yellow-600"
+                          : leave.status === "REJECTED"
+                          ? "text-red-600"
+                          : "text-gray-600"
+                      }`}>
                         {leave.status}
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-center">
@@ -132,16 +157,20 @@ function Leave2() {
           </div>
 
           <div className="flex justify-center mt-6 gap-2">
-            {Array.from({ length: Math.ceil(leaveRequest.length / itemsPerPage) }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => paginate(i + 1)}
-                className={`px-4 py-2 rounded ${currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300 text-black"
+            {leaveRequest.length > 0 &&
+              Array.from({ length: Math.ceil(leaveRequest.length / itemsPerPage) }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => paginate(i + 1)}
+                  className={`px-4 py-2 rounded ${
+                    currentPage === i + 1
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 hover:bg-gray-300 text-black"
                   }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+                >
+                  {i + 1}
+                </button>
+              ))}
           </div>
         </div>
       </div>
