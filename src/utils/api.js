@@ -1,6 +1,6 @@
 import axios from "axios";
 //const BASE_URL = "http://localhost:8000";
-const BASE_URL = "https://backend-faculty-of-engineering-leave.onrender.com";
+export const BASE_URL = "https://backend-faculty-of-engineering-leave.onrender.com";
 
 export const apiEndpoints = {
   // auth
