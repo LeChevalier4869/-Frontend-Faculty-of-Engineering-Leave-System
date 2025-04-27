@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { BASE_URL } from "../../utils/api";
 
-const BASE_URL = "http://localhost:8000";
 const PAGE_SIZE = 8;
 
 export default function DepartmentManage() {
