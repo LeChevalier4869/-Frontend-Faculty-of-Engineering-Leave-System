@@ -48,7 +48,7 @@ function Leave2() {
     }
 
     try {
-      const res = await axios.get(getApiUrl("leave-requests/landing"), {
+      const res = await axios.get(getApiUrl("/leave-requests/me"), {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("✅ API Response:", res.data);
