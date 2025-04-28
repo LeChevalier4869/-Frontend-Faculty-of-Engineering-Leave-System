@@ -18,7 +18,8 @@
 - [ ] Task x: user อาจจะทราบขั้นตอนการอนุมัติไปถึงไหนแล้ว
 
 ## Low Priority
-- [ ] Task alpha: ต้องดูสถิติ
+- [ ] Task beta: ต้องดูสถิติ
+- [ ] Task grammar: เมื่อ register เสร็จ ควรยืนยันด้วย
 
 ## Test & Complete
 - [x] Task 0: หน้า register อะไรที่ควรเป็นตัวเลือกก็ควรจะเป็นอย่างนั้น
