@@ -8,10 +8,13 @@ const PAGE_SIZE = 8;
 export default function DepartmentManage() {
   const [departments, setDepartments] = useState([]);
   const [organizations, setOrganizations] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [newName, setNewName] = useState("");
   const [newOrgId, setNewOrgId] = useState("");
+  const [newHeadId, setNewHeadId] = useState("");
   const [editId, setEditId] = useState(null);
   const [editOrgId, setEditOrgId] = useState(null);
+  const [editHeadId, setEditHeadId] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -41,7 +44,7 @@ export default function DepartmentManage() {
     setLoading(true);
     try {
       const [deptRes, orgRes] = await Promise.all([
-        axios.get(`${BASE_URL}/admin/departments`, authHeader()),
+        axios.get(`${BASE_URL}/admin/departmentsList`, authHeader()),
         axios.get(`${BASE_URL}/admin/organizations`, authHeader()),
       ]);
       setDepartments(deptRes.data.data);
@@ -53,6 +56,19 @@ export default function DepartmentManage() {
     }
   };
 
+  const loadUsersByOrganizationId = async (organizationId) => {
+    if (!organizationId) {
+      setFilteredUsers([]);
+      return;
+    }
+    try {
+      const res = await axios.get(`${BASE_URL}/admin/users?organizationId=${organizationId}`, authHeader());
+      setFilteredUsers(res.data.data || []);
+    } catch (err) {
+      handleApiError(err);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -60,8 +76,11 @@ export default function DepartmentManage() {
   const resetForm = () => {
     setNewName("");
     setNewOrgId("");
+    setNewHeadId("");
     setEditId(null);
     setEditOrgId(null);
+    setEditHeadId("");
+    setFilteredUsers([]);
   };
 
   const handleAdd = async () => {
@@ -71,7 +90,11 @@ export default function DepartmentManage() {
     try {
       await axios.post(
         `${BASE_URL}/admin/departments`,
-        { name: newName, organizationId: +newOrgId },
+        {
+          name: newName,
+          organizationId: +newOrgId,
+          headId: newHeadId ? +newHeadId : null,
+        },
         authHeader()
       );
       Swal.fire("บันทึกสำเร็จ!", "", "success");
@@ -88,6 +111,8 @@ export default function DepartmentManage() {
     setNewName(dept.name);
     setEditId(dept.id);
     setEditOrgId(dept.organizationId);
+    setEditHeadId(dept.headId || "");
+    loadUsersByOrganizationId(dept.organizationId); // 🔥 โหลด Users ของหน่วยงานที่จะแก้ไข
   };
 
   const handleUpdate = async () => {
@@ -97,7 +122,11 @@ export default function DepartmentManage() {
     try {
       await axios.put(
         `${BASE_URL}/admin/departments/${editId}`,
-        { name: newName, organizationId: +editOrgId },
+        {
+          name: newName,
+          organizationId: +editOrgId,
+          headId: editHeadId ? +editHeadId : null,
+        },
         authHeader()
       );
       Swal.fire("อัปเดตสำเร็จ!", "", "success");
@@ -137,11 +166,12 @@ export default function DepartmentManage() {
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center text-black">จัดการแผนก</h1>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">จัดการแผนก</h1>
 
         {/* Form */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+          {/* ชื่อแผนก */}
           <input
             type="text"
             placeholder="กรอกชื่อแผนก"
@@ -149,10 +179,21 @@ export default function DepartmentManage() {
             onChange={(e) => setNewName(e.target.value)}
             className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
           />
+
+          {/* เลือกหน่วยงาน */}
           <div className="relative">
             <select
               value={editId ? editOrgId : newOrgId}
-              onChange={(e) => editId ? setEditOrgId(e.target.value) : setNewOrgId(e.target.value)}
+              onChange={(e) => {
+                const selectedOrgId = e.target.value;
+                if (editId) {
+                  setEditOrgId(selectedOrgId);
+                  loadUsersByOrganizationId(selectedOrgId);
+                } else {
+                  setNewOrgId(selectedOrgId);
+                  loadUsersByOrganizationId(selectedOrgId);
+                }
+              }}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-8 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400 appearance-none"
             >
               <option value="">เลือกหน่วยงาน</option>
@@ -161,17 +202,34 @@ export default function DepartmentManage() {
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <svg
-                className="h-4 w-4 text-black"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+              <svg className="h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
           </div>
+
+          {/* เลือกหัวหน้าแผนก */}
+          <div className="relative">
+            <select
+              value={editId ? editHeadId : newHeadId}
+              onChange={(e) => editId ? setEditHeadId(e.target.value) : setNewHeadId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-8 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400 appearance-none"
+            >
+              <option value="">เลือกหัวหน้าแผนก (ไม่ระบุก็ได้)</option>
+              {filteredUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.fullName || user.email}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+              <svg className="h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+
+          {/* ปุ่มเพิ่ม/อัปเดต */}
           <button
             onClick={editId ? handleUpdate : handleAdd}
             className={`col-span-1 ${editId ? "bg-gray-700 hover:bg-gray-800" : "bg-gray-600 hover:bg-gray-700"} text-white px-4 py-2 rounded-lg transition-all`}
@@ -188,13 +246,14 @@ export default function DepartmentManage() {
                 <th className="px-4 py-3">#</th>
                 <th className="px-4 py-3">ชื่อแผนก</th>
                 <th className="px-4 py-3">หน่วยงาน</th>
+                <th className="px-4 py-3">หัวหน้าแผนก</th>
                 <th className="px-4 py-3 text-center">การจัดการ</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="text-center py-6 text-gray-500">กำลังโหลด...</td>
+                  <td colSpan="5" className="text-center py-6 text-gray-500">กำลังโหลด...</td>
                 </tr>
               ) : displayed.length > 0 ? (
                 displayed.map((d, idx) => (
@@ -202,6 +261,11 @@ export default function DepartmentManage() {
                     <td className="px-4 py-2">{d.id}</td>
                     <td className="px-4 py-2">{d.name}</td>
                     <td className="px-4 py-2">{d.organization?.name || '-'}</td>
+                    <td className="px-4 py-2">
+                      {d.head
+                        ? `${d.head.firstName} ${d.head.lastName}`
+                        : '-'}
+                    </td>
                     <td className="px-4 py-2 text-center space-x-2">
                       <button onClick={() => handleEdit(d.id)} className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm">แก้ไข</button>
                       <button onClick={() => handleDelete(d.id)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm">ลบ</button>
@@ -210,7 +274,7 @@ export default function DepartmentManage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="text-center py-6 text-black">ยังไม่มีข้อมูลแผนก</td>
+                  <td colSpan="5" className="text-center py-6 text-black">ยังไม่มีข้อมูลแผนก</td>
                 </tr>
               )}
             </tbody>
@@ -220,9 +284,13 @@ export default function DepartmentManage() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-4">
-            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50">ก่อนหน้า</button>
+            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50">
+              ก่อนหน้า
+            </button>
             <span className="px-3 py-1 text-black">หน้า {currentPage} / {totalPages}</span>
-            <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50">ถัดไป</button>
+            <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50">
+              ถัดไป
+            </button>
           </div>
         )}
       </div>

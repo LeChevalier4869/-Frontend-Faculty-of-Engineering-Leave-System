@@ -1,14 +1,25 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore"; 
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 dayjs.extend(isSameOrBefore);
+
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { th } from "date-fns/locale";
 
 import getApiUrl from "../../utils/apiUtils";
 import Swal from "sweetalert2";
-import { CalendarDaysIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 const holidays = ["2025-04-25", "2025-05-01"];
+
+// 🆕 Map ประเภทการลา
+const leaveTypeMap = {
+  1: "ลาป่วย",
+  2: "ลากิจส่วนตัว",
+  3: "ลาพักผ่อน",
+};
 
 function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -27,12 +38,10 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
 
   useEffect(() => {
     if (!isOpen) return;
-
     const fetchLeaveBalances = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-
         const res = await axios.get(getApiUrl("leave-balances/me"), {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -43,14 +52,12 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         console.error("Error fetching leave balances:", error);
       }
     };
-
     fetchLeaveBalances();
   }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-
     if (name === "leaveTypeId") {
       const selected = leaveBalances.find((b) => String(b.leaveTypeId) === value);
       setSelectedLeaveBalance(selected || null);
@@ -61,32 +68,25 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     setFormData((prev) => ({ ...prev, images: e.target.files[0] || null }));
   };
 
-  const calculateWorkingDays = (start, end, holidays) => {
+  const calculateWorkingDays = (start, end) => {
     const startDate = dayjs(start);
     const endDate = dayjs(end);
-
     if (!startDate.isValid() || !endDate.isValid() || startDate.isAfter(endDate)) return 0;
 
     let workingDays = 0;
     let d = startDate.clone();
-
     while (d.isSameOrBefore(endDate, "day")) {
       const isWeekend = d.day() === 0 || d.day() === 6;
       const isHoliday = holidays.includes(d.format("YYYY-MM-DD"));
-
-      if (!isWeekend && !isHoliday) {
-        workingDays++;
-      }
-
+      if (!isWeekend && !isHoliday) workingDays++;
       d = d.add(1, "day");
     }
-
     return workingDays;
   };
 
   const workingDays = useMemo(() => {
-    if (!formData.startDate || !formData.endDate) return 0; // ✅ ต้องเช็กก่อน
-    return calculateWorkingDays(formData.startDate, formData.endDate, holidays);
+    if (!formData.startDate || !formData.endDate) return 0;
+    return calculateWorkingDays(formData.startDate, formData.endDate);
   }, [formData.startDate, formData.endDate]);
 
   const resetForm = () => {
@@ -142,6 +142,14 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
+  const dayHighlight = (date) => {
+    const day = date.getDay();
+    if (day === 0 || day === 6) {
+      return "!text-red-500";
+    }
+    return "";
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -154,12 +162,16 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         <h2 className="text-2xl font-bold mb-6 text-center">ยื่นคำร้องการลา</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+
+          {/* แสดงสิทธิการลาเหลือ */}
           {selectedLeaveBalance && (
             <div className="bg-gray-100 text-gray-700 px-4 py-3 rounded-lg mb-2 text-sm">
-              คุณมีสิทธิลาประเภทนี้เหลือ: <span className="font-bold">{selectedLeaveBalance.remainingDays} วัน</span>
+              คุณมีสิทธิลาประเภทนี้เหลือ:{" "}
+              <span className="font-bold">{selectedLeaveBalance.remainingDays} วัน</span>
             </div>
           )}
 
+          {/* ประเภทการลา */}
           <div>
             <label className="block text-sm font-medium mb-1">ประเภทการลา</label>
             <select
@@ -170,54 +182,96 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
               className={`${inputStyle} appearance-none pr-10 cursor-pointer`}
             >
               <option value="">เลือกประเภทการลา</option>
-              {leaveBalances.map((b) => (
-                <option key={b.leaveTypeId} value={b.leaveTypeId}>
-                  {b.leaveType?.name || `ประเภท ${b.leaveTypeId}`}
+              {Object.entries(leaveTypeMap).map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* วันที่เริ่มต้น */}
           <div>
-            <label htmlFor="startDate" className="block text-sm font-medium mb-1">วันที่เริ่มต้น</label>
-            <div className="relative">
-              <input type="date" id="startDate" name="startDate" value={formData.startDate} onChange={handleChange} required className={`${inputStyle} pr-10`} />
-              <CalendarDaysIcon className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-            </div>
+            <label className="block text-sm font-medium mb-1">วันที่เริ่มต้น</label>
+            <DatePicker
+              selected={formData.startDate ? new Date(formData.startDate) : null}
+              onChange={(date) => {
+                const formatted = date ? dayjs(date).format("YYYY-MM-DD") : "";
+                setFormData((prev) => ({ ...prev, startDate: formatted }));
+              }}
+              dateFormat="dd/MM/yyyy"
+              locale={th}
+              placeholderText="เลือกวันที่เริ่มต้น (วัน/เดือน/ปี)"
+              className={`${inputStyle}`}
+              wrapperClassName="w-full"
+              calendarClassName="!rounded-xl !border-2 !border-rose-300 p-2"
+              dayClassName={dayHighlight}
+            />
           </div>
 
+          {/* วันที่สิ้นสุด */}
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
-            <div className="relative">
-              <input type="date" id="endDate" name="endDate" value={formData.endDate} onChange={handleChange} required className={`${inputStyle} pr-10`} />
-              <CalendarDaysIcon className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-            </div>
+            <label className="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
+            <DatePicker
+              selected={formData.endDate ? new Date(formData.endDate) : null}
+              onChange={(date) => {
+                const formatted = date ? dayjs(date).format("YYYY-MM-DD") : "";
+                setFormData((prev) => ({ ...prev, endDate: formatted }));
+              }}
+              dateFormat="dd/MM/yyyy"
+              locale={th}
+              placeholderText="เลือกวันที่สิ้นสุด (วัน/เดือน/ปี)"
+              className={`${inputStyle}`}
+              wrapperClassName="w-full"
+              calendarClassName="!rounded-xl !border-2 !border-rose-300 p-2"
+              dayClassName={dayHighlight}
+            />
           </div>
 
+          {/* จำนวนวันลา */}
           {formData.startDate && formData.endDate && (
             <div className="text-sm text-gray-600">
               จำนวนวันลา: <span className="font-bold text-black">{workingDays} วัน</span>
             </div>
           )}
 
+          {/* เหตุผลการลา */}
           <div>
             <label className="block text-sm font-medium mb-1">เหตุผลการลา</label>
-            <textarea name="reason" value={formData.reason} onChange={handleChange} rows="3" required className={inputStyle} />
+            <textarea
+              name="reason"
+              value={formData.reason}
+              onChange={handleChange}
+              rows="3"
+              required
+              className={inputStyle}
+            />
           </div>
 
+          {/* แนบไฟล์ใบรับรองแพทย์ */}
           {formData.leaveTypeId === "1" && (
             <div>
               <label className="block text-sm font-medium mb-1">แนบไฟล์ใบรับรองแพทย์</label>
-              <input type="file" name="images" onChange={handleFileChange} accept=".jpg,.jpeg,.png,.pdf" className={inputStyle} />
+              <input
+                type="file"
+                name="images"
+                onChange={handleFileChange}
+                accept=".jpg,.jpeg,.png,.pdf"
+                className={inputStyle}
+              />
             </div>
           )}
 
+          {/* ปุ่มบันทึก */}
           <div className="flex justify-end gap-4">
-            <button type="button" onClick={onClose} className="px-6 py-2 rounded-lg bg-gray-200 text-black hover:bg-gray-300">ยกเลิก</button>
+            <button type="button" onClick={onClose} className="px-6 py-2 rounded-lg bg-gray-200 text-black hover:bg-gray-300">
+              ยกเลิก
+            </button>
             <button type="submit" disabled={submitting} className="px-6 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600">
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>
           </div>
+
         </form>
       </div>
     </div>
