@@ -1,17 +1,34 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+import { apiEndpoints } from "../../utils/api";
 
 function AddLeave2() {
   const navigate = useNavigate();
+  const [leaveTypes, setLeaveTypes] = useState([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await axios.get(apiEndpoints.availableLeaveType);
+        console.log("Leave Types:", response.data.data);
+        setLeaveTypes(response.data.data);
+      } catch (error) {
+        console.error("Error fetching leave types:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
   const [formData, setFormData] = useState({
     leaveTypeId: "",
     startDate: "",
     endDate: "",
     reason: "",
+    contact: "",
     isEmergency: "0",
     images: null,
     additionalDetails: "",
@@ -48,6 +65,7 @@ function AddLeave2() {
       formDataToSend.append("startDate", formData.startDate);
       formDataToSend.append("endDate", formData.endDate);
       formDataToSend.append("reason", formData.reason);
+      formDataToSend.append("contact", formData.contact);
       formDataToSend.append("isEmergency", formData.isEmergency === "1");
 
       if (formData.leaveTypeId === "1" && formData.images) {
@@ -82,12 +100,16 @@ function AddLeave2() {
   return (
     <div className="min-h-screen bg-white px-4 py-10 font-kanit text-black">
       <div className="max-w-3xl mx-auto bg-gray-50 p-8 rounded-2xl shadow">
-        <h2 className="text-2xl font-bold mb-6 text-center">แบบฟอร์มคำร้องขอการลา</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">
+          แบบฟอร์มคำร้องขอการลา
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* ประเภทการลา */}
           <div>
-            <label className="block text-sm font-medium mb-1">ประเภทการลา</label>
+            <label className="block text-sm font-medium mb-1">
+              ประเภทการลา
+            </label>
             <div className="relative">
               <select
                 name="leaveTypeId"
@@ -97,12 +119,18 @@ function AddLeave2() {
                 className={`${inputStyle} appearance-none pr-10 cursor-pointer`}
               >
                 <option value="">เลือกประเภทการลา</option>
-                <option value="1">ลาป่วย</option>
-                <option value="2">ลากิจส่วนตัว</option>
-                <option value="3">ลาพักผ่อน</option>
+                {leaveTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path d="M7 7l3-3 3 3m0 6l-3 3-3-3" />
                 </svg>
               </div>
@@ -111,7 +139,12 @@ function AddLeave2() {
 
           {/* วันที่เริ่มต้น */}
           <div>
-            <label htmlFor="startDate" className="block text-sm font-medium mb-1">วันที่เริ่มต้น</label>
+            <label
+              htmlFor="startDate"
+              className="block text-sm font-medium mb-1"
+            >
+              วันที่เริ่มต้น
+            </label>
             <div className="relative w-full">
               <input
                 type="date"
@@ -130,7 +163,9 @@ function AddLeave2() {
 
           {/* วันที่สิ้นสุด */}
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium mb-1">วันที่สิ้นสุด</label>
+            <label htmlFor="endDate" className="block text-sm font-medium mb-1">
+              วันที่สิ้นสุด
+            </label>
             <div className="relative w-full">
               <input
                 type="date"
@@ -149,7 +184,9 @@ function AddLeave2() {
 
           {/* เหตุผลการลา */}
           <div>
-            <label className="block text-sm font-medium mb-1">เหตุผลการลา</label>
+            <label className="block text-sm font-medium mb-1">
+              เหตุผลการลา
+            </label>
             <textarea
               name="reason"
               value={formData.reason}
@@ -160,10 +197,26 @@ function AddLeave2() {
             />
           </div>
 
+          {/* ช่องทางติดต่อ */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+            ช่องทางติดต่อ
+            </label>
+            <input
+              name="contact"
+              value={formData.contact}
+              onChange={handleChange}
+              required
+              className={inputStyle}
+            />
+          </div>
+
           {/* แนบไฟล์ */}
           {formData.leaveTypeId === "1" && (
             <div>
-              <label className="block text-sm font-medium mb-1">แนบไฟล์ใบรับรองแพทย์</label>
+              <label className="block text-sm font-medium mb-1">
+                แนบไฟล์ใบรับรองแพทย์
+              </label>
               <input
                 type="file"
                 name="images"

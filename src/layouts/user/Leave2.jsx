@@ -5,18 +5,33 @@ import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import { Plus } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
+import { apiEndpoints } from "../../utils/api";
 
 function Leave2() {
   const navigate = useNavigate();
   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await axios.get(apiEndpoints.availableLeaveType);
+        setLeaveTypes(response.data.data);
+      } catch (error) {
+        console.error('Error fetching leave types:', error);
+      }
+    }
 
-  const leaveTypes = {
-    1: "ลาป่วย",
-    2: "ลากิจส่วนตัว",
-    3: "ลาพักผ่อน",
-  };
+    fetchData();
+  }, []);
+
+  // const leaveTypes = {
+  //   1: "ลาป่วย",
+  //   2: "ลากิจส่วนตัว",
+  //   3: "ลาพักผ่อน",
+  // };
 
   const statusLabels = {
     APPROVED: "อนุมัติแล้ว",
@@ -141,7 +156,7 @@ function Leave2() {
                       onClick={() => navigate(`/leave/${leave.id}`)}
                     >
                       <td className="p-3">{formatDate(leave.createdAt)}</td>
-                      <td className="p-3">{leaveTypes[leave.leaveTypeId] || "-"}</td>
+                      <td className="p-3">{leaveTypes.find((type) => type.id === leave.leaveTypeId)?.name || "-"}</td>
                       <td className="p-3">{formatDate(leave.startDate)}</td>
                       <td className="p-3">{formatDate(leave.endDate)}</td>
                       <td className="p-3 text-left">
