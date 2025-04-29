@@ -40,6 +40,7 @@ import DepartmentManage from "../layouts/admin/DepartmentManage";
 import OrganizationManage from "../layouts/admin/OrganizationManage";
 import PersonnelTypeManage from "../layouts/admin/PersonelTypeManage";
 import HolidayManage from "../layouts/admin/HolidayManage";
+import SettingManage from "../layouts/admin/AdminManage";
 import UserManage from "../layouts/admin/UserManage";
 import EditUser from "../layouts/admin/EditUser";
 import EditProfile from "../layouts/admin/EditProfile";
@@ -130,6 +131,7 @@ const userRouter = createBrowserRouter([
           { path: "organization-manage", element: <OrganizationManage /> },
           { path: "personel-manage", element: <PersonnelTypeManage /> },
           { path: "holiday-manage", element: <HolidayManage /> },
+          { path: "setting-manage", element: <SettingManage /> },
           { path: "edit-profile", element: <EditProfile /> },
           { path: "add-user", element: <AddnewUser /> },
           { path: "user/:id", element: <EditUser /> },
