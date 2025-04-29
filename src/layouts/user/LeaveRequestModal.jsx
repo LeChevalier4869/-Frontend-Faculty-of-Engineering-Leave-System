@@ -48,6 +48,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         if (Array.isArray(res.data.data)) {
           setLeaveBalances(res.data.data);
         }
+        resetForm();
       } catch (error) {
         console.error("Error fetching leave balances:", error);
       }
@@ -129,6 +130,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
       onSuccess();
       resetForm();
       onClose();
+      window.location.reload();
     } catch (err) {
       console.error("Submit Error:", err);
       Swal.fire({
@@ -223,7 +225,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
               placeholderText="เลือกวันที่สิ้นสุด (วัน/เดือน/ปี)"
               className={`${inputStyle}`}
               wrapperClassName="w-full"
-              calendarClassName="!rounded-xl !border-2 !border-rose-300 p-2"
+              calendarClassName="!rounded-xl p-2"
               dayClassName={dayHighlight}
             />
           </div>

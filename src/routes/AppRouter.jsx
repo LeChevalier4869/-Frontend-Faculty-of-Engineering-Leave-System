@@ -14,7 +14,7 @@ import Register from "../layouts/auth/Register";
 /** Main components **/
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
-
+ 
 /** User pages **/
 import UserHome from "../layouts/user/UserHome";
 import Leave2 from "../layouts/user/Leave2";
@@ -23,6 +23,7 @@ import LeaveBalance from "../layouts/user/LeaveBalance";
 import LeaveDetail from "../layouts/user/LeaveDetails";
 import UserProfile2 from "../layouts/user/UserProfile2";
 import UserLanding from "../layouts/user/UserLanding";
+import UserDashBoard from "../layouts/user/UserDashBoard";
 
 /** Approver pages **/
 import LeaveApprover1 from "../layouts/approver/LeaveApprover1";
@@ -92,15 +93,15 @@ const userRouter = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      { index: true, element: <UserHome /> },
-      { path: "leave", element: <Leave2 /> },
-      { path: "leave/add", element: <AddLeave2 /> },
-      { path: "leave/balance", element: <LeaveBalance /> },
-      { path: "leave/:id", element: <LeaveDetail /> },
-      { path: "profile", element: <UserProfile2 /> },
-      { path: "profile/edit", element: <EditProfile /> },
-      { path: "user/landing", element: <UserLanding /> },
-      { path: "dashboard", element: <DashBoard /> },
+      { index: true,            element: <UserHome /> },
+      { path: "leave",          element: <Leave2 /> },
+      { path: "leave/add",      element: <AddLeave2 /> },
+      { path: "leave/balance",  element: <LeaveBalance /> },
+      { path: "leave/:id",      element: <LeaveDetail /> },
+      { path: "profile",        element: <UserProfile2 /> },
+      { path: "profile/edit",   element: <EditProfile /> },
+      { path: "user/landing",   element: <UserLanding /> },
+      { path: "dashboard",      element: <UserDashBoard/>},
 
       // Approver group
       {
@@ -126,6 +127,7 @@ const userRouter = createBrowserRouter([
           { path: "edit-profile", element: <EditProfile /> },
           { path: "add-user", element: <AddnewUser /> },
           { path: "user/:id", element: <EditUser /> },
+          { path: "dashboard", element: <DashBoard /> },
         ],
       },
 

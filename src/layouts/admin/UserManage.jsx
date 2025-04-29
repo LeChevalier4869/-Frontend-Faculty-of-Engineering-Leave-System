@@ -76,8 +76,8 @@ export default function UserManage() {
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
       <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-center">จัดการผู้ใช้งาน</h1>
+        <div className="flex items-center mb-8">
+          <h1 className="flex-1 text-3xl font-bold text-center">จัดการผู้ใช้งาน</h1>
           <Link
             to="/admin/add-user"
             className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition"
@@ -107,8 +107,13 @@ export default function UserManage() {
                 </tr>
               ) : displayedUsers.length > 0 ? (
                 displayedUsers.map((user, idx) => (
-                  <tr key={user.id} className={`${idx % 2 ? "bg-gray-50" : "bg-white"} hover:bg-gray-100 transition`}>
-                    <td className="px-4 py-3 truncate">{user.prefixName} {user.firstName} {user.lastName}</td>
+                  <tr
+                    key={user.id}
+                    className={`${idx % 2 ? "bg-gray-50" : "bg-white"} hover:bg-gray-100 transition`}
+                  >
+                    <td className="px-4 py-3 truncate">
+                      {user.prefixName} {user.firstName} {user.lastName}
+                    </td>
                     <td className="px-4 py-3 truncate">{user.email}</td>
                     <td className="px-4 py-3 truncate">{user.phone}</td>
                     <td className="px-4 py-3 truncate">{user.personnelType?.name || "-"}</td>
@@ -142,11 +147,21 @@ export default function UserManage() {
 
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-4">
-            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-lg bg-white disabled:opacity-50">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded-lg bg-white disabled:opacity-50"
+            >
               ก่อนหน้า
             </button>
-            <span className="px-3 py-1">หน้า {currentPage} / {totalPages}</span>
-            <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-lg bg-white disabled:opacity-50">
+            <span className="px-3 py-1">
+              หน้า {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded-lg bg-white disabled:opacity-50"
+            >
               ถัดไป
             </button>
           </div>

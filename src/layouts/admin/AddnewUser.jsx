@@ -48,7 +48,7 @@ export default function AddUser() {
         setOrganizations(orgRes.data.data);
         setPersonnelTypes(ptRes.data.data);
         const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
-        setEmploymentTypes(emp.map(e => ({ value: e, label: e })));
+        setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
       } catch (err) {
         Swal.fire("Error", "โหลดข้อมูล lookup ล้มเหลว", "error");
       }
@@ -56,7 +56,6 @@ export default function AddUser() {
     fetchLookup();
   }, []);
 
-  // ───────────────────────────────────────────── handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -64,45 +63,6 @@ export default function AddUser() {
 
   const handleFileChange = (e) => setSelectedFile(e.target.files[0]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      return Swal.fire("ข้อผิดพลาด", "รหัสผ่านไม่ตรงกัน", "error");
-    }
-    setLoading(true);
-    try {
-      const fd = new FormData();
-      const keysToExclude = ["confirmPassword", "organizationId"];
-      Object.entries(formData).forEach(([k, v]) => {
-        fd.append(k, v); 
-      });
-      if (selectedFile) fd.append("profilePicture", selectedFile);
-
-      const token = localStorage.getItem("token");
-      console.log("🚀 Submit formData: ", formData);
-
-      await axios.post(apiEndpoints.createUserByAdmin, fd, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      Swal.fire("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว", "success").then(() =>
-        navigate("/admin/manage-user")
-      );
-    } catch (err) {
-      Swal.fire(
-        "ผิดพลาด",
-        err.response?.data?.message || "ไม่สามารถเพิ่มผู้ใช้งานได้",
-        "error"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ───────────────────────────────────────────── ui helpers
   const renderDropdown = (label, name, options) => (
     <div className="mb-4">
       <label className="block text-sm font-medium mb-2">{label}</label>
@@ -131,7 +91,41 @@ export default function AddUser() {
     </div>
   );
 
-  // ───────────────────────────────────────────── render
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      return Swal.fire("ข้อผิดพลาด", "รหัสผ่านไม่ตรงกัน", "error");
+    }
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      Object.entries(formData).forEach(([k, v]) => {
+        fd.append(k, v);
+      });
+      if (selectedFile) fd.append("profilePicture", selectedFile);
+
+      const token = localStorage.getItem("token");
+      await axios.post(apiEndpoints.createUserByAdmin, fd, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      Swal.fire("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว", "success").then(() =>
+        navigate("/admin/manage-user")
+      );
+    } catch (err) {
+      Swal.fire(
+        "ผิดพลาด",
+        err.response?.data?.message || "ไม่สามารถเพิ่มผู้ใช้งานได้",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-black px-4 py-10 font-kanit">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
@@ -141,19 +135,11 @@ export default function AddUser() {
           <section>
             <h3 className="text-lg font-semibold mb-4">ข้อมูลส่วนตัว</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* prefixName */}
-              <div>
-                <label className="block text-sm font-medium mb-2">คำนำหน้า</label>
-                <input
-                  type="text"
-                  name="prefixName"
-                  value={formData.prefixName}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-              {/* firstName */}
+              {renderDropdown("คำนำหน้า", "prefixName", [
+                { value: "นาย", label: "นาย" },
+                { value: "นางสาว", label: "นางสาว" },
+                { value: "นาง", label: "นาง" },
+              ])}
               <div>
                 <label className="block text-sm font-medium mb-2">ชื่อจริง</label>
                 <input
@@ -165,7 +151,6 @@ export default function AddUser() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
-              {/* lastName */}
               <div>
                 <label className="block text-sm font-medium mb-2">นามสกุล</label>
                 <input
@@ -177,7 +162,6 @@ export default function AddUser() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
-              {/* sex */}
               {renderDropdown("เพศ", "sex", [
                 { value: "MALE", label: "ชาย" },
                 { value: "FEMALE", label: "หญิง" },
@@ -189,7 +173,6 @@ export default function AddUser() {
           <section>
             <h3 className="text-lg font-semibold mb-4">ข้อมูลบัญชีผู้ใช้</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* email */}
               <div>
                 <label className="block text-sm font-medium mb-2">อีเมล</label>
                 <input
@@ -201,7 +184,6 @@ export default function AddUser() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
-              {/* phone */}
               <div>
                 <label className="block text-sm font-medium mb-2">เบอร์โทรศัพท์</label>
                 <input
@@ -213,7 +195,6 @@ export default function AddUser() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
-              {/* password */}
               <div>
                 <label className="block text-sm font-medium mb-2">รหัสผ่าน</label>
                 <input
@@ -225,7 +206,6 @@ export default function AddUser() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
-              {/* confirm */}
               <div>
                 <label className="block text-sm font-medium mb-2">ยืนยันรหัสผ่าน</label>
                 <input
@@ -244,11 +224,22 @@ export default function AddUser() {
           <section>
             <h3 className="text-lg font-semibold mb-4">ข้อมูลการทำงาน</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderDropdown("ประเภทบุคลากร", "personnelTypeId", personnelTypes.map((pt) => ({ id: pt.id, name: pt.name })))}
-              {renderDropdown("แผนก", "departmentId", departments.map((d) => ({ id: d.id, name: d.name })))}
-              {renderDropdown("องค์กร", "organizationId", organizations.map((o) => ({ id: o.id, name: o.name })))}
+              {renderDropdown(
+                "ประเภทบุคลากร",
+                "personnelTypeId",
+                personnelTypes.map((pt) => ({ value: pt.id, label: pt.name }))
+              )}
+              {renderDropdown(
+                "แผนก",
+                "departmentId",
+                departments.map((d) => ({ value: d.id, label: d.name }))
+              )}
+              {renderDropdown(
+                "องค์กร",
+                "organizationId",
+                organizations.map((o) => ({ value: o.id, label: o.name }))
+              )}
               {renderDropdown("ประเภทพนักงาน", "employmentType", employmentTypes)}
-              {/* hire date */}
               <div>
                 <label className="block text-sm font-medium mb-2">วันที่เริ่มงาน</label>
                 <input
@@ -260,14 +251,13 @@ export default function AddUser() {
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
-              {/* profile pic */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">รูปโปรไฟล์ (ถ้ามี)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white"
                 />
               </div>
             </div>
