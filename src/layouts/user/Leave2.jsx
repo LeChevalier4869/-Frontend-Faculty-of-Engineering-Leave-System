@@ -6,6 +6,7 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { Plus } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
+import { apiEndpoints } from "../../utils/api";
 
 const PAGE_SIZE = 8;
 
@@ -14,6 +15,17 @@ export default function Leave2() {
   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await axios.get(apiEndpoints.availableLeaveType);
+        setLeaveTypes(response.data.data);
+      } catch (error) {
+        console.error('Error fetching leave types:', error);
+      }
+    }
 
   // default date filter to today
   const today = dayjs().format("YYYY-MM-DD");

@@ -1,5 +1,5 @@
 import axios from "axios";
-//const BASE_URL = "http://localhost:8000";
+// export const BASE_URL = "http://localhost:8000";
 export const BASE_URL = "https://backend-faculty-of-engineering-leave.onrender.com";
 
 export const apiEndpoints = {
@@ -23,6 +23,9 @@ export const apiEndpoints = {
 
   // leave balance
   getLeaveBalanceForMe: `${BASE_URL}/leave-balances/me`, // GET
+
+  // leave type
+  availableLeaveType: `${BASE_URL}/leave-types/available`,
 
   // leave request
   leaveRequest: `${BASE_URL}/leave-requests`, // CRUD
