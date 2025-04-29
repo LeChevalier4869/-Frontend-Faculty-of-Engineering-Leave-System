@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import useLeaveRequest from "../../hooks/useLeaveRequest";
+import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import dayjs from "dayjs";
 import { Plus } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
-import getApiUrl from "../../utils/apiUtils";
 
 const PAGE_SIZE = 8;
 
 export default function Leave2() {
   const navigate = useNavigate();
   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
-
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
-  const [availableLeaveTypes, setAvailableLeaveTypes] = useState({});
+  const [leaveTypesMap, setLeaveTypesMap] = useState({});
 
   // default filterDate to today
   const today = dayjs().format("YYYY-MM-DD");
@@ -34,7 +34,7 @@ export default function Leave2() {
     CANCELLED: "bg-gray-100 text-gray-700",
   };
 
-  // fetch user's leave requests
+  // fetch user's own leave requests
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
@@ -56,16 +56,16 @@ export default function Leave2() {
     }
   };
 
-  // fetch available leave types
+  // fetch available leave types for mapping id → name
   const fetchLeaveTypes = async () => {
     try {
       const res = await axios.get(apiEndpoints.availableLeaveType);
-      // assume API returns array of { id, name }
+      // assume API returns { data: [ { id, name }, … ] }
       const map = {};
-      res.data.data.forEach((lt) => {
+      (res.data.data || []).forEach((lt) => {
         map[lt.id] = lt.name;
       });
-      setAvailableLeaveTypes(map);
+      setLeaveTypesMap(map);
     } catch (err) {
       console.error("Error fetching leave types:", err);
     }
@@ -176,7 +176,7 @@ export default function Leave2() {
                     >
                       <td className="px-4 py-3">{formatDate(leave.createdAt)}</td>
                       <td className="px-4 py-3">
-                        {availableLeaveTypes[leave.leaveTypeId] || "-"}
+                        {leaveTypesMap[leave.leaveTypeId] || "-"}
                       </td>
                       <td className="px-4 py-3">{formatDate(leave.startDate)}</td>
                       <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
@@ -235,7 +235,6 @@ export default function Leave2() {
         <Plus className="w-6 h-6" />
       </button>
 
-      {/* modal */}
       <LeaveRequestModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
