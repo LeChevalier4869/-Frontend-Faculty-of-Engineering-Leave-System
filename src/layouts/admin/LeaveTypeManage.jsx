@@ -35,7 +35,7 @@ export default function LeaveTypeManage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/admin/leave-type`, authHeader());
+      const res = await axios.get(`${BASE_URL}/leave-types/`, authHeader());
       setLeaveTypes(res.data);
     } catch (err) {
       handleApiError(err);
@@ -60,7 +60,7 @@ export default function LeaveTypeManage() {
     }
     try {
       await axios.post(
-        `${BASE_URL}/admin/leave-type`,
+        `${BASE_URL}/leave-types/`,
         { name, isAvailable },
         authHeader()
       );
@@ -85,7 +85,7 @@ export default function LeaveTypeManage() {
     }
     try {
       await axios.put(
-        `${BASE_URL}/admin/leave-type/${editId}`,
+        `${BASE_URL}/leave-types/${editId}`,
         { name, isAvailable },
         authHeader()
       );
@@ -110,7 +110,7 @@ export default function LeaveTypeManage() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await axios.delete(`${BASE_URL}/admin/leave-type/${id}`, authHeader());
+      await axios.delete(`${BASE_URL}/leave-types/${id}`, authHeader());
       Swal.fire("ลบสำเร็จ!", "", "success");
       loadData();
     } catch (err) {
