@@ -129,7 +129,7 @@ const userRouter = createBrowserRouter([
           { path: "department-manage", element: <DepartmentManage /> },
           { path: "organization-manage", element: <OrganizationManage /> },
           { path: "personel-manage", element: <PersonnelTypeManage /> },
-          { path: "holiday-manage", element: <PersonnelTypeManage /> },
+          { path: "holiday-manage", element: <HolidayManage /> },
           { path: "edit-profile", element: <EditProfile /> },
           { path: "add-user", element: <AddnewUser /> },
           { path: "user/:id", element: <EditUser /> },
