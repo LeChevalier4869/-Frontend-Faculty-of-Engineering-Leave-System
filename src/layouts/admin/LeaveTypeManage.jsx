@@ -6,7 +6,7 @@ import { BASE_URL } from "../../utils/api";
 export default function LeaveTypeManage() {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [name, setName] = useState("");
-  const [isAvailable, setIsAvailable] = useState(true);
+  const [isAvailable, setIsAvailable] = useState(false);
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +36,7 @@ export default function LeaveTypeManage() {
     setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/leave-types/`, authHeader());
-      setLeaveTypes(res.data);
+      setLeaveTypes(res.data.data);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -121,7 +121,9 @@ export default function LeaveTypeManage() {
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">จัดการประเภทการลา</h1>
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          จัดการประเภทการลา
+        </h1>
 
         {/* Form */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
@@ -132,14 +134,14 @@ export default function LeaveTypeManage() {
             onChange={(e) => setName(e.target.value)}
             className="col-span-2 border border-gray-300 rounded-lg px-4 py-2"
           />
-          <select
-            value={isAvailable ? "true" : "false"}
-            onChange={(e) => setIsAvailable(e.target.value === "true")}
-            className="col-span-1 border border-gray-300 rounded-lg px-4 py-2"
-          >
-            <option value="true">เปิดใช้งาน</option>
-            <option value="false">ปิดใช้งาน</option>
-          </select>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isAvailable}
+              onChange={() => setIsAvailable(!isAvailable)}
+            />
+            ลาในระบบได้
+          </label>
           <button
             onClick={editId ? handleUpdate : handleAdd}
             className={`${
@@ -157,7 +159,7 @@ export default function LeaveTypeManage() {
               <tr>
                 <th className="px-4 py-3">#</th>
                 <th className="px-4 py-3">ชื่อ</th>
-                <th className="px-4 py-3">สถานะ</th>
+                <th className="px-4 py-3">ลาในระบบได้</th>
                 <th className="px-4 py-3 text-center">การจัดการ</th>
               </tr>
             </thead>
@@ -173,10 +175,10 @@ export default function LeaveTypeManage() {
                   <tr key={t.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2">{t.id}</td>
                     <td className="px-4 py-2">{t.name}</td>
-                    <td className="px-4 py-2">
-                      {t.isAvailable ? "เปิดใช้งาน" : "ปิดใช้งาน"}
+                    <td className="px-4 py-2 text-center align-middle">
+                      {t.isAvailable ? "✅" : "❌"}
                     </td>
-                    <td className="px-4 py-2 text-center space-x-2">
+                    <td className="px-4 py-2 text-center">
                       <button
                         onClick={() => handleEdit(t.id)}
                         className="bg-gray-700 text-white px-3 py-1 rounded-lg text-sm hover:bg-gray-800"
