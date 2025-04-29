@@ -96,7 +96,7 @@ export default function SettingManage() {
     }
     try {
       await axios.put(
-        `${BASE_URL}/admin/settings/${editId}`,
+        `${BASE_URL}/admin/setting/${editId}`,
         { key: newKey, type: newType, value: newValue, description },
         authHeader()
       );
