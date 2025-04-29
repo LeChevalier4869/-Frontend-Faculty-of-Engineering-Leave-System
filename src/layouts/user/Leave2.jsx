@@ -1,37 +1,26 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import useLeaveRequest from "../../hooks/useLeaveRequest";
-import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import dayjs from "dayjs";
 import { Plus } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
+import getApiUrl from "../../utils/apiUtils";
 
 const PAGE_SIZE = 8;
 
 export default function Leave2() {
   const navigate = useNavigate();
   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
+
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
-  const [leaveTypes, setLeaveTypes] = useState([]);
-  
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await axios.get(apiEndpoints.availableLeaveType);
-        setLeaveTypes(response.data.data);
-      } catch (error) {
-        console.error('Error fetching leave types:', error);
-      }
-    }
+  const [availableLeaveTypes, setAvailableLeaveTypes] = useState({});
 
-  // default date filter to today
+  // default filterDate to today
   const today = dayjs().format("YYYY-MM-DD");
   const [filterDate, setFilterDate] = useState(today);
 
-  const leaveTypes = { 1: "ลาป่วย", 2: "ลากิจส่วนตัว", 3: "ลาพักผ่อน" };
   const statusLabels = {
     APPROVED: "อนุมัติแล้ว",
     PENDING: "รออนุมัติ",
@@ -45,36 +34,53 @@ export default function Leave2() {
     CANCELLED: "bg-gray-100 text-gray-700",
   };
 
+  // fetch user's leave requests
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token");
-      const url = getApiUrl("leave-requests/me");
-      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
-      const items = Array.isArray(res.data.data)
+      const res = await axios.get(getApiUrl("leave-requests/me"), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = Array.isArray(res.data.data)
         ? res.data.data
         : Array.isArray(res.data.leaveRequest)
         ? res.data.leaveRequest
         : [];
-      setLeaveRequest(items);
+      setLeaveRequest(data);
     } catch (err) {
-      console.error("fetchLeaveRequests error:", err);
+      console.error("Error fetching leave requests:", err);
       setLeaveRequest([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // fetch available leave types
+  const fetchLeaveTypes = async () => {
+    try {
+      const res = await axios.get(apiEndpoints.availableLeaveType);
+      // assume API returns array of { id, name }
+      const map = {};
+      res.data.data.forEach((lt) => {
+        map[lt.id] = lt.name;
+      });
+      setAvailableLeaveTypes(map);
+    } catch (err) {
+      console.error("Error fetching leave types:", err);
+    }
+  };
+
   useEffect(() => {
     fetchLeaveRequests();
+    fetchLeaveTypes();
   }, []);
 
-  const formatDate = (dateStr) =>
-    dayjs(dateStr).locale("th").format("DD/MM/YYYY");
+  const formatDate = (iso) =>
+    dayjs(iso).locale("th").format("DD/MM/YYYY");
 
-  const filteredRequests = useMemo(() => {
-    if (!filterDate) return leaveRequest;
+  // filter by createdAt matching filterDate
+  const filtered = useMemo(() => {
     return leaveRequest.filter((lr) =>
       dayjs(lr.createdAt).format("YYYY-MM-DD") === filterDate
     );
@@ -82,8 +88,8 @@ export default function Leave2() {
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(filteredRequests.length / PAGE_SIZE);
-  const displayItems = filteredRequests.slice(
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const displayItems = filtered.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
@@ -164,20 +170,16 @@ export default function Leave2() {
                     <tr
                       key={leave.id}
                       className={`${
-                        idx % 2 ? "bg-white" : "bg-gray-50"
+                        idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                       } hover:bg-gray-100 transition cursor-pointer`}
                       onClick={() => navigate(`/leave/${leave.id}`)}
                     >
                       <td className="px-4 py-3">{formatDate(leave.createdAt)}</td>
                       <td className="px-4 py-3">
-                        {leaveTypes[leave.leaveTypeId] || "-"}
+                        {availableLeaveTypes[leave.leaveTypeId] || "-"}
                       </td>
-                      <td className="px-4 py-3">
-                        {formatDate(leave.startDate)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {formatDate(leave.endDate)}
-                      </td>
+                      <td className="px-4 py-3">{formatDate(leave.startDate)}</td>
+                      <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
