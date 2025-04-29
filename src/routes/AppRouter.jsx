@@ -40,7 +40,7 @@ import DepartmentManage from "../layouts/admin/DepartmentManage";
 import OrganizationManage from "../layouts/admin/OrganizationManage";
 import PersonnelTypeManage from "../layouts/admin/PersonelTypeManage";
 import HolidayManage from "../layouts/admin/HolidayManage";
-import SettingManage from "../layouts/admin/AdminManage";
+import SettingManage from "../layouts/admin/SettingManage";
 import UserManage from "../layouts/admin/UserManage";
 import EditUser from "../layouts/admin/EditUser";
 import EditProfile from "../layouts/admin/EditProfile";

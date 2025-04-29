@@ -203,8 +203,8 @@ export default function HolidayManage() {
           <button
             onClick={editId ? handleUpdate : handleAdd}
             className={`${
-              editId ? "bg-gray-700" : "bg-green-600"
-            } hover:bg-green-800 text-white px-4 py-2 rounded-lg transition-all`}
+              editId ? "bg-gray-700" : "bg-gray-700"
+            } hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition-all`}
           >
             {editId ? "อัปเดต" : "เพิ่ม"}
           </button>

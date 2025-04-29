@@ -9,7 +9,7 @@ const PAGE_SIZE = 8;
 export default function SettingManage() {
   const [settings, setSettings] = useState([]);
   const [newKey, setNewKey] = useState("");
-  const [newType, setNewType] = useState("");
+  const [newType, setNewType] = useState(""); // New state for type
   const [newValue, setNewValue] = useState("");
   const [description, setDescription] = useState("");
   const [editId, setEditId] = useState(null);
@@ -41,8 +41,8 @@ export default function SettingManage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/admin/settings`, authHeader());
-      setSettings(res.data.data);
+      const res = await axios.get(`${BASE_URL}/admin/setting`, authHeader());
+      setSettings(res.data);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -56,19 +56,19 @@ export default function SettingManage() {
 
   const resetForm = () => {
     setNewKey("");
-    setNewType("");
+    setNewType(""); // Reset the type
     setNewValue("");
     setDescription("");
     setEditId(null);
   };
 
   const handleAdd = async () => {
-    if (!newKey.trim() || !newValue.trim()) {
-      return Swal.fire("Error", "ต้องระบุ key และ value", "error");
+    if (!newKey.trim() || !newValue.trim() || !newType.trim()) {
+      return Swal.fire("Error", "ต้องระบุ key, type และ value", "error");
     }
     try {
       await axios.post(
-        apiEndpoints.settingCreate,
+        `${BASE_URL}/admin/setting`,
         { key: newKey, type: newType, value: newValue, description },
         authHeader()
       );
@@ -84,19 +84,19 @@ export default function SettingManage() {
   const handleEdit = (id) => {
     const setting = settings.find((s) => s.id === id);
     setNewKey(setting.key);
-    setNewType(setting.type);
+    setNewType(setting.type); // Set the type for editing
     setNewValue(setting.value);
     setDescription(setting.description || "");
     setEditId(setting.id);
   };
 
   const handleUpdate = async () => {
-    if (!newKey.trim() || !newValue.trim()) {
-      return Swal.fire("Error", "ต้องระบุ key และ value", "error");
+    if (!newKey.trim() || !newValue.trim() || !newType.trim()) {
+      return Swal.fire("Error", "ต้องระบุ key, type และ value", "error");
     }
     try {
       await axios.put(
-        apiEndpoints.settingUpdate(editId),
+        `${BASE_URL}/admin/settings/${editId}`,
         { key: newKey, type: newType, value: newValue, description },
         authHeader()
       );
@@ -121,7 +121,7 @@ export default function SettingManage() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await axios.delete(`${BASE_URL}/admin/settings/${id}`, authHeader());
+      await axios.delete(`${BASE_URL}/admin/setting/${id}`, authHeader());
       Swal.fire("ลบสำเร็จ!", "ข้อมูลการตั้งค่าถูกลบแล้ว", "success");
       const pageCount = Math.ceil(settings.length / PAGE_SIZE);
       if (currentPage > pageCount) setCurrentPage(pageCount);
@@ -138,7 +138,9 @@ export default function SettingManage() {
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">จัดการการตั้งค่า</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">
+          จัดการการตั้งค่า
+        </h1>
 
         {/* Form */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
@@ -156,16 +158,32 @@ export default function SettingManage() {
             onChange={(e) => setNewValue(e.target.value)}
             className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
           />
-          <textarea
+          <input
             placeholder="คำอธิบาย (ไม่บังคับ)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
           />
+          {/* Select for Type */}
+          <select
+            value={newType}
+            onChange={(e) => setNewType(e.target.value)}
+            className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
+          >
+            <option value="">เลือก Type</option>
+            <option value="string">String</option>
+            <option value="number">Number</option>
+            <option value="boolean">Boolean</option>
+            <option value="date">Date</option>
+            <option value="json">JSON</option>
+          </select>
+
           <button
             onClick={editId ? handleUpdate : handleAdd}
             className={`${
-              editId ? "bg-gray-700 hover:bg-gray-800" : "bg-gray-600 hover:bg-gray-700"
+              editId
+                ? "bg-gray-700 hover:bg-gray-800"
+                : "bg-gray-600 hover:bg-gray-700"
             } text-white px-4 py-2 rounded-lg transition-all`}
           >
             {editId ? "อัปเดต" : "เพิ่ม"}
@@ -181,13 +199,14 @@ export default function SettingManage() {
                 <th className="px-4 py-3">Key</th>
                 <th className="px-4 py-3">Value</th>
                 <th className="px-4 py-3">คำอธิบาย</th>
+                <th className="px-4 py-3">Type</th> {/* New column for Type */}
                 <th className="px-4 py-3 text-center">การจัดการ</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-6 text-gray-500">
+                  <td colSpan="6" className="text-center py-6 text-gray-500">
                     กำลังโหลด...
                   </td>
                 </tr>
@@ -195,16 +214,19 @@ export default function SettingManage() {
                 displayed.map((s, idx) => (
                   <tr
                     key={s.id}
-                    className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition`}
+                    className={`${
+                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } hover:bg-gray-100 transition`}
                   >
                     <td className="px-4 py-2">{s.id}</td>
                     <td className="px-4 py-2">{s.key}</td>
                     <td className="px-4 py-2">{s.value}</td>
                     <td className="px-4 py-2">{s.description || "ไม่มี"}</td>
+                    <td className="px-4 py-2">{s.type}</td> {/* Display Type */}
                     <td className="px-4 py-2 text-center space-x-2">
                       <button
                         onClick={() => handleEdit(s.id)}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm"
+                        className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded-lg text-sm"
                       >
                         แก้ไข
                       </button>
@@ -219,7 +241,7 @@ export default function SettingManage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center py-6 text-black">
+                  <td colSpan="6" className="text-center py-6 text-black">
                     ยังไม่มีการตั้งค่า
                   </td>
                 </tr>
