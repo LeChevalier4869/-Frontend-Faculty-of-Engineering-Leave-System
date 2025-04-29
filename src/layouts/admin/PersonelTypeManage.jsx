@@ -61,7 +61,7 @@ export default function PersonnelTypeManage() {
     }
     try {
       await axios.post(
-        `${BASE_URL}/admin/personnel-types`,
+        `${BASE_URL}/admin/personnel-type`,
         { name: newName },
         authHeader()
       );
@@ -86,7 +86,7 @@ export default function PersonnelTypeManage() {
     }
     try {
       await axios.put(
-        `${BASE_URL}/admin/personnel-types/${editId}`,
+        `${BASE_URL}/admin/personnel-type/${editId}`,
         { name: newName },
         authHeader()
       );
@@ -111,7 +111,7 @@ export default function PersonnelTypeManage() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await axios.delete(`${BASE_URL}/admin/personnel-types/${id}`, authHeader());
+      await axios.delete(`${BASE_URL}/admin/personnel-type/${id}`, authHeader());
       Swal.fire("ลบสำเร็จ!", "", "success");
       const pageCount = Math.ceil(types.length / PAGE_SIZE);
       if (currentPage > pageCount) setCurrentPage(pageCount);
