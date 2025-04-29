@@ -37,6 +37,7 @@ import LeaveVerifier from "../layouts/approver/LeaveVerifier";
 import DashBoard from "../layouts/admin/DashBoard";
 import Approver from "../layouts/admin/Approver";
 import DepartmentManage from "../layouts/admin/DepartmentManage";
+import OrganizationManage from "../layouts/admin/OrganizationManage";
 import UserManage from "../layouts/admin/UserManage";
 import EditUser from "../layouts/admin/EditUser";
 import EditProfile from "../layouts/admin/EditProfile";
@@ -124,6 +125,7 @@ const userRouter = createBrowserRouter([
           { path: "leave-request", element: <LeaveAdmin /> },
           { path: "approve", element: <Approver /> },
           { path: "department-manage", element: <DepartmentManage /> },
+          { path: "organization-manage", element: <OrganizationManage /> },
           { path: "edit-profile", element: <EditProfile /> },
           { path: "add-user", element: <AddnewUser /> },
           { path: "user/:id", element: <EditUser /> },
