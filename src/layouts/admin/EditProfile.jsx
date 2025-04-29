@@ -166,7 +166,7 @@ export default function EditProfile() {
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {renderDropdown("คำนำหน้า", "firstName", [
+            {renderDropdown("คำนำหน้า", "prefixName", [
               { value: "นาย", label: "นาย" },
               { value: "นาง", label: "นาง" },
               { value: "นางสาว", label: "นางสาว" },
