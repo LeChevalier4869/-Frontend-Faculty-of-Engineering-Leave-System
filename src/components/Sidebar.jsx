@@ -46,6 +46,7 @@ const adminNav = [
   { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaUsersCog /> },
   { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
   { to: "/admin/setting-manage", text: "จัดการค่าของระบบ", icon: <FaUsersCog /> },
+  { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
   { to: "/admin/edit-profile", text: "การตั้งค่า", icon: <FaUsersCog /> },
 ];
 
