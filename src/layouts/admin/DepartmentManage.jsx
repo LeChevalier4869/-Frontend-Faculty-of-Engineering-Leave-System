@@ -17,13 +17,16 @@ export default function DepartmentManage() {
   const [editHeadId, setEditHeadId] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedOrgFilter, setSelectedOrgFilter] = useState(""); // ✅ ตัวแปรใหม่
 
   const authHeader = () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(() => {
-        window.location.href = "/login";
-      });
+      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
+        () => {
+          window.location.href = "/login";
+        }
+      );
       throw new Error("No token");
     }
     return { headers: { Authorization: `Bearer ${token}` } };
@@ -32,9 +35,11 @@ export default function DepartmentManage() {
   const handleApiError = (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
-      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(() => {
-        window.location.href = "/login";
-      });
+      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
+        () => {
+          window.location.href = "/login";
+        }
+      );
     } else {
       Swal.fire("Error", err.response?.data?.message || err.message, "error");
     }
@@ -62,7 +67,10 @@ export default function DepartmentManage() {
       return;
     }
     try {
-      const res = await axios.get(`${BASE_URL}/admin/users?organizationId=${organizationId}`, authHeader());
+      const res = await axios.get(
+        `${BASE_URL}/admin/users?organizationId=${organizationId}`,
+        authHeader()
+      );
       setFilteredUsers(res.data.data || []);
     } catch (err) {
       handleApiError(err);
@@ -112,7 +120,7 @@ export default function DepartmentManage() {
     setEditId(dept.id);
     setEditOrgId(dept.organizationId);
     setEditHeadId(dept.headId || "");
-    loadUsersByOrganizationId(dept.organizationId); // 🔥 โหลด Users ของหน่วยงานที่จะแก้ไข
+    loadUsersByOrganizationId(dept.organizationId);
   };
 
   const handleUpdate = async () => {
@@ -160,9 +168,17 @@ export default function DepartmentManage() {
     }
   };
 
-  const totalPages = Math.ceil(departments.length / PAGE_SIZE);
+  // ✅ กรองแผนกตาม org filter ก่อนแบ่งหน้า
+  const filteredDepartments = selectedOrgFilter
+    ? departments.filter((d) => d.organizationId === +selectedOrgFilter)
+    : departments;
+
+  const totalPages = Math.ceil(filteredDepartments.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const displayed = departments.slice(startIndex, startIndex + PAGE_SIZE);
+  const displayed = filteredDepartments.slice(
+    startIndex,
+    startIndex + PAGE_SIZE
+  );
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
@@ -171,7 +187,6 @@ export default function DepartmentManage() {
 
         {/* Form */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-          {/* ชื่อแผนก */}
           <input
             type="text"
             placeholder="กรอกชื่อแผนก"
@@ -179,8 +194,6 @@ export default function DepartmentManage() {
             onChange={(e) => setNewName(e.target.value)}
             className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
           />
-
-          {/* เลือกหน่วยงาน */}
           <div className="relative">
             <select
               value={editId ? editOrgId : newOrgId}
@@ -198,12 +211,25 @@ export default function DepartmentManage() {
             >
               <option value="">เลือกหน่วยงาน</option>
               {organizations.map((org) => (
-                <option key={org.id} value={org.id}>{org.name}</option>
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <svg className="h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                className="h-4 w-4 text-black"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>
@@ -212,7 +238,11 @@ export default function DepartmentManage() {
           <div className="relative">
             <select
               value={editId ? editHeadId : newHeadId}
-              onChange={(e) => editId ? setEditHeadId(e.target.value) : setNewHeadId(e.target.value)}
+              onChange={(e) =>
+                editId
+                  ? setEditHeadId(e.target.value)
+                  : setNewHeadId(e.target.value)
+              }
               className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-8 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400 appearance-none"
             >
               <option value="">เลือกหัวหน้าแผนก (ไม่ระบุก็ได้)</option>
@@ -223,19 +253,54 @@ export default function DepartmentManage() {
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <svg className="h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                className="h-4 w-4 text-black"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>
-
-          {/* ปุ่มเพิ่ม/อัปเดต */}
+        </div>
+        <div className="mb-6 flex justify-between items-center flex-col sm:flex-row gap-2">
           <button
             onClick={editId ? handleUpdate : handleAdd}
-            className={`col-span-1 ${editId ? "bg-gray-700 hover:bg-gray-800" : "bg-gray-600 hover:bg-gray-700"} text-white px-4 py-2 rounded-lg transition-all`}
+            className={`col-span-1 ${
+              editId
+                ? "bg-gray-700 hover:bg-gray-800"
+                : "bg-gray-600 hover:bg-gray-700"
+            } text-white px-4 py-2 rounded-lg transition-all`}
           >
             {editId ? "อัปเดต" : "เพิ่ม"}
           </button>
+
+          {/* Filter by Organization */}
+          <div>
+            <label className="text-black">กรองตามหน่วยงาน: </label>
+            <select
+              value={selectedOrgFilter}
+              onChange={(e) => {
+                setSelectedOrgFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
+            >
+              <option value="">-- แสดงทั้งหมด --</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Table */}
@@ -253,28 +318,48 @@ export default function DepartmentManage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-6 text-gray-500">กำลังโหลด...</td>
+                  <td colSpan="5" className="text-center py-6 text-gray-500">
+                    กำลังโหลด...
+                  </td>
                 </tr>
               ) : displayed.length > 0 ? (
                 displayed.map((d, idx) => (
-                  <tr key={d.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition`}>
+                  <tr
+                    key={d.id}
+                    className={`${
+                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } hover:bg-gray-100 transition`}
+                  >
                     <td className="px-4 py-2">{d.id}</td>
                     <td className="px-4 py-2">{d.name}</td>
-                    <td className="px-4 py-2">{d.organization?.name || '-'}</td>
                     <td className="px-4 py-2">
-                      {d.head
-                        ? `${d.head.firstName} ${d.head.lastName}`
-                        : '-'}
+                      {organizations.find((org) => org.id === d.organizationId)
+                        ?.name || "-"}
+                    </td>
+                    <td className="px-4 py-2">
+                      {d.head ? `${d.head.firstName} ${d.head.lastName}` : "-"}
                     </td>
                     <td className="px-4 py-2 text-center space-x-2">
-                      <button onClick={() => handleEdit(d.id)} className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm">แก้ไข</button>
-                      <button onClick={() => handleDelete(d.id)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm">ลบ</button>
+                      <button
+                        onClick={() => handleEdit(d.id)}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm"
+                      >
+                        แก้ไข
+                      </button>
+                      <button
+                        onClick={() => handleDelete(d.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
+                      >
+                        ลบ
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center py-6 text-black">ยังไม่มีข้อมูลแผนก</td>
+                  <td colSpan="5" className="text-center py-6 text-black">
+                    ยังไม่มีข้อมูลแผนก
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -284,11 +369,21 @@ export default function DepartmentManage() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-4">
-            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50"
+            >
               ก่อนหน้า
             </button>
-            <span className="px-3 py-1 text-black">หน้า {currentPage} / {totalPages}</span>
-            <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50">
+            <span className="px-3 py-1 text-black">
+              หน้า {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50"
+            >
               ถัดไป
             </button>
           </div>

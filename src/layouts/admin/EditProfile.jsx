@@ -11,9 +11,10 @@ export default function EditProfile() {
 
   // detect ADMIN role
   const isAdmin =
-    Array.isArray(user?.userRoles) && user.userRoles.some(ur => ur.role?.name === "ADMIN") ||
+    (Array.isArray(user?.userRoles) &&
+      user.userRoles.some((ur) => ur.role?.name === "ADMIN")) ||
     user?.role === "ADMIN" ||
-    Array.isArray(user?.roleNames) && user.roleNames.includes("ADMIN");
+    (Array.isArray(user?.roleNames) && user.roleNames.includes("ADMIN"));
 
   // lookup data
   const [departments, setDepartments] = useState([]);
@@ -45,30 +46,36 @@ export default function EditProfile() {
       try {
         const token = localStorage.getItem("token");
         const [deptRes, ptRes, empRes] = await Promise.all([
-          axios.get(apiEndpoints.lookupDepartments, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(apiEndpoints.lookupPersonnelTypes, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(apiEndpoints.lookupEmploymentTypes, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(apiEndpoints.lookupDepartments, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(apiEndpoints.lookupPersonnelTypes, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(apiEndpoints.lookupEmploymentTypes, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
         setDepartments(deptRes.data.data);
         setPersonnelTypes(ptRes.data.data);
         const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
-        setEmploymentTypes(emp.map(e => ({ value: e, label: e })));
+        setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
       } catch (err) {
-        console.error("Lookup load failed:", err);
+        console.error(err);
       }
     };
     fetchLookups();
   }, []);
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked.toString() : value
+      [name]: type === "checkbox" ? checked.toString() : value,
     }));
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
@@ -91,7 +98,7 @@ export default function EditProfile() {
           departmentId: Number(formData.departmentId),
           employmentType: formData.employmentType,
           inActive: formData.inActiveRaw === "true",
-        })
+        }),
       };
       const url = apiEndpoints.updateUser(user.id);
       console.log("🔵 Debug URL to PUT:", url);
@@ -104,15 +111,29 @@ export default function EditProfile() {
       await Swal.fire("อัปเดตสำเร็จ", "โปรไฟล์ถูกอัปเดตแล้ว", "success");
       navigate(isAdmin ? "/admin/manage-user" : "/profile");
 
+      await axios.put(endpoint, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      Swal.fire(
+        "อัปเดตสำเร็จ",
+        "โปรไฟล์ของคุณได้รับการอัปเดตแล้ว",
+        "success"
+      ).then(() => navigate(isAdmin ? "/admin/manage-user" : "/profile"));
     } catch (err) {
-      console.error("Update failed:", err);
-      Swal.fire("อัปเดตล้มเหลว", err.response?.data?.message || err.message, "error");
+      console.error(err);
+      Swal.fire(
+        "อัปเดตล้มเหลว",
+        err.response?.data?.message || err.message,
+        "error"
+      );
     }
   };
 
   const renderDropdown = (label, name, options) => (
     <div className="mb-4 relative">
-      <label className="block text-sm font-medium text-black mb-1">{label}</label>
+      <label className="block text-sm font-medium text-black mb-1">
+        {label}
+      </label>
       <div className="relative">
         <select
           name={name}
@@ -122,15 +143,30 @@ export default function EditProfile() {
           className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">-- เลือก{label} --</option>
-          {options.map(opt => (
-            <option key={opt.value || opt.id} value={opt.value || opt.id}>
+          {options.map((opt) => (
+            <option
+              key={opt.value || opt.id}
+              value={opt.value || opt.id}
+              className="bg-white text-black hover:bg-gray-100"
+            >
               {opt.label || opt.name}
             </option>
           ))}
         </select>
         <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-          <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+          <svg
+            className="w-4 h-4 text-gray-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </div>
       </div>
@@ -140,19 +176,29 @@ export default function EditProfile() {
   return (
     <div className="min-h-screen bg-white px-4 py-10 font-kanit">
       <div className="max-w-4xl mx-auto bg-gray-50 rounded-2xl shadow-lg p-6 sm:p-8">
-        <h2 className="text-2xl font-bold text-black mb-6 text-center">แก้ไขโปรไฟล์</h2>
+        <h2 className="text-2xl font-bold text-black mb-6 text-center">
+          แก้ไขโปรไฟล์
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {renderDropdown("คำนำหน้า", "prefixName", [
+              { value: "นาย", label: "นาย" },
+              { value: "นาง", label: "นาง" },
+              { value: "นางสาว", label: "นางสาว" },
+            ])}
+
             {[
-              ["คำนำหน้า", "prefixName"],
+              // ["คำนำหน้า", "prefixName"],
               ["ชื่อจริง", "firstName"],
               ["นามสกุล", "lastName"],
               ["อีเมล", "email"],
               ["เบอร์โทรศัพท์", "phone"],
-              ["ตำแหน่ง", "position"]
+              ["ตำแหน่ง", "position"],
             ].map(([label, name]) => (
               <div key={name}>
-                <label className="block text-sm font-medium mb-1 text-black">{label}</label>
+                <label className="block text-sm font-medium mb-1 text-black">
+                  {label}
+                </label>
                 <input
                   type="text"
                   name={name}
@@ -165,7 +211,9 @@ export default function EditProfile() {
             ))}
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-black">วันที่เริ่มงาน</label>
+              <label className="block text-sm font-medium mb-1 text-black">
+                วันที่เริ่มงาน
+              </label>
               <input
                 type="date"
                 name="hireDate"
@@ -178,7 +226,7 @@ export default function EditProfile() {
 
             {renderDropdown("เพศ", "sex", [
               { value: "MALE", label: "ชาย" },
-              { value: "FEMALE", label: "หญิง" }
+              { value: "FEMALE", label: "หญิง" },
             ])}
 
             {renderDropdown("ประเภทบุคลากร", "personnelTypeId", personnelTypes)}
@@ -191,13 +239,17 @@ export default function EditProfile() {
                   type="checkbox"
                   name="inActiveRaw"
                   checked={formData.inActiveRaw === "true"}
-                  onChange={e => setFormData(fd => ({
-                    ...fd,
-                    inActiveRaw: e.target.checked ? "true" : "false"
-                  }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      inActiveRaw: e.target.checked ? "true" : "false",
+                    }))
+                  }
                   className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className="text-sm font-medium">อยู่ในสถานะใช้งาน</span>
+                <span className="text-sm font-medium text-black">
+                  อยู่ในสถานะใช้งาน
+                </span>
               </label>
             </div>
           </div>
@@ -205,8 +257,10 @@ export default function EditProfile() {
           <div className="flex justify-end gap-4">
             <button
               type="button"
-              onClick={() => navigate(isAdmin ? "/admin/manage-user" : "/profile")}
-              className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black rounded-lg"
+              onClick={() =>
+                navigate(isAdmin ? "/admin/manage-user" : "/profile")
+              }
+              className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg text-black"
             >
               ยกเลิก
             </button>

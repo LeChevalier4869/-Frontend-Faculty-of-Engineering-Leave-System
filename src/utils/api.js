@@ -20,6 +20,11 @@ export const apiEndpoints = {
   departmentsAdmin: `${BASE_URL}/admin/departments`,
   departmentByIdAdmin: (id) => `${BASE_URL}/admin/departments/${id}`,
 
+
+  // admin manage organization
+  organizationCreate: `${BASE_URL}/admin/organizations`,
+  organizationUpdate: (id) => `${BASE_URL}/admin/organizations/${id}`,
+
   // leave balance
   getLeaveBalanceForMe: `${BASE_URL}/leave-balances/me`, // GET
 
