@@ -43,6 +43,7 @@ import HolidayManage from "../layouts/admin/HolidayManage";
 import SettingManage from "../layouts/admin/SettingManage";
 import LeaveTypeManage from "../layouts/admin/LeaveTypeManage";
 import UserManage from "../layouts/admin/UserManage";
+import UserInfo from "../layouts/admin/UserInfo";
 import EditUser from "../layouts/admin/EditUser";
 import EditProfile from "../layouts/admin/EditProfile";
 import AddnewUser from "../layouts/admin/AddnewUser";
@@ -134,6 +135,7 @@ const userRouter = createBrowserRouter([
           { path: "holiday-manage", element: <HolidayManage /> },
           { path: "setting-manage", element: <SettingManage /> },
           { path: "leave-type-manage", element: <LeaveTypeManage /> },
+          { path: "user-info/:id", element: <UserInfo /> },
           { path: "edit-profile", element: <EditProfile /> },
           { path: "add-user", element: <AddnewUser /> },
           { path: "user/:id", element: <EditUser /> },

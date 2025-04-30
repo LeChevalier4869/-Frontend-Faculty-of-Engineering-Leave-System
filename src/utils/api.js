@@ -15,7 +15,8 @@ export const apiEndpoints = {
   getUserByIdAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   updateUserByIdAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   deleteUserByAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
-
+  userInfoById: (id) => `${BASE_URL}/auth/user-info/${id}`,
+  
   // admin manage department
   departmentsAdmin: `${BASE_URL}/admin/departments`,
   departmentByIdAdmin: (id) => `${BASE_URL}/admin/departments/${id}`,
