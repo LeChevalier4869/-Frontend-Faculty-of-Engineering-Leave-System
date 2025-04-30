@@ -9,8 +9,7 @@ export const apiEndpoints = {
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
   updateUserRole: `${BASE_URL}/auth/update-role`, // POST /auth/update-role/:id
-  updateUser: `${BASE_URL}/users`, // PUT  /users
-
+  updateUser: (id) => `${BASE_URL}/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,
   getUserByIdAdmin: (id) => `${BASE_URL}/admin/users/${id}`,

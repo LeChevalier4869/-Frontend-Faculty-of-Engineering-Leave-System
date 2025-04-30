@@ -9,15 +9,18 @@ export default function EditProfile() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // detect ADMIN role
   const isAdmin =
     Array.isArray(user?.userRoles) && user.userRoles.some(ur => ur.role?.name === "ADMIN") ||
     user?.role === "ADMIN" ||
     Array.isArray(user?.roleNames) && user.roleNames.includes("ADMIN");
 
+  // lookup data
   const [departments, setDepartments] = useState([]);
   const [personnelTypes, setPersonnelTypes] = useState([]);
   const [employmentTypes, setEmploymentTypes] = useState([]);
 
+  // initialize form
   const initialForm = {
     prefixName: user.prefixName || "",
     firstName: user.firstName || "",
@@ -25,48 +28,54 @@ export default function EditProfile() {
     email: user.email || "",
     phone: user.phone || "",
     position: user.position || "",
-    hireDate: user.hireDate ? new Date(user.hireDate).toISOString().slice(0, 10) : "",
+    hireDate: user.hireDate
+      ? new Date(user.hireDate).toISOString().slice(0, 10)
+      : "",
     sex: user.sex || "",
     personnelTypeId: user.personnelType?.id || "",
     departmentId: user.department?.id || "",
     employmentType: user.employmentType || "",
     inActiveRaw: user.inActive ? "true" : "false",
   };
-
   const [formData, setFormData] = useState(initialForm);
 
+  // fetch dropdowns
   useEffect(() => {
     const fetchLookups = async () => {
       try {
         const token = localStorage.getItem("token");
         const [deptRes, ptRes, empRes] = await Promise.all([
-          axios.get(apiEndpoints.lookupDepartments,    { headers:{ Authorization:`Bearer ${token}` } }),
-          axios.get(apiEndpoints.lookupPersonnelTypes, { headers:{ Authorization:`Bearer ${token}` } }),
-          axios.get(apiEndpoints.lookupEmploymentTypes,{ headers:{ Authorization:`Bearer ${token}` } }),
+          axios.get(apiEndpoints.lookupDepartments, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(apiEndpoints.lookupPersonnelTypes, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(apiEndpoints.lookupEmploymentTypes, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
         setDepartments(deptRes.data.data);
         setPersonnelTypes(ptRes.data.data);
-        const emp = empRes.data.data ?? ["ACADEMIC","SUPPORT"];
-        setEmploymentTypes(emp.map(e => ({ value:e, label:e })));
-      } catch(err) {
-        console.error(err);
+        const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
+        setEmploymentTypes(emp.map(e => ({ value: e, label: e })));
+      } catch (err) {
+        console.error("Lookup load failed:", err);
       }
     };
     fetchLookups();
-  }, []);  
+  }, []);
 
   const handleChange = e => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked.toString() : value
+      [name]: type === "checkbox" ? checked.toString() : value
     }));
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
+
     try {
       const token = localStorage.getItem("token");
+      if (!token) throw new Error("No auth token");
+
+      // build payload
       const payload = {
         prefixName: formData.prefixName,
         firstName: formData.firstName,
@@ -76,6 +85,7 @@ export default function EditProfile() {
         position: formData.position,
         hireDate: new Date(formData.hireDate),
         sex: formData.sex,
+        // admin-only fields
         ...(isAdmin && {
           personnelTypeId: Number(formData.personnelTypeId),
           departmentId: Number(formData.departmentId),
@@ -83,15 +93,19 @@ export default function EditProfile() {
           inActive: formData.inActiveRaw === "true",
         })
       };
-      const endpoint = isAdmin
-        ? apiEndpoints.updateUserByIdAdmin(user.id)
-        : `${apiEndpoints.updateUser}/${user.id}`;
+      const url = apiEndpoints.updateUser(user.id);
+      console.log("🔵 Debug URL to PUT:", url);
+      await axios.put(
+        url,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      await axios.put(endpoint, payload, { headers: { Authorization: `Bearer ${token}` } });
-      Swal.fire("อัปเดตสำเร็จ", "โปรไฟล์ของคุณได้รับการอัปเดตแล้ว", "success")
-        .then(() => navigate(isAdmin ? "/admin/manage-user" : "/profile"));
+      await Swal.fire("อัปเดตสำเร็จ", "โปรไฟล์ถูกอัปเดตแล้ว", "success");
+      navigate(isAdmin ? "/admin/manage-user" : "/profile");
+
     } catch (err) {
-      console.error(err);
+      console.error("Update failed:", err);
       Swal.fire("อัปเดตล้มเหลว", err.response?.data?.message || err.message, "error");
     }
   };
@@ -105,22 +119,18 @@ export default function EditProfile() {
           value={formData[name]}
           onChange={handleChange}
           required
-          className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-48 overflow-y-auto"
+          className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">-- เลือก{label} --</option>
           {options.map(opt => (
-            <option
-              key={opt.value || opt.id}
-              value={opt.value || opt.id}
-              className="bg-white text-black hover:bg-gray-100"
-            >
+            <option key={opt.value || opt.id} value={opt.value || opt.id}>
               {opt.label || opt.name}
             </option>
           ))}
         </select>
         <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-          <svg className="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
       </div>
@@ -148,9 +158,8 @@ export default function EditProfile() {
                   name={name}
                   value={formData[name]}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder={label}
                   required
+                  className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             ))}
@@ -162,8 +171,8 @@ export default function EditProfile() {
                 name="hireDate"
                 value={formData.hireDate}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
                 required
+                className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -177,18 +186,18 @@ export default function EditProfile() {
             {renderDropdown("ประเภทพนักงาน", "employmentType", employmentTypes)}
 
             <div className="md:col-span-2 flex items-center">
-              <label className="inline-flex items-center space-x-2">
+              <label className="inline-flex items-center space-x-2 text-black">
                 <input
                   type="checkbox"
                   name="inActiveRaw"
                   checked={formData.inActiveRaw === "true"}
-                  onChange={e => setFormData(prev => ({
-                    ...prev,
+                  onChange={e => setFormData(fd => ({
+                    ...fd,
                     inActiveRaw: e.target.checked ? "true" : "false"
                   }))}
                   className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className="text-sm font-medium text-black">อยู่ในสถานะใช้งาน</span>
+                <span className="text-sm font-medium">อยู่ในสถานะใช้งาน</span>
               </label>
             </div>
           </div>
@@ -197,13 +206,13 @@ export default function EditProfile() {
             <button
               type="button"
               onClick={() => navigate(isAdmin ? "/admin/manage-user" : "/profile")}
-              className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg text-black"
+              className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black rounded-lg"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
             >
               บันทึก
             </button>
