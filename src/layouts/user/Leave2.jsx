@@ -4,6 +4,7 @@ import useLeaveRequest from "../../hooks/useLeaveRequest";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import dayjs from "dayjs";
+import "dayjs/locale/th";
 import { Plus } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
@@ -22,6 +23,7 @@ export default function Leave2() {
   const [filterDate, setFilterDate] = useState(today);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLeaveType, setFilterLeaveType] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc"); // default sorting from latest to oldest
 
   const statusLabels = {
     APPROVED: "อนุมัติแล้ว",
@@ -78,17 +80,24 @@ export default function Leave2() {
   }, []);
 
   const formatDate = (iso) =>
-    dayjs(iso).locale("th").format("DD/MM/YYYY");
+    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // แสดงวันที่และเวลา
 
-  // combined filters: date, status, leaveType
+  // combined filters: date, status, leaveType, and sorting
   const filtered = useMemo(() => {
-    return leaveRequest.filter((lr) => {
-      const byDate = dayjs(lr.createdAt).format("YYYY-MM-DD") === filterDate;
-      const byStatus = filterStatus ? lr.status === filterStatus : true;
-      const byType = filterLeaveType ? String(lr.leaveTypeId) === filterLeaveType : true;
-      return byDate && byStatus && byType;
-    });
-  }, [leaveRequest, filterDate, filterStatus, filterLeaveType]);
+    return leaveRequest
+      .slice() // ป้องกันการ mutate state เดิม
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return sortOrder === "desc" ? dateB - dateA : dateA - dateB; // sorting by createdAt
+      })
+      .filter((lr) => {
+        const byDate = dayjs(lr.createdAt).format("YYYY-MM-DD") === filterDate;
+        const byStatus = filterStatus ? lr.status === filterStatus : true;
+        const byType = filterLeaveType ? String(lr.leaveTypeId) === filterLeaveType : true;
+        return byDate && byStatus && byType;
+      });
+  }, [leaveRequest, filterDate, filterStatus, filterLeaveType, sortOrder]);
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -148,8 +157,17 @@ export default function Leave2() {
               <option key={id} value={id}>{name}</option>
             ))}
           </select>
+           {/* Sorting */}
+           <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="bg-white px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="desc">เรียงจากใหม่สุด</option>
+            <option value="asc">เรียงจากเก่าสุด</option>
+          </select>
           <button
-            onClick={() => { setFilterDate(today); setFilterStatus(""); setFilterLeaveType(""); setCurrentPage(1); }}
+            onClick={() => { setFilterDate(today); setFilterStatus(""); setFilterLeaveType(""); setCurrentPage(1); setSortOrder("desc"); }}
             className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
           >
             ล้าง

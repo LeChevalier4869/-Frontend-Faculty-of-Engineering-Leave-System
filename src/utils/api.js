@@ -1,6 +1,7 @@
 import axios from "axios";
 // export const BASE_URL = "http://localhost:8000";
-export const BASE_URL = "https://backend-faculty-of-engineering-leave.onrender.com";
+export const BASE_URL =
+  "https://backend-faculty-of-engineering-leave.onrender.com";
 
 export const apiEndpoints = {
   // auth
@@ -8,7 +9,7 @@ export const apiEndpoints = {
   register: `${BASE_URL}/auth/register`, // POST
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
-  updateUserRole: `${BASE_URL}/auth/update-role`, 
+  updateUserRole: `${BASE_URL}/auth/update-role`,
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,
@@ -16,11 +17,10 @@ export const apiEndpoints = {
   updateUserByIdAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   deleteUserByAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   userInfoById: (id) => `${BASE_URL}/auth/user-info/${id}`,
-  
+
   // admin manage department
   departmentsAdmin: `${BASE_URL}/admin/departments`,
   departmentByIdAdmin: (id) => `${BASE_URL}/admin/departments/${id}`,
-
 
   // admin manage organization
   organizationCreate: `${BASE_URL}/admin/organizations`,
@@ -35,6 +35,8 @@ export const apiEndpoints = {
   // leave request
   leaveRequest: `${BASE_URL}/leave-requests`, // CRUD
   leaveRequestMe: `${BASE_URL}/leave-requests/me`, // GET
+  getLeaveById: (id) => `${BASE_URL}/leave-requests/getLeaveRequest/${id}`,
+  getLeaveByUserId: (id) => `${BASE_URL}/leave-requests/user/${id}`,
   leaveRequestForFirstApprover: `${BASE_URL}/leave-requests/for-approver1`, // GET
   leaveRequestForVerifier: `${BASE_URL}/leave-requests/for-verifier`, // GET
   leaveRequestForReceiver: `${BASE_URL}/leave-requests/for-receiver`, // GET
@@ -67,10 +69,10 @@ export const apiEndpoints = {
   //----------------- Reject Leave Requests ------------------//
   RejectleaveRequestsByFirstApprover: (id) =>
     `${BASE_URL}/leave-requests/${id}/reject-by-approver1`,
-  
+
   RejectleaveRequestsByVerifier: (id) =>
     `${BASE_URL}/leave-requests/${id}/reject-by-verifier`,
-  
+
   RejectleaveRequestsByReceiver: (id) =>
     `${BASE_URL}/leave-requests/${id}/reject-by-receiver`,
 
