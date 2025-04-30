@@ -8,8 +8,8 @@ export const apiEndpoints = {
   register: `${BASE_URL}/auth/register`, // POST
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
-  updateUserRole: `${BASE_URL}/auth/update-role`, // POST /auth/update-role/:id
-  updateUser: (id) => `${BASE_URL}/users/${id}`,
+  updateUserRole: `${BASE_URL}/auth/update-role`, 
+  updateUser: (id) => `${BASE_URL}/auth/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,
   getUserByIdAdmin: (id) => `${BASE_URL}/admin/users/${id}`,

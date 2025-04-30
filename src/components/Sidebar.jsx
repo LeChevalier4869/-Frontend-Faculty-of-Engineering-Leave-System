@@ -1,10 +1,10 @@
+// src/components/Sidebar.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { HiOutlineChevronDown } from "react-icons/hi";
 import {
   FaTachometerAlt,
   FaCalendarAlt,
-  FaPlusCircle,
   FaClipboardList,
   FaUser,
   FaCheckCircle,
@@ -13,48 +13,60 @@ import {
 import useAuth from "../hooks/useAuth";
 
 const userNav = [
-  { to: "/dashboard", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
-  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaClipboardList /> },
-  { to: "/leave", text: "การลา", icon: <FaCalendarAlt /> },
-  { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser /> },
+  { to: "/dashboard",           text: "แดชบอร์ด",               icon: <FaTachometerAlt /> },
+  { to: "/leave/balance",       text: "ยอดวันลาคงเหลือ",         icon: <FaClipboardList /> },
+  { to: "/leave",               text: "การลา",                   icon: <FaCalendarAlt /> },
+  { to: "/profile",             text: "โปรไฟล์ผู้ใช้",            icon: <FaUser /> },
 ];
 
 const approverNav1 = [
   { to: "/approver/leave-request-approver1", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
 ];
-const verifierNav = [
+const verifierNav    = [
   { to: "/approver/leave-request-verifier", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
 ];
-const receiverNav = [
+const receiverNav    = [
   { to: "/approver/leave-request-receiver", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
 ];
-const approverNav2 = [
+const approverNav2   = [
   { to: "/approver/leave-request-approver2", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
 ];
-const approverNav3 = [
+const approverNav3   = [
   { to: "/approver/leave-request-approver3", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
 ];
-const approverNav4 = [
+const approverNav4   = [
   { to: "/approver/leave-request-approver4", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
 ];
 
 const adminNav = [
-  { to: "/", text: "เมนูแอดมิน", icon: <FaUsersCog /> },
-  { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
-  { to: "/admin/organization-manage", text: "จัดการองค์กร", icon: <FaUsersCog /> },
-  { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
-  { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaUsersCog /> },
-  { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
-  { to: "/admin/setting-manage", text: "จัดการค่าของระบบ", icon: <FaUsersCog /> },
-  { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
-  { to: "/admin/edit-profile", text: "การตั้งค่า", icon: <FaUsersCog /> },
+  { to: "/admin/manage-user",        text: "จัดการผู้ใช้งาน",         icon: <FaUsersCog /> },
+  { to: "/admin/organization-manage",text: "จัดการองค์กร",             icon: <FaUsersCog /> },
+  { to: "/admin/department-manage",  text: "จัดการแผนก",               icon: <FaUsersCog /> },
+  { to: "/admin/personel-manage",    text: "จัดการประเภทบุคคล",        icon: <FaUsersCog /> },
+  { to: "/admin/holiday-manage",     text: "จัดการวันหยุด",             icon: <FaUsersCog /> },
+  { to: "/admin/setting-manage",     text: "จัดการค่าของระบบ",          icon: <FaUsersCog /> },
+  { to: "/admin/leave-type-manage",  text: "จัดการประเภทการลา",         icon: <FaUsersCog /> },
+  { to: "/admin/edit-profile",       text: "การตั้งค่า",               icon: <FaUsersCog /> },
 ];
 
-function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
+export default function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
   const { user } = useAuth();
   const [openDropdown, setOpenDropdown] = useState(null);
 
-  const toggleDropdown = (title) => setOpenDropdown(openDropdown === title ? null : title);
+  // 1) Don’t render until user is loaded
+  if (!user) return null;
+
+  // 2) Normalize roles array
+  const roles = Array.isArray(user.role)
+    ? user.role
+    : Array.isArray(user.roleNames)
+    ? user.roleNames
+    : [];
+
+  const hasRole = (r) => roles.includes(r);
+
+  const toggleDropdown = (title) =>
+    setOpenDropdown(openDropdown === title ? null : title);
 
   const renderDropdown = (title, menu) => (
     <div className="flex flex-col">
@@ -94,19 +106,12 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
   return (
     <aside
       className={`fixed md:static top-0 left-0 z-40 h-full bg-gray-900 text-white font-kanit transform transition-all duration-300 ease-in-out
-        ${isMini ? "w-20" : "w-64"}
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-      `}
+        ${isMini ? "w-20" : "w-64"} ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
-        <span className="text-2xl font-bold truncate">
-          {!isMini && "เมนูหลัก"}
-        </span>
-        <button
-          onClick={toggleMiniSidebar}
-          className="p-1 rounded hover:bg-gray-700 transition"
-        >
+        {!isMini && <span className="text-2xl font-bold truncate">เมนูหลัก</span>}
+        <button onClick={toggleMiniSidebar} className="p-1 rounded hover:bg-gray-700 transition">
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {isMini ? (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
@@ -119,8 +124,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
 
       {/* Menu */}
       <nav className="flex flex-col gap-2 p-4">
-        {/* USER */}
-        {user?.role.includes("USER") &&
+        {hasRole("USER") &&
           userNav.map((item, idx) => (
             <Link
               key={idx}
@@ -132,19 +136,15 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
             </Link>
           ))}
 
-        {/* APPROVER */}
-        {user?.role.includes("APPROVER_1") && renderDropdown("เมนูหัวหน้าสาขา", approverNav1)}
-        {user?.role.includes("VERIFIER") && renderDropdown("เมนูผู้ตรวจสอบ", verifierNav)}
-        {user?.role.includes("RECEIVER") && renderDropdown("เมนูผู้รับหนังสือ", receiverNav)}
-        {user?.role.includes("APPROVER_2") && renderDropdown("เมนูผู้อนุมัติ2", approverNav2)}
-        {user?.role.includes("APPROVER_3") && renderDropdown("เมนูผู้อนุมัติ3", approverNav3)}
-        {user?.role.includes("APPROVER_4") && renderDropdown("เมนูผู้อนุมัติ4", approverNav4)}
+        {hasRole("APPROVER_1") && renderDropdown("เมนูหัวหน้าสาขา", approverNav1)}
+        {hasRole("VERIFIER")   && renderDropdown("เมนูผู้ตรวจสอบ", verifierNav)}
+        {hasRole("RECEIVER")   && renderDropdown("เมนูผู้รับหนังสือ", receiverNav)}
+        {hasRole("APPROVER_2") && renderDropdown("เมนูผู้อนุมัติ2", approverNav2)}
+        {hasRole("APPROVER_3") && renderDropdown("เมนูผู้อนุมัติ3", approverNav3)}
+        {hasRole("APPROVER_4") && renderDropdown("เมนูผู้อนุมัติ4", approverNav4)}
 
-        {/* ADMIN */}
-        {user?.role.includes("ADMIN") && renderDropdown("เมนูผู้ดูแล", adminNav)}
+        {hasRole("ADMIN") && renderDropdown("เมนูผู้ดูแล", adminNav)}
       </nav>
     </aside>
   );
 }
-
-export default Sidebar;

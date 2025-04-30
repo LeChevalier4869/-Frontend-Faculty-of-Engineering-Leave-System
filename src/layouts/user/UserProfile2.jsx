@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
-import React from "react";
 import useAuth from "../../hooks/useAuth";
 import { FaUserAlt } from "react-icons/fa";
+import React, { useEffect } from "react";
 
 function UserProfile2() {
   const { user } = useAuth();
+
+  useEffect(() => {
+    console.log("UserProfile2 – user context updated:", user);
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-white px-4 py-10 font-kanit">
