@@ -10,6 +10,13 @@ export default function LeaveTypeManage() {
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ปรับขนาดฟิลด์และปุ่ม
+  const inputClass =
+    "col-span-2 border border-gray-300 rounded-lg px-3 py-2 bg-white text-base text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400";
+  const checkboxClass = "w-5 h-5 text-gray-700";
+  const buttonClass =
+    "text-white text-base px-4 py-2 rounded-lg transition";
+
   const authHeader = () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -50,7 +57,7 @@ export default function LeaveTypeManage() {
 
   const resetForm = () => {
     setName("");
-    setIsAvailable(true);
+    setIsAvailable(false);
     setEditId(null);
   };
 
@@ -132,21 +139,22 @@ export default function LeaveTypeManage() {
             placeholder="ชื่อประเภทการลา"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="col-span-2 border border-gray-300 rounded-lg px-4 py-2"
+            className={inputClass}
           />
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={isAvailable}
               onChange={() => setIsAvailable(!isAvailable)}
+              className={checkboxClass}
             />
-            ลาในระบบได้
+            <span className="text-base">ลาในระบบได้</span>
           </label>
           <button
             onClick={editId ? handleUpdate : handleAdd}
-            className={`${
-              editId ? "bg-gray-700" : "bg-green-600"
-            } text-white px-4 py-2 rounded-lg hover:opacity-90`}
+            className={`${buttonClass} ${
+              editId ? "bg-gray-700 hover:bg-gray-800" : "bg-green-600 hover:bg-green-700"
+            }`}
           >
             {editId ? "อัปเดต" : "เพิ่ม"}
           </button>
@@ -157,10 +165,10 @@ export default function LeaveTypeManage() {
           <table className="min-w-full text-sm text-black bg-white">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-3">#</th>
-                <th className="px-4 py-3">ชื่อ</th>
-                <th className="px-4 py-3">ลาในระบบได้</th>
-                <th className="px-4 py-3 text-center">การจัดการ</th>
+                <th className="px-3 py-2">#</th>
+                <th className="px-3 py-2">ชื่อ</th>
+                <th className="px-3 py-2">ลาในระบบได้</th>
+                <th className="px-3 py-2 text-center">การจัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -171,23 +179,26 @@ export default function LeaveTypeManage() {
                   </td>
                 </tr>
               ) : leaveTypes.length > 0 ? (
-                leaveTypes.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2">{t.id}</td>
-                    <td className="px-4 py-2">{t.name}</td>
-                    <td className="px-4 py-2 text-center align-middle">
+                leaveTypes.map((t, idx) => (
+                  <tr
+                    key={t.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-3 py-2">{t.id}</td>
+                    <td className="px-3 py-2">{t.name}</td>
+                    <td className="px-3 py-2 text-center">
                       {t.isAvailable ? "✅" : "❌"}
                     </td>
-                    <td className="px-4 py-2 text-center">
+                    <td className="px-3 py-2 text-center space-x-2">
                       <button
                         onClick={() => handleEdit(t.id)}
-                        className="bg-gray-700 text-white px-3 py-1 rounded-lg text-sm hover:bg-gray-800"
+                        className="bg-gray-700 hover:bg-gray-800 text-white px-2 py-1 rounded-lg text-xs"
                       >
                         แก้ไข
                       </button>
                       <button
                         onClick={() => handleDelete(t.id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600"
+                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg text-xs"
                       >
                         ลบ
                       </button>
@@ -196,7 +207,7 @@ export default function LeaveTypeManage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="text-center py-6 text-black">
+                  <td colSpan="4" className="text-center py-6">
                     ไม่มีข้อมูลประเภทการลา
                   </td>
                 </tr>

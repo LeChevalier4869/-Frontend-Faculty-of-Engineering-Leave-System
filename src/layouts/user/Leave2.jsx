@@ -4,9 +4,12 @@ import useLeaveRequest from "../../hooks/useLeaveRequest";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import dayjs from "dayjs";
-import { Plus } from "lucide-react";
+import isBetween from "dayjs/plugin/isBetween";
+import { Plus, ChevronDown } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
+
+dayjs.extend(isBetween);
 
 const PAGE_SIZE = 8;
 
@@ -17,16 +20,16 @@ export default function Leave2() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
 
-  // default filterDate to today
-  const today = dayjs().format("YYYY-MM-DD");
-  const [filterDate, setFilterDate] = useState(today);
+  // filters: start/end dates, status, leave type
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLeaveType, setFilterLeaveType] = useState("");
 
   const statusLabels = {
-    APPROVED: "อนุมัติแล้ว",
-    PENDING:  "รออนุมัติ",
-    REJECTED: "ปฏิเสธ",
+    APPROVED:  "อนุมัติแล้ว",
+    PENDING:   "รออนุมัติ",
+    REJECTED:  "ปฏิเสธ",
     CANCELLED: "ยกเลิก",
   };
   const statusColors = {
@@ -80,15 +83,28 @@ export default function Leave2() {
   const formatDate = (iso) =>
     dayjs(iso).locale("th").format("DD/MM/YYYY");
 
-  // combined filters: date, status, leaveType
+  // combined filters: date range, status, leaveType
   const filtered = useMemo(() => {
     return leaveRequest.filter((lr) => {
-      const byDate = dayjs(lr.createdAt).format("YYYY-MM-DD") === filterDate;
+      const created = dayjs(lr.createdAt).format("YYYY-MM-DD");
+      let byDate = true;
+
+      if (filterStartDate && filterEndDate) {
+        byDate = dayjs(created).isBetween(filterStartDate, filterEndDate, null, "[]");
+      } else if (filterStartDate) {
+        byDate = created >= filterStartDate;
+      } else if (filterEndDate) {
+        byDate = created <= filterEndDate;
+      }
+
       const byStatus = filterStatus ? lr.status === filterStatus : true;
-      const byType = filterLeaveType ? String(lr.leaveTypeId) === filterLeaveType : true;
+      const byType = filterLeaveType
+        ? String(lr.leaveTypeId) === filterLeaveType
+        : true;
+
       return byDate && byStatus && byType;
     });
-  }, [leaveRequest, filterDate, filterStatus, filterLeaveType]);
+  }, [leaveRequest, filterStartDate, filterEndDate, filterStatus, filterLeaveType]);
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -121,35 +137,68 @@ export default function Leave2() {
         </div>
 
         {/* filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }}
-            className="bg-white px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <select
-            value={filterStatus}
-            onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
-            className="bg-white px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="">สถานะทั้งหมด</option>
-            {Object.entries(statusLabels).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
-            ))}
-          </select>
-          <select
-            value={filterLeaveType}
-            onChange={(e) => { setFilterLeaveType(e.target.value); setCurrentPage(1); }}
-            className="bg-white px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="">ประเภทการลาทั้งหมด</option>
-            {Object.entries(leaveTypesMap).map(([id, name]) => (
-              <option key={id} value={id}>{name}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          {/* Date range */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm">จาก</label>
+            <input
+              type="date"
+              value={filterStartDate}
+              onChange={(e) => { setFilterStartDate(e.target.value); setCurrentPage(1); }}
+              className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <label className="text-sm">ถึง</label>
+            <input
+              type="date"
+              value={filterEndDate}
+              onChange={(e) => { setFilterEndDate(e.target.value); setCurrentPage(1); }}
+              className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+
+          {/* Status dropdown */}
+          <div className="relative w-48">
+            <select
+              value={filterStatus}
+              onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+              className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="">สถานะทั้งหมด</option>
+              {Object.entries(statusLabels).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+              <ChevronDown className="w-4 h-4 text-gray-500" />
+            </div>
+          </div>
+
+          {/* Leave-type dropdown */}
+          <div className="relative w-48">
+            <select
+              value={filterLeaveType}
+              onChange={(e) => { setFilterLeaveType(e.target.value); setCurrentPage(1); }}
+              className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="">ประเภทการลาทั้งหมด</option>
+              {Object.entries(leaveTypesMap).map(([id, name]) => (
+                <option key={id} value={id}>{name}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+              <ChevronDown className="w-4 h-4 text-gray-500" />
+            </div>
+          </div>
+
+          {/* Clear filters */}
           <button
-            onClick={() => { setFilterDate(today); setFilterStatus(""); setFilterLeaveType(""); setCurrentPage(1); }}
+            onClick={() => {
+              setFilterStartDate("");
+              setFilterEndDate("");
+              setFilterStatus("");
+              setFilterLeaveType("");
+              setCurrentPage(1);
+            }}
             className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
           >
             ล้าง
@@ -196,12 +245,18 @@ export default function Leave2() {
                     <td className="px-4 py-3">{formatDate(leave.startDate)}</td>
                     <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors[statusKey] || "bg-gray-100 text-gray-700"}`}>{statusLabels[statusKey] || leave.status}</span>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors[statusKey] || "bg-gray-100 text-gray-700"}`}>
+                        {statusLabels[statusKey] || leave.status}
+                      </span>
                     </td>
                   </tr>
                 );
               }) : (
-                <tr><td colSpan="5" className="px-4 py-6 text-center text-gray-500">ไม่มีข้อมูลการลา</td></tr>
+                <tr>
+                  <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
+                    ไม่มีข้อมูลการลา
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -214,13 +269,17 @@ export default function Leave2() {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="px-3 py-1 border border-gray-300 rounded-lg bg-white disabled:opacity-50 transition"
-            >ก่อนหน้า</button>
+            >
+              ก่อนหน้า
+            </button>
             <span className="px-3 py-1 text-gray-800">หน้า {currentPage} / {totalPages}</span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="px-3 py-1 border border-gray-300 rounded-lg bg-white disabled:opacity-50 transition"
-            >ถัดไป</button>
+            >
+              ถัดไป
+            </button>
           </div>
         )}
       </div>

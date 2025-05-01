@@ -2,19 +2,37 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { BASE_URL } from "../../utils/api";
-import { apiEndpoints } from "../../utils/api";
 
 const PAGE_SIZE = 8;
 
 export default function SettingManage() {
   const [settings, setSettings] = useState([]);
   const [newKey, setNewKey] = useState("");
-  const [newType, setNewType] = useState(""); // New state for type
+  const [newType, setNewType] = useState("");
   const [newValue, setNewValue] = useState("");
   const [description, setDescription] = useState("");
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // ปรับขนาดฟิลด์ให้เล็กลง
+  const inputClass =
+    "col-span-2 border border-gray-300 rounded-lg px-3 py-2 bg-white text-base text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400";
+  const dropdownClass =
+    "appearance-none col-span-2 bg-white text-black border border-gray-300 rounded-lg px-3 py-2 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-full";
+  const wrapperClass = "relative col-span-2 w-full";
+
+  const ArrowIcon = () => (
+    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500">
+      <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fillRule="evenodd"
+          d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 01.02-1.06z"
+          clipRule="evenodd"
+        />
+      </svg>
+    </div>
+  );
 
   const authHeader = () => {
     const token = localStorage.getItem("token");
@@ -56,7 +74,7 @@ export default function SettingManage() {
 
   const resetForm = () => {
     setNewKey("");
-    setNewType(""); // Reset the type
+    setNewType("");
     setNewValue("");
     setDescription("");
     setEditId(null);
@@ -84,10 +102,10 @@ export default function SettingManage() {
   const handleEdit = (id) => {
     const setting = settings.find((s) => s.id === id);
     setNewKey(setting.key);
-    setNewType(setting.type); // Set the type for editing
+    setNewType(setting.type);
     setNewValue(setting.value);
     setDescription(setting.description || "");
-    setEditId(setting.id);
+    setEditId(id);
   };
 
   const handleUpdate = async () => {
@@ -149,34 +167,39 @@ export default function SettingManage() {
             placeholder="กรอก Key"
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
-            className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
+            className={inputClass}
           />
           <input
             type="text"
             placeholder="กรอก Value"
             value={newValue}
             onChange={(e) => setNewValue(e.target.value)}
-            className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
+            className={inputClass}
           />
           <input
+            type="text"
             placeholder="คำอธิบาย (ไม่บังคับ)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
+            className={inputClass}
           />
-          {/* Select for Type */}
-          <select
-            value={newType}
-            onChange={(e) => setNewType(e.target.value)}
-            className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
-          >
-            <option value="">เลือก Type</option>
-            <option value="string">String</option>
-            <option value="number">Number</option>
-            <option value="boolean">Boolean</option>
-            <option value="date">Date</option>
-            <option value="json">JSON</option>
-          </select>
+
+          {/* Type dropdown */}
+          <div className={wrapperClass}>
+            <select
+              value={newType}
+              onChange={(e) => setNewType(e.target.value)}
+              className={dropdownClass}
+            >
+              <option value="">เลือก Type</option>
+              <option value="string">String</option>
+              <option value="number">Number</option>
+              <option value="boolean">Boolean</option>
+              <option value="date">Date</option>
+              <option value="json">JSON</option>
+            </select>
+            <ArrowIcon />
+          </div>
 
           <button
             onClick={editId ? handleUpdate : handleAdd}
@@ -184,7 +207,7 @@ export default function SettingManage() {
               editId
                 ? "bg-gray-700 hover:bg-gray-800"
                 : "bg-gray-600 hover:bg-gray-700"
-            } text-white px-4 py-2 rounded-lg transition-all`}
+            } text-white text-base px-4 py-2 rounded-lg transition`}
           >
             {editId ? "อัปเดต" : "เพิ่ม"}
           </button>
@@ -195,12 +218,12 @@ export default function SettingManage() {
           <table className="min-w-full bg-white text-sm text-black">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-4 py-3">#</th>
-                <th className="px-4 py-3">Key</th>
-                <th className="px-4 py-3">Value</th>
-                <th className="px-4 py-3">คำอธิบาย</th>
-                <th className="px-4 py-3">Type</th> {/* New column for Type */}
-                <th className="px-4 py-3 text-center">การจัดการ</th>
+                <th className="px-4 py-2">#</th>
+                <th className="px-4 py-2">Key</th>
+                <th className="px-4 py-2">Value</th>
+                <th className="px-4 py-2">คำอธิบาย</th>
+                <th className="px-4 py-2">Type</th>
+                <th className="px-4 py-2 text-center">การจัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -222,7 +245,7 @@ export default function SettingManage() {
                     <td className="px-4 py-2">{s.key}</td>
                     <td className="px-4 py-2">{s.value}</td>
                     <td className="px-4 py-2">{s.description || "ไม่มี"}</td>
-                    <td className="px-4 py-2">{s.type}</td> {/* Display Type */}
+                    <td className="px-4 py-2">{s.type}</td>
                     <td className="px-4 py-2 text-center space-x-2">
                       <button
                         onClick={() => handleEdit(s.id)}
@@ -251,7 +274,7 @@ export default function SettingManage() {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {totalPages > 1 && ( 
           <div className="flex justify-center gap-2 mt-4">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -264,7 +287,9 @@ export default function SettingManage() {
               หน้า {currentPage} / {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() =>
+                setCurrentPage((p) => Math.min(totalPages, p + 1))
+              }
               disabled={currentPage === totalPages}
               className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50"
             >

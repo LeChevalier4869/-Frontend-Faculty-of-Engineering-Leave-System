@@ -130,7 +130,7 @@ export default function OrganizationManage() {
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">จัดการหองค์กร</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">จัดการองค์กร</h1>
 
         {/* Form */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">

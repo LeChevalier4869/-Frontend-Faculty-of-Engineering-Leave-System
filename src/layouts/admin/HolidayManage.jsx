@@ -15,7 +15,26 @@ export default function HolidayManage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc"); // เพิ่ม state สำหรับการเรียงลำดับ
+  const [sortOrder, setSortOrder] = useState("asc");
+
+  // ปรับขนาดฟิลด์ให้เล็กลง
+  const inputClass =
+    "w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400";
+  const dropdownClass =
+    "appearance-none w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400";
+  const wrapperClass = "relative w-full";
+
+  const ArrowIcon = () => (
+    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500">
+      <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fillRule="evenodd"
+          d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 01.02-1.06z"
+          clipRule="evenodd"
+        />
+      </svg>
+    </div>
+  );
 
   const authHeader = () => {
     const token = localStorage.getItem("token");
@@ -70,12 +89,7 @@ export default function HolidayManage() {
     try {
       await axios.post(
         `${BASE_URL}/admin/holiday`,
-        {
-          date,
-          description,
-          isRecurring,
-          holidayType,
-        },
+        { date, description, isRecurring, holidayType },
         authHeader()
       );
       Swal.fire("เพิ่มวันหยุดสำเร็จ", "", "success");
@@ -103,12 +117,7 @@ export default function HolidayManage() {
     try {
       await axios.put(
         `${BASE_URL}/admin/holiday/${editId}`,
-        {
-          date,
-          description,
-          isRecurring,
-          holidayType,
-        },
+        { date, description, isRecurring, holidayType },
         authHeader()
       );
       Swal.fire("อัปเดตสำเร็จ", "", "success");
@@ -142,17 +151,14 @@ export default function HolidayManage() {
     }
   };
 
-  // กรองตามประเภท และการเรียงตามวัน
   const filtered = (filterType
     ? holidays.filter((h) => h.holidayType === filterType)
     : holidays
-  ).sort((a, b) => {
-    if (sortOrder === "asc") {
-      return new Date(a.date) - new Date(b.date); // เก่าสุดไปล่าสุด
-    } else {
-      return new Date(b.date) - new Date(a.date); // ล่าสุดไปเก่าสุด
-    }
-  });
+  ).sort((a, b) =>
+    sortOrder === "asc"
+      ? new Date(a.date) - new Date(b.date)
+      : new Date(b.date) - new Date(a.date)
+  );
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -169,83 +175,96 @@ export default function HolidayManage() {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2"
+            className={inputClass}
           />
           <input
             type="text"
             placeholder="รายละเอียด"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2"
+            className={inputClass}
           />
-          <select
-            value={holidayType}
-            onChange={(e) => setHolidayType(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2"
-          >
-            <option value="">เลือกประเภท</option>
-            <option value="หยุดนักขัตฤกษ์">หยุดนักขัตฤกษ์</option>
-            <option value="หยุดราชการพิเศษ">หยุดราชการพิเศษ</option>
-            <option value="วันสำคัญอื่น ๆ">วันสำคัญอื่น ๆ</option>
-          </select>
+
+          {/* holidayType dropdown */}
+          <div className={wrapperClass}>
+            <select
+              value={holidayType}
+              onChange={(e) => setHolidayType(e.target.value)}
+              className={dropdownClass}
+            >
+              <option value="">เลือกประเภท</option>
+              <option value="หยุดนักขัตฤกษ์">หยุดนักขัตฤกษ์</option>
+              <option value="หยุดราชการพิเศษ">หยุดราชการพิเศษ</option>
+              <option value="วันสำคัญอื่น ๆ">วันสำคัญอื่น ๆ</option>
+            </select>
+            <ArrowIcon />
+          </div>
+
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={isRecurring}
               onChange={() => setIsRecurring(!isRecurring)}
+              className="w-5 h-5 accent-gray-700"
             />
-            ประจำทุกปี
+            <span className="text-base">ประจำทุกปี</span>
           </label>
         </div>
 
-        {/* Button and Dropdown for Filter & Sort */}
-        <div className="mb-6 flex justify-between items-center flex-col sm:flex-row gap-2">
+        {/* Button + Filter & Sort */}
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <button
             onClick={editId ? handleUpdate : handleAdd}
-            className={`${
-              editId ? "bg-gray-700" : "bg-gray-700"
-            } hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition-all`}
+            className="bg-gray-700 hover:bg-gray-800 text-white text-base px-5 py-2 rounded-lg transition"
           >
             {editId ? "อัปเดต" : "เพิ่ม"}
           </button>
 
-          <div className="flex gap-2">
-            <select
-              value={filterType}
-              onChange={(e) => {
-                setFilterType(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border border-gray-300 rounded-lg px-4 py-2"
-            >
-              <option value="">-- เรียงตามประเภททั้งหมด --</option>
-              <option value="หยุดนักขัตฤกษ์">หยุดนักขัตฤกษ์</option>
-              <option value="หยุดราชการพิเศษ">หยุดราชการพิเศษ</option>
-              <option value="วันสำคัญอื่น ๆ">วันสำคัญอื่น ๆ</option>
-            </select>
+          <div className="flex gap-4 w-full sm:w-auto">
+            {/* filterType dropdown */}
+            <div className={wrapperClass}>
+              <select
+                value={filterType}
+                onChange={(e) => {
+                  setFilterType(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={dropdownClass}
+              >
+                <option value="">-- ทุกประเภท --</option>
+                <option value="หยุดนักขัตฤกษ์">หยุดนักขัตฤกษ์</option>
+                <option value="หยุดราชการพิเศษ">หยุดราชการพิเศษ</option>
+                <option value="วันสำคัญอื่น ๆ">วันสำคัญอื่น ๆ</option>
+              </select>
+              <ArrowIcon />
+            </div>
 
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-2"
-            >
-              <option value="asc">เรียงจากต้นปี</option>
-              <option value="desc">เรียงจากท้ายปี</option>
-            </select>
+            {/* sortOrder dropdown */}
+            <div className={wrapperClass}>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className={dropdownClass}
+              >
+                <option value="asc">เรียงจากต้นปี</option>
+                <option value="desc">เรียงจากท้ายปี</option>
+              </select>
+              <ArrowIcon />
+            </div>
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto rounded-lg shadow border border-gray-300">
-          <table className="min-w-full bg-white text-sm text-black">
+          <table className="min-w-full bg-white text-sm">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-4 py-3">#</th>
-                <th className="px-4 py-3">วันที่</th>
-                <th className="px-4 py-3">รายละเอียด</th>
-                <th className="px-4 py-3">ประเภท</th>
-                <th className="px-4 py-3">ประจำปี</th>
-                <th className="px-4 py-3 text-center">การจัดการ</th>
+                <th className="px-3 py-2">#</th>
+                <th className="px-3 py-2">วันที่</th>
+                <th className="px-3 py-2">รายละเอียด</th>
+                <th className="px-3 py-2">ประเภท</th>
+                <th className="px-3 py-2">ประจำปี</th>
+                <th className="px-3 py-2 text-center">การจัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -261,23 +280,23 @@ export default function HolidayManage() {
                     key={h.id}
                     className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
-                    <td className="px-4 py-2">{h.id}</td>
-                    <td className="px-4 py-2">{h.date.split("T")[0]}</td>
-                    <td className="px-4 py-2">{h.description}</td>
-                    <td className="px-4 py-2">{h.holidayType || "-"}</td>
-                    <td className="px-4 py-2 text-center">
+                    <td className="px-3 py-2">{h.id}</td>
+                    <td className="px-3 py-2">{h.date.split("T")[0]}</td>
+                    <td className="px-3 py-2">{h.description}</td>
+                    <td className="px-3 py-2">{h.holidayType || "-"}</td>
+                    <td className="px-3 py-2 text-center">
                       {h.isRecurring ? "✅" : "❌"}
                     </td>
-                    <td className="px-4 py-2 text-center space-x-2">
+                    <td className="px-3 py-2 text-center space-x-2">
                       <button
                         onClick={() => handleEdit(h.id)}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm"
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded-lg text-xs"
                       >
                         แก้ไข
                       </button>
                       <button
                         onClick={() => handleDelete(h.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
+                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg text-xs"
                       >
                         ลบ
                       </button>
@@ -286,7 +305,7 @@ export default function HolidayManage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-6 text-black">
+                  <td colSpan="6" className="text-center py-6">
                     ยังไม่มีข้อมูลวันหยุด
                   </td>
                 </tr>
@@ -301,17 +320,17 @@ export default function HolidayManage() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50"
+              className="px-2 py-1 border rounded-lg bg-white disabled:opacity-50 text-sm"
             >
               ก่อนหน้า
             </button>
-            <span className="px-3 py-1 text-black">
+            <span className="px-2 py-1 text-sm">
               หน้า {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50"
+              className="px-2 py-1 border rounded-lg bg-white disabled:opacity-50 text-sm"
             >
               ถัดไป
             </button>

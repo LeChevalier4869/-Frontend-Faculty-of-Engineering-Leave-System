@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { BASE_URL } from "../../utils/api";
+import { ChevronDown } from "lucide-react";
 
 const PAGE_SIZE = 8;
 
@@ -17,15 +18,13 @@ export default function DepartmentManage() {
   const [editHeadId, setEditHeadId] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedOrgFilter, setSelectedOrgFilter] = useState(""); // ✅ ตัวแปรใหม่
+  const [selectedOrgFilter, setSelectedOrgFilter] = useState("");
 
   const authHeader = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => {
-          window.location.href = "/login";
-        }
+        () => { window.location.href = "/login"; }
       );
       throw new Error("No token");
     }
@@ -36,9 +35,7 @@ export default function DepartmentManage() {
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => {
-          window.location.href = "/login";
-        }
+        () => { window.location.href = "/login"; }
       );
     } else {
       Swal.fire("Error", err.response?.data?.message || err.message, "error");
@@ -98,11 +95,7 @@ export default function DepartmentManage() {
     try {
       await axios.post(
         `${BASE_URL}/admin/departments`,
-        {
-          name: newName,
-          organizationId: +newOrgId,
-          headId: newHeadId ? +newHeadId : null,
-        },
+        { name: newName, organizationId: +newOrgId, headId: newHeadId ? +newHeadId : null },
         authHeader()
       );
       Swal.fire("บันทึกสำเร็จ!", "", "success");
@@ -130,11 +123,7 @@ export default function DepartmentManage() {
     try {
       await axios.put(
         `${BASE_URL}/admin/departments/${editId}`,
-        {
-          name: newName,
-          organizationId: +editOrgId,
-          headId: editHeadId ? +editHeadId : null,
-        },
+        { name: newName, organizationId: +editOrgId, headId: editHeadId ? +editHeadId : null },
         authHeader()
       );
       Swal.fire("อัปเดตสำเร็จ!", "", "success");
@@ -168,17 +157,14 @@ export default function DepartmentManage() {
     }
   };
 
-  // ✅ กรองแผนกตาม org filter ก่อนแบ่งหน้า
+  // กรองตาม org filter
   const filteredDepartments = selectedOrgFilter
     ? departments.filter((d) => d.organizationId === +selectedOrgFilter)
     : departments;
 
   const totalPages = Math.ceil(filteredDepartments.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const displayed = filteredDepartments.slice(
-    startIndex,
-    startIndex + PAGE_SIZE
-  );
+  const displayed = filteredDepartments.slice(startIndex, startIndex + PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
@@ -194,56 +180,39 @@ export default function DepartmentManage() {
             onChange={(e) => setNewName(e.target.value)}
             className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
           />
-          <div className="relative">
+
+          {/* Organization dropdown */}
+          <div className="relative w-full">
             <select
               value={editId ? editOrgId : newOrgId}
               onChange={(e) => {
-                const selectedOrgId = e.target.value;
+                const id = e.target.value;
                 if (editId) {
-                  setEditOrgId(selectedOrgId);
-                  loadUsersByOrganizationId(selectedOrgId);
+                  setEditOrgId(id);
+                  loadUsersByOrganizationId(id);
                 } else {
-                  setNewOrgId(selectedOrgId);
-                  loadUsersByOrganizationId(selectedOrgId);
+                  setNewOrgId(id);
+                  loadUsersByOrganizationId(id);
                 }
               }}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-8 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400 appearance-none"
+              className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-gray-400"
             >
               <option value="">เลือกหน่วยงาน</option>
               {organizations.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name}
-                </option>
+                <option key={org.id} value={org.id}>{org.name}</option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <svg
-                className="h-4 w-4 text-black"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+              <ChevronDown className="w-4 h-4 text-black" />
             </div>
           </div>
 
-          {/* เลือกหัวหน้าแผนก */}
-          <div className="relative">
+          {/* Head dropdown */}
+          <div className="relative w-full">
             <select
               value={editId ? editHeadId : newHeadId}
-              onChange={(e) =>
-                editId
-                  ? setEditHeadId(e.target.value)
-                  : setNewHeadId(e.target.value)
-              }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-8 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400 appearance-none"
+              onChange={(e) => editId ? setEditHeadId(e.target.value) : setNewHeadId(e.target.value)}
+              className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-gray-400"
             >
               <option value="">เลือกหัวหน้าแผนก (ไม่ระบุก็ได้)</option>
               {filteredUsers.map((user) => (
@@ -252,54 +221,43 @@ export default function DepartmentManage() {
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <svg
-                className="h-4 w-4 text-black"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+              <ChevronDown className="w-4 h-4 text-black" />
             </div>
           </div>
         </div>
+
         <div className="mb-6 flex justify-between items-center flex-col sm:flex-row gap-2">
           <button
             onClick={editId ? handleUpdate : handleAdd}
-            className={`col-span-1 ${
-              editId
-                ? "bg-gray-700 hover:bg-gray-800"
-                : "bg-gray-600 hover:bg-gray-700"
-            } text-white px-4 py-2 rounded-lg transition-all`}
+            className={`col-span-1 ${editId ? "bg-gray-700 hover:bg-gray-800" : "bg-gray-600 hover:bg-gray-700"} text-white px-4 py-2 rounded-lg transition-all`}
           >
             {editId ? "อัปเดต" : "เพิ่ม"}
           </button>
 
           {/* Filter by Organization */}
-          <div>
-            <label className="text-black">กรองตามหน่วยงาน: </label>
-            <select
-              value={selectedOrgFilter}
-              onChange={(e) => {
-                setSelectedOrgFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              <option value="">-- แสดงทั้งหมด --</option>
-              {organizations.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name}
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center space-x-2">
+            <label className="text-sm text-black whitespace-nowrap">
+              กรองตามหน่วยงาน:
+            </label>
+            <div className="relative w-full sm:w-48">
+              <select
+                value={selectedOrgFilter}
+                onChange={(e) => {
+                  setSelectedOrgFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-gray-400"
+              >
+                <option value="">-- แสดงทั้งหมด --</option>
+                {organizations.map((org) => (
+                  <option key={org.id} value={org.id}>{org.name}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <ChevronDown className="w-4 h-4 text-black" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -324,32 +282,18 @@ export default function DepartmentManage() {
                 </tr>
               ) : displayed.length > 0 ? (
                 displayed.map((d, idx) => (
-                  <tr
-                    key={d.id}
-                    className={`${
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-gray-100 transition`}
-                  >
+                  <tr key={d.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition`}>
                     <td className="px-4 py-2">{d.id}</td>
                     <td className="px-4 py-2">{d.name}</td>
                     <td className="px-4 py-2">
-                      {organizations.find((org) => org.id === d.organizationId)
-                        ?.name || "-"}
+                      {organizations.find(org => org.id === d.organizationId)?.name || "-"}
                     </td>
-                    <td className="px-4 py-2">
-                      {d.head ? `${d.head.firstName} ${d.head.lastName}` : "-"}
-                    </td>
+                    <td className="px-4 py-2">{d.head ? `${d.head.firstName} ${d.head.lastName}` : "-"}</td>
                     <td className="px-4 py-2 text-center space-x-2">
-                      <button
-                        onClick={() => handleEdit(d.id)}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm"
-                      >
+                      <button onClick={() => handleEdit(d.id)} className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm">
                         แก้ไข
                       </button>
-                      <button
-                        onClick={() => handleDelete(d.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
-                      >
+                      <button onClick={() => handleDelete(d.id)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm">
                         ลบ
                       </button>
                     </td>
@@ -372,7 +316,7 @@ export default function DepartmentManage() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50"
+              className="px-3 py-1 rounded bg-white border text-black disabled:opacity-50"
             >
               ก่อนหน้า
             </button>
@@ -380,9 +324,9 @@ export default function DepartmentManage() {
               หน้า {currentPage} / {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded-lg bg-white text-black disabled:opacity-50"
+              className="px-3 py-1 rounded bg-white border text-black disabled:opacity-50"
             >
               ถัดไป
             </button>
