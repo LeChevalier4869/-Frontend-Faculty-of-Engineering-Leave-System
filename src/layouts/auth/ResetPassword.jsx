@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
+import Swal from "sweetalert2";
 
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -17,8 +18,12 @@ export default function ResetPassword() {
 
     // ถ้าไม่มี token ใน URL, ทำการ redirect ไปที่หน้า login หรือแสดงข้อความ
     if (!tokenFromUrl) {
-      alert("ไม่พบลิงก์รีเซ็ตรหัสผ่าน");
-      navigate("/login");  // หรือหน้าอื่นๆ ที่ต้องการ
+      Swal.fire({
+        icon: "error",
+        title: "ไม่พบลิงก์รีเซ็ตรหัสผ่าน",
+        text: "กรุณาตรวจสอบลิงก์ที่คุณได้รับ",
+        confirmButtonColor: "#ef4444",
+      }).then(() => navigate("/login"));
       return;
     }
 
@@ -27,8 +32,15 @@ export default function ResetPassword() {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+
+    // ตรวจสอบการยืนยันรหัสผ่าน
     if (newPassword !== confirmPassword) {
-      alert("รหัสผ่านไม่ตรงกัน");
+      Swal.fire({
+        icon: "error",
+        title: "รหัสผ่านไม่ตรงกัน",
+        text: "กรุณากรอกรหัสผ่านให้ตรงกัน",
+        confirmButtonColor: "#ef4444",
+      });
       return;
     }
 
@@ -40,10 +52,21 @@ export default function ResetPassword() {
         newPassword,
       });
 
-      alert("รีเซ็ตรหัสผ่านสำเร็จ!");
-      window.location.href = "/login";  // หรือ redirect ไปที่หน้าอื่น
+      Swal.fire({
+        icon: "success",
+        title: "รีเซ็ตรหัสผ่านสำเร็จ!",
+        text: "คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้แล้ว",
+        confirmButtonColor: "#ef4444",
+      }).then(() => {
+        window.location.href = "/login";  // หรือ redirect ไปที่หน้า login
+      });
     } catch (error) {
-      alert("เกิดข้อผิดพลาด: " + (error.response?.data?.message || "กรุณาลองใหม่อีกครั้ง"));
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: error.response?.data?.message || "กรุณาลองใหม่อีกครั้ง",
+        confirmButtonColor: "#ef4444",
+      });
     } finally {
       setLoading(false);
     }
