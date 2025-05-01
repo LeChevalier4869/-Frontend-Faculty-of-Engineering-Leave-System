@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
@@ -10,6 +10,7 @@ export default function UserManage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
 
   const authHeader = () => {
     const token = localStorage.getItem("token");
@@ -109,7 +110,10 @@ export default function UserManage() {
                 displayedUsers.map((user, idx) => (
                   <tr
                     key={user.id}
-                    className={`${idx % 2 ? "bg-gray-50" : "bg-white"} hover:bg-gray-100 transition`}
+                    className={`${
+                      idx % 2 ? "bg-gray-50" : "bg-white"
+                    } hover:bg-gray-100 transition cursor-pointer`}
+                    onClick={() => navigate(`/admin/user-info/${user.id}`)}
                   >
                     <td className="px-4 py-3 truncate">
                       {user.prefixName} {user.firstName} {user.lastName}
@@ -122,11 +126,15 @@ export default function UserManage() {
                       <Link
                         to={`/admin/user/${user.id}`}
                         className="inline-block bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-lg text-sm"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         แก้ไข
                       </Link>
                       <button
-                        onClick={() => handleDelete(user.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(user.id);
+                        }}
                         className="inline-block bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
                       >
                         ลบ

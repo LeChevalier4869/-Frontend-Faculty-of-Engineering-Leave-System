@@ -25,6 +25,7 @@ export default function Leave2() {
   const [filterEndDate, setFilterEndDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLeaveType, setFilterLeaveType] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc"); // default sorting from latest to oldest
 
   const statusLabels = {
     APPROVED:  "อนุมัติแล้ว",
@@ -81,7 +82,7 @@ export default function Leave2() {
   }, []);
 
   const formatDate = (iso) =>
-    dayjs(iso).locale("th").format("DD/MM/YYYY");
+    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // แสดงวันที่และเวลา
 
   // combined filters: date range, status, leaveType
   const filtered = useMemo(() => {
