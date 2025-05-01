@@ -39,6 +39,7 @@ const approverNav4   = [
 ];
 
 const adminNav = [
+  { to: "/admin/leave-report",       text: "รายงานสรุปผล",         icon: <FaUsersCog /> },
   { to: "/admin/manage-user",        text: "จัดการผู้ใช้งาน",         icon: <FaUsersCog /> },
   { to: "/admin/organization-manage",text: "จัดการองค์กร",             icon: <FaUsersCog /> },
   { to: "/admin/department-manage",  text: "จัดการแผนก",               icon: <FaUsersCog /> },

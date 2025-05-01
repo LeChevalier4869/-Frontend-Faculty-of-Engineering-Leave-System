@@ -48,6 +48,7 @@ import EditUser from "../layouts/admin/EditUser";
 import EditProfile from "../layouts/admin/EditProfile";
 import AddnewUser from "../layouts/admin/AddnewUser";
 import LeaveAdmin from "../layouts/admin/LeaveAdmin";
+import LeaveReport from "../layouts/admin/LeaveReport";
 
 /** Layout หลัก */
 function AppLayout() {
@@ -126,6 +127,7 @@ const userRouter = createBrowserRouter([
       {
         path: "admin",
         children: [
+          { path: "leave-report", element: <LeaveReport /> },
           { path: "manage-user", element: <UserManage /> },
           { path: "leave-request", element: <LeaveAdmin /> },
           { path: "approve", element: <Approver /> },
