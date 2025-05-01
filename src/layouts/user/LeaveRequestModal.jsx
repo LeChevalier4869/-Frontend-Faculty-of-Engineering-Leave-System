@@ -54,6 +54,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         const res = await axios.get(getApiUrl("leave-balances/me"), {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("Leave Balances:", res.data.data);
         if (Array.isArray(res.data.data)) {
           setLeaveBalances(res.data.data);
         }
