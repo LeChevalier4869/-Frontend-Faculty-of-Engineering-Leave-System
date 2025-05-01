@@ -71,6 +71,7 @@ export default function Leave2() {
         map[lt.id] = lt.name;
       });
       setLeaveTypesMap(map);
+      console.log("Leave types map:", map);
     } catch (err) {
       console.error("Error fetching leave types:", err);
     }
