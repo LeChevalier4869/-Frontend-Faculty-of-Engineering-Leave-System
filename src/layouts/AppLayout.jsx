@@ -1,38 +1,50 @@
-import { useState } from "react";
-import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
+import { useState, useEffect, useCallback } from "react";
 import { Outlet } from "react-router-dom";
+import clsx from "clsx";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
 
-function AppLayout() {
-  const [isSidebarOpen, setSidebarOpen] = useState(true);  // เริ่มเปิดไว้ก่อน
-  const [isMiniSidebar, setMiniSidebar] = useState(false); // เริ่มแบบเต็ม
+export default function AppLayout() {
+  /* --- state --- */
+  const [isExpanded, setExpanded] = useState(false); // ขยาย/ย่อ (ทุกขนาดจอ)
+  const [isMobile, setIsMobile]   = useState(window.innerWidth < 1024);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
+  /* --- breakpoint listener --- */
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023.98px)");
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
-  const toggleMiniSidebar = () => {
-    setMiniSidebar(!isMiniSidebar);
-  };
+  /* --- handlers --- */
+  const toggleSidebar = () => setExpanded((o) => !o);
+  const closeSidebar  = useCallback(() => setExpanded(false), []);
+
+  /* --- main shift --- */
+  const mainShift = clsx(
+    "transition-all duration-300",
+    isExpanded ? "ml-64" : "ml-16"   // 64 px vs 256 px
+  );
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
       <Sidebar
-        isOpen={isSidebarOpen}
-        isMini={isMiniSidebar}
-        toggleMiniSidebar={toggleMiniSidebar}
+        isExpanded={isExpanded}
+        isMobile={isMobile}
+        onClose={closeSidebar}
       />
 
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <Header onToggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-auto p-4 bg-gray-100 transition-all duration-300">
+      <div className={clsx("flex flex-col flex-1 overflow-hidden", mainShift)}>
+        <Header
+          onToggleSidebar={toggleSidebar}
+          isExpanded={isExpanded}
+        />
+
+        <main className="flex-1 overflow-auto bg-gray-100 p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
     </div>
   );
 }
-
-export default AppLayout;
