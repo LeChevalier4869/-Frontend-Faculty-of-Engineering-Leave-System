@@ -11,6 +11,7 @@ export const apiEndpoints = {
   userLanding: `${BASE_URL}/auth/landing`, // GET
   updateUserRole: `${BASE_URL}/auth/update-role`,
   forgotPassword: `${BASE_URL}/auth/forgot-password`,
+  resetPassword: `${BASE_URL}/auth/reset-password`,
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,

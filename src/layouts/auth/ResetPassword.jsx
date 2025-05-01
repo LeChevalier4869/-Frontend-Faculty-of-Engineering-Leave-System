@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { apiEndpoints } from "../../utils/api";
 
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -34,7 +35,7 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
-      const res = await axios.post("/api/reset-password", {
+      const res = await axios.post(apiEndpoints.resetPassword, {
         token,
         newPassword,
       });
