@@ -87,6 +87,15 @@ export default function Login() {
               required
               className="w-full px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
             />
+            <div className="text-right mt-1">
+              <button
+                type="button"
+                className="text-sm text-red-400 hover:underline focus:outline-none"
+                onClick={() => navigate("/forgot-password")}
+              >
+                ลืมรหัสผ่าน?
+              </button>
+            </div>
           </div>
 
           <button

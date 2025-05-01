@@ -10,6 +10,8 @@ import useAuth from "../hooks/useAuth";
 /** Auth layouts **/
 import Login from "../layouts/auth/Login";
 import Register from "../layouts/auth/Register";
+import ForgotPassword from "../layouts/auth/ForgotPassword";
+import ResetPassword from "../layouts/auth/ResetPassword";
 
 /** Main components **/
 import Header from "../components/Header";
@@ -90,6 +92,8 @@ const guestRouter = createBrowserRouter([
     children: [
       { path: "/", element: <Login /> },
       { path: "/register", element: <Register /> },
+      { path: "/forgot-password", element: <ForgotPassword /> },
+      { path: "/reset-password", element: <ResetPassword /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
   },

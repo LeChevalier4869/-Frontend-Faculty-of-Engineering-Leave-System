@@ -10,6 +10,7 @@ export const apiEndpoints = {
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
   updateUserRole: `${BASE_URL}/auth/update-role`,
+  forgotPassword: `${BASE_URL}/auth/forgot-password`,
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,
