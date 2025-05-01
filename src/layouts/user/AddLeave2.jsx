@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
@@ -200,7 +200,7 @@ function AddLeave2() {
           {/* ช่องทางติดต่อ */}
           <div>
             <label className="block text-sm font-medium mb-1">
-            ช่องทางติดต่อ
+              ช่องทางติดต่อ
             </label>
             <input
               name="contact"
