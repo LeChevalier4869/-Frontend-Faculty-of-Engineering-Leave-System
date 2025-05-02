@@ -16,7 +16,7 @@ import ResetPassword from "../layouts/auth/ResetPassword";
 /** Main components **/
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
- 
+
 /** User pages **/
 import UserHome from "../layouts/user/UserHome";
 import Leave2 from "../layouts/user/Leave2";
@@ -26,6 +26,7 @@ import LeaveDetail from "../layouts/user/LeaveDetails";
 import UserProfile2 from "../layouts/user/UserProfile2";
 import UserLanding from "../layouts/user/UserLanding";
 import UserDashBoard from "../layouts/user/UserDashBoard";
+import ChangePassword from "../layouts/user/ChangePassword";
 
 /** Approver pages **/
 import LeaveApprover1 from "../layouts/approver/LeaveApprover1";
@@ -54,8 +55,8 @@ import LeaveReport from "../layouts/admin/LeaveReport";
 
 /** Layout หลัก */
 function AppLayout() {
-  const [isSidebarOpen, setSidebarOpen] = useState(true);    // เปิดค้าง
-  const [isMiniSidebar, setMiniSidebar] = useState(false);   // Full mode ก่อน
+  const [isSidebarOpen, setSidebarOpen] = useState(true); // เปิดค้าง
+  const [isMiniSidebar, setMiniSidebar] = useState(false); // Full mode ก่อน
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
@@ -104,15 +105,16 @@ const userRouter = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      { index: true,            element: <UserHome /> },
-      { path: "leave",          element: <Leave2 /> },
-      { path: "leave/add",      element: <AddLeave2 /> },
-      { path: "leave/balance",  element: <LeaveBalance /> },
-      { path: "leave/:id",      element: <LeaveDetail /> },
-      { path: "profile",        element: <UserProfile2 /> },
-      { path: "profile/edit",   element: <EditProfile /> },
-      { path: "user/landing",   element: <UserLanding /> },
-      { path: "dashboard",      element: <UserDashBoard/>},
+      { index: true, element: <UserHome /> },
+      { path: "leave", element: <Leave2 /> },
+      { path: "leave/add", element: <AddLeave2 /> },
+      { path: "leave/balance", element: <LeaveBalance /> },
+      { path: "leave/:id", element: <LeaveDetail /> },
+      { path: "profile", element: <UserProfile2 /> },
+      { path: "profile/edit", element: <EditProfile /> },
+      { path: "user/landing", element: <UserLanding /> },
+      { path: "dashboard", element: <UserDashBoard /> },
+      { path: "change-password", element: <ChangePassword /> },
 
       // Approver group
       {

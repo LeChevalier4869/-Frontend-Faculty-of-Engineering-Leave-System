@@ -13,7 +13,9 @@ function UserProfile2() {
 
   /* ---- helper: ตำแหน่งเป็น string หรือ object ---- */
   const positionName =
-    typeof user?.position === "object" ? user.position?.name ?? "-" : user?.position ?? "-";
+    typeof user?.position === "object"
+      ? user.position?.name ?? "-"
+      : user?.position ?? "-";
 
   return (
     <div className="min-h-screen bg-white px-4 py-10 font-kanit">
@@ -44,11 +46,14 @@ function UserProfile2() {
           {/* details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              ["ชื่อ-นามสกุล", `${user.prefixName}${user.firstName} ${user.lastName}`],
+              [
+                "ชื่อ-นามสกุล",
+                `${user.prefixName}${user.firstName} ${user.lastName}`,
+              ],
               ["อีเมล", user.email],
               ["เพศ", user.sex],
               ["เบอร์มือถือ", user.phone],
-              ["ตำแหน่ง", positionName],                               // ← ADD
+              ["ตำแหน่ง", positionName], // ← ADD
               ["คณะ", user.organization?.name],
               ["สาขา", user.department?.name],
               ["ประเภทบุคลากร", user.personnelType?.name],
@@ -57,8 +62,8 @@ function UserProfile2() {
                 user.employmentType === "SUPPORT"
                   ? "สายสนับสนุน"
                   : user.employmentType === "ACADEMIC"
-                    ? "สายวิชาการ"
-                    : "ไม่มีข้อมูล",
+                  ? "สายวิชาการ"
+                  : "ไม่มีข้อมูล",
               ],
               [
                 "วันที่เริ่มงาน",
@@ -73,7 +78,9 @@ function UserProfile2() {
               ["สถานะการใช้งาน", user.inActive ? "อยู่" : "ไม่อยู่"],
             ].map(([label, value], idx) => (
               <div key={idx}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {label}
+                </label>
                 <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800">
                   {value || "-"}
                 </p>
@@ -82,7 +89,13 @@ function UserProfile2() {
           </div>
 
           {/* action */}
-          <div className="mt-8 text-center sm:text-right">
+          <div className="mt-8 flex flex-col sm:flex-row justify-center sm:justify-end gap-4">
+            <Link
+              to="/change-password"
+              className="inline-block px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white transition font-medium"
+            >
+              เปลี่ยนรหัสผ่าน
+            </Link>
             <Link
               to="/profile/edit"
               className="inline-block px-6 py-2 rounded-lg bg-blue-400 hover:bg-blue-500 text-white transition font-medium"
