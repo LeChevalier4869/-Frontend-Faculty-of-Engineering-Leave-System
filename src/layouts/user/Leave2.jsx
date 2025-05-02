@@ -11,7 +11,7 @@ import { apiEndpoints } from "../../utils/api";
 
 dayjs.extend(isBetween);
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 export default function Leave2() {
   const navigate = useNavigate();

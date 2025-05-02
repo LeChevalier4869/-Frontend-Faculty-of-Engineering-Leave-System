@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { BASE_URL } from "../../utils/api";
 import { ChevronDown } from "lucide-react";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 export default function DepartmentManage() {
   const [departments, setDepartments] = useState([]);

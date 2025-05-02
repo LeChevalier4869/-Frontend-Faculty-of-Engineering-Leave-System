@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 const DEBOUNCE_MS = 200;
 
 export default function UserManage() {

@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { BASE_URL } from "../../utils/api";
 import { apiEndpoints } from "../../utils/api";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 export default function OrganizationManage() {
   const [organizations, setOrganizations] = useState([]);
