@@ -6,6 +6,7 @@ import React, { useEffect } from "react";
 
 function UserProfile2() {
   const { user } = useAuth();
+  console.log("UserProfile2 – user context:", user);
 
   useEffect(() => {
     console.log("UserProfile2 – user context updated:", user);
@@ -53,7 +54,7 @@ function UserProfile2() {
               ["อีเมล", user.email],
               ["เพศ", user.sex],
               ["เบอร์มือถือ", user.phone],
-              ["ตำแหน่ง", positionName], // ← ADD
+              ["ตำแหน่ง", user.position], // ← ADD
               ["คณะ", user.organization?.name],
               ["สาขา", user.department?.name],
               ["ประเภทบุคลากร", user.personnelType?.name],
