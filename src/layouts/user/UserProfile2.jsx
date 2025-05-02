@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 
 function UserProfile2() {
   const { user } = useAuth();
+  console.log("UserProfile2 – user context:", user);
 
   useEffect(() => {
     console.log("UserProfile2 – user context updated:", user);
@@ -12,7 +13,9 @@ function UserProfile2() {
 
   /* ---- helper: แปลงค่าที่อาจเป็น object → string ---- */
   const positionName =
-    typeof user?.position === "object" ? user.position?.name ?? "-" : user?.position ?? "-";
+    typeof user?.position === "object"
+      ? user.position?.name ?? "-"
+      : user?.position ?? "-";
 
   /* ---- ชื่อคณะ: มีได้สองแหล่ง ---- */
   const orgName =
@@ -47,12 +50,15 @@ function UserProfile2() {
           {/* details */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {[
-              ["ชื่อ-นามสกุล", `${user.prefixName}${user.firstName} ${user.lastName}`],
+              [
+                "ชื่อ-นามสกุล",
+                `${user.prefixName}${user.firstName} ${user.lastName}`,
+              ],
               ["อีเมล", user.email],
               ["เพศ", user.sex],
               ["เบอร์มือถือ", user.phone],
-              ["ตำแหน่ง", positionName],
-              ["คณะ", orgName],                            // ★ ใช้ orgName ใหม่
+              ["ตำแหน่ง", user.position], // ← ADD
+              ["คณะ", user.organization?.name],
               ["สาขา", user.department?.name],
               ["ประเภทบุคลากร", user.personnelType?.name],
               [
@@ -76,8 +82,10 @@ function UserProfile2() {
               ["สถานะการใช้งาน", user.inActive ? "อยู่" : "ไม่อยู่"],
             ].map(([label, value], idx) => (
               <div key={idx}>
-                <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
-                <p className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-800">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {label}
+                </label>
+                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800">
                   {value || "-"}
                 </p>
               </div>
@@ -85,7 +93,13 @@ function UserProfile2() {
           </div>
 
           {/* action */}
-          <div className="mt-8 text-center sm:text-right">
+          <div className="mt-8 flex flex-col sm:flex-row justify-center sm:justify-end gap-4">
+            <Link
+              to="/change-password"
+              className="inline-block px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white transition font-medium"
+            >
+              เปลี่ยนรหัสผ่าน
+            </Link>
             <Link
               to="/profile/edit"
               className="inline-block rounded-lg bg-blue-400 px-6 py-2 font-medium text-white transition hover:bg-blue-500"

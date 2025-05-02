@@ -12,6 +12,7 @@ export const apiEndpoints = {
   updateUserRole: `${BASE_URL}/auth/update-role`,
   forgotPassword: `${BASE_URL}/auth/forgot-password`,
   resetPassword: `${BASE_URL}/auth/reset-password`,
+  changePassword: `${BASE_URL}/auth/change-password`,
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,
