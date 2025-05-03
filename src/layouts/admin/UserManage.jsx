@@ -1,6 +1,6 @@
 // src/pages/admin/UserManage.jsx
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
@@ -14,6 +14,7 @@ export default function UserManage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [keyword, setKeyword] = useState("");
+  const navigate = useNavigate();
 
   /* ---------- debounce search ---------- */
   useEffect(() => {
@@ -158,9 +159,10 @@ export default function UserManage() {
                 displayedUsers.map((user, idx) => (
                   <tr
                     key={user.id}
-                    className={`${
+                    onClick={() => navigate(`/admin/user-info/${user.id}`)}
+                    className={`cursor-pointer ${
                       idx % 2 ? "bg-gray-50" : "bg-white"
-                    } hover:bg-gray-100 transition`}
+                    } hover:bg-indigo-50 transition`}
                   >
                     <td className="px-4 py-3 truncate">
                       {user.prefixName} {user.firstName} {user.lastName}
@@ -178,7 +180,10 @@ export default function UserManage() {
                     <td className="px-4 py-3 truncate">
                       {user.department?.name || "-"}
                     </td>
-                    <td className="px-4 py-3 text-center space-x-2">
+                    <td
+                      className="px-4 py-3 text-center space-x-2"
+                      onClick={(e) => e.stopPropagation()} // 👈 ป้องกันเด้งเมื่อกดปุ่มในแถว
+                    >
                       <Link
                         to={`/admin/user/${user.id}`}
                         className="inline-block bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-lg text-sm"

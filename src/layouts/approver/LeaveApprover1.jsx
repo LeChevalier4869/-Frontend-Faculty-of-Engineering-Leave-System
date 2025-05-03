@@ -9,12 +9,7 @@ export default function LeaveApprover1() {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-
-  const leaveTypes = {
-    1: "ลาป่วย",
-    2: "ลากิจส่วนตัว",
-    3: "ลาพักผ่อน",
-  };
+  const [leaveTypesMap, setLeaveTypesMap] = useState({});
 
   const statusLabels = {
     PENDING: "รออนุมัติ",
@@ -39,8 +34,22 @@ export default function LeaveApprover1() {
     }
   };
 
+  const fetchLeaveTypes = async () => {
+    try {
+      const res = await axios.get(apiEndpoints.availableLeaveType);
+      const map = {};
+      (res.data.data || []).forEach((lt) => {
+        map[lt.id] = lt.name;
+      });
+      setLeaveTypesMap(map);
+    } catch (err) {
+      console.error("❌ Error fetching leave types:", err);
+    }
+  };
+
   useEffect(() => {
     fetchLeaveRequests();
+    fetchLeaveTypes();
   }, []);
 
   // Edit the comment locally
@@ -118,10 +127,10 @@ export default function LeaveApprover1() {
     <div className="p-6 bg-white min-h-screen text-black font-kanit">
       <h1 className="text-2xl font-bold mb-6 text-center">คำขอลาทั้งหมด</h1>
 
-      <div className="overflow-x-auto bg-white rounded-xl shadow border border-gray-200">
-        <table className="min-w-full text-sm text-left border-collapse">
-          <thead className="bg-gray-100 text-black">
-            <tr>
+      <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
+        <table className="table-fixed w-full bg-white text-sm text-black">
+          <thead>
+            <tr className="bg-gray-100 text-gray-800">
               <th className="px-4 py-2 border">ชื่อผู้ลา</th>
               <th className="px-4 py-2 border">ประเภทการลา</th>
               <th className="px-4 py-2 border">วันที่เริ่ม</th>
@@ -143,7 +152,7 @@ export default function LeaveApprover1() {
                       {item.user?.lastName}
                     </td>
                     <td className="px-4 py-2 border">
-                      {leaveTypes[item.leaveTypeId] || "-"}
+                      {leaveTypesMap[item.leaveTypeId] || "-"}
                     </td>
                     <td className="px-4 py-2 border">
                       {formatDate(item.startDate)}
