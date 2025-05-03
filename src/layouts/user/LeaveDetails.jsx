@@ -9,6 +9,7 @@ export default function LeaveDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [leave, setLeave] = useState(null);
+  const [lastLeave, setLastLeave] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const authHeader = () => {
@@ -24,21 +25,80 @@ export default function LeaveDetail() {
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
-  const loadLeave = async () => {
-    try {
-      const res = await axios.get(apiEndpoints.getLeaveById(id), authHeader());
-      setLeave(res.data.data);
-      console.log("Leave Details:", res.data.data);
-    } catch (err) {
-      Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const loadLeave = async () => {
+  //   try {
+  //     const res = await axios.get(apiEndpoints.getLeaveById(id), authHeader());
+  //     setLeave(res.data.data);
+  //     console.log("Leave Details:", res.data.data);
+  //   } catch (err) {
+  //     Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  // const loadLastLeave = async () => {
+  //   try {
+  //     const res = await axios.post(apiEndpoints.getLastLeaveRequestByUserAndType(user?.id),{
+  //       leaveTypeId: leaveType?.id,
+  //     }, authHeader());
+  //     setLeave(res.data.data);
+  //     console.log("Leave Last Details:", res.data.data);
+  //   } catch (err) {
+  //     Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
+  // useEffect ที่ 1: โหลดข้อมูล leave ตาม id
   useEffect(() => {
+    const loadLeave = async () => {
+      try {
+        const res = await axios.get(
+          apiEndpoints.getLeaveById(id),
+          authHeader()
+        );
+        console.log("Leave Details:", res.data.data);
+        setLeave(res.data.data);
+      } catch (err) {
+        Swal.fire(
+          "ผิดพลาด",
+          err.response?.data?.message || err.message,
+          "error"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadLeave();
   }, [id]);
+
+  // useEffect ที่ 2: โหลดข้อมูล leave ล่าสุดของผู้ใช้และประเภทลานี้
+  // ตัวอย่างใน useEffect ที่ 2
+  useEffect(() => {
+    if (!leave || !leave.userId || !leave.leaveType?.id) return;
+
+    const loadLastLeave = async () => {
+      try {
+        const res = await axios.post(
+          apiEndpoints.getLastLeaveRequestByUserAndType(leave.userId),
+          { leaveTypeId: leave.leaveType.id },
+          authHeader()
+        );
+        console.log("Last Leave Details:", res.data);
+        setLastLeave(res.data);
+      } catch (err) {
+        Swal.fire(
+          "ผิดพลาด",
+          err.response?.data?.message || err.message,
+          "error"
+        );
+      }
+    };
+
+    loadLastLeave();
+  }, [leave]);
 
   if (loading) {
     return (
@@ -230,7 +290,7 @@ export default function LeaveDetail() {
                   ครั้งสุดท้ายเมื่อ
                 </label>
                 <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {formatDate(startDate)}
+                  {lastLeave?.startDate ? formatDate(lastLeave.startDate) : "-"}
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-[2]">
@@ -238,7 +298,7 @@ export default function LeaveDetail() {
                   ถึง
                 </label>
                 <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {formatDate(endDate)}
+                  {lastLeave?.endDate ? formatDate(lastLeave.endDate) : "-"}
                 </p>
               </div>
             </div>
@@ -250,8 +310,8 @@ export default function LeaveDetail() {
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   มีกำหนด
                 </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 text-center w-full">
-                  {totalDays}
+                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
+                  {lastLeave?.totalDays ? lastLeave.totalDays : "-"}
                 </p>
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   วัน
@@ -274,11 +334,23 @@ export default function LeaveDetail() {
                 </p>
               </div>
             </div>
+            <div className="md:col-span-2 flex justify-end mt-10 mr-40">
+              <div className="flex flex-col text-center w-max">
+                <label className="text-sm font-medium text-gray-700">
+                  ขอแสดงความนับถือ
+                </label>
+                <label className="text-sm font-medium text-gray-700">
+                  {`${user?.prefixName}${user?.firstName} ${user?.lastName}`}
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="mt-8">
-          <h2 className="font-semibold text-lg mb-2">ความคิดเห็นผู้อนุมัติ</h2>
+          <h2 className="font-semibold text-lg mb-2">
+            ความคิดเห็นผู้บังคับบัญชา
+          </h2>
           {approvalSteps?.length > 0 ? (
             approvalSteps.map((step, i) => (
               <div
