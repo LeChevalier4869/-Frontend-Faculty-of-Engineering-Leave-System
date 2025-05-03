@@ -35,7 +35,7 @@ import LeaveApprover3 from "../layouts/approver/LeaveApprover3";
 import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
 import LeaveReceiver from "../layouts/approver/LeaveReceiver";
 import LeaveVerifier from "../layouts/approver/LeaveVerifier";
-import LeaveApprover12 from "../layouts/approver/LeaveApprover12";
+
 
 /** Admin pages **/
 import DashBoard from "../layouts/admin/DashBoard";
