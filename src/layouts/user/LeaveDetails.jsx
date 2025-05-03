@@ -28,6 +28,7 @@ export default function LeaveDetail() {
     try {
       const res = await axios.get(apiEndpoints.getLeaveById(id), authHeader());
       setLeave(res.data.data);
+      console.log("Leave Details:", res.data.data);
     } catch (err) {
       Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
     } finally {
@@ -65,6 +66,8 @@ export default function LeaveDetail() {
     contact,
     contactPhone,
     status,
+    documentNumber,
+    documentIssuedDate,
     leaveRequestDetails,
     files,
     approvalSteps,
@@ -84,8 +87,8 @@ export default function LeaveDetail() {
               <label className="text-sm font-medium text-gray-700">
                 เลขที่ใบลา:
               </label>
-              <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800">
-                12345678
+              <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 text-center w-40">
+                {documentNumber || "-"}
               </p>
             </div>
           </div>
@@ -94,8 +97,8 @@ export default function LeaveDetail() {
               <label className="text-sm font-medium text-gray-700">
                 วัน/เดือน/ปี:
               </label>
-              <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800">
-                1 พฤษภาคม 2567
+              <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 text-center w-60">
+                {formatDate(documentIssuedDate) || "-"}
               </p>
             </div>
           </div>
