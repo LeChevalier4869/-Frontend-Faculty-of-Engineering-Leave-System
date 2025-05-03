@@ -12,9 +12,10 @@ import Swal from "sweetalert2";
 
 dayjs.extend(isBetween);
 
+const MAX_LENGTH = 15;
 const PAGE_SIZE = 10;
 
-export default function LeaveApprover12() {
+export default function LeaveApprover1() {
   const navigate = useNavigate();
   //   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const [leaveRequest, setLeaveRequest] = useState([]);
@@ -289,12 +290,18 @@ export default function LeaveApprover12() {
                   "ความคิดเห็น",
                   "ดำเนินการ",
                 ].map((h, i) => (
-                  <th key={i} className="px-4 py-3 text-left">
+                  <th
+                    key={i}
+                    className={`px-4 py-3 text-left ${
+                      h === "ชื่อผู้ลา" ? "w-[220px]" : ""
+                    }`}
+                  >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
+
             <tbody>
               {displayItems.length > 0 ? (
                 displayItems.map((leave, idx) => {
@@ -311,7 +318,7 @@ export default function LeaveApprover12() {
                       <td className="px-4 py-3">
                         {formatDate(leave.createdAt)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 w-[220px]">
                         {leave.user.prefixName}
                         {leave.user.firstName} {leave.user.lastName}
                       </td>
@@ -324,7 +331,7 @@ export default function LeaveApprover12() {
                       <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          className={`px-4 py-1 rounded-full text-xs font-semibold ${
                             statusColors[statusKey] ||
                             "bg-gray-100 text-gray-700"
                           }`}
@@ -332,9 +339,36 @@ export default function LeaveApprover12() {
                           {statusLabels[statusKey] || leave.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 max-w-xs truncate">
                         <div className="inline-flex items-center gap-2">
-                          <span>{leave.comment || "-"}</span>
+                          {/* ตัดข้อความเฉพาะ span นี้ */}
+                          <span
+                            title={leave.comment}
+                            className="truncate max-w-[150px] block"
+                          >
+                            {leave.comment?.length > MAX_LENGTH
+                              ? `${leave.comment.slice(0, MAX_LENGTH)}`
+                              : leave.comment || "-"}
+                          </span>
+
+                          {/* ปุ่ม "ดูเพิ่มเติม" ถ้ายาวเกิน */}
+                          {leave.comment?.length > MAX_LENGTH && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                Swal.fire({
+                                  title: "ความคิดเห็นทั้งหมด",
+                                  text: leave.comment,
+                                  confirmButtonText: "ปิด",
+                                });
+                              }}
+                              className="text-blue-500 hover:underline text-xs whitespace-nowrap"
+                            >
+                              ดูเพิ่มเติม
+                            </button>
+                          )}
+
+                          {/* ปุ่มแก้ไข */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
