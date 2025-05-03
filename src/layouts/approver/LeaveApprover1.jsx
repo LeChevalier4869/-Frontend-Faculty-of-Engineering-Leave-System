@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import useLeaveRequest from "../../hooks/useLeaveRequest";
-import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -12,7 +10,6 @@ import Swal from "sweetalert2";
 
 dayjs.extend(isBetween);
 
-const MAX_LENGTH = 15;
 const PAGE_SIZE = 10;
 
 export default function LeaveApprover1() {
@@ -80,50 +77,40 @@ export default function LeaveApprover1() {
     fetchLeaveTypes();
   }, []);
 
-  // Edit the comment locally
-  const handleEditComment = async (itemId) => {
-    const leave = leaveRequest.find((item) => item.id === itemId);
-    const { value } = await Swal.fire({
-      title: "แก้ไขความคิดเห็น",
-      input: "textarea",
-      inputValue: leave?.comment || "",
-      inputPlaceholder: "กรอกความคิดเห็นของคุณ...",
-      showCancelButton: true,
-      confirmButtonText: "บันทึก",
-      cancelButtonText: "ยกเลิก",
-    });
-    if (value !== undefined) {
-      setLeaveRequest((prev) =>
-        prev.map((item) =>
-          item.id === itemId ? { ...item, comment: value } : item
-        )
-      );
-    }
-  };
-
   // Approve and remove from list
   const handleApprove = async (detailId) => {
     const commentFromInput = (comments[detailId] || "").trim();
-    setLoadingApprovals((prev) => ({ ...prev, [detailId]: true }));
+
+    Swal.fire({
+      title: "กำลังดำเนินการ...",
+      text: "กรุณารอสักครู่",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsByFirstApprover(detailId),
         {
-          remarks: commentFromInput || "อนุมัติ",
-          comment: commentFromInput || "อนุมัติ",
+          remarks: commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+          comment: commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
+
+      Swal.close(); // ปิด loading
+      await Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
+
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
     } catch (error) {
       console.error("❌ Error approving request", error);
+      Swal.close();
       Swal.fire("ผิดพลาด", "ไม่สามารถอนุมัติได้", "error");
-    }finally {
-      setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
     }
   };
 
@@ -266,6 +253,7 @@ export default function LeaveApprover1() {
             setFilterStatus("");
             setFilterLeaveType("");
             setCurrentPage(1);
+            setSortOrder("desc");
           }}
           className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
         >
@@ -342,61 +330,6 @@ export default function LeaveApprover1() {
                         {statusLabels[statusKey] || leave.status}
                       </span>
                     </td>
-                    {/* <td className="px-4 py-2">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={comments[detailId] || ""}
-                          onChange={(e) =>
-                            setComments((c) => ({
-                              ...c,
-                              [detailId]: e.target.value,
-                            }))
-                          }
-                          className="w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
-                          placeholder="ใส่ความคิดเห็น"
-                        />
-                        <Pencil className="w-5 h-5 text-gray-500 cursor-pointer" />
-                      </div>
-                    </td> */}
-                    {/* <td className="px-4 py-2 max-w-xs truncate">
-                      <div className="inline-flex items-center gap-2">
-                        <span
-                          title={leave.comment}
-                          className="truncate max-w-[150px] block"
-                        >
-                          {leave.comment?.length > MAX_LENGTH
-                            ? `${leave.comment.slice(0, MAX_LENGTH)}`
-                            : leave.comment || "-"}
-                        </span>
-                        {leave.comment?.length > MAX_LENGTH && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              Swal.fire({
-                                title: "ความคิดเห็นทั้งหมด",
-                                text: leave.comment,
-                                confirmButtonText: "ปิด",
-                              });
-                            }}
-                            className="text-blue-500 hover:underline text-xs whitespace-nowrap"
-                          >
-                            ดูเพิ่มเติม
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditComment(leave.id);
-                          }}
-                        >
-                          <Pencil
-                            size={16}
-                            className="text-blue-500 hover:text-blue-700"
-                          />
-                        </button>
-                      </div>
-                    </td> */}
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
                         <input
@@ -421,9 +354,22 @@ export default function LeaveApprover1() {
 
                     <td className="px-4 py-2">
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          handleApprove(detailId);
+                          const result = await Swal.fire({
+                            title: "รับรองคำขอลา",
+                            text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "ใช่, รับรอง",
+                            cancelButtonText: "ยกเลิก",
+                            confirmButtonColor: "#16a34a", // เขียว
+                            cancelButtonColor: "#d33", // แดง
+                          });
+
+                          if (result.isConfirmed) {
+                            handleApprove(detailId);
+                          }
                         }}
                         disabled={loadingApprovals[detailId]}
                         className={`px-4 py-1 rounded text-white ${
@@ -432,9 +378,7 @@ export default function LeaveApprover1() {
                             : "bg-green-500 hover:bg-green-600"
                         }`}
                       >
-                        {loadingApprovals[detailId]
-                          ? "กำลังดำเนินการ..."
-                          : "ตกลง"}
+                        {loadingApprovals[detailId] ? "ตกลง" : "ตกลง"}
                       </button>
                     </td>
                   </tr>

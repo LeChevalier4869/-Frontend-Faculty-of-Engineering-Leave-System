@@ -74,32 +74,55 @@ export default function LeaveVerifier() {
 
   const handleApprove = async (detailId) => {
     setLoadingApprovals((prev) => ({ ...prev, [detailId]: true }));
-    console.log("Approving leave request with ID:", detailId);
-    console.log("Approve URL:", apiEndpoints.ApproveleaveRequestsByVerifier(detailId));
+  
     try {
+      Swal.fire({
+        title: "กำลังดำเนินการ...",
+        text: "กรุณารอสักครู่",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+  
       const token = localStorage.getItem("token");
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsByVerifier(detailId),
         {
-          remarks: "อนุมัติ",
-          comment: "อนุมัติ",
+          remarks: "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+          comment: "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+  
+      Swal.close(); // ปิด loading modal
       Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
+  
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
     } catch (error) {
       console.error("❌ Error approving request", error);
+      Swal.close(); // ปิด loading modal หากมี error
       Swal.fire("ผิดพลาด", "ไม่สามารถอนุมัติได้", "error");
     } finally {
       setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
     }
   };
+  
   const handleReject = async (detailId) => {
     setLoadingApprovals((prev) => ({ ...prev, [detailId]: true }));
     try {
+      Swal.fire({
+        title: "กำลังดำเนินการ...",
+        text: "กรุณารอสักครู่",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
       const token = localStorage.getItem("token");
       await axios.patch(
         apiEndpoints.RejectleaveRequestsByVerifier(detailId),
@@ -109,12 +132,14 @@ export default function LeaveVerifier() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
+      Swal.close(); // ปิด loading modal
+      Swal.fire("สำเร็จ", "ปฏิเสธเรียบร้อยแล้ว", "success");
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
     } catch (error) {
       console.error("❌ Error approving request", error);
+      Swal.close(); // ปิด loading modal หากมี error
       Swal.fire("ผิดพลาด", "ไม่สามารถอนุมัติได้", "error");
     } finally {
       setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
@@ -254,6 +279,7 @@ export default function LeaveVerifier() {
             setFilterStatus("");
             setFilterLeaveType("");
             setCurrentPage(1);
+            setSortOrder("desc");
           }}
           className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
         >
@@ -320,9 +346,22 @@ export default function LeaveVerifier() {
                     </td>
                     <td className="px-4 py-2 flex space-x-2">
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          handleApprove(detailId);
+                          const result = await Swal.fire({
+                            title: "รับรองคำขอลา",
+                            text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "ใช่, รับรอง",
+                            cancelButtonText: "ยกเลิก",
+                            confirmButtonColor: "#16a34a", // เขียว
+                            cancelButtonColor: "#d33", // แดง
+                          });
+
+                          if (result.isConfirmed) {
+                            handleApprove(detailId);
+                          }
                         }}
                         disabled={loadingApprovals[detailId]}
                         className={`px-4 py-1 rounded text-white ${
@@ -331,14 +370,25 @@ export default function LeaveVerifier() {
                             : "bg-green-500 hover:bg-green-600"
                         }`}
                       >
-                        {loadingApprovals[detailId]
-                          ? "ผ่าน"
-                          : "ผ่าน"}
+                        {loadingApprovals[detailId] ? "ผ่าน" : "ผ่าน"}
                       </button>
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          handleReject(detailId);
+                          const result = await Swal.fire({
+                            title: "ปฏิเสธคำขอลา",
+                            text: "คุณแน่ใจหรือไม่ว่า ไม่ต้องการรับรองคำขอลานี้",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "ใช่, ไม่รับรอง",
+                            cancelButtonText: "ยกเลิก",
+                            confirmButtonColor: "#d33", // แดง
+                            cancelButtonColor: "#3085d6", // ฟ้า
+                          });
+
+                          if (result.isConfirmed) {
+                            handleReject(detailId);
+                          }
                         }}
                         disabled={loadingApprovals[detailId]}
                         className={`px-4 py-1 rounded text-white ${
@@ -347,9 +397,7 @@ export default function LeaveVerifier() {
                             : "bg-red-500 hover:bg-red-600"
                         }`}
                       >
-                        {loadingApprovals[detailId]
-                          ? "ไม่ผ่าน"
-                          : "ไม่ผ่าน"}
+                        {loadingApprovals[detailId] ? "ไม่ผ่าน" : "ไม่ผ่าน"}
                       </button>
                     </td>
                   </tr>
