@@ -13,7 +13,7 @@ import {
 import useAuth from "../hooks/useAuth";
 
 const userNav = [
-  { to: "/dashboard",           text: "แดชบอร์ด",               icon: <FaTachometerAlt /> },
+  { to: "/",           text: "แดชบอร์ด",               icon: <FaTachometerAlt /> },
   { to: "/leave/balance",       text: "ยอดวันลาคงเหลือ",         icon: <FaClipboardList /> },
   { to: "/leave",               text: "การลา",                   icon: <FaCalendarAlt /> },
   { to: "/profile",             text: "โปรไฟล์ผู้ใช้",            icon: <FaUser /> },

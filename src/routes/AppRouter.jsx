@@ -105,7 +105,7 @@ const userRouter = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      { index: true, element: <UserHome /> },
+      { index: true, element: <UserDashBoard /> },
       { path: "leave", element: <Leave2 /> },
       { path: "leave/add", element: <AddLeave2 /> },
       { path: "leave/balance", element: <LeaveBalance /> },
