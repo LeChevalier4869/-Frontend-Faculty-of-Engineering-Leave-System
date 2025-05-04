@@ -5,7 +5,15 @@ import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { Plus, ChevronDown } from "lucide-react";
+import {
+  Plus,
+  ChevronDown,
+  CalendarDays,
+  CheckCircle,
+  Clock,
+  PlusCircle,
+  List,
+} from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
 
@@ -28,15 +36,15 @@ export default function Leave2() {
   const [sortOrder, setSortOrder] = useState("desc"); // default sorting from latest to oldest
 
   const statusLabels = {
-    APPROVED:  "อนุมัติแล้ว",
-    PENDING:   "รออนุมัติ",
-    REJECTED:  "ปฏิเสธ",
+    APPROVED: "อนุมัติแล้ว",
+    PENDING: "รออนุมัติ",
+    REJECTED: "ปฏิเสธ",
     CANCELLED: "ยกเลิก",
   };
   const statusColors = {
-    APPROVED:  "bg-green-500 text-white",
-    PENDING:   "bg-yellow-500 text-white",
-    REJECTED:  "bg-red-500 text-white",
+    APPROVED: "bg-green-500 text-white",
+    PENDING: "bg-yellow-500 text-white",
+    REJECTED: "bg-red-500 text-white",
     CANCELLED: "bg-gray-500 text-white",
   };
 
@@ -92,7 +100,12 @@ export default function Leave2() {
       let byDate = true;
 
       if (filterStartDate && filterEndDate) {
-        byDate = dayjs(created).isBetween(filterStartDate, filterEndDate, null, "[]");
+        byDate = dayjs(created).isBetween(
+          filterStartDate,
+          filterEndDate,
+          null,
+          "[]"
+        );
       } else if (filterStartDate) {
         byDate = created >= filterStartDate;
       } else if (filterEndDate) {
@@ -106,7 +119,13 @@ export default function Leave2() {
 
       return byDate && byStatus && byType;
     });
-  }, [leaveRequest, filterStartDate, filterEndDate, filterStatus, filterLeaveType]);
+  }, [
+    leaveRequest,
+    filterStartDate,
+    filterEndDate,
+    filterStatus,
+    filterLeaveType,
+  ]);
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -132,9 +151,9 @@ export default function Leave2() {
           <h1 className="text-3xl font-bold">รายการการลา</h1>
           <button
             onClick={() => setModalOpen(true)}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition"
+            className="flex items-center bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
           >
-            + ยื่นลา
+            <PlusCircle className="mr-2" /> ยื่นลา
           </button>
         </div>
 
@@ -146,14 +165,20 @@ export default function Leave2() {
             <input
               type="date"
               value={filterStartDate}
-              onChange={(e) => { setFilterStartDate(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setFilterStartDate(e.target.value);
+                setCurrentPage(1);
+              }}
               className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <label className="text-sm">ถึง</label>
             <input
               type="date"
               value={filterEndDate}
-              onChange={(e) => { setFilterEndDate(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setFilterEndDate(e.target.value);
+                setCurrentPage(1);
+              }}
               className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
@@ -162,12 +187,17 @@ export default function Leave2() {
           <div className="relative w-48">
             <select
               value={filterStatus}
-              onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="">สถานะทั้งหมด</option>
               {Object.entries(statusLabels).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
+                <option key={key} value={key}>
+                  {label}
+                </option>
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
@@ -179,12 +209,17 @@ export default function Leave2() {
           <div className="relative w-48">
             <select
               value={filterLeaveType}
-              onChange={(e) => { setFilterLeaveType(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setFilterLeaveType(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="">ประเภทการลาทั้งหมด</option>
               {Object.entries(leaveTypesMap).map(([id, name]) => (
-                <option key={id} value={id}>{name}</option>
+                <option key={id} value={id}>
+                  {name}
+                </option>
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
@@ -229,33 +264,53 @@ export default function Leave2() {
                   "วันสิ้นสุด",
                   "สถานะ",
                 ].map((h, i) => (
-                  <th key={i} className="px-4 py-3 text-left">{h}</th>
+                  <th key={i} className="px-4 py-3 text-left">
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {displayItems.length > 0 ? displayItems.map((leave, idx) => {
-                const statusKey = (leave.status || "").toUpperCase();
-                return (
-                  <tr
-                    key={leave.id}
-                    className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition cursor-pointer`}
-                    onClick={() => navigate(`/leave/${leave.id}`)}
-                  >
-                    <td className="px-4 py-3">{formatDate(leave.createdAt)}</td>
-                    <td className="px-4 py-3">{leaveTypesMap[leave.leaveTypeId] || "-"}</td>
-                    <td className="px-4 py-3">{formatDate(leave.startDate)}</td>
-                    <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors[statusKey] || "bg-gray-100 text-gray-700"}`}>
-                        {statusLabels[statusKey] || leave.status}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              }) : (
+              {displayItems.length > 0 ? (
+                displayItems.map((leave, idx) => {
+                  const statusKey = (leave.status || "").toUpperCase();
+                  return (
+                    <tr
+                      key={leave.id}
+                      className={`${
+                        idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      } hover:bg-gray-100 transition cursor-pointer`}
+                      onClick={() => navigate(`/leave/${leave.id}`)}
+                    >
+                      <td className="px-4 py-3">
+                        {formatDate(leave.createdAt)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {leaveTypesMap[leave.leaveTypeId] || "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {formatDate(leave.startDate)}
+                      </td>
+                      <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                            statusColors[statusKey] ||
+                            "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {statusLabels[statusKey] || leave.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
                 <tr>
-                  <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
+                  <td
+                    colSpan="5"
+                    className="px-4 py-6 text-center text-gray-500"
+                  >
                     ไม่มีข้อมูลการลา
                   </td>
                 </tr>
@@ -274,7 +329,9 @@ export default function Leave2() {
             >
               ก่อนหน้า
             </button>
-            <span className="px-3 py-1 text-gray-800">หน้า {currentPage} / {totalPages}</span>
+            <span className="px-3 py-1 text-gray-800">
+              หน้า {currentPage} / {totalPages}
+            </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
@@ -297,7 +354,10 @@ export default function Leave2() {
       <LeaveRequestModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
-        onSuccess={() => { setModalOpen(false); fetchLeaveRequests(); }}
+        onSuccess={() => {
+          setModalOpen(false);
+          fetchLeaveRequests();
+        }}
       />
     </div>
   );

@@ -28,6 +28,7 @@ import UserLanding from "../layouts/user/UserLanding";
 import UserDashBoard from "../layouts/user/UserDashBoard";
 import ChangePassword from "../layouts/user/ChangePassword";
 
+
 /** Approver pages **/
 import LeaveApprover1 from "../layouts/approver/LeaveApprover1";
 import LeaveApprover2 from "../layouts/approver/LeaveApprover2";
@@ -53,7 +54,6 @@ import EditProfile from "../layouts/admin/EditProfile";
 import AddnewUser from "../layouts/admin/AddnewUser";
 import LeaveAdmin from "../layouts/admin/LeaveAdmin";
 import LeaveReport from "../layouts/admin/LeaveReport";
-
 /** Layout หลัก */
 function AppLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true); // เปิดค้าง
