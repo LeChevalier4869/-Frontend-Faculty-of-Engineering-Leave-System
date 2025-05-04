@@ -13,41 +13,42 @@ import {
 import useAuth from "../hooks/useAuth";
 
 const userNav = [
-  { to: "/dashboard",           text: "แดชบอร์ด",               icon: <FaTachometerAlt /> },
-  { to: "/leave/balance",       text: "ยอดวันลาคงเหลือ",         icon: <FaClipboardList /> },
-  { to: "/leave",               text: "การลา",                   icon: <FaCalendarAlt /> },
-  { to: "/profile",             text: "โปรไฟล์ผู้ใช้",            icon: <FaUser /> },
+  { to: "/dashboard", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
+  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaClipboardList /> },
+  { to: "/leave", text: "การลา", icon: <FaCalendarAlt /> },
+  { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser /> },
 ];
 
 const approverNav1 = [
-  { to: "/approver/leave-request-approver1", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
+  { to: "/approver/leave-request-approver1", text: "อนุมัติระดับหัวหน้าสาขา", icon: <FaCheckCircle /> },
 ];
-const verifierNav    = [
-  { to: "/approver/leave-request-verifier", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
+const verifierNav = [
+  { to: "/approver/leave-request-verifier", text: "ตรวจสอบคำขอการลา", icon: <FaCheckCircle /> },
 ];
-const receiverNav    = [
-  { to: "/approver/leave-request-receiver", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
+const receiverNav = [
+  { to: "/approver/leave-request-receiver", text: "รับหนังสือคำขอลา", icon: <FaCheckCircle /> },
 ];
-const approverNav2   = [
-  { to: "/approver/leave-request-approver2", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
+const approverNav2 = [
+  { to: "/approver/leave-request-approver2", text: "อนุมัติระดับ 2", icon: <FaCheckCircle /> },
 ];
-const approverNav3   = [
-  { to: "/approver/leave-request-approver3", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
+const approverNav3 = [
+  { to: "/approver/leave-request-approver3", text: "อนุมัติระดับ 3", icon: <FaCheckCircle /> },
 ];
-const approverNav4   = [
-  { to: "/approver/leave-request-approver4", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> },
+const approverNav4 = [
+  { to: "/approver/leave-request-approver4", text: "อนุมัติระดับ 4", icon: <FaCheckCircle /> },
 ];
 
+
 const adminNav = [
-  { to: "/admin/leave-report",       text: "รายงานสรุปผล",         icon: <FaUsersCog /> },
-  { to: "/admin/manage-user",        text: "จัดการผู้ใช้งาน",         icon: <FaUsersCog /> },
-  { to: "/admin/organization-manage",text: "จัดการองค์กร",             icon: <FaUsersCog /> },
-  { to: "/admin/department-manage",  text: "จัดการแผนก",               icon: <FaUsersCog /> },
-  { to: "/admin/personel-manage",    text: "จัดการประเภทบุคคล",        icon: <FaUsersCog /> },
-  { to: "/admin/holiday-manage",     text: "จัดการวันหยุด",             icon: <FaUsersCog /> },
-  { to: "/admin/setting-manage",     text: "จัดการค่าของระบบ",          icon: <FaUsersCog /> },
-  { to: "/admin/leave-type-manage",  text: "จัดการประเภทการลา",         icon: <FaUsersCog /> },
-  { to: "/admin/edit-profile",       text: "การตั้งค่า",               icon: <FaUsersCog /> },
+  { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
+  { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
+  { to: "/admin/organization-manage", text: "จัดการองค์กร", icon: <FaUsersCog /> },
+  { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
+  { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaUsersCog /> },
+  { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
+  { to: "/admin/setting-manage", text: "จัดการค่าของระบบ", icon: <FaUsersCog /> },
+  { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
+  { to: "/admin/edit-profile", text: "การตั้งค่า", icon: <FaUsersCog /> },
 ];
 
 export default function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
@@ -61,8 +62,8 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
   const roles = Array.isArray(user.role)
     ? user.role
     : Array.isArray(user.roleNames)
-    ? user.roleNames
-    : [];
+      ? user.roleNames
+      : [];
 
   const hasRole = (r) => roles.includes(r);
 
@@ -81,9 +82,8 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
         </div>
         {!isMini && (
           <HiOutlineChevronDown
-            className={`w-5 h-5 ml-auto transition-transform duration-300 ${
-              openDropdown === title ? "rotate-180" : "rotate-0"
-            }`}
+            className={`w-5 h-5 ml-auto transition-transform duration-300 ${openDropdown === title ? "rotate-180" : "rotate-0"
+              }`}
           />
         )}
       </button>
@@ -107,7 +107,7 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
   return (
     <aside
       className={`fixed md:static top-0 left-0 z-40 h-full bg-gray-900 text-white font-kanit transform transition-all duration-300 ease-in-out
-        ${isMini ? "w-20" : "w-64"} ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+    ${isMini ? "w-20" : "w-64"} ${isOpen ? "translate-x-0" : "-translate-x-full"} overflow-y-auto`}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
@@ -138,8 +138,8 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
           ))}
 
         {hasRole("APPROVER_1") && renderDropdown("เมนูหัวหน้าสาขา", approverNav1)}
-        {hasRole("VERIFIER")   && renderDropdown("เมนูผู้ตรวจสอบ", verifierNav)}
-        {hasRole("RECEIVER")   && renderDropdown("เมนูผู้รับหนังสือ", receiverNav)}
+        {hasRole("VERIFIER") && renderDropdown("เมนูผู้ตรวจสอบ", verifierNav)}
+        {hasRole("RECEIVER") && renderDropdown("เมนูผู้รับหนังสือ", receiverNav)}
         {hasRole("APPROVER_2") && renderDropdown("เมนูผู้อนุมัติ2", approverNav2)}
         {hasRole("APPROVER_3") && renderDropdown("เมนูผู้อนุมัติ3", approverNav3)}
         {hasRole("APPROVER_4") && renderDropdown("เมนูผู้อนุมัติ4", approverNav4)}

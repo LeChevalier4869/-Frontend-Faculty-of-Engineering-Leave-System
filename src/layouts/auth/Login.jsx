@@ -22,12 +22,17 @@ export default function Login() {
       const res = await axios.post(apiEndpoints.login, input);
       const token = res.data.token;
       localStorage.setItem("token", token);
-
+  
       const userRes = await axios.get(apiEndpoints.getMe, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUser(userRes.data);
-
+  
+      const user = userRes.data;
+      setUser(user);
+  
+      // ตรวจสอบ roles ในรูปแบบที่ถูกต้อง
+      const roles = (user?.roles || []).map(role => role.roleName);
+  
       Swal.fire({
         icon: "success",
         title: "เข้าสู่ระบบสำเร็จ",
@@ -35,7 +40,11 @@ export default function Login() {
         confirmButtonColor: "#ef4444",
         confirmButtonText: "ไปยังหน้าหลัก",
       }).then(() => {
-        window.location.href = "/dashboard";
+        if (roles.includes("ADMIN")) {
+          window.location.href = "/admin/dashboard";
+        } else {
+          window.location.href = "/dashboard";
+        }
       });
     } catch (err) {
       Swal.fire({
@@ -47,6 +56,7 @@ export default function Login() {
       });
     }
   };
+  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 px-4 font-kanit">
