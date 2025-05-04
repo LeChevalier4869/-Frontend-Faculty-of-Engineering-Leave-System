@@ -77,11 +77,11 @@ const adminNav = [
     icon: <FaUsersCog />,
   },
   { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
-  {
-    to: "/admin/setting-manage",
-    text: "จัดการค่าของระบบ",
-    icon: <FaUsersCog />,
-  },
+  // {
+  //   to: "/admin/setting-manage",
+  //   text: "จัดการค่าของระบบ",
+  //   icon: <FaUsersCog />,
+  // },
   {
     to: "/admin/leave-type-manage",
     text: "จัดการประเภทการลา",
