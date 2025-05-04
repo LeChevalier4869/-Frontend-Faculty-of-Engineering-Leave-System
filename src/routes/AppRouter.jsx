@@ -36,6 +36,7 @@ import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
 import LeaveReceiver from "../layouts/approver/LeaveReceiver";
 import LeaveVerifier from "../layouts/approver/LeaveVerifier";
 
+
 /** Admin pages **/
 import DashBoard from "../layouts/admin/DashBoard";
 import Approver from "../layouts/admin/Approver";
@@ -105,7 +106,7 @@ const userRouter = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      { index: true, element: <UserHome /> },
+      { index: true, element: <UserDashBoard /> },
       { path: "leave", element: <Leave2 /> },
       { path: "leave/add", element: <AddLeave2 /> },
       { path: "leave/balance", element: <LeaveBalance /> },

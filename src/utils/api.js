@@ -40,6 +40,7 @@ export const apiEndpoints = {
   leaveRequestMe: `${BASE_URL}/leave-requests/me`, // GET
   getLeaveById: (id) => `${BASE_URL}/leave-requests/getLeaveRequest/${id}`,
   getLeaveByUserId: (id) => `${BASE_URL}/leave-requests/user/${id}`,
+  getLastLeaveRequestByUserAndType: (userId) => `${BASE_URL}/leave-requests/last/type/${userId}`,
   leaveRequestForFirstApprover: `${BASE_URL}/leave-requests/for-approver1`, // GET
   leaveRequestForVerifier: `${BASE_URL}/leave-requests/for-verifier`, // GET
   leaveRequestForReceiver: `${BASE_URL}/leave-requests/for-receiver`, // GET

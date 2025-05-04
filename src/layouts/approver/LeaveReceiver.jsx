@@ -1,174 +1,236 @@
-import React, { useEffect, useState, useMemo } from "react";
-import axios from "axios";
-import getApiUrl from "../../utils/apiUtils";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiEndpoints } from "../../utils/api";
-import Swal from "sweetalert2";
+import useLeaveRequest from "../../hooks/useLeaveRequest";
+import getApiUrl from "../../utils/apiUtils";
+import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { ChevronDown } from "lucide-react";
+import { apiEndpoints } from "../../utils/api";
+import { Pencil } from "lucide-react";
+import Swal from "sweetalert2";
 
 dayjs.extend(isBetween);
 
+const PAGE_SIZE = 10;
+
 export default function LeaveReceiver() {
-  const [leaveRequests, setLeaveRequests] = useState([]);
+  const navigate = useNavigate();
+  //   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
+  const [leaveRequest, setLeaveRequest] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // new state for inline comments
+  const [leaveTypesMap, setLeaveTypesMap] = useState({});
   const [comments, setComments] = useState({});
-
-  // filters
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
   const [filterLeaveType, setFilterLeaveType] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [loadingApprovals, setLoadingApprovals] = useState({});
 
-  // pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-  const navigate = useNavigate();
-
-  const leaveTypes = {
-    1: "ลาป่วย",
-    2: "ลากิจส่วนตัว",
-    3: "ลาพักผ่อน",
+  const statusLabels = {
+    APPROVED: "อนุมัติแล้ว",
+    PENDING: "รออนุมัติ",
+    REJECTED: "ปฏิเสธ",
+    CANCELLED: "ยกเลิก",
+  };
+  const statusColors = {
+    APPROVED: "bg-green-500 text-white",
+    PENDING: "bg-yellow-500 text-white",
+    REJECTED: "bg-red-500 text-white",
+    CANCELLED: "bg-gray-500 text-white",
   };
 
-  // load data
+  const fetchLeaveRequests = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(apiEndpoints.leaveRequestForReceiver, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Leave Requests:", res.data);
+
+      // ตั้งค่าข้อมูลคำขอลาโดยตรงจาก res.data (ถ้าเป็น array)
+      const data = Array.isArray(res.data) ? res.data : [];
+      setLeaveRequest(data);
+    } catch (err) {
+      console.error("Error fetching leave requests:", err);
+      setLeaveRequest([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLeaveTypes = async () => {
+    try {
+      const res = await axios.get(apiEndpoints.availableLeaveType);
+      const map = {};
+      (res.data.data || []).forEach((lt) => {
+        map[lt.id] = lt.name;
+      });
+      setLeaveTypesMap(map);
+    } catch (err) {
+      console.error("Error fetching leave types:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchLeaveRequests = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(apiEndpoints.leaveRequestForReceiver, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setLeaveRequests(res.data || []);
-      } catch (error) {
-        console.error("❌ Error loading leave requests", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchLeaveRequests();
+    fetchLeaveTypes();
   }, []);
 
-  // filter logic
-  const filtered = useMemo(() => {
-    return leaveRequests.filter(item => {
-      const created = dayjs(item.createdAt).format("YYYY-MM-DD");
-      let okDate = true;
-      if (filterStartDate && filterEndDate) {
-        okDate = dayjs(created).isBetween(filterStartDate, filterEndDate, null, "[]");
-      } else if (filterStartDate) {
-        okDate = created >= filterStartDate;
-      } else if (filterEndDate) {
-        okDate = created <= filterEndDate;
-      }
-      const okType = filterLeaveType ? String(item.leaveTypeId) === filterLeaveType : true;
-      return okDate && okType;
+  // Approve and remove from list
+  const handleApprove = async (detailId) => {
+    const commentFromInput = (comments[detailId] || "").trim();
+
+    if (!commentFromInput) {
+      Swal.fire({
+        icon: "warning",
+        title: "กรุณากรอกเลขที่ใบลา",
+        text: "คุณต้องกรอกเลขที่ใบลาก่อนจึงจะสามารถอนุมัติได้",
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: "กำลังดำเนินการ...",
+      text: "กรุณารอสักครู่",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
     });
-  }, [leaveRequests, filterStartDate, filterEndDate, filterLeaveType]);
+    setLoadingApprovals((prev) => ({ ...prev, [detailId]: true }));
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        apiEndpoints.ApproveleaveRequestsByReceiver(detailId),
+        {
+          documentNumber: commentFromInput,
+          remarks: "อนุมัติ",
+          comment: "อนุมัติ",
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.close();
+      Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
+      setLeaveRequest((prev) =>
+        prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
+      );
+    } catch (error) {
+      console.error("❌ Error approving request", error);
+      Swal.close();
+      Swal.fire("ผิดพลาด", "ไม่สามารถอนุมัติได้", "error");
+    } finally {
+      setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
+    }
+  };
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const formatDate = (iso) =>
+    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
+
+  const filtered = useMemo(() => {
+    const sorted = [...leaveRequest].sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    return sorted.filter((lr) => {
+      const created = dayjs(lr.createdAt).format("YYYY-MM-DD");
+      let byDate = true;
+
+      if (filterStartDate && filterEndDate) {
+        byDate = dayjs(created).isBetween(
+          filterStartDate,
+          filterEndDate,
+          null,
+          "[]"
+        );
+      } else if (filterStartDate) {
+        byDate = created >= filterStartDate;
+      } else if (filterEndDate) {
+        byDate = created <= filterEndDate;
+      }
+
+      const byStatus = filterStatus ? lr.status === filterStatus : true;
+      const byType = filterLeaveType
+        ? String(lr.leaveTypeId) === filterLeaveType
+        : true;
+
+      return byDate && byStatus && byType;
+    });
+  }, [
+    leaveRequest,
+    filterStartDate,
+    filterEndDate,
+    filterStatus,
+    filterLeaveType,
+    sortOrder, // 👈 อย่าลืมเพิ่ม dependency
+  ]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const displayItems = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
   );
-
-  const formatDate = dateStr =>
-    dayjs(dateStr).locale("th").format("DD MMM YYYY");
-
-  // approve / reject handlers using inline comment
-  const handleApprove = async leaveRequestId => {
-    const comment = comments[leaveRequestId]?.trim();
-    if (!comment) {
-      Swal.fire("กรุณาระบุความคิดเห็นก่อนส่ง");
-      return;
-    }
-    try {
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        apiEndpoints.ApproveleaveRequestsByReceiver(leaveRequestId),
-        { comment },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      Swal.fire("สำเร็จ", "อนุมัติคำขอเรียบร้อยแล้ว", "success");
-      setLeaveRequests(r => r.filter(req => req.id !== leaveRequestId));
-    } catch (error) {
-      const msg = error.response?.data?.message || "เกิดข้อผิดพลาดในการอนุมัติ";
-      Swal.fire("ผิดพลาด", msg, "error");
-    }
-  };
-
-  const handleReject = async leaveRequestId => {
-    const comment = comments[leaveRequestId]?.trim();
-    if (!comment) {
-      Swal.fire("กรุณาระบุความคิดเห็นก่อนส่ง");
-      return;
-    }
-    try {
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        apiEndpoints.RejectleaveRequestsByReceiver(leaveRequestId),
-        { comment },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      Swal.fire("สำเร็จ", "ปฏิเสธคำขอเรียบร้อยแล้ว", "success");
-      setLeaveRequests(r => r.filter(req => req.id !== leaveRequestId));
-    } catch (error) {
-      const msg = error.response?.data?.message || "เกิดข้อผิดพลาดในการปฏิเสธ";
-      Swal.fire("ผิดพลาด", msg, "error");
-    }
-  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
-        กำลังโหลดคำขอ...
+        กำลังโหลดข้อมูลการลา...
       </div>
     );
   }
 
+  console.log(comments, "comments");
   return (
-    <div className="p-6 bg-white min-h-screen text-black font-kanit">
-      <h1 className="text-2xl font-bold mb-6 text-center">คำขอลาทั้งหมด</h1>
+    <div className="min-h-screen p-6 bg-white font-kanit text-black">
+      {/* header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+        <h1 className="text-3xl font-bold">รายการการลาที่รออนุมัติ</h1>
+      </div>
 
-      {/* Filters */}
+      {/* filters */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
+        {/* Date range */}
         <div className="flex items-center gap-2">
           <label className="text-sm">จาก</label>
           <input
             type="date"
             value={filterStartDate}
-            onChange={e => {
+            onChange={(e) => {
               setFilterStartDate(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-white text-black text-base px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+            className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <label className="text-sm">ถึง</label>
           <input
             type="date"
             value={filterEndDate}
-            onChange={e => {
+            onChange={(e) => {
               setFilterEndDate(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-white text-black text-base px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+            className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
+        {/* Leave-type dropdown */}
         <div className="relative w-48">
           <select
             value={filterLeaveType}
-            onChange={e => {
+            onChange={(e) => {
               setFilterLeaveType(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full bg-white text-black text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-blue-400"
+            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <option value="">ประเภทการลาทั้งหมด</option>
-            {Object.entries(leaveTypes).map(([id, name]) => (
+            {Object.entries(leaveTypesMap).map(([id, name]) => (
               <option key={id} value={id}>
                 {name}
               </option>
@@ -179,82 +241,157 @@ export default function LeaveReceiver() {
           </div>
         </div>
 
+        {/* Sort order dropdown */}
+        <div className="relative w-48">
+          <select
+            value={sortOrder}
+            onChange={(e) => {
+              setSortOrder(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="desc">ล่าสุดก่อน</option>
+            <option value="asc">เก่าสุดก่อน</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          </div>
+        </div>
+        {/* Clear filters */}
         <button
           onClick={() => {
             setFilterStartDate("");
             setFilterEndDate("");
+            setFilterStatus("");
             setFilterLeaveType("");
             setCurrentPage(1);
+            setSortOrder("desc");
           }}
-          className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
+          className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
         >
           ล้าง
         </button>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto bg-white rounded-xl shadow border border-gray-200">
-        <table className="min-w-full text-sm text-left border-collapse">
-          <thead className="bg-gray-100 text-black">
-            <tr>
-              <th className="px-4 py-2 border border-gray-200">ชื่อผู้ลา</th>
-              <th className="px-4 py-2 border border-gray-200">ประเภทการลา</th>
-              <th className="px-4 py-2 border border-gray-200">วันที่เริ่ม</th>
-              <th className="px-4 py-2 border border-gray-200">วันที่สิ้นสุด</th>
-              <th className="px-4 py-2 border border-gray-200">วันที่ยื่น</th>
-              <th className="px-4 py-2 border border-gray-200">ความคิดเห็น</th>
-              <th className="px-4 py-2 border border-gray-200">การดำเนินการ</th>
+      {/* table */}
+      <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
+        <table className="min-w-full bg-white text-sm text-black">
+          <thead>
+            <tr className="bg-gray-100 text-gray-800">
+              {[
+                "วันที่ยื่น",
+                "ชื่อผู้ลา",
+                "ประเภทการลา",
+                "วันเริ่มต้น",
+                "วันสิ้นสุด",
+                "สถานะ",
+                "เลขที่ใบลา",
+                "ดำเนินการ",
+              ].map((h, i) => (
+                <th
+                  key={i}
+                  className={`px-4 py-3 text-left ${
+                    h === "ชื่อผู้ลา" ? "w-[220px]" : ""
+                  }`}
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
+
           <tbody>
             {displayItems.length > 0 ? (
-              displayItems.map(item => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border border-gray-200">
-                    {item.user?.prefixName} {item.user?.firstName} {item.user?.lastName}
-                  </td>
-                  <td className="px-4 py-2 border border-gray-200">
-                    {leaveTypes[item.leaveTypeId] || "-"}
-                  </td>
-                  <td className="px-4 py-2 border border-gray-200">
-                    {formatDate(item.startDate)}
-                  </td>
-                  <td className="px-4 py-2 border border-gray-200">
-                    {formatDate(item.endDate)}
-                  </td>
-                  <td className="px-4 py-2 border border-gray-200">
-                    {formatDate(item.createdAt)}
-                  </td>
-                  <td className="px-4 py-2 border border-gray-200">
-                    <textarea
-                      value={comments[item.id] || ""}
-                      onChange={e =>
-                        setComments(prev => ({ ...prev, [item.id]: e.target.value }))
-                      }
-                      placeholder="ระบุความคิดเห็น..."
-                      className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-400 bg-white text-black"
-                    />
-                  </td>
-                  <td className="px-6 py-3 text-center space-x-2">
-                    <button
-                      onClick={() => handleApprove(item.leaveRequestDetails?.[0]?.id)}
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      ยอมรับ
-                    </button>
-                    <button
-                      onClick={() => handleReject(item.leaveRequestDetails?.[0]?.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      ปฏิเสธ
-                    </button>
-                  </td>
-                </tr>
-              ))
+              displayItems.map((leave, idx) => {
+                const detailId = leave.leaveRequestDetails?.[0]?.id;
+                const statusKey = (leave.status || "").toUpperCase();
+                return (
+                  <tr
+                    key={leave.id}
+                    className={`${
+                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } hover:bg-gray-100 transition cursor-pointer`}
+                    onClick={() => navigate(`/leave/${leave.id}`)}
+                  >
+                    <td className="px-4 py-2">{formatDate(leave.createdAt)}</td>
+                    <td className="px-4 py-2 w-[220px]">
+                      {leave.user.prefixName}
+                      {leave.user.firstName} {leave.user.lastName}
+                    </td>
+                    <td className="px-4 py-2">
+                      {leaveTypesMap[leave.leaveTypeId] || "-"}
+                    </td>
+                    <td className="px-4 py-2">{formatDate(leave.startDate)}</td>
+                    <td className="px-4 py-2">{formatDate(leave.endDate)}</td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`px-4 py-1 rounded-full text-xs font-semibold ${
+                          statusColors[statusKey] || "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {statusLabels[statusKey] || leave.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={comments[detailId] || ""}
+                          onClick={(e) => e.stopPropagation()} // ⛔ กันไม่ให้เด้ง
+                          onChange={(e) =>
+                            setComments((c) => ({
+                              ...c,
+                              [detailId]: e.target.value,
+                            }))
+                          }
+                          className="w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                          placeholder="กรุณาใส่เลขที่ใบลา"
+                          required
+                        />
+                        <Pencil
+                          className="w-5 h-5 text-gray-500 cursor-pointer"
+                          onClick={(e) => e.stopPropagation()} // ⛔ กันไม่ให้เด้ง
+                        />
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-2">
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const result = await Swal.fire({
+                            title: "รับรองคำขอลา",
+                            text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "ใช่, รับรอง",
+                            cancelButtonText: "ยกเลิก",
+                            confirmButtonColor: "#16a34a", // เขียว
+                            cancelButtonColor: "#d33", // แดง
+                          });
+
+                          if (result.isConfirmed) {
+                            handleApprove(detailId);
+                          }
+                        }}
+                        disabled={loadingApprovals[detailId]}
+                        className={`px-4 py-1 rounded text-white ${
+                          loadingApprovals[detailId]
+                            ? "bg-green-300 cursor-not-allowed"
+                            : "bg-green-500 hover:bg-green-600"
+                        }`}
+                      >
+                        {loadingApprovals[detailId] ? "ตกลง" : "ตกลง"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
-                <td colSpan="7" className="text-center py-4 text-gray-500">
-                  ไม่มีข้อมูลคำขอ
+                <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
+                  ไม่มีข้อมูลการลา
                 </td>
               </tr>
             )}
@@ -262,23 +399,23 @@ export default function LeaveReceiver() {
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-6">
+        <div className="flex justify-center gap-2 mt-6">
           <button
-            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-4 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+            className="px-3 py-1 border border-gray-300 rounded-lg bg-white disabled:opacity-50 transition"
           >
             ก่อนหน้า
           </button>
-          <span>
+          <span className="px-3 py-1 text-gray-800">
             หน้า {currentPage} / {totalPages}
           </span>
           <button
-            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="px-4 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+            className="px-3 py-1 border border-gray-300 rounded-lg bg-white disabled:opacity-50 transition"
           >
             ถัดไป
           </button>
