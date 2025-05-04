@@ -9,6 +9,7 @@ import {
   List,
   XCircle,
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import getApiUrl from "../../utils/apiUtils";
 import useAuth from "../../hooks/useAuth";
@@ -16,6 +17,7 @@ import { apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import LeaveRequestModal from "./LeaveRequestModal";
+import dayjs from "dayjs";
 
 export default function UserDashboard() {
   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
@@ -32,6 +34,17 @@ export default function UserDashboard() {
   const [entitlements, setEntitlements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
+  const statusLabels = {
+    APPROVED: "อนุมัติแล้ว",
+    PENDING: "รออนุมัติ",
+    REJECTED: "ปฏิเสธแล้ว",
+  };
+
+  const statusColors = {
+    APPROVED: "bg-green-500 text-white",
+    PENDING: "bg-yellow-400 text-black",
+    REJECTED: "bg-red-500 text-white",
+  };
 
   useEffect(() => {
     const fetchUserStats = async () => {
@@ -48,14 +61,15 @@ export default function UserDashboard() {
           }),
         ]);
 
-        const summary = summaryRes.data.data;
-        const leaves = Array.isArray(leavesRes.data.data)
-          ? leavesRes.data.data
-          : [];
+        console.log("User Dashboard Summary Response:", summaryRes.data);
+        console.log("User Dashboard Leaves Response:", leavesRes.data);
+        const summary = summaryRes.data;
+        const leaves = Array.isArray(leavesRes.data) ? leavesRes.data : [];
 
         const approved = leaves.filter((r) => r.status === "APPROVED").length;
         const pending = leaves.filter((r) => r.status === "PENDING").length;
         const rejected = leaves.filter((r) => r.status === "REJECTED").length;
+        console.log("User Dashboard Summary:", summary);
         const remainingLeave = summary.remainingDays || 0;
 
         setStats({ approved, pending, rejected, remainingLeave });
@@ -120,6 +134,7 @@ export default function UserDashboard() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(getApiUrl("leave-requests/me"), {
+        withCredentials: true,
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = Array.isArray(res.data.data)
@@ -140,20 +155,29 @@ export default function UserDashboard() {
     fetchLeaveRequests();
   }, []);
 
-  const formatDate = (iso) =>
-    new Date(iso).toLocaleDateString("th-TH", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-
   const pieData = [
     { name: "อนุมัติแล้ว", value: stats.approved },
     { name: "รออนุมัติ", value: stats.pending },
     { name: "ปฏิเสธแล้ว", value: stats.rejected },
   ];
 
+  // Bar Chart Data - จำนวนคำขอลาแยกตามประเภท
+  const leaveTypeStats = leaveRequest.reduce((acc, leave) => {
+    const type = leave.leaveType?.name || "อื่นๆ";
+    acc[type] = acc[type] ? acc[type] + 1 : 1;
+    return acc;
+  }, {});
+
+  const barData = Object.keys(leaveTypeStats).map((type) => ({
+    name: type,
+    value: leaveTypeStats[type],
+  }));
+
   const COLORS = ["#22c55e", "#facc15", "#ef4444"];
+
+  const formatDateTime = (iso) =>
+    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
+  const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
 
   if (loading || isLoading) {
     return (
@@ -218,31 +242,53 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* Pie Chart */}
-      <div className="bg-white p-6 rounded-lg shadow mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-black">
-          สัดส่วนสถานะคำขอลา
-        </h2>
-        <PieChart width={360} height={300}>
-          <Pie
-            data={pieData}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={({ name, percent }) =>
-              `${name}: ${(percent * 100).toFixed(0)}%`
-            }
-            outerRadius={100}
-            fill="#8884d8"
-            dataKey="value"
-          >
-            {pieData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index]} />
-            ))}
-          </Pie>
-          <Tooltip />
-          <Legend />
-        </PieChart>
+      {/* Pie Chart and Bar Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Pie Chart */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4 text-black">
+            สัดส่วนสถานะคำขอลา
+          </h2>
+          <div className="flex justify-center items-center">
+            <PieChart width={400} height={300}>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) =>
+                  `${name}: ${(percent * 100).toFixed(0)}%`
+                }
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </div>
+        </div>
+
+        {/* Bar Chart - จำนวนคำขอลาแยกตามประเภท */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4 text-black">
+            จำนวนคำขอลาตามประเภท
+          </h2>
+          <div className="flex justify-center items-center">
+            <BarChart width={400} height={300} data={barData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#4CAF50" />
+            </BarChart>
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions */}
@@ -264,40 +310,73 @@ export default function UserDashboard() {
         </button>
       </div>
 
-      {/* Recent Requests */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4 text-black">คำขอลาล่าสุด</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left table-auto">
-            <thead className="bg-gray-100">
+      {/* Legend for Status */}
+      <div className="flex flex-wrap gap-4 items-center text-sm mb-4">
+        {Object.entries(statusLabels).map(([key, label]) => (
+          <div key={key} className="flex items-center gap-2">
+            <span
+              className={`w-3 h-3 rounded-full ${
+                statusColors[key]?.split(" ")[0] || "bg-gray-300"
+              }`}
+            />
+            <span className="text-gray-700">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Leave Request Table */}
+      <div className="rounded-lg shadow border border-gray-300 overflow-hidden mb-8 bg-white">
+        <table className="table-fixed w-full text-sm text-black">
+          <thead className="bg-gray-100 text-gray-800">
+            <tr>
+              <th className="px-4 py-3 text-left">วันที่ยื่น</th>
+              <th className="px-4 py-3 text-left">ประเภทการลา</th>
+              <th className="px-4 py-3 text-left">วันเริ่มต้น</th>
+              <th className="px-4 py-3 text-left">วันสิ้นสุด</th>
+              <th className="px-4 py-3 text-left">สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recent.length > 0 ? (
+              recent.map((leave, idx) => {
+                const statusKey = (leave.status || "").toUpperCase();
+                return (
+                  <tr
+                    key={leave.id}
+                    className={`${
+                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } hover:bg-gray-100 transition cursor-pointer`}
+                    onClick={() => navigate(`/leave/${leave.id}`)}
+                  >
+                    <td className="px-4 py-3">
+                      {formatDateTime(leave.createdAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {leave.leaveType?.name || "-"}
+                    </td>
+                    <td className="px-4 py-3">{formatDate(leave.startDate)}</td>
+                    <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          statusColors[statusKey] || "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        {statusLabels[statusKey] || leave.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
               <tr>
-                <th className="p-3 font-medium text-black">วันที่</th>
-                <th className="p-3 font-medium text-black">ประเภทลา</th>
-                <th className="p-3 font-medium text-black">สถานะ</th>
+                <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
+                  ไม่มีข้อมูลการลา
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {recent.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-t hover:bg-gray-50 cursor-pointer"
-                  onClick={() => navigate(`/leave-history/${r.id}`)}
-                >
-                  <td className="p-3 text-black">{formatDate(r.createdAt)}</td>
-                  <td className="p-3 text-black">{r.leaveType.name}</td>
-                  <td className="p-3 text-black">{r.status}</td>
-                </tr>
-              ))}
-              {recent.length === 0 && (
-                <tr>
-                  <td colSpan="3" className="p-4 text-center text-black">
-                    ไม่มีคำขอลา
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            )}
+          </tbody>
+        </table>
       </div>
 
       <LeaveRequestModal

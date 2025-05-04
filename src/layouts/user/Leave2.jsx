@@ -90,8 +90,9 @@ export default function Leave2() {
     fetchLeaveTypes();
   }, []);
 
-  const formatDate = (iso) =>
-    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // แสดงวันที่และเวลา
+  const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
+  const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
+  
 
   // combined filters: date range, status, leaveType
   const filtered = useMemo(() => {
@@ -283,7 +284,7 @@ export default function Leave2() {
                       onClick={() => navigate(`/leave/${leave.id}`)}
                     >
                       <td className="px-4 py-3">
-                        {formatDate(leave.createdAt)}
+                        {formatDateTime(leave.createdAt)}
                       </td>
                       <td className="px-4 py-3">
                         {leaveTypesMap[leave.leaveTypeId] || "-"}
