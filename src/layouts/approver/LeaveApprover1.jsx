@@ -10,7 +10,7 @@ import Swal from "sweetalert2";
 
 dayjs.extend(isBetween);
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
 export default function LeaveApprover1() {
   const navigate = useNavigate();
@@ -273,126 +273,125 @@ export default function LeaveApprover1() {
 
       {/* table */}
       <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
-        <table className="min-w-full bg-white text-sm text-black">
-          <thead>
-            <tr className="bg-gray-100 text-gray-800">
-              {[
-                "วันที่ยื่น",
-                "ชื่อผู้ลา",
-                "ประเภทการลา",
-                "วันเริ่มต้น",
-                "วันสิ้นสุด",
-                "สถานะ",
-                "ความคิดเห็น",
-                "ดำเนินการ",
-              ].map((h, i) => (
-                <th
-                  key={i}
-                  className={`px-4 py-3 text-left ${
-                    h === "ชื่อผู้ลา" ? "w-[220px]" : ""
-                  }`}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-
-          <tbody>
-            {displayItems.length > 0 ? (
-              displayItems.map((leave, idx) => {
-                const detailId = leave.leaveRequestDetails?.[0]?.id;
-                const statusKey = (leave.status || "").toUpperCase();
-                return (
-                  <tr
-                    key={leave.id}
-                    className={`${
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-gray-100 transition cursor-pointer`}
-                    onClick={() => navigate(`/leave/${leave.id}`)}
+        <div className="overflow-x-auto">
+          <table className="min-w-[1200px] bg-white text-sm text-black">
+            <thead>
+              <tr className="bg-gray-100 text-gray-800">
+                {[
+                  "วันที่ยื่น",
+                  "ชื่อผู้ลา",
+                  "ประเภทการลา",
+                  "วันเริ่มต้น",
+                  "วันสิ้นสุด",
+                  "สถานะ",
+                  "ความคิดเห็น",
+                  "ดำเนินการ",
+                ].map((h, i) => (
+                  <th
+                    key={i}
+                    className={`px-4 py-3 text-left ${h === "ชื่อผู้ลา" ? "w-[220px]" : ""
+                      }`}
                   >
-                    <td className="px-4 py-2">{formatDate(leave.createdAt)}</td>
-                    <td className="px-4 py-2 w-[220px]">
-                      {leave.user.prefixName}
-                      {leave.user.firstName} {leave.user.lastName}
-                    </td>
-                    <td className="px-4 py-2">
-                      {leaveTypesMap[leave.leaveTypeId] || "-"}
-                    </td>
-                    <td className="px-4 py-2">{formatDate(leave.startDate)}</td>
-                    <td className="px-4 py-2">{formatDate(leave.endDate)}</td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`px-4 py-1 rounded-full text-xs font-semibold ${
-                          statusColors[statusKey] || "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {statusLabels[statusKey] || leave.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={comments[detailId] || ""}
-                          onClick={(e) => e.stopPropagation()} // ⛔ กันไม่ให้เด้ง
-                          onChange={(e) =>
-                            setComments((c) => ({
-                              ...c,
-                              [detailId]: e.target.value,
-                            }))
-                          }
-                          className="w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
-                          placeholder="ใส่ความคิดเห็น"
-                        />
-                        <Pencil
-                          className="w-5 h-5 text-gray-500 cursor-pointer"
-                          onClick={(e) => e.stopPropagation()} // ⛔ กันไม่ให้เด้ง
-                        />
-                      </div>
-                    </td>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-                    <td className="px-4 py-2">
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const result = await Swal.fire({
-                            title: "รับรองคำขอลา",
-                            text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "ใช่, รับรอง",
-                            cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#16a34a", // เขียว
-                            cancelButtonColor: "#d33", // แดง
-                          });
+            <tbody>
+              {displayItems.length > 0 ? (
+                displayItems.map((leave, idx) => {
+                  const detailId = leave.leaveRequestDetails?.[0]?.id;
+                  const statusKey = (leave.status || "").toUpperCase();
+                  return (
+                    <tr
+                      key={leave.id}
+                      className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        } hover:bg-gray-100 transition cursor-pointer`}
+                      onClick={() => navigate(`/leave/${leave.id}`)}
+                    >
+                      <td className="px-4 py-2">{formatDate(leave.createdAt)}</td>
+                      <td className="px-4 py-2 w-[220px]">
+                        {leave.user.prefixName}
+                        {leave.user.firstName} {leave.user.lastName}
+                      </td>
+                      <td className="px-4 py-2">
+                        {leaveTypesMap[leave.leaveTypeId] || "-"}
+                      </td>
+                      <td className="px-4 py-2">{formatDate(leave.startDate)}</td>
+                      <td className="px-4 py-2">{formatDate(leave.endDate)}</td>
+                      <td className="px-4 py-2">
+                        <div className="w-full">
+                          <span
+                            className={`w-full inline-block text-center px-2 py-1 rounded-full text-sm font-medium whitespace-nowrap ${statusColors[statusKey] || "bg-gray-100 text-gray-700"
+                              }`}
+                          >
+                            {statusLabels[statusKey] || leave.status}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={comments[detailId] || ""}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) =>
+                              setComments((c) => ({
+                                ...c,
+                                [detailId]: e.target.value,
+                              }))
+                            }
+                            className="w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                            placeholder="ใส่ความคิดเห็น"
+                          />
+                          <Pencil
+                            className="w-5 h-5 text-gray-500 cursor-pointer"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const result = await Swal.fire({
+                              title: "รับรองคำขอลา",
+                              text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
+                              icon: "warning",
+                              showCancelButton: true,
+                              confirmButtonText: "ใช่, รับรอง",
+                              cancelButtonText: "ยกเลิก",
+                              confirmButtonColor: "#16a34a",
+                              cancelButtonColor: "#d33",
+                            });
 
-                          if (result.isConfirmed) {
-                            handleApprove(detailId);
-                          }
-                        }}
-                        disabled={loadingApprovals[detailId]}
-                        className={`px-4 py-1 rounded text-white ${
-                          loadingApprovals[detailId]
+                            if (result.isConfirmed) {
+                              handleApprove(detailId);
+                            }
+                          }}
+                          disabled={loadingApprovals[detailId]}
+                          className={`px-4 py-1 rounded text-white ${loadingApprovals[detailId]
                             ? "bg-green-300 cursor-not-allowed"
                             : "bg-green-500 hover:bg-green-600"
-                        }`}
-                      >
-                        {loadingApprovals[detailId] ? "ตกลง" : "ตกลง"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
-                  ไม่มีข้อมูลการลา
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                            }`}
+                        >
+                          {loadingApprovals[detailId] ? "ตกลง" : "ตกลง"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="8" className="px-4 py-6 text-center text-gray-500">
+                    ไม่มีข้อมูลการลา
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* pagination */}

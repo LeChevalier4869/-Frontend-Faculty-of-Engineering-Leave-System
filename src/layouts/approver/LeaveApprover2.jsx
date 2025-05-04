@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { ChevronDown } from "lucide-react";
-import { apiEndpoints } from "../../utils/api";
-import { Pencil } from "lucide-react";
+import { ChevronDown, Pencil } from "lucide-react";
 import Swal from "sweetalert2";
+import { apiEndpoints } from "../../utils/api";
 
 dayjs.extend(isBetween);
 
@@ -45,11 +44,7 @@ export default function LeaveApprover2() {
       const res = await axios.get(apiEndpoints.leaveRequestForSecondApprover, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Leave Requests:", res.data);
-
-      // ตั้งค่าข้อมูลคำขอลาโดยตรงจาก res.data (ถ้าเป็น array)
-      const data = Array.isArray(res.data) ? res.data : [];
-      setLeaveRequest(data);
+      setLeaveRequest(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching leave requests:", err);
       setLeaveRequest([]);
@@ -76,33 +71,36 @@ export default function LeaveApprover2() {
     fetchLeaveTypes();
   }, []);
 
-  // Approve and remove from list
   const handleApprove = async (detailId) => {
-    const commentFromInput = (comments[detailId] || "").trim();
+    const commentText = (comments[detailId] || "").trim();
     setLoadingApprovals((prev) => ({ ...prev, [detailId]: true }));
-    try {
-      Swal.fire({
-        title: "กำลังดำเนินการ...",
-        text: "กรุณารอสักครู่",
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-      });
 
+    Swal.fire({
+      title: "กำลังดำเนินการ...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    try {
       const token = localStorage.getItem("token");
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsBySecondApprover(detailId),
         {
-          remarks: commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
-          comment: commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+          remarks:
+            commentText ||
+            "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+          comment:
+            commentText ||
+            "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       Swal.close();
       Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
       setLeaveRequest((prev) =>
-        prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
+        prev.filter(
+          (item) => item.leaveRequestDetails?.[0]?.id !== detailId
+        )
       );
     } catch (error) {
       console.error("❌ Error approving request", error);
@@ -118,34 +116,34 @@ export default function LeaveApprover2() {
 
   const filtered = useMemo(() => {
     const sorted = [...leaveRequest].sort((a, b) => {
-      const dateA = new Date(a.createdAt);
-      const dateB = new Date(b.createdAt);
-      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      const aT = new Date(a.createdAt),
+        bT = new Date(b.createdAt);
+      return sortOrder === "asc" ? aT - bT : bT - aT;
     });
 
     return sorted.filter((lr) => {
       const created = dayjs(lr.createdAt).format("YYYY-MM-DD");
-      let byDate = true;
+      let okDate = true;
 
       if (filterStartDate && filterEndDate) {
-        byDate = dayjs(created).isBetween(
+        okDate = dayjs(created).isBetween(
           filterStartDate,
           filterEndDate,
           null,
           "[]"
         );
       } else if (filterStartDate) {
-        byDate = created >= filterStartDate;
+        okDate = created >= filterStartDate;
       } else if (filterEndDate) {
-        byDate = created <= filterEndDate;
+        okDate = created <= filterEndDate;
       }
 
-      const byStatus = filterStatus ? lr.status === filterStatus : true;
-      const byType = filterLeaveType
+      const okStatus = filterStatus ? lr.status === filterStatus : true;
+      const okType = filterLeaveType
         ? String(lr.leaveTypeId) === filterLeaveType
         : true;
 
-      return byDate && byStatus && byType;
+      return okDate && okStatus && okType;
     });
   }, [
     leaveRequest,
@@ -153,7 +151,7 @@ export default function LeaveApprover2() {
     filterEndDate,
     filterStatus,
     filterLeaveType,
-    sortOrder, // 👈 อย่าลืมเพิ่ม dependency
+    sortOrder,
   ]);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -171,17 +169,17 @@ export default function LeaveApprover2() {
     );
   }
 
-  console.log(comments, "comments");
   return (
     <div className="min-h-screen p-6 bg-white font-kanit text-black">
-      {/* header */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-        <h1 className="text-3xl font-bold">รายการการลาที่รออนุมัติ</h1>
+        <h1 className="text-3xl font-bold">
+          รายการการลาที่รออนุมัติ (ระดับ 2)
+        </h1>
       </div>
 
-      {/* filters */}
+      {/* Filters */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        {/* Date range */}
         <div className="flex items-center gap-2">
           <label className="text-sm">จาก</label>
           <input
@@ -205,7 +203,6 @@ export default function LeaveApprover2() {
           />
         </div>
 
-        {/* Leave-type dropdown */}
         <div className="relative w-48">
           <select
             value={filterLeaveType}
@@ -213,7 +210,8 @@ export default function LeaveApprover2() {
               setFilterLeaveType(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full bg-white text-base px-3 py-2 pr-8 border border
+-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <option value="">ประเภทการลาทั้งหมด</option>
             {Object.entries(leaveTypesMap).map(([id, name]) => (
@@ -227,7 +225,6 @@ export default function LeaveApprover2() {
           </div>
         </div>
 
-        {/* Sort order dropdown */}
         <div className="relative w-48">
           <select
             value={sortOrder}
@@ -244,15 +241,15 @@ export default function LeaveApprover2() {
             <ChevronDown className="w-4 h-4 text-gray-500" />
           </div>
         </div>
-        {/* Clear filters */}
+
         <button
           onClick={() => {
             setFilterStartDate("");
             setFilterEndDate("");
             setFilterStatus("");
             setFilterLeaveType("");
-            setCurrentPage(1);
             setSortOrder("desc");
+            setCurrentPage(1);
           }}
           className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
         >
@@ -260,7 +257,8 @@ export default function LeaveApprover2() {
         </button>
       </div>
 
-      <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
+      {/* Table */}
+      <div className="rounded-lg shadow border border-gray-300 overflow-x-auto">
         <table className="min-w-full bg-white text-sm text-black">
           <thead>
             <tr className="bg-gray-100 text-gray-800">
@@ -276,7 +274,7 @@ export default function LeaveApprover2() {
               ].map((h, i) => (
                 <th
                   key={i}
-                  className={`px-4 py-3 text-left ${
+                  className={`px-4 py-3 text-left whitespace-nowrap ${
                     h === "ชื่อผู้ลา" ? "w-[220px]" : ""
                   }`}
                 >
@@ -285,12 +283,11 @@ export default function LeaveApprover2() {
               ))}
             </tr>
           </thead>
-
           <tbody>
             {displayItems.length > 0 ? (
               displayItems.map((leave, idx) => {
                 const detailId = leave.leaveRequestDetails?.[0]?.id;
-                const statusKey = (leave.status || "").toUpperCase();
+                const key = (leave.status || "").toUpperCase();
                 return (
                   <tr
                     key={leave.id}
@@ -299,62 +296,65 @@ export default function LeaveApprover2() {
                     } hover:bg-gray-100 transition cursor-pointer`}
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
-                    <td className="px-4 py-2">{formatDate(leave.createdAt)}</td>
-                    <td className="px-4 py-2 w-[220px]">
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      {formatDate(leave.createdAt)}
+                    </td>
+                    <td className="px-4 py-2 w-[220px] whitespace-nowrap">
                       {leave.user.prefixName}
                       {leave.user.firstName} {leave.user.lastName}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       {leaveTypesMap[leave.leaveTypeId] || "-"}
                     </td>
-                    <td className="px-4 py-2">{formatDate(leave.startDate)}</td>
-                    <td className="px-4 py-2">{formatDate(leave.endDate)}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      {formatDate(leave.startDate)}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      {formatDate(leave.endDate)}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <span
-                        className={`px-4 py-1 rounded-full text-xs font-semibold ${
-                          statusColors[statusKey] || "bg-gray-100 text-gray-700"
+                        className={`px-4 py-1 whitespace-nowrap rounded-full text-xs font-semibold ${
+                          statusColors[key] || "bg-gray-100 text-gray-700"
                         }`}
                       >
-                        {statusLabels[statusKey] || leave.status}
+                        {statusLabels[key] || leave.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <input
                           type="text"
                           value={comments[detailId] || ""}
-                          onClick={(e) => e.stopPropagation()} // ⛔ กันไม่ให้เด้ง
+                          onClick={(e) => e.stopPropagation()}
                           onChange={(e) =>
                             setComments((c) => ({
                               ...c,
                               [detailId]: e.target.value,
                             }))
                           }
-                          className="w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                          className="w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 whitespace-nowrap"
                           placeholder="ใส่ความคิดเห็น"
                         />
                         <Pencil
                           className="w-5 h-5 text-gray-500 cursor-pointer"
-                          onClick={(e) => e.stopPropagation()} // ⛔ กันไม่ให้เด้ง
+                          onClick={(e) => e.stopPropagation()}
                         />
                       </div>
                     </td>
-
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
                           const result = await Swal.fire({
                             title: "รับรองคำขอลา",
-                            text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
                             icon: "warning",
                             showCancelButton: true,
                             confirmButtonText: "ใช่, รับรอง",
                             cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#16a34a", // เขียว
-                            cancelButtonColor: "#d33", // แดง
+                            confirmButtonColor: "#16a34a",
+                            cancelButtonColor: "#d33",
                           });
-
                           if (result.isConfirmed) {
                             handleApprove(detailId);
                           }
@@ -374,7 +374,7 @@ export default function LeaveApprover2() {
               })
             ) : (
               <tr>
-                <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
+                <td colSpan="8" className="px-4 py-6 text-center text-gray-500 whitespace-nowrap">
                   ไม่มีข้อมูลการลา
                 </td>
               </tr>
@@ -383,7 +383,7 @@ export default function LeaveApprover2() {
         </table>
       </div>
 
-      {/* pagination */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-6">
           <button

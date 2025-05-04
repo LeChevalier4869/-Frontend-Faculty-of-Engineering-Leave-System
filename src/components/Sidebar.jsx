@@ -22,48 +22,47 @@ const userNav = [
 const approverNav1 = [
   {
     to: "/approver/leave-request-approver1",
-    text: "การลาที่รอการอนุมัติ",
+    text: "อนุมัติระดับหัวหน้าสาขา",
     icon: <FaCheckCircle />,
   },
 ];
 const verifierNav = [
   {
     to: "/approver/leave-request-verifier",
-    text: "การลาที่รอการอนุมัติ",
+    text: "ตรวจสอบคำขอการลา",
     icon: <FaCheckCircle />,
   },
 ];
 const receiverNav = [
   {
     to: "/approver/leave-request-receiver",
-    text: "การลาที่รอการอนุมัติ",
+    text: "รับหนังสือคำขอลา",
     icon: <FaCheckCircle />,
   },
 ];
 const approverNav2 = [
   {
     to: "/approver/leave-request-approver2",
-    text: "การลาที่รอการอนุมัติ",
+    text: "อนุมัติระดับ 2",
     icon: <FaCheckCircle />,
   },
 ];
 const approverNav3 = [
   {
     to: "/approver/leave-request-approver3",
-    text: "การลาที่รอการอนุมัติ",
+    text: "อนุมัติระดับ 3",
     icon: <FaCheckCircle />,
   },
 ];
 const approverNav4 = [
   {
     to: "/approver/leave-request-approver4",
-    text: "การลาที่รอการอนุมัติ",
+    text: "อนุมัติระดับ 4",
     icon: <FaCheckCircle />,
   },
 ];
 
 const adminNav = [
-  { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
   { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
   { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
   {
@@ -148,9 +147,9 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
   return (
     <aside
       className={`fixed md:static top-0 left-0 z-40 h-full bg-gray-900 text-white font-kanit transform transition-all duration-300 ease-in-out
-        ${isMini ? "w-20" : "w-64"} ${
+    ${isMini ? "w-20" : "w-64"} ${
         isOpen ? "translate-x-0" : "-translate-x-full"
-      }`}
+      } overflow-y-auto`}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
@@ -211,7 +210,6 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
           renderDropdown("เมนูผู้อนุมัติ3", approverNav3)}
         {hasRole("APPROVER_4") &&
           renderDropdown("เมนูผู้อนุมัติ4", approverNav4)}
-
         {hasRole("ADMIN") && renderDropdown("เมนูผู้ดูแล", adminNav)}
       </nav>
     </aside>
