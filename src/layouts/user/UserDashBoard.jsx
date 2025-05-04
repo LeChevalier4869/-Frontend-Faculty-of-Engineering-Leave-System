@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
-  Users,
-  Calendar,
-  Clock,
+  CalendarDays,
   CheckCircle,
   Clock,
   PlusCircle,
@@ -21,14 +19,13 @@ import useLeaveRequest from "../../hooks/useLeaveRequest";
 import LeaveRequestModal from "./LeaveRequestModal";
 import dayjs from "dayjs";
 
-export default function AdminDashboard() {
+export default function UserDashboard() {
+  const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalRequests: 0,
-    pending: 0,
+    remainingLeave: 0,
     approved: 0,
     pending: 0,
     rejected: 0,
@@ -53,33 +50,33 @@ export default function AdminDashboard() {
     const fetchUserStats = async () => {
       setLoading(true);
       try {
-        if (!token) throw new Error("No auth token");
-        const [usersRes, leavesRes] = await Promise.all([
-          axios.get(getApiUrl("admin/users"), {
+        const token = localStorage.getItem("token"); // ✅ เพิ่มตรงนี้
+
+        const [summaryRes, leavesRes] = await Promise.all([
+          axios.get(getApiUrl("leave-balances/leave-summary"), {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(getApiUrl("admin/leave-requests"), {
+          axios.get(getApiUrl("leave-requests/my-requests"), {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
-        const users = Array.isArray(usersRes.data.data) ? usersRes.data.data : [];
-        const leaves = Array.isArray(leavesRes.data.data) ? leavesRes.data.data : [];
+        console.log("User Dashboard Summary Response:", summaryRes.data);
+        console.log("User Dashboard Leaves Response:", leavesRes.data);
+        const summary = summaryRes.data;
+        const leaves = Array.isArray(leavesRes.data) ? leavesRes.data : [];
 
-        // compute counts
-        const totalUsers = users.length;
-        const totalRequests = leaves.length;
-        const pending = leaves.filter((r) => r.status === "PENDING").length;
         const approved = leaves.filter((r) => r.status === "APPROVED").length;
         const pending = leaves.filter((r) => r.status === "PENDING").length;
         const rejected = leaves.filter((r) => r.status === "REJECTED").length;
         console.log("User Dashboard Summary:", summary);
         const remainingLeave = summary.remainingDays || 0;
 
-        setStats({ totalUsers, totalRequests, pending, approved, rejected, cancelled });
+        setStats({ approved, pending, rejected, remainingLeave });
 
-        // most recent 5
-        const sorted = leaves.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const sorted = leaves
+          .slice()
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setRecent(sorted.slice(0, 5));
       } catch (err) {
         console.error("UserDashboard fetch error:", err.response || err);
@@ -192,18 +189,30 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-8 font-kanit">
-      <h1 className="text-3xl font-bold mb-6 text-black">แดชบอร์ดผู้ดูแลระบบ</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black">
+        สวัสดีคุณ {user?.firstName || ""} {user?.lastName || ""} 👋
+      </h1>
+
+      {/* Leave Balance by Type */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {entitlements.map((item) => (
+          <div
+            key={item.leaveType.name}
+            className="bg-white p-6 rounded-lg shadow flex items-center"
+          >
+            <CalendarDays className="w-8 h-8 text-blue-500" />
+            <div className="ml-4">
+              <p className="text-2xl font-semibold text-black">
+                {item.remainingDays}
+              </p>
+              <p className="text-black">วันลาคงเหลือ ({item.leaveType.name})</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow flex items-center">
-          <Users className="w-8 h-8 text-blue-500" />
-          <div className="ml-4">
-            <p className="text-2xl font-semibold text-black">{stats.totalUsers}</p>
-            <p className="text-black">ผู้ใช้งานทั้งหมด</p>
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow flex items-center">
           <CheckCircle className="w-8 h-8 text-green-500" />
           <div className="ml-4">
@@ -282,45 +291,102 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Requests */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4 text-black">คำขอลาล่าสุด</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left table-auto">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-3 font-medium text-black">วันที่</th>
-                <th className="p-3 font-medium text-black">ผู้ขอ</th>
-                <th className="p-3 font-medium text-black">ประเภทลา</th>
-                <th className="p-3 font-medium text-black">สถานะ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recent.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-t hover:bg-gray-50 cursor-pointer"
-                  onClick={() => navigate(`/admin/leave/${r.id}`)}
-                >
-                  <td className="p-3 text-black">{formatDate(r.createdAt)}</td>
-                  <td className="p-3 text-black">
-                    {r.user.firstName} {r.user.lastName}
-                  </td>
-                  <td className="p-3 text-black">{r.leaveType.name}</td>
-                  <td className="p-3 text-black">{r.status}</td>
-                </tr>
-              ))}
-              {recent.length === 0 && (
-                <tr>
-                  <td colSpan="4" className="p-4 text-center text-black">
-                    ไม่มีคำขอลา
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* Quick Actions */}
+      <div className="flex gap-4 mb-8">
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
+        >
+          <PlusCircle className="mr-2" />
+          ยื่นลา
+        </button>
+
+        <button
+          onClick={() => navigate("/leave")}
+          className="flex items-center bg-gray-700 text-white px-4 py-2 rounded shadow hover:bg-gray-800"
+        >
+          <List className="mr-2" />
+          ประวัติการลา
+        </button>
       </div>
+
+      {/* Legend for Status */}
+      <div className="flex flex-wrap gap-4 items-center text-sm mb-4">
+        {Object.entries(statusLabels).map(([key, label]) => (
+          <div key={key} className="flex items-center gap-2">
+            <span
+              className={`w-3 h-3 rounded-full ${
+                statusColors[key]?.split(" ")[0] || "bg-gray-300"
+              }`}
+            />
+            <span className="text-gray-700">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Leave Request Table */}
+      <div className="rounded-lg shadow border border-gray-300 overflow-hidden mb-8 bg-white">
+        <table className="table-fixed w-full text-sm text-black">
+          <thead className="bg-gray-100 text-gray-800">
+            <tr>
+              <th className="px-4 py-3 text-left">วันที่ยื่น</th>
+              <th className="px-4 py-3 text-left">ประเภทการลา</th>
+              <th className="px-4 py-3 text-left">วันเริ่มต้น</th>
+              <th className="px-4 py-3 text-left">วันสิ้นสุด</th>
+              <th className="px-4 py-3 text-left">สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recent.length > 0 ? (
+              recent.map((leave, idx) => {
+                const statusKey = (leave.status || "").toUpperCase();
+                return (
+                  <tr
+                    key={leave.id}
+                    className={`${
+                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } hover:bg-gray-100 transition cursor-pointer`}
+                    onClick={() => navigate(`/leave/${leave.id}`)}
+                  >
+                    <td className="px-4 py-3">
+                      {formatDateTime(leave.createdAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {leave.leaveType?.name || "-"}
+                    </td>
+                    <td className="px-4 py-3">{formatDate(leave.startDate)}</td>
+                    <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          statusColors[statusKey] || "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        {statusLabels[statusKey] || leave.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
+                  ไม่มีข้อมูลการลา
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <LeaveRequestModal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={() => {
+          setModalOpen(false);
+          fetchLeaveRequests();
+        }}
+      />
     </div>
   );
 }
