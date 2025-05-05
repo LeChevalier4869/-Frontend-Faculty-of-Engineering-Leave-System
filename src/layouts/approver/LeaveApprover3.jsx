@@ -107,8 +107,9 @@ export default function LeaveApprover3() {
     }
   };
 
-  const formatDate = (iso) =>
-    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
+const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
+  const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
+  
 
   const filtered = useMemo(() => {
     const sorted = [...leaveRequest].sort((a, b) => {
@@ -294,7 +295,7 @@ export default function LeaveApprover3() {
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
                     <td className="px-4 py-2">
-                      {formatDate(leave.createdAt)}
+                      {formatDateTime(leave.createdAt)}
                     </td>
                     <td className="px-4 py-2 w-[220px]">
                       {leave.user.prefixName}

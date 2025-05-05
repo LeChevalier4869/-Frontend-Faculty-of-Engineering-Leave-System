@@ -107,8 +107,9 @@ export default function LeaveReceiver() {
     }
   };
 
-  const formatDate = (iso) =>
-    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
+const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
+  const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
+  
 
   const filtered = useMemo(() => {
     const sorted = [...leaveRequest].sort((a, b) => {
@@ -258,7 +259,7 @@ export default function LeaveReceiver() {
                     className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition cursor-pointer`}
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
-                    <td className="px-4 py-2 whitespace-nowrap">{formatDate(leave.createdAt)}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{formatDateTime(leave.createdAt)}</td>
                     <td className="px-4 py-2 w-[220px] whitespace-nowrap">
                       {leave.user.prefixName}{leave.user.firstName} {leave.user.lastName}
                     </td>

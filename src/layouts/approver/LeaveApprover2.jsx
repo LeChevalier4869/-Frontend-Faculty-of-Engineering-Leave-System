@@ -86,21 +86,15 @@ export default function LeaveApprover2() {
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsBySecondApprover(detailId),
         {
-          remarks:
-            commentText ||
-            "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
-          comment:
-            commentText ||
-            "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+          remarks: commentText || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+          comment: commentText || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       Swal.close();
       Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
       setLeaveRequest((prev) =>
-        prev.filter(
-          (item) => item.leaveRequestDetails?.[0]?.id !== detailId
-        )
+        prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
     } catch (error) {
       console.error("❌ Error approving request", error);
@@ -111,8 +105,9 @@ export default function LeaveApprover2() {
     }
   };
 
-  const formatDate = (iso) =>
-    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
+  const formatDateTime = (iso) =>
+    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
+  const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
 
   const filtered = useMemo(() => {
     const sorted = [...leaveRequest].sort((a, b) => {
@@ -210,8 +205,7 @@ export default function LeaveApprover2() {
               setFilterLeaveType(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full bg-white text-base px-3 py-2 pr-8 border border
--gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full bg-white text-base px-3 py-2 pr-8 border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <option value="">ประเภทการลาทั้งหมด</option>
             {Object.entries(leaveTypesMap).map(([id, name]) => (
@@ -297,7 +291,7 @@ export default function LeaveApprover2() {
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
                     <td className="px-4 py-2 whitespace-nowrap">
-                      {formatDate(leave.createdAt)}
+                      {formatDateTime(leave.createdAt)}
                     </td>
                     <td className="px-4 py-2 w-[220px] whitespace-nowrap">
                       {leave.user.prefixName}
@@ -374,7 +368,10 @@ export default function LeaveApprover2() {
               })
             ) : (
               <tr>
-                <td colSpan="8" className="px-4 py-6 text-center text-gray-500 whitespace-nowrap">
+                <td
+                  colSpan="8"
+                  className="px-4 py-6 text-center text-gray-500 whitespace-nowrap"
+                >
                   ไม่มีข้อมูลการลา
                 </td>
               </tr>

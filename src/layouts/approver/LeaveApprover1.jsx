@@ -114,8 +114,6 @@ export default function LeaveApprover1() {
     }
   };
 
-  const formatDate = (iso) =>
-    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
 
   const filtered = useMemo(() => {
     const sorted = [...leaveRequest].sort((a, b) => {
@@ -163,6 +161,11 @@ export default function LeaveApprover1() {
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
+
+  const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
+    const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
+    
+
 
   if (loading) {
     return (
@@ -310,7 +313,7 @@ export default function LeaveApprover1() {
                         } hover:bg-gray-100 transition cursor-pointer`}
                       onClick={() => navigate(`/leave/${leave.id}`)}
                     >
-                      <td className="px-4 py-2">{formatDate(leave.createdAt)}</td>
+                      <td className="px-4 py-2">{formatDateTime(leave.createdAt)}</td>
                       <td className="px-4 py-2 w-[220px]">
                         {leave.user.prefixName}
                         {leave.user.firstName} {leave.user.lastName}
