@@ -90,13 +90,19 @@ export default function Leave2() {
     fetchLeaveTypes();
   }, []);
 
-  const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
+  const formatDateTime = (iso) =>
+    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
   const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
-  
 
   // combined filters: date range, status, leaveType
   const filtered = useMemo(() => {
-    return leaveRequest.filter((lr) => {
+    const sorted = [...leaveRequest].sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    return sorted.filter((lr) => {
       const created = dayjs(lr.createdAt).format("YYYY-MM-DD");
       let byDate = true;
 
@@ -126,6 +132,7 @@ export default function Leave2() {
     filterEndDate,
     filterStatus,
     filterLeaveType,
+    sortOrder,
   ]);
 
   // pagination
@@ -222,6 +229,21 @@ export default function Leave2() {
                   {name}
                 </option>
               ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+              <ChevronDown className="w-4 h-4 text-gray-500" />
+            </div>
+          </div>
+
+          {/* Sort order */}
+          <div className="relative w-48">
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="desc">เรียงจากใหม่ไปเก่า</option>
+              <option value="asc">เรียงจากเก่าไปใหม่</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
               <ChevronDown className="w-4 h-4 text-gray-500" />

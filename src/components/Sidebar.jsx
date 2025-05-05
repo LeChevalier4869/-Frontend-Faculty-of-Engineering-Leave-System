@@ -87,7 +87,7 @@ const adminNav = [
     text: "จัดการประเภทการลา",
     icon: <FaUsersCog />,
   },
-  { to: "/admin/edit-profile", text: "การตั้งค่า", icon: <FaUsersCog /> },
+  // { to: "/admin/edit-profile", text: "การตั้งค่า", icon: <FaUsersCog /> },
 ];
 
 export default function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
