@@ -107,9 +107,9 @@ export default function LeaveApprover3() {
     }
   };
 
-const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
+  const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
   const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
-  
+
 
   const filtered = useMemo(() => {
     const sorted = [...leaveRequest].sort((a, b) => {
@@ -272,9 +272,8 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
               ].map((h, i) => (
                 <th
                   key={i}
-                  className={`px-4 py-3 text-left whitespace-nowrap ${
-                    h === "ชื่อผู้ลา" ? "w-[220px]" : ""
-                  }`}
+                  className={`px-4 py-3 text-left whitespace-nowrap ${h === "ชื่อผู้ลา" ? "w-[220px]" : ""
+                    }`}
                 >
                   {h}
                 </th>
@@ -289,9 +288,8 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
                 return (
                   <tr
                     key={leave.id}
-                    className={`${
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-gray-100 transition cursor-pointer`}
+                    className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      } hover:bg-gray-100 transition cursor-pointer`}
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
                     <td className="px-4 py-2">
@@ -310,12 +308,10 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
                     <td className="px-4 py-2">
                       {formatDate(leave.endDate)}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <span
-                        className={`px-4 py-1 rounded-full text-xs font-semibold ${
-                          statusColors[statusKey] ||
-                          "bg-gray-100 text-gray-700"
-                        }`}
+                        className={`px-4 py-1 whitespace-nowrap rounded-full text-xs font-semibold ${statusColors[statusKey] || "bg-gray-100 text-gray-700"
+                          }`}
                       >
                         {statusLabels[statusKey] || leave.status}
                       </span>
@@ -360,11 +356,10 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
                           }
                         }}
                         disabled={loadingApprovals[detailId]}
-                        className={`px-4 py-1 rounded text-white transition ${
-                          loadingApprovals[detailId]
-                            ? "bg-green-300 cursor-not-allowed"
-                            : "bg-green-500 hover:bg-green-600"
-                        }`}
+                        className={`px-4 py-1 rounded text-white transition ${loadingApprovals[detailId]
+                          ? "bg-green-300 cursor-not-allowed"
+                          : "bg-green-500 hover:bg-green-600"
+                          }`}
                       >
                         {loadingApprovals[detailId] ? "กำลังดำเนินการ" : "ตกลง"}
                       </button>

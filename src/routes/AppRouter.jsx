@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useState } from "react";
+import clsx from "clsx"; // ✅ ใช้ควบคุม class แบบ dynamic
 import useAuth from "../hooks/useAuth";
 
 /** Auth layouts **/
@@ -28,7 +29,6 @@ import UserLanding from "../layouts/user/UserLanding";
 import UserDashBoard from "../layouts/user/UserDashBoard";
 import ChangePassword from "../layouts/user/ChangePassword";
 
-
 /** Approver pages **/
 import LeaveApprover1 from "../layouts/approver/LeaveApprover1";
 import LeaveApprover2 from "../layouts/approver/LeaveApprover2";
@@ -36,7 +36,6 @@ import LeaveApprover3 from "../layouts/approver/LeaveApprover3";
 import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
 import LeaveReceiver from "../layouts/approver/LeaveReceiver";
 import LeaveVerifier from "../layouts/approver/LeaveVerifier";
-
 
 /** Admin pages **/
 import DashBoard from "../layouts/admin/DashBoard";
@@ -54,10 +53,11 @@ import EditProfile from "../layouts/admin/EditProfile";
 import AddnewUser from "../layouts/admin/AddnewUser";
 import LeaveAdmin from "../layouts/admin/LeaveAdmin";
 import LeaveReport from "../layouts/admin/LeaveReport";
-/** Layout หลัก */
+
+/** Layout หลักพร้อม Sidebar */
 function AppLayout() {
-  const [isSidebarOpen, setSidebarOpen] = useState(true); // เปิดค้าง
-  const [isMiniSidebar, setMiniSidebar] = useState(false); // Full mode ก่อน
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isMiniSidebar, setMiniSidebar] = useState(false);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
@@ -66,6 +66,11 @@ function AppLayout() {
   const toggleMiniSidebar = () => {
     setMiniSidebar(!isMiniSidebar);
   };
+
+  const mainShift = clsx(
+    "transition-all duration-300",
+    isMiniSidebar ? "ml-16" : "ml-64"
+  );
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -79,7 +84,7 @@ function AppLayout() {
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header onToggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-auto p-4 bg-gray-100 transition-all duration-300">
+        <main className={clsx("flex-1 overflow-auto p-4 bg-gray-100", mainShift)}>
           <Outlet />
         </main>
       </div>
@@ -107,15 +112,15 @@ const userRouter = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { index: true, element: <UserDashBoard /> },
+      { path: "dashboard", element: <UserDashBoard /> },
       { path: "leave", element: <Leave2 /> },
       { path: "leave/add", element: <AddLeave2 /> },
       { path: "leave/balance", element: <LeaveBalance /> },
       { path: "leave/:id", element: <LeaveDetail /> },
       { path: "profile", element: <UserProfile2 /> },
       { path: "profile/edit", element: <EditProfile /> },
-      { path: "user/landing", element: <UserLanding /> },
-      { path: "dashboard", element: <UserDashBoard /> },
       { path: "change-password", element: <ChangePassword /> },
+      { path: "user/landing", element: <UserLanding /> },
 
       // Approver group
       {
@@ -134,6 +139,7 @@ const userRouter = createBrowserRouter([
       {
         path: "admin",
         children: [
+          { path: "dashboard", element: <DashBoard /> },
           { path: "leave-report", element: <LeaveReport /> },
           { path: "manage-user", element: <UserManage /> },
           { path: "leave-request", element: <LeaveAdmin /> },
@@ -145,10 +151,9 @@ const userRouter = createBrowserRouter([
           { path: "setting-manage", element: <SettingManage /> },
           { path: "leave-type-manage", element: <LeaveTypeManage /> },
           { path: "user-info/:id", element: <UserInfo /> },
-          { path: "edit-profile", element: <EditProfile /> },
           { path: "add-user", element: <AddnewUser /> },
+          { path: "edit-profile", element: <EditProfile /> },
           { path: "user/:id", element: <EditUser /> },
-          { path: "dashboard", element: <DashBoard /> },
         ],
       },
 

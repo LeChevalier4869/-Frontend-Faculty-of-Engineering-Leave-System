@@ -17,7 +17,7 @@ function App() {
       const timer2 = setTimeout(() => setShowSplash(false), 3000);
 
       return () => {
-        clearTimeout(timer1);
+        clearTimeout(timer1)
         clearTimeout(timer2);
       };
     }
