@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { ChevronDown } from "lucide-react";
-import { apiEndpoints } from "../../utils/api";
-import { Pencil } from "lucide-react";
+import { ChevronDown, Pencil } from "lucide-react";
 import Swal from "sweetalert2";
+import { apiEndpoints } from "../../utils/api";
 
 dayjs.extend(isBetween);
 
@@ -14,7 +13,6 @@ const PAGE_SIZE = 8;
 
 export default function LeaveApprover1() {
   const navigate = useNavigate();
-  //   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const [leaveRequest, setLeaveRequest] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
@@ -46,11 +44,7 @@ export default function LeaveApprover1() {
       const res = await axios.get(apiEndpoints.leaveRequestForFirstApprover, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Leave Requests:", res.data);
-
-      // ตั้งค่าข้อมูลคำขอลาโดยตรงจาก res.data (ถ้าเป็น array)
-      const data = Array.isArray(res.data) ? res.data : [];
-      setLeaveRequest(data);
+      setLeaveRequest(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching leave requests:", err);
       setLeaveRequest([]);
@@ -77,33 +71,28 @@ export default function LeaveApprover1() {
     fetchLeaveTypes();
   }, []);
 
-  // Approve and remove from list
   const handleApprove = async (detailId) => {
     const commentFromInput = (comments[detailId] || "").trim();
-
     Swal.fire({
       title: "กำลังดำเนินการ...",
       text: "กรุณารอสักครู่",
       allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
+      didOpen: () => Swal.showLoading(),
     });
-
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsByFirstApprover(detailId),
         {
-          remarks: commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
-          comment: commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+          remarks:
+            commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+          comment:
+            commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      Swal.close(); // ปิด loading
+      Swal.close();
       await Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
-
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
@@ -113,7 +102,6 @@ export default function LeaveApprover1() {
       Swal.fire("ผิดพลาด", "ไม่สามารถอนุมัติได้", "error");
     }
   };
-
 
   const filtered = useMemo(() => {
     const sorted = [...leaveRequest].sort((a, b) => {
@@ -125,7 +113,6 @@ export default function LeaveApprover1() {
     return sorted.filter((lr) => {
       const created = dayjs(lr.createdAt).format("YYYY-MM-DD");
       let byDate = true;
-
       if (filterStartDate && filterEndDate) {
         byDate = dayjs(created).isBetween(
           filterStartDate,
@@ -138,12 +125,10 @@ export default function LeaveApprover1() {
       } else if (filterEndDate) {
         byDate = created <= filterEndDate;
       }
-
       const byStatus = filterStatus ? lr.status === filterStatus : true;
       const byType = filterLeaveType
         ? String(lr.leaveTypeId) === filterLeaveType
         : true;
-
       return byDate && byStatus && byType;
     });
   }, [
@@ -152,7 +137,7 @@ export default function LeaveApprover1() {
     filterEndDate,
     filterStatus,
     filterLeaveType,
-    sortOrder, // 👈 อย่าลืมเพิ่ม dependency
+    sortOrder,
   ]);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -162,10 +147,10 @@ export default function LeaveApprover1() {
     currentPage * PAGE_SIZE
   );
 
-  const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
-    const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
-    
-
+  const formatDateTime = (iso) =>
+    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
+  const formatDate = (iso) =>
+    dayjs(iso).locale("th").format("DD/MM/YYYY");
 
   if (loading) {
     return (
@@ -175,7 +160,6 @@ export default function LeaveApprover1() {
     );
   }
 
-  console.log(comments, "comments");
   return (
     <div className="min-h-screen p-6 bg-white font-kanit text-black">
       {/* header */}
@@ -248,6 +232,7 @@ export default function LeaveApprover1() {
             <ChevronDown className="w-4 h-4 text-gray-500" />
           </div>
         </div>
+
         {/* Clear filters */}
         <button
           onClick={() => {
@@ -264,137 +249,134 @@ export default function LeaveApprover1() {
         </button>
       </div>
 
-      {/* legend */}
-      {/* <div className="flex gap-6 items-center text-sm mb-6">
-          {Object.entries(statusLabels).map(([key, label]) => (
-            <div key={key} className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${statusColors[key]}`} />
-              <span className="text-gray-800">{label}</span>
-            </div>
-          ))}
-        </div> */}
-
       {/* table */}
-      <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-[1200px] bg-white text-sm text-black">
-            <thead>
-              <tr className="bg-gray-100 text-gray-800">
-                {[
-                  "วันที่ยื่น",
-                  "ชื่อผู้ลา",
-                  "ประเภทการลา",
-                  "วันเริ่มต้น",
-                  "วันสิ้นสุด",
-                  "สถานะ",
-                  "ความคิดเห็น",
-                  "ดำเนินการ",
-                ].map((h, i) => (
-                  <th
-                    key={i}
-                    className={`px-4 py-3 text-left ${h === "ชื่อผู้ลา" ? "w-[220px]" : ""
-                      }`}
+      <div className="rounded-lg shadow border border-gray-300 overflow-visible">
+        <table className="w-full table-auto bg-white text-sm text-black">
+          <thead>
+            <tr className="bg-gray-100 text-gray-800">
+              {[
+                "วันที่ยื่น",
+                "ชื่อผู้ลา",
+                "ประเภทการลา",
+                "วันเริ่มต้น",
+                "วันสิ้นสุด",
+                "สถานะ",
+                "ความคิดเห็น",
+                "ดำเนินการ",
+              ].map((h, i) => (
+                <th
+                  key={i}
+                  className={`px-4 py-3 text-left whitespace-normal ${
+                    h === "ชื่อผู้ลา" ? "w-[220px]" : ""
+                  }`}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {displayItems.length > 0 ? (
+              displayItems.map((leave, idx) => {
+                const detailId = leave.leaveRequestDetails?.[0]?.id;
+                const statusKey = (leave.status || "").toUpperCase();
+                return (
+                  <tr
+                    key={leave.id}
+                    className={`${
+                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } hover:bg-gray-100 transition cursor-pointer`}
+                    onClick={() => navigate(`/leave/${leave.id}`)}
                   >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {displayItems.length > 0 ? (
-                displayItems.map((leave, idx) => {
-                  const detailId = leave.leaveRequestDetails?.[0]?.id;
-                  const statusKey = (leave.status || "").toUpperCase();
-                  return (
-                    <tr
-                      key={leave.id}
-                      className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                        } hover:bg-gray-100 transition cursor-pointer`}
-                      onClick={() => navigate(`/leave/${leave.id}`)}
-                    >
-                      <td className="px-4 py-2">{formatDateTime(leave.createdAt)}</td>
-                      <td className="px-4 py-2 w-[220px]">
-                        {leave.user.prefixName}
-                        {leave.user.firstName} {leave.user.lastName}
-                      </td>
-                      <td className="px-4 py-2">
-                        {leaveTypesMap[leave.leaveTypeId] || "-"}
-                      </td>
-                      <td className="px-4 py-2">{formatDate(leave.startDate)}</td>
-                      <td className="px-4 py-2">{formatDate(leave.endDate)}</td>
-                      <td className="px-4 py-2">
-                        <div className="w-full">
-                          <span
-                            className={`w-full inline-block text-center px-2 py-1 rounded-full text-sm font-medium whitespace-nowrap ${statusColors[statusKey] || "bg-gray-100 text-gray-700"
-                              }`}
-                          >
-                            {statusLabels[statusKey] || leave.status}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={comments[detailId] || ""}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) =>
-                              setComments((c) => ({
-                                ...c,
-                                [detailId]: e.target.value,
-                              }))
-                            }
-                            className="w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
-                            placeholder="ใส่ความคิดเห็น"
-                          />
-                          <Pencil
-                            className="w-5 h-5 text-gray-500 cursor-pointer"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                      </td>
-                      <td className="px-4 py-2">
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            const result = await Swal.fire({
-                              title: "รับรองคำขอลา",
-                              text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
-                              icon: "warning",
-                              showCancelButton: true,
-                              confirmButtonText: "ใช่, รับรอง",
-                              cancelButtonText: "ยกเลิก",
-                              confirmButtonColor: "#16a34a",
-                              cancelButtonColor: "#d33",
-                            });
-
-                            if (result.isConfirmed) {
-                              handleApprove(detailId);
-                            }
-                          }}
-                          disabled={loadingApprovals[detailId]}
-                          className={`px-4 py-1 rounded text-white ${loadingApprovals[detailId]
+                    <td className="px-4 py-2 whitespace-normal break-words">
+                      {formatDateTime(leave.createdAt)}
+                    </td>
+                    <td className="px-4 py-2 whitespace-normal break-words w-[220px]">
+                      {leave.user.prefixName}
+                      {leave.user.firstName} {leave.user.lastName}
+                    </td>
+                    <td className="px-4 py-2 whitespace-normal break-words">
+                      {leaveTypesMap[leave.leaveTypeId] || "-"}
+                    </td>
+                    <td className="px-4 py-2 whitespace-normal break-words">
+                      {formatDate(leave.startDate)}
+                    </td>
+                    <td className="px-4 py-2 whitespace-normal break-words">
+                      {formatDate(leave.endDate)}
+                    </td>
+                    <td className="px-4 py-2 whitespace-normal break-words">
+                      <span
+                        className={`inline-block text-center px-2 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
+                          statusColors[statusKey] || "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {statusLabels[statusKey] || leave.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 whitespace-normal break-words">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={comments[detailId] || ""}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) =>
+                            setComments((c) => ({
+                              ...c,
+                              [detailId]: e.target.value,
+                            }))
+                          }
+                          className="w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+                          placeholder="ใส่ความคิดเห็น"
+                        />
+                        <Pencil
+                          className="w-5 h-5 text-gray-500 cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 whitespace-normal break-words">
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const result = await Swal.fire({
+                            title: "รับรองคำขอลา",
+                            text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "ใช่, รับรอง",
+                            cancelButtonText: "ยกเลิก",
+                            confirmButtonColor: "#16a34a",
+                            cancelButtonColor: "#d33",
+                          });
+                          if (result.isConfirmed) {
+                            handleApprove(detailId);
+                          }
+                        }}
+                        disabled={loadingApprovals[detailId]}
+                        className={`px-4 py-1 rounded text-white ${
+                          loadingApprovals[detailId]
                             ? "bg-green-300 cursor-not-allowed"
                             : "bg-green-500 hover:bg-green-600"
-                            }`}
-                        >
-                          {loadingApprovals[detailId] ? "ตกลง" : "ตกลง"}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="8" className="px-4 py-6 text-center text-gray-500">
-                    ไม่มีข้อมูลการลา
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                        }`}
+                      >
+                        ตกลง
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan="8"
+                  className="px-4 py-6 text-center text-gray-500 whitespace-normal"
+                >
+                  ไม่มีข้อมูลการลา
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* pagination */}

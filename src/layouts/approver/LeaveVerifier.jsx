@@ -43,7 +43,6 @@ export default function LeaveVerifier() {
       const res = await axios.get(apiEndpoints.leaveRequestForVerifier, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Leave Requests:", res.data);
       const data = Array.isArray(res.data) ? res.data : [];
       setLeaveRequest(data);
     } catch (err) {
@@ -73,122 +72,93 @@ export default function LeaveVerifier() {
   }, []);
 
   const handleApprove = async (detailId) => {
-    setLoadingApprovals((prev) => ({ ...prev, [detailId]: true }));
-  
+    setLoadingApprovals((p) => ({ ...p, [detailId]: true }));
     try {
       Swal.fire({
         title: "กำลังดำเนินการ...",
         text: "กรุณารอสักครู่",
         allowOutsideClick: false,
         allowEscapeKey: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
+        didOpen: () => Swal.showLoading(),
       });
-  
       const token = localStorage.getItem("token");
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsByVerifier(detailId),
-        {
-          remarks: "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
-          comment: "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
-        },
+        { remarks: "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา", comment: "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-  
-      Swal.close(); // ปิด loading modal
+      Swal.close();
       Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
-  
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
     } catch (error) {
       console.error("❌ Error approving request", error);
-      Swal.close(); // ปิด loading modal หากมี error
+      Swal.close();
       Swal.fire("ผิดพลาด", "ไม่สามารถอนุมัติได้", "error");
     } finally {
-      setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
+      setLoadingApprovals((p) => ({ ...p, [detailId]: false }));
     }
   };
-  
+
   const handleReject = async (detailId) => {
-    setLoadingApprovals((prev) => ({ ...prev, [detailId]: true }));
+    setLoadingApprovals((p) => ({ ...p, [detailId]: true }));
     try {
       Swal.fire({
         title: "กำลังดำเนินการ...",
         text: "กรุณารอสักครู่",
         allowOutsideClick: false,
         allowEscapeKey: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
+        didOpen: () => Swal.showLoading(),
       });
       const token = localStorage.getItem("token");
       await axios.patch(
         apiEndpoints.RejectleaveRequestsByVerifier(detailId),
-        {
-          remarks: "ปฏิเสธ",
-          comment: "ปฏิเสธ",
-        },
+        { remarks: "ปฏิเสธ", comment: "ปฏิเสธ" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      Swal.close(); // ปิด loading modal
+      Swal.close();
       Swal.fire("สำเร็จ", "ปฏิเสธเรียบร้อยแล้ว", "success");
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
     } catch (error) {
-      console.error("❌ Error approving request", error);
-      Swal.close(); // ปิด loading modal หากมี error
-      Swal.fire("ผิดพลาด", "ไม่สามารถอนุมัติได้", "error");
+      console.error("❌ Error rejecting request", error);
+      Swal.close();
+      Swal.fire("ผิดพลาด", "ไม่สามารถปฏิเสธได้", "error");
     } finally {
-      setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
+      setLoadingApprovals((p) => ({ ...p, [detailId]: false }));
     }
   };
 
-const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
-  const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
-  
+  const formatDateTime = (iso) =>
+    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
+  const formatDate = (iso) =>
+    dayjs(iso).locale("th").format("DD/MM/YYYY");
 
   const filtered = useMemo(() => {
     const sorted = [...leaveRequest].sort((a, b) => {
-      const dateA = new Date(a.createdAt);
-      const dateB = new Date(b.createdAt);
+      const dateA = new Date(a.createdAt),
+        dateB = new Date(b.createdAt);
       return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
     });
-
     return sorted.filter((lr) => {
       const created = dayjs(lr.createdAt).format("YYYY-MM-DD");
       let byDate = true;
-
       if (filterStartDate && filterEndDate) {
-        byDate = dayjs(created).isBetween(
-          filterStartDate,
-          filterEndDate,
-          null,
-          "[]"
-        );
+        byDate = dayjs(created).isBetween(filterStartDate, filterEndDate, null, "[]");
       } else if (filterStartDate) {
         byDate = created >= filterStartDate;
       } else if (filterEndDate) {
         byDate = created <= filterEndDate;
       }
-
       const byStatus = filterStatus ? lr.status === filterStatus : true;
       const byType = filterLeaveType
         ? String(lr.leaveTypeId) === filterLeaveType
         : true;
-
       return byDate && byStatus && byType;
     });
-  }, [
-    leaveRequest,
-    filterStartDate,
-    filterEndDate,
-    filterStatus,
-    filterLeaveType,
-    sortOrder,
-  ]);
+  }, [leaveRequest, filterStartDate, filterEndDate, filterStatus, filterLeaveType, sortOrder]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -211,6 +181,7 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
         <h1 className="text-3xl font-bold">รายการการลาที่รออนุมัติ</h1>
       </div>
 
+      {/* Filters */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <div className="flex items-center gap-2">
           <label className="text-sm">จาก</label>
@@ -221,7 +192,7 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
               setFilterStartDate(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="bg-white px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <label className="text-sm">ถึง</label>
           <input
@@ -231,7 +202,7 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
               setFilterEndDate(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="bg-white px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
@@ -242,7 +213,7 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
               setFilterLeaveType(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full bg-white px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <option value="">ประเภทการลาทั้งหมด</option>
             {Object.entries(leaveTypesMap).map(([id, name]) => (
@@ -263,7 +234,7 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
               setSortOrder(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full bg-white px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <option value="desc">ล่าสุดก่อน</option>
             <option value="asc">เก่าสุดก่อน</option>
@@ -288,6 +259,7 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
         </button>
       </div>
 
+      {/* Table */}
       <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
         <table className="min-w-full bg-white text-sm text-black">
           <thead>
@@ -312,7 +284,6 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
               ))}
             </tr>
           </thead>
-
           <tbody>
             {displayItems.length > 0 ? (
               displayItems.map((leave, idx) => {
@@ -326,7 +297,9 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
                     } hover:bg-gray-100 transition cursor-pointer`}
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
-                    <td className="px-4 py-2">{formatDateTime(leave.createdAt)}</td>
+                    <td className="px-4 py-2">
+                      {formatDateTime(leave.createdAt)}
+                    </td>
                     <td className="px-4 py-2 w-[220px]">
                       {leave.user.prefixName}
                       {leave.user.firstName} {leave.user.lastName}
@@ -334,12 +307,17 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
                     <td className="px-4 py-2">
                       {leaveTypesMap[leave.leaveTypeId] || "-"}
                     </td>
-                    <td className="px-4 py-2">{formatDate(leave.startDate)}</td>
-                    <td className="px-4 py-2">{formatDate(leave.endDate)}</td>
                     <td className="px-4 py-2">
+                      {formatDate(leave.startDate)}
+                    </td>
+                    <td className="px-4 py-2">
+                      {formatDate(leave.endDate)}
+                    </td>
+                    <td className="px-2 py-2">
                       <span
-                        className={`px-4 py-1 rounded-full text-xs font-semibold ${
-                          statusColors[statusKey] || "bg-gray-100 text-gray-700"
+                        className={`inline-block whitespace-nowrap px-2 py-1 rounded-full text-xs font-semibold ${
+                          statusColors[statusKey] ||
+                          "bg-gray-100 text-gray-700"
                         }`}
                       >
                         {statusLabels[statusKey] || leave.status}
@@ -351,15 +329,14 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
                           e.stopPropagation();
                           const result = await Swal.fire({
                             title: "รับรองคำขอลา",
-                            text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
+                            text: "คุณแน่ใจหรือไม่ว่า ต้องการรับรองคำขอลานี้",
                             icon: "warning",
                             showCancelButton: true,
                             confirmButtonText: "ใช่, รับรอง",
                             cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#16a34a", // เขียว
-                            cancelButtonColor: "#d33", // แดง
+                            confirmButtonColor: "#16a34a",
+                            cancelButtonColor: "#d33",
                           });
-
                           if (result.isConfirmed) {
                             handleApprove(detailId);
                           }
@@ -371,22 +348,21 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
                             : "bg-green-500 hover:bg-green-600"
                         }`}
                       >
-                        {loadingApprovals[detailId] ? "ผ่าน" : "ผ่าน"}
+                        ผ่าน
                       </button>
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
                           const result = await Swal.fire({
                             title: "ปฏิเสธคำขอลา",
-                            text: "คุณแน่ใจหรือไม่ว่า ไม่ต้องการรับรองคำขอลานี้",
+                            text: "คุณแน่ใจหรือไม่ว่า ต้องการปฏิเสธคำขอลานี้",
                             icon: "warning",
                             showCancelButton: true,
-                            confirmButtonText: "ใช่, ไม่รับรอง",
+                            confirmButtonText: "ใช่, ปฏิเสธ",
                             cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#d33", // แดง
-                            cancelButtonColor: "#3085d6", // ฟ้า
+                            confirmButtonColor: "#d33",
+                            cancelButtonColor: "#3085d6",
                           });
-
                           if (result.isConfirmed) {
                             handleReject(detailId);
                           }
@@ -398,7 +374,7 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
                             : "bg-red-500 hover:bg-red-600"
                         }`}
                       >
-                        {loadingApprovals[detailId] ? "ไม่ผ่าน" : "ไม่ผ่าน"}
+                        ปฏิเสธ
                       </button>
                     </td>
                   </tr>
@@ -406,7 +382,10 @@ const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm
               })
             ) : (
               <tr>
-                <td colSpan="7" className="px-4 py-6 text-center text-gray-500">
+                <td
+                  colSpan="7"
+                  className="px-4 py-6 text-center text-gray-500"
+                >
                   ไม่มีข้อมูลการลา
                 </td>
               </tr>
