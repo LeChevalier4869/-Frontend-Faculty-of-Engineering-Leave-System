@@ -259,10 +259,10 @@ export default function HolidayManage() {
           <table className="min-w-full bg-white text-sm">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-3 py-2">#</th>
-                <th className="px-3 py-2">วันที่</th>
-                <th className="px-3 py-2">รายละเอียด</th>
-                <th className="px-3 py-2">ประเภท</th>
+                <th className="px-3 py-2 text-left">ลำดับ</th>
+                <th className="px-3 py-2 text-left">วันที่</th>
+                <th className="px-3 py-2 text-left">รายละเอียด</th>
+                <th className="px-3 py-2 text-left">ประเภท</th>
                 <th className="px-3 py-2">ประจำปี</th>
                 <th className="px-3 py-2 text-center">การจัดการ</th>
               </tr>
@@ -280,7 +280,7 @@ export default function HolidayManage() {
                     key={h.id}
                     className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
-                    <td className="px-3 py-2">{h.id}</td>
+                    <td className="px-3 py-2">{startIndex + idx + 1}</td>
                     <td className="px-3 py-2">{h.date.split("T")[0]}</td>
                     <td className="px-3 py-2">{h.description}</td>
                     <td className="px-3 py-2">{h.holidayType || "-"}</td>

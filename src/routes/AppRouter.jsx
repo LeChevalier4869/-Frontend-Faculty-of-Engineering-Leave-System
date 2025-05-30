@@ -28,6 +28,7 @@ import UserProfile2 from "../layouts/user/UserProfile2";
 import UserLanding from "../layouts/user/UserLanding";
 import UserDashBoard from "../layouts/user/UserDashBoard";
 import ChangePassword from "../layouts/user/ChangePassword";
+import CalendarPage from "../layouts/user/CalendarPage";
 
 /** Approver pages **/
 import LeaveApprover1 from "../layouts/approver/LeaveApprover1";
@@ -36,6 +37,7 @@ import LeaveApprover3 from "../layouts/approver/LeaveApprover3";
 import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
 import LeaveReceiver from "../layouts/approver/LeaveReceiver";
 import LeaveVerifier from "../layouts/approver/LeaveVerifier";
+import Approver1Dashboard from "../layouts/approver/Approver1DashBoard";
 
 /** Admin pages **/
 import DashBoard from "../layouts/admin/DashBoard";
@@ -121,6 +123,7 @@ const userRouter = createBrowserRouter([
       { path: "profile/edit", element: <EditProfile /> },
       { path: "change-password", element: <ChangePassword /> },
       { path: "user/landing", element: <UserLanding /> },
+      { path: "Calendar", element: <CalendarPage /> },
 
       // Approver group
       {
@@ -132,6 +135,7 @@ const userRouter = createBrowserRouter([
           { path: "leave-request-approver4", element: <LeaveApprover4 /> },
           { path: "leave-request-receiver", element: <LeaveReceiver /> },
           { path: "leave-request-verifier", element: <LeaveVerifier /> },
+          { path: "dashboard-approver1", element: <Approver1Dashboard /> },
         ],
       },
 

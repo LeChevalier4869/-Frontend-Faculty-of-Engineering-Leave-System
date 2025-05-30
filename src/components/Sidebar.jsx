@@ -15,11 +15,14 @@ const userNav = [
   { to: "/", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
   { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaClipboardList /> },
   { to: "/leave", text: "การลา", icon: <FaCalendarAlt /> },
+  { to: "/Calendar", text: "ปฏิทิน", icon: <FaCalendarAlt /> },
   { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser /> },
 ];
 
 const approverNav1 = [
+  { to: "/approver/dashboard-approver1", text: "แดชบอร์ดหัวหน้าสาขา", icon: <FaTachometerAlt /> },
   { to: "/approver/leave-request-approver1", text: "อนุมัติระดับหัวหน้าสาขา", icon: <FaCheckCircle /> },
+  
 ];
 const verifierNav = [
   { to: "/approver/leave-request-verifier", text: "ตรวจสอบคำขอการลา", icon: <FaCheckCircle /> },
