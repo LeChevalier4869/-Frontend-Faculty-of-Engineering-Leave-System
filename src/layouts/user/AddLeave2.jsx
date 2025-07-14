@@ -192,7 +192,7 @@ function AddLeave2() {
               value={formData.reason}
               onChange={handleChange}
               rows="3"
-              required
+              // required ไม่บังคับให้กรอก
               className={inputStyle}
             />
           </div>
