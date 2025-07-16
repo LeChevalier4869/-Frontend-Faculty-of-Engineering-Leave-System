@@ -251,7 +251,7 @@ export default function UserDashboard() {
           <h2 className="text-xl font-semibold mb-4 text-black">
             สัดส่วนสถานะคำขอลา
           </h2>
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center relative">
             <PieChart width={450} height={300}>
               {/* <Pie
                 data={pieData}
@@ -275,10 +275,11 @@ export default function UserDashboard() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent, x, y, cx, cy, outerRadius, midAngle }) => {
-                  // คำนวณตำแหน่ง label ให้อยู่ด้านนอกวงกลม
+                label={({ name, percent, cx, cy, outerRadius, midAngle, index }) => {
+                  // แสดง label เฉพาะ slice ที่ >= 10%
+                  if (percent < 0.1) return null;
                   const RADIAN = Math.PI / 180;
-                  const radius = outerRadius + 30; // ขยายออกไป 30px
+                  const radius = outerRadius + 30;
                   const xPos = cx + radius * Math.cos(-midAngle * RADIAN);
                   const yPos = cy + radius * Math.sin(-midAngle * RADIAN);
                   return (
