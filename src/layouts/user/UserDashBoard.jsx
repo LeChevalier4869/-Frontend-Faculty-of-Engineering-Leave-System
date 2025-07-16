@@ -286,7 +286,6 @@ export default function UserDashboard() {
                     <text
                       x={xPos}
                       y={yPos}
-                      fill="#333"
                       textAnchor={xPos > cx ? "start" : "end"}
                       dominantBaseline="central"
                       fontSize={14}
