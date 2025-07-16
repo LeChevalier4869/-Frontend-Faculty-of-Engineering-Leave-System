@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -156,11 +156,42 @@ export default function UserDashboard() {
     fetchLeaveRequests();
   }, []);
 
+  // Pie Chart Data - สัดส่วนสถานะคำขอลา
   const pieData = [
     { name: "อนุมัติแล้ว", value: stats.approved },
     { name: "รออนุมัติ", value: stats.pending },
     { name: "ปฏิเสธแล้ว", value: stats.rejected },
   ];
+
+  // แก้ label ของ pie chart ตัวหนังสือทับกัน
+  const RADIAN = Math.PI / 180;
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,  
+    name,
+    index,
+  }) => {
+    const radius = outerRadius + 20; // เพิ่มระยะห่างจากวงกลม
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#333"
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+        fontSize={12}
+      >
+        {`${name}: ${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
 
   // Bar Chart Data - จำนวนคำขอลาแยกตามประเภท
   const leaveTypeStats = leaveRequest.reduce((acc, leave) => {
@@ -251,15 +282,16 @@ export default function UserDashboard() {
             สัดส่วนสถานะคำขอลา
           </h2>
           <div className="flex justify-center items-center">
-            <PieChart width={400} height={300}>
+            <PieChart width={450} height={300}>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
+                // label={({ name, percent }) =>
+                //   `${name}: ${(percent * 100).toFixed(0)}%`
+                // }
+                label={renderCustomizedLabel}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
@@ -269,7 +301,7 @@ export default function UserDashboard() {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              <Legend layout="horizontal" align="center" verticalAlign="bottom" />
             </PieChart>
           </div>
         </div>
@@ -280,7 +312,7 @@ export default function UserDashboard() {
             จำนวนคำขอลาตามประเภท
           </h2>
           <div className="flex justify-center items-center">
-            <BarChart width={400} height={300} data={barData}>
+            <BarChart width={450} height={300} data={barData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
