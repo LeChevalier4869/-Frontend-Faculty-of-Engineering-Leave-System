@@ -203,11 +203,11 @@ function AddLeave2() {
             <label className="block text-sm font-medium mb-1">
               ช่องทางติดต่อ
             </label>
-            <input
+            <textarea
               name="contact"
               value={formData.contact}
               onChange={handleChange}
-              required
+              rows="3"
               className={inputStyle}
             />
           </div>
