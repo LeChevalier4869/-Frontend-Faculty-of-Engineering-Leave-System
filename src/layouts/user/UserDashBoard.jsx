@@ -141,8 +141,8 @@ export default function UserDashboard() {
       const data = Array.isArray(res.data.data)
         ? res.data.data
         : Array.isArray(res.data.leaveRequest)
-        ? res.data.leaveRequest
-        : [];
+          ? res.data.leaveRequest
+          : [];
       setLeaveRequest(data);
     } catch (err) {
       console.error("Error fetching leave requests:", err);
@@ -256,10 +256,7 @@ export default function UserDashboard() {
                 data={pieData}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
+                label={false} // ✅ ปิด label บน slice
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
@@ -269,7 +266,7 @@ export default function UserDashboard() {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              <Legend layout="horizontal" align="center" verticalAlign="bottom" />
             </PieChart>
           </div>
         </div>
@@ -316,9 +313,8 @@ export default function UserDashboard() {
         {Object.entries(statusLabels).map(([key, label]) => (
           <div key={key} className="flex items-center gap-2">
             <span
-              className={`w-3 h-3 rounded-full ${
-                statusColors[key]?.split(" ")[0] || "bg-gray-300"
-              }`}
+              className={`w-3 h-3 rounded-full ${statusColors[key]?.split(" ")[0] || "bg-gray-300"
+                }`}
             />
             <span className="text-gray-700">{label}</span>
           </div>
@@ -344,9 +340,8 @@ export default function UserDashboard() {
                 return (
                   <tr
                     key={leave.id}
-                    className={`${
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-gray-100 transition cursor-pointer`}
+                    className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      } hover:bg-gray-100 transition cursor-pointer`}
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
                     <td className="px-4 py-3">
@@ -359,9 +354,8 @@ export default function UserDashboard() {
                     <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          statusColors[statusKey] || "bg-gray-200 text-gray-700"
-                        }`}
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors[statusKey] || "bg-gray-200 text-gray-700"
+                          }`}
                       >
                         {statusLabels[statusKey] || leave.status}
                       </span>
