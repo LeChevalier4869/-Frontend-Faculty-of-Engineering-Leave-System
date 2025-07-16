@@ -311,7 +311,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
           {/* ติดต่อ */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              ติดต่อ
+              ช่องทางติดต่อติดต่อ
             </label>
             <textarea
               name="contact"

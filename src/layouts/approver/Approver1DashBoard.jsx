@@ -31,7 +31,7 @@ export default function Approver1DashBoard() {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(getApiUrl("leave-requests/for-approver"), {
+        const res = await axios.get(getApiUrl("leave-requests/for-approver1"), {
           headers: { Authorization: `Bearer ${token}` },
         });
         setLeaveRequests(res.data || []);
