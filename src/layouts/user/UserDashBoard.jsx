@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -61,15 +61,16 @@ export default function UserDashboard() {
           }),
         ]);
 
-        console.log("User Dashboard Summary Response:", summaryRes.data);
-        console.log("User Dashboard Leaves Response:", leavesRes.data);
+        // ทดสอบ response
+        // console.log("User Dashboard Summary Response:", summaryRes.data);
+        // console.log("User Dashboard Leaves Response:", leavesRes.data);
         const summary = summaryRes.data;
         const leaves = Array.isArray(leavesRes.data) ? leavesRes.data : [];
 
         const approved = leaves.filter((r) => r.status === "APPROVED").length;
         const pending = leaves.filter((r) => r.status === "PENDING").length;
         const rejected = leaves.filter((r) => r.status === "REJECTED").length;
-        console.log("User Dashboard Summary:", summary);
+        // console.log("User Dashboard Summary:", summary);
         const remainingLeave = summary.remainingDays || 0;
 
         setStats({ approved, pending, rejected, remainingLeave });
@@ -140,8 +141,8 @@ export default function UserDashboard() {
       const data = Array.isArray(res.data.data)
         ? res.data.data
         : Array.isArray(res.data.leaveRequest)
-        ? res.data.leaveRequest
-        : [];
+          ? res.data.leaveRequest
+          : [];
       setLeaveRequest(data);
     } catch (err) {
       console.error("Error fetching leave requests:", err);
@@ -155,6 +156,7 @@ export default function UserDashboard() {
     fetchLeaveRequests();
   }, []);
 
+  // Pie Chart Data - สัดส่วนสถานะคำขอลา
   const pieData = [
     { name: "อนุมัติแล้ว", value: stats.approved },
     { name: "รออนุมัติ", value: stats.pending },
@@ -250,7 +252,7 @@ export default function UserDashboard() {
             สัดส่วนสถานะคำขอลา
           </h2>
           <div className="flex justify-center items-center">
-            <PieChart width={400} height={300}>
+            <PieChart width={450} height={300}>
               <Pie
                 data={pieData}
                 cx="50%"
@@ -268,7 +270,7 @@ export default function UserDashboard() {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              <Legend layout="horizontal" align="center" verticalAlign="bottom" />
             </PieChart>
           </div>
         </div>
@@ -279,7 +281,7 @@ export default function UserDashboard() {
             จำนวนคำขอลาตามประเภท
           </h2>
           <div className="flex justify-center items-center">
-            <BarChart width={400} height={300} data={barData}>
+            <BarChart width={450} height={300} data={barData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -315,9 +317,8 @@ export default function UserDashboard() {
         {Object.entries(statusLabels).map(([key, label]) => (
           <div key={key} className="flex items-center gap-2">
             <span
-              className={`w-3 h-3 rounded-full ${
-                statusColors[key]?.split(" ")[0] || "bg-gray-300"
-              }`}
+              className={`w-3 h-3 rounded-full ${statusColors[key]?.split(" ")[0] || "bg-gray-300"
+                }`}
             />
             <span className="text-gray-700">{label}</span>
           </div>
@@ -343,9 +344,8 @@ export default function UserDashboard() {
                 return (
                   <tr
                     key={leave.id}
-                    className={`${
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-gray-100 transition cursor-pointer`}
+                    className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      } hover:bg-gray-100 transition cursor-pointer`}
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
                     <td className="px-4 py-3">
@@ -358,9 +358,8 @@ export default function UserDashboard() {
                     <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          statusColors[statusKey] || "bg-gray-200 text-gray-700"
-                        }`}
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors[statusKey] || "bg-gray-200 text-gray-700"
+                          }`}
                       >
                         {statusLabels[statusKey] || leave.status}
                       </span>
