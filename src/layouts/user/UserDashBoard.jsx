@@ -251,23 +251,26 @@ export default function UserDashboard() {
             สัดส่วนสถานะคำขอลา
           </h2>
           <div className="flex justify-center items-center">
-<PieChart width={400} height={300}>
-  <Pie
-    data={pieData}
-    cx="50%"
-    cy="50%"
-    label={false} // ✅ ปิด label บน slice
-    outerRadius={100}
-    fill="#8884d8"
-    dataKey="value"
-  >
-    {pieData.map((entry, index) => (
-      <Cell key={`cell-${index}`} fill={COLORS[index]} />
-    ))}
-  </Pie>
-  <Tooltip />
-  <Legend layout="horizontal" align="center" verticalAlign="bottom" />
-</PieChart>
+            <PieChart width={400} height={300}>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) =>
+                  `${name}: ${(percent * 100).toFixed(0)}%`
+                }
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
           </div>
         </div>
 
