@@ -27,20 +27,21 @@ export default function UserEdit() {
   const [formData, setFormData] = useState(initialForm);
   const [departments, setDepartments] = useState([]);
   const [personnelTypes, setPersonnelTypes] = useState([]);
-  const [employmentTypes, setEmploymentTypes] = useState([]);
+  // const [employmentTypes, setEmploymentTypes] = useState([]);
 
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const [userRes, deptRes, ptRes, empRes] = await Promise.all([
+        // const [userRes, deptRes, ptRes, empRes] = await Promise.all([
+        const [userRes, deptRes, ptRes] = await Promise.all([
           axios.get(apiEndpoints.getUserByIdAdmin(id), {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(apiEndpoints.lookupDepartments),
           axios.get(apiEndpoints.lookupPersonnelTypes),
-          axios.get(apiEndpoints.lookupEmploymentTypes),
+          // axios.get(apiEndpoints.lookupEmploymentTypes),
         ]);
 
         const u = userRes.data.data;
@@ -62,8 +63,8 @@ export default function UserEdit() {
 
         setDepartments(deptRes.data.data);
         setPersonnelTypes(ptRes.data.data);
-        const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
-        setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
+        // const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
+        // setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
       } catch (err) {
         console.error(err);
         Swal.fire("ไม่พบผู้ใช้งาน", "", "error").then(() =>
@@ -208,7 +209,11 @@ export default function UserEdit() {
             ])}
             {renderDropdown("ประเภทบุคลากร", "personnelTypeId", personnelTypes)}
             {renderDropdown("แผนก", "departmentId", departments)}
-            {renderDropdown("ประเภทพนักงาน", "employmentType", employmentTypes)}
+            {/* {renderDropdown("ประเภทพนักงาน", "employmentType", employmentTypes)} */}
+            {renderDropdown("ประเภทพนักงาน", "employmentType", [
+              { value: "ACADEMIC", label: "สายวิชาการ" },
+              { value: "SUPPORT", label: "สายสนับสนุน" },
+            ])}
           </div>
 
           <div className="flex justify-end gap-4">
