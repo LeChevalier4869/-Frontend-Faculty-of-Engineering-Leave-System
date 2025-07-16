@@ -4,6 +4,8 @@ import { FaUserAlt } from "react-icons/fa";
 import React, { useEffect } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import axios from "axios";
+import { apiEndpoints } from "../../utils/api";
 
 function UserProfile2() {
   const { user } = useAuth();
@@ -11,43 +13,135 @@ function UserProfile2() {
 
   const MySwal = withReactContent(Swal);
 
-  const handleSignatureClick = () => {
-    MySwal.fire({
-      title: "ลายเซ็นของคุณ",
-      html: (
-        <div className="flex flex-col items-center">
-          {user.signature?.file ? (
-            <img
-              src={user.signature.file}
-              alt="ลายเซ็น"
-              className="max-w-full h-40 border rounded mb-4"
-            />
-          ) : (
-            <p className="mb-4 text-gray-600">ยังไม่มีลายเซ็น</p>
-          )}
+  const handleSignatureClick = async () => {
+    try {
+      const res = await axios.get(apiEndpoints.signatureGetIsMine, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-          <label className="cursor-pointer px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">
-            เลือกไฟล์ลายเซ็น
-            <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  // 🔧 อัปโหลดลายเซ็น: ใช้ fetch หรือ axios ตรงนี้
-                  console.log("อัปโหลดลายเซ็น:", file);
-                  Swal.fire("สำเร็จ", "กำลังอัปโหลดลายเซ็น...", "success");
-                }
-              }}
-            />
-          </label>
-        </div>
-      ),
-      showConfirmButton: false,
-      showCloseButton: true,
-      width: 400,
-    });
+      const signatureFile = res.data?.file;
+
+      // ✅ ฟังก์ชันช่วยสำหรับอัปโหลด/อัปเดต
+      const handleUpload = async (file, isUpdate = false) => {
+        const formData = new FormData();
+        formData.append("signature", file);
+
+        try {
+          await axios.post(
+            isUpdate
+              ? apiEndpoints.signatureUpdate
+              : apiEndpoints.signatureUpload,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          Swal.fire("สำเร็จ", "บันทึกลายเซ็นเรียบร้อยแล้ว", "success");
+          window.location.reload();
+        } catch (err) {
+          Swal.fire(
+            "เกิดข้อผิดพลาด",
+            err.response?.data?.error || err.message,
+            "error"
+          );
+        }
+      };
+
+      // ✅ ฟังก์ชันช่วยสำหรับลบ
+      const handleDelete = async () => {
+        const confirm = await Swal.fire({
+          title: "ยืนยันการลบ",
+          text: "คุณต้องการลบลายเซ็นนี้หรือไม่?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "ลบ",
+          cancelButtonText: "ยกเลิก",
+        });
+
+        if (confirm.isConfirmed) {
+          try {
+            await axios.delete(apiEndpoints.signatureDelete, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            });
+
+            Swal.fire("ลบแล้ว", "ลายเซ็นถูกลบเรียบร้อยแล้ว", "success");
+            window.location.reload();
+          } catch (err) {
+            Swal.fire(
+              "เกิดข้อผิดพลาด",
+              err.response?.data?.error || err.message,
+              "error"
+            );
+          }
+        }
+      };
+
+      // ✅ แสดง SweetAlert2
+      MySwal.fire({
+        title: "ลายเซ็นของคุณ",
+        html: (
+          <div className="flex flex-col items-center">
+            {signatureFile ? (
+              <>
+                <img
+                  src={signatureFile}
+                  alt="ลายเซ็น"
+                  className="max-w-full h-40 border rounded mb-4"
+                />
+                <label className="cursor-pointer px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded mb-2">
+                  เปลี่ยนลายเซ็น
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) handleUpload(file, true); // ใช้ signatureUpdate
+                    }}
+                  />
+                </label>
+
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+                >
+                  ลบลายเซ็น
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="mb-4 text-gray-600">ยังไม่มีลายเซ็น</p>
+                <label className="cursor-pointer px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">
+                  อัปโหลดลายเซ็น
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) handleUpload(file, false); // ใช้ signatureUpload
+                    }}
+                  />
+                </label>
+              </>
+            )}
+          </div>
+        ),
+        showConfirmButton: false,
+        showCloseButton: true,
+        width: 400,
+      });
+    } catch (err) {
+      Swal.fire("เกิดข้อผิดพลาด", "โหลดลายเซ็นไม่สำเร็จ", "error");
+    }
   };
 
   useEffect(() => {

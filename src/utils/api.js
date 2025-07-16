@@ -100,4 +100,12 @@ export const apiEndpoints = {
   lookupOrganizations: `${BASE_URL}/api/lookups/organizations`,
   lookupPersonnelTypes: `${BASE_URL}/api/lookups/personnel-types`,
   lookupEmploymentTypes: `${BASE_URL}/api/lookups/employment-types`,
+
+  // signature
+  signatureUpload: `${BASE_URL}/signature`, // POST 
+  signatureGetAll: `${BASE_URL}/signature`, // GET
+  signatureGetById: (id) => `${BASE_URL}/signature/get/${id}`, // GET
+  signatureUpdate: (id) => `${BASE_URL}/signature/update/${id}`, // PUT
+  signatureDelete: (id) => `${BASE_URL}/signature/delete/${id}`, // DELETE
+  signatureGetIsMine: `${BASE_URL}/signature/me`, // GET
 };
