@@ -203,8 +203,8 @@ export default function UserEdit() {
             </div>
 
             {renderDropdown("เพศ", "sex", [
-              { value: "MALE", label: "ชาย" },
-              { value: "FEMALE", label: "หญิง" },
+              { value: "ชาย", label: "ชาย" },
+              { value: "หญิง", label: "หญิง" },
             ])}
             {renderDropdown("ประเภทบุคลากร", "personnelTypeId", personnelTypes)}
             {renderDropdown("แผนก", "departmentId", departments)}
