@@ -2,10 +2,53 @@ import { Link } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import { FaUserAlt } from "react-icons/fa";
 import React, { useEffect } from "react";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
 function UserProfile2() {
   const { user } = useAuth();
   console.log("UserProfile2 – user context:", user);
+
+  const MySwal = withReactContent(Swal);
+
+  const handleSignatureClick = () => {
+    MySwal.fire({
+      title: "ลายเซ็นของคุณ",
+      html: (
+        <div className="flex flex-col items-center">
+          {user.signature?.file ? (
+            <img
+              src={user.signature.file}
+              alt="ลายเซ็น"
+              className="max-w-full h-40 border rounded mb-4"
+            />
+          ) : (
+            <p className="mb-4 text-gray-600">ยังไม่มีลายเซ็น</p>
+          )}
+
+          <label className="cursor-pointer px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">
+            เลือกไฟล์ลายเซ็น
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  // 🔧 อัปโหลดลายเซ็น: ใช้ fetch หรือ axios ตรงนี้
+                  console.log("อัปโหลดลายเซ็น:", file);
+                  Swal.fire("สำเร็จ", "กำลังอัปโหลดลายเซ็น...", "success");
+                }
+              }}
+            />
+          </label>
+        </div>
+      ),
+      showConfirmButton: false,
+      showCloseButton: true,
+      width: 400,
+    });
+  };
 
   useEffect(() => {
     console.log("UserProfile2 – user context updated:", user);
@@ -94,6 +137,14 @@ function UserProfile2() {
 
           {/* action */}
           <div className="mt-8 flex flex-col sm:flex-row justify-center sm:justify-end gap-4">
+            <Link
+              to="#"
+              onClick={handleSignatureClick}
+              className="inline-block rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition hover:bg-green-600"
+            >
+              ลายเซ็น
+            </Link>
+
             <Link
               to="/change-password"
               className="inline-block px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white transition font-medium"
