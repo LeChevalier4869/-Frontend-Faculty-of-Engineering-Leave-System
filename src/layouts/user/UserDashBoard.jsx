@@ -253,7 +253,7 @@ export default function UserDashboard() {
           </h2>
           <div className="flex justify-center items-center relative">
             <PieChart width={450} height={300}>
-              {/* <Pie
+              <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
@@ -268,41 +268,7 @@ export default function UserDashboard() {
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index]} />
                 ))}
-              </Pie> */}
-
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent, cx, cy, outerRadius, midAngle, index }) => {
-                  // แสดง label เฉพาะ slice ที่ >= 10%
-                  if (percent < 0.1) return null;
-                  const RADIAN = Math.PI / 180;
-                  const radius = outerRadius + 30;
-                  const xPos = cx + radius * Math.cos(-midAngle * RADIAN);
-                  const yPos = cy + radius * Math.sin(-midAngle * RADIAN);
-                  return (
-                    <text
-                      x={xPos}
-                      y={yPos}
-                      textAnchor={xPos > cx ? "start" : "end"}
-                      dominantBaseline="central"
-                      fontSize={14}
-                    >
-                      {`${name}: ${(percent * 100).toFixed(0)}%`}
-                    </text>
-                  );
-                }}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index]} />
-                ))}
               </Pie>
-
               <Tooltip />
               <Legend layout="horizontal" align="center" verticalAlign="bottom" />
             </PieChart>
