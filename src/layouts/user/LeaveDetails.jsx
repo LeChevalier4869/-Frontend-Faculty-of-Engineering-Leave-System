@@ -58,7 +58,8 @@ export default function LeaveDetail() {
           apiEndpoints.getLeaveById(id),
           authHeader()
         );
-        console.log("Leave Details:", res.data.data);
+        // ทดสอบ response
+        // console.log("Leave Details:", res.data.data);
         setLeave(res.data.data);
       } catch (err) {
         Swal.fire(
@@ -86,7 +87,8 @@ export default function LeaveDetail() {
           { leaveTypeId: leave.leaveType.id },
           authHeader()
         );
-        console.log("Last Leave Details:", res.data);
+        // ทดสอบ response
+        // console.log("Last Leave Details:", res.data);
         setLastLeave(res.data);
       } catch (err) {
         Swal.fire(

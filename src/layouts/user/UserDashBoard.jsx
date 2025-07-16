@@ -61,15 +61,16 @@ export default function UserDashboard() {
           }),
         ]);
 
-        console.log("User Dashboard Summary Response:", summaryRes.data);
-        console.log("User Dashboard Leaves Response:", leavesRes.data);
+        // ทดสอบ response
+        // console.log("User Dashboard Summary Response:", summaryRes.data);
+        // console.log("User Dashboard Leaves Response:", leavesRes.data);
         const summary = summaryRes.data;
         const leaves = Array.isArray(leavesRes.data) ? leavesRes.data : [];
 
         const approved = leaves.filter((r) => r.status === "APPROVED").length;
         const pending = leaves.filter((r) => r.status === "PENDING").length;
         const rejected = leaves.filter((r) => r.status === "REJECTED").length;
-        console.log("User Dashboard Summary:", summary);
+        // console.log("User Dashboard Summary:", summary);
         const remainingLeave = summary.remainingDays || 0;
 
         setStats({ approved, pending, rejected, remainingLeave });

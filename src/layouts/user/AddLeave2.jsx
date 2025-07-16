@@ -14,7 +14,8 @@ function AddLeave2() {
     async function fetchData() {
       try {
         const response = await axios.get(apiEndpoints.availableLeaveType);
-        console.log("Leave Types:", response.data.data);
+        // ทดสอบ response
+        // console.log("Leave Types:", response.data.data);
         setLeaveTypes(response.data.data);
       } catch (error) {
         console.error("Error fetching leave types:", error);
