@@ -163,36 +163,6 @@ export default function UserDashboard() {
     { name: "ปฏิเสธแล้ว", value: stats.rejected },
   ];
 
-  // แก้ label ของ pie chart ตัวหนังสือทับกัน
-  const RADIAN = Math.PI / 180;
-  const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,  
-    name,
-    index,
-  }) => {
-    const radius = outerRadius + 20; // เพิ่มระยะห่างจากวงกลม
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="#333"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-        fontSize={12}
-      >
-        {`${name}: ${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
-
   // Bar Chart Data - จำนวนคำขอลาแยกตามประเภท
   const leaveTypeStats = leaveRequest.reduce((acc, leave) => {
     const type = leave.leaveType?.name || "อื่นๆ";
@@ -288,10 +258,9 @@ export default function UserDashboard() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                // label={({ name, percent }) =>
-                //   `${name}: ${(percent * 100).toFixed(0)}%`
-                // }
-                label={renderCustomizedLabel}
+                label={({ name, percent }) =>
+                  `${name}: ${(percent * 100).toFixed(0)}%`
+                }
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
