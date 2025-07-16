@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 export default function Login() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  // const [input, setInput] = useState({ email: "", password: "" });
   const [input, setInput] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,19 +21,20 @@ export default function Login() {
     e.preventDefault();
     try {
       const res = await axios.post(apiEndpoints.login, input);
+      // const res = await axios.post(apiEndpoints.loginByUsername, input);
       const token = res.data.token;
       localStorage.setItem("token", token);
-  
+
       const userRes = await axios.get(apiEndpoints.getMe, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       const user = userRes.data;
       setUser(user);
-  
+
       // ตรวจสอบ roles ในรูปแบบที่ถูกต้อง
       const roles = (user?.roles || []).map(role => role.roleName);
-  
+
       Swal.fire({
         icon: "success",
         title: "เข้าสู่ระบบสำเร็จ",
@@ -56,7 +58,7 @@ export default function Login() {
       });
     }
   };
-  
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 px-4 font-kanit">
@@ -75,10 +77,22 @@ export default function Login() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
+          {/* <div>
             <label className="block text-gray-300 font-medium mb-1">อีเมล</label>
             <input
               type="email"
+              name="email"
+              value={input.email}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+            />
+          </div> */}
+
+          <div>
+            <label className="block text-gray-300 font-medium mb-1">ชื่อผู้ใช้งาน</label>
+            <input
+              type="text"
               name="email"
               value={input.email}
               onChange={handleChange}

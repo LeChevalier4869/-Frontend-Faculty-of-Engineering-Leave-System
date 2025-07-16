@@ -178,7 +178,8 @@ export default function OrganizationManage() {
                       idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                     } hover:bg-gray-100 transition`}
                   >
-                    <td className="px-4 py-2">{o.id}</td>
+                    {/* <td className="px-4 py-2">{o.id}</td> */}
+                    <td className="px-4 py-2">{startIndex + idx + 1}</td>
                     <td className="px-4 py-2">{o.name}</td>
                     <td className="px-4 py-2 text-center space-x-2">
                       <button

@@ -140,10 +140,10 @@ export default function UserManage() {
               <tr className="bg-gray-100 text-gray-800">
                 <th className="px-4 py-3 text-left w-[18%]">ชื่อ-นามสกุล</th>
                 <th className="px-4 py-3 text-left w-[22%]">อีเมล</th>
-                <th className="px-4 py-3 text-left w-[12%]">เบอร์โทร</th>
-                <th className="px-4 py-3 text-left w-[11%]">บทบาท</th>
-                <th className="px-4 py-3 text-left w-[15%]">ประเภทบุคลากร</th>
                 <th className="px-4 py-3 text-left w-[15%]">แผนก</th>
+                <th className="px-4 py-3 text-left w-[15%]">ประเภทบุคลากร</th>
+                <th className="px-4 py-3 text-left w-[12%]">เบอร์โทร</th>
+                {/* <th className="px-4 py-3 text-left w-[11%]">บทบาท</th> */}
                 <th className="px-4 py-3 text-center w-[15%]">การจัดการ</th>
               </tr>
             </thead>
@@ -168,18 +168,18 @@ export default function UserManage() {
                       {user.prefixName} {user.firstName} {user.lastName}
                     </td>
                     <td className="px-4 py-3 truncate">{user.email}</td>
-                    <td className="px-4 py-3 truncate">{user.phone}</td>
-                    <td className="px-4 py-3 truncate">
+                    {/* <td className="px-4 py-3 truncate">
                       {Array.isArray(user.roles)
-                        ? user.roles.map((r) => r.name).join(", ")
-                        : user.role || "USER"}
+                      ? user.roles.map((r) => r.name).join(", ")
+                      : user.role || "USER"}
+                      </td> */}
+                    <td className="px-4 py-3 truncate">
+                      {user.department?.name || "-"}
                     </td>
                     <td className="px-4 py-3 truncate">
                       {user.personnelType?.name || "-"}
                     </td>
-                    <td className="px-4 py-3 truncate">
-                      {user.department?.name || "-"}
-                    </td>
+                      <td className="px-4 py-3 truncate">{user.phone}</td>
                     <td
                       className="px-4 py-3 text-center space-x-2"
                       onClick={(e) => e.stopPropagation()} // 👈 ป้องกันเด้งเมื่อกดปุ่มในแถว

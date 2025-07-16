@@ -6,6 +6,7 @@ export const BASE_URL =
 export const apiEndpoints = {
   // auth
   login: `${BASE_URL}/auth/login`, // POST
+  // loginByUsername: `${BASE_URL}/auth/login/username`, // POST
   register: `${BASE_URL}/auth/register`, // POST
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET

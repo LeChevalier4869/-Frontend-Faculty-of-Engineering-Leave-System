@@ -251,7 +251,7 @@ export default function UserDashboard() {
           <h2 className="text-xl font-semibold mb-4 text-black">
             สัดส่วนสถานะคำขอลา
           </h2>
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center relative">
             <PieChart width={450} height={300}>
               <Pie
                 data={pieData}

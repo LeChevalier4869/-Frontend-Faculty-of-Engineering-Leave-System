@@ -35,6 +35,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     startDate: "",
     endDate: "",
     reason: "",
+    contact: "",
     isEmergency: "0",
     images: null,
   });
@@ -114,6 +115,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
       startDate: "",
       endDate: "",
       reason: "",
+      contact: "",
       isEmergency: "0",
       images: null,
     });
@@ -139,6 +141,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
       formDataToSend.append("startDate", formData.startDate);
       formDataToSend.append("endDate", formData.endDate);
       formDataToSend.append("reason", formData.reason);
+      formDataToSend.append("contact", formData.contact);
       formDataToSend.append("isEmergency", formData.isEmergency === "1");
       if (formData.leaveTypeId === "1" && formData.images) {
         formDataToSend.append("images", formData.images);
@@ -299,8 +302,23 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
               name="reason"
               value={formData.reason}
               onChange={handleChange}
-              rows="3"
-              required
+              rows="2"
+              // required
+              className={inputStyle}
+            />
+          </div>
+
+          {/* ติดต่อ */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              ช่องทางติดต่อติดต่อ
+            </label>
+            <textarea
+              name="contact"
+              value={formData.contact}
+              onChange={handleChange}
+              rows="2"
+              // required
               className={inputStyle}
             />
           </div>
