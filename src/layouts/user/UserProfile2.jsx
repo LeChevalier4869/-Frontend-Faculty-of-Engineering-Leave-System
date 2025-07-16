@@ -5,11 +5,7 @@ import React, { useEffect } from "react";
 
 function UserProfile2() {
   const { user } = useAuth();
-  console.log("UserProfile2 – user context:", user);
-
-  useEffect(() => {
-    console.log("UserProfile2 – user context updated:", user);
-  }, [user]);
+  // console.log("UserProfile2 – user context:", user);
 
   /* ---- helper: แปลงค่าที่อาจเป็น object → string ---- */
   const positionName =

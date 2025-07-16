@@ -140,10 +140,10 @@ export default function UserManage() {
               <tr className="bg-gray-100 text-gray-800">
                 <th className="px-4 py-3 text-left w-[18%]">ชื่อ-นามสกุล</th>
                 <th className="px-4 py-3 text-left w-[22%]">อีเมล</th>
-                <th className="px-4 py-3 text-left w-[12%]">เบอร์โทร</th>
-                <th className="px-4 py-3 text-left w-[11%]">บทบาท</th>
-                <th className="px-4 py-3 text-left w-[15%]">ประเภทบุคลากร</th>
                 <th className="px-4 py-3 text-left w-[15%]">แผนก</th>
+                <th className="px-4 py-3 text-left w-[15%]">ประเภทบุคลากร</th>
+                <th className="px-4 py-3 text-left w-[12%]">เบอร์โทร</th>
+                {/* <th className="px-4 py-3 text-left w-[11%]">บทบาท</th> */}
                 <th className="px-4 py-3 text-center w-[15%]">การจัดการ</th>
               </tr>
             </thead>
