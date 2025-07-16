@@ -15,32 +15,39 @@ function UserProfile2() {
 
   const handleSignatureClick = async () => {
     try {
-      const res = await axios.get(apiEndpoints.signatureGetIsMine, {
+      const res = await axios.get(apiEndpoints.signatureGetByUserId(user.id), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
-      const signatureFile = res.data?.file;
+      console.log("Signature data:", res.data);
+      const signatureFile = res.data === null ? null : res.data.file;
+      console.log("Signature file:", signatureFile);
 
       // ✅ ฟังก์ชันช่วยสำหรับอัปโหลด/อัปเดต
       const handleUpload = async (file, isUpdate = false) => {
         const formData = new FormData();
-        formData.append("signature", file);
+        formData.append("images", file);
 
         try {
-          await axios.post(
+          console.log(
+            "Uploading to:",
             isUpdate
-              ? apiEndpoints.signatureUpdate
-              : apiEndpoints.signatureUpload,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
+              ? `${apiEndpoints.signatureUpdate(user.id)}`
+              : apiEndpoints.signatureUpload
           );
+          await axios({
+            method: isUpdate ? "put" : "post", // ✅ เปลี่ยนตรงนี้
+            url: isUpdate
+              ? `${apiEndpoints.signatureUpdate(user.id)}`
+              : apiEndpoints.signatureUpload(user.id),
+            data: formData,
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
 
           Swal.fire("สำเร็จ", "บันทึกลายเซ็นเรียบร้อยแล้ว", "success");
           window.location.reload();
@@ -66,7 +73,7 @@ function UserProfile2() {
 
         if (confirm.isConfirmed) {
           try {
-            await axios.delete(apiEndpoints.signatureDelete, {
+            await axios.delete(apiEndpoints.signatureDelete(user.id), {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
               },
@@ -140,7 +147,8 @@ function UserProfile2() {
         width: 400,
       });
     } catch (err) {
-      Swal.fire("เกิดข้อผิดพลาด", "โหลดลายเซ็นไม่สำเร็จ", "error");
+      console.error("Error loading signature:", err);
+      // Swal.fire("เกิดข้อผิดพลาด", "โหลดลายเซ็นไม่สำเร็จ", "error");
     }
   };
 

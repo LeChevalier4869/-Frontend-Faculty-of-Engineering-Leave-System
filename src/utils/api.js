@@ -102,10 +102,11 @@ export const apiEndpoints = {
   lookupEmploymentTypes: `${BASE_URL}/api/lookups/employment-types`,
 
   // signature
-  signatureUpload: `${BASE_URL}/signature`, // POST 
+  signatureUpload: (userId) => `${BASE_URL}/signature/${userId}`, // POST 
   signatureGetAll: `${BASE_URL}/signature`, // GET
   signatureGetById: (id) => `${BASE_URL}/signature/get/${id}`, // GET
-  signatureUpdate: (id) => `${BASE_URL}/signature/update/${id}`, // PUT
-  signatureDelete: (id) => `${BASE_URL}/signature/delete/${id}`, // DELETE
+  signatureUpdate: (userId) => `${BASE_URL}/signature/update/${userId}`, // PUT
+  signatureDelete: (userId) => `${BASE_URL}/signature/delete/${userId}`, // DELETE
   signatureGetIsMine: `${BASE_URL}/signature/me`, // GET
+  signatureGetByUserId: (userId) => `${BASE_URL}/signature/user/${userId}`, // GET
 };
