@@ -283,7 +283,8 @@ export default function DepartmentManage() {
               ) : displayed.length > 0 ? (
                 displayed.map((d, idx) => (
                   <tr key={d.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition`}>
-                    <td className="px-4 py-2">{d.id}</td>
+                    {/* <td className="px-4 py-2">{d.id}</td> */}
+                    <td className="px-4 py-2">{startIndex + idx + 1}</td>
                     <td className="px-4 py-2">{d.name}</td>
                     <td className="px-4 py-2">
                       {organizations.find(org => org.id === d.organizationId)?.name || "-"}
