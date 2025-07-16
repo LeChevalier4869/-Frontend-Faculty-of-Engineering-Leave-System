@@ -168,18 +168,18 @@ export default function UserManage() {
                       {user.prefixName} {user.firstName} {user.lastName}
                     </td>
                     <td className="px-4 py-3 truncate">{user.email}</td>
-                    <td className="px-4 py-3 truncate">{user.phone}</td>
-                    <td className="px-4 py-3 truncate">
+                    {/* <td className="px-4 py-3 truncate">
                       {Array.isArray(user.roles)
-                        ? user.roles.map((r) => r.name).join(", ")
-                        : user.role || "USER"}
+                      ? user.roles.map((r) => r.name).join(", ")
+                      : user.role || "USER"}
+                      </td> */}
+                    <td className="px-4 py-3 truncate">
+                      {user.department?.name || "-"}
                     </td>
                     <td className="px-4 py-3 truncate">
                       {user.personnelType?.name || "-"}
                     </td>
-                    <td className="px-4 py-3 truncate">
-                      {user.department?.name || "-"}
-                    </td>
+                      <td className="px-4 py-3 truncate">{user.phone}</td>
                     <td
                       className="px-4 py-3 text-center space-x-2"
                       onClick={(e) => e.stopPropagation()} // 👈 ป้องกันเด้งเมื่อกดปุ่มในแถว
