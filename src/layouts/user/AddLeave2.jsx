@@ -192,7 +192,7 @@ function AddLeave2() {
               name="reason"
               value={formData.reason}
               onChange={handleChange}
-              rows="3"
+              rows="2"
               // required ไม่บังคับให้กรอก
               className={inputStyle}
             />
@@ -207,7 +207,7 @@ function AddLeave2() {
               name="contact"
               value={formData.contact}
               onChange={handleChange}
-              rows="3"
+              rows="2"
               className={inputStyle}
             />
           </div>
@@ -228,8 +228,8 @@ function AddLeave2() {
             </div>
           )}
 
-          {/* การลาเร่งด่วน */}
-          {/*}
+          {/* การลาเร่งด่วน 
+          {/*
           <div>
             <label className="block text-sm font-medium mb-1">การลาเร่งด่วน</label>
             <div className="relative">
@@ -250,7 +250,7 @@ function AddLeave2() {
               </div>
             </div>
           </div>
-          {*/}
+          */}
 
           {/* ปุ่ม */}
           <div className="flex justify-end gap-4">
