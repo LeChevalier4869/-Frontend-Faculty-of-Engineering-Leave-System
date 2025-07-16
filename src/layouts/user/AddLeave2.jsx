@@ -185,10 +185,11 @@ function AddLeave2() {
 
           {/* เหตุผลการลา */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label for="reason" className="block text-sm font-medium mb-1">
               เหตุผลการลา
             </label>
             <textarea
+              id="reason"
               name="reason"
               value={formData.reason}
               onChange={handleChange}
@@ -200,10 +201,11 @@ function AddLeave2() {
 
           {/* ช่องทางติดต่อ */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label for="contact" className="block text-sm font-medium mb-1">
               ช่องทางติดต่อ
             </label>
             <textarea
+              id="contact"
               name="contact"
               value={formData.contact}
               onChange={handleChange}
@@ -252,7 +254,6 @@ function AddLeave2() {
           </div>
           */}
 
-          {/* ปุ่ม */}
           <div className="flex justify-end gap-4">
             <button
               type="button"
