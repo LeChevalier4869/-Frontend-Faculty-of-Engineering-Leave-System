@@ -36,17 +36,22 @@ export default function CalendarPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/admin/holiday`, authHeader());
-      const eventData = res.data.data.map((holiday) => {
-        let color = "red"; // ค่าเริ่มต้น
+      const [holidayRes, leaveRes] = await Promise.all([
+        axios.get(`${BASE_URL}/admin/holiday`, authHeader()),
+        axios.get(
+          `${BASE_URL}/leave-requests/my-requests/approved`,
+          authHeader()
+        ), // API ข้อมูลการลา
+      ]);
+      console.log("Holiday Data:", holidayRes.data);
+      console.log("Leave Data:", leaveRes.data);
 
-        if (holiday.holidayType === "หยุดนักขัตฤกษ์") {
-          color = "green";
-        } else if (holiday.holidayType === "หยุดราชการพิเศษ") {
-          color = "blue";
-        } else if (holiday.holidayType === "วันสำคัญอื่น ๆ") {
-          color = "purple"; // ม่วงอ่อน โทนเย็น
-        }
+      // วันหยุด
+      const holidayEvents = holidayRes.data.data.map((holiday) => {
+        let color = "red";
+        if (holiday.holidayType === "หยุดนักขัตฤกษ์") color = "green";
+        else if (holiday.holidayType === "หยุดราชการพิเศษ") color = "blue";
+        else if (holiday.holidayType === "วันสำคัญอื่น ๆ") color = "purple";
 
         return {
           title: holiday.description,
@@ -55,7 +60,19 @@ export default function CalendarPage() {
           color,
         };
       });
-      setEvents(eventData);
+
+      // วันลา
+      const leaveEvents = leaveRes.data.map((leave) => ({
+        title: `${leave.leaveType.name}`,
+        start: leave.startDate,
+        end: new Date(new Date(leave.endDate).getTime() + 86400000) // บวก 1 วันเพื่อให้ FullCalendar ครอบวันสุดท้ายด้วย
+          .toISOString()
+          .split("T")[0],
+        allDay: true,
+        color: "#f59e0b", // สีส้มทอง (tailwind amber-500)
+      }));
+
+      setEvents([...holidayEvents, ...leaveEvents]);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -101,7 +118,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Legend */}
-      <div className="mt-2 max-w-md mx-auto flex justify-center gap-6">
+      <div className="mt-2 max-w-3xl mx-auto flex flex-wrap justify-center gap-6">
         <div className="flex items-center space-x-2">
           <span className="w-5 h-5 rounded-full bg-green-600 inline-block"></span>
           <span>หยุดนักขัตฤกษ์</span>
@@ -113,6 +130,10 @@ export default function CalendarPage() {
         <div className="flex items-center space-x-2">
           <span className="w-5 h-5 rounded-full bg-purple-600 inline-block"></span>
           <span>วันสำคัญอื่น ๆ</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="w-5 h-5 rounded-full bg-amber-500 inline-block"></span>
+          <span>วันลาของคุณ</span>
         </div>
       </div>
     </div>

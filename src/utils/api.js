@@ -40,6 +40,7 @@ export const apiEndpoints = {
   // leave request
   leaveRequest: `${BASE_URL}/leave-requests`, // CRUD
   leaveRequestMe: `${BASE_URL}/leave-requests/me`, // GET
+  leaveRequestApprovedMe: `${BASE_URL}/leave-requests//my-requests/approved`, // GET
   getLeaveById: (id) => `${BASE_URL}/leave-requests/getLeaveRequest/${id}`,
   getLeaveByUserId: (id) => `${BASE_URL}/leave-requests/user/${id}`,
   getLastLeaveRequestByUserAndType: (userId) => `${BASE_URL}/leave-requests/last/type/${userId}`,
