@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { FaFileAlt } from "react-icons/fa";
+import { FaFileAlt, FaFilePdf } from "react-icons/fa";
 import { apiEndpoints } from "../../utils/api";
 
 export default function LeaveDetail() {
@@ -102,13 +102,6 @@ export default function LeaveDetail() {
     loadLastLeave();
   }, [leave]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center text-gray-500 font-kanit">
-        กำลังโหลด...
-      </div>
-    );
-  }
 
   if (!leave) {
     return (
@@ -134,6 +127,101 @@ export default function LeaveDetail() {
     files,
     approvalSteps,
   } = leave;
+
+    const leaveData = {
+    documentNumber: documentNumber || "ไม่ระบุ",//
+    documentDate: documentIssuedDate || "ไม่ระบุ",//
+    title: `ขอ${leaveType?.name}`,//
+    name: `${user?.prefixName}${user?.firstName} ${user?.lastName}`,//
+    position: user?.position || "ไม่ระบุ",//
+    organizationId: null,
+    personalType: "ข้าราชการ",
+    leaveType: "ลาป่วย",
+    reason: reason || "ไม่ระบุ",//
+    description: "รายละเอียดตัวอย่าง",
+    date: "2023-10-15",
+    leaveTypeId: "3",
+    startDate: startDate,//
+    endDate: endDate,//
+    total: totalDays,//
+    lastLeave: "/",
+    lastLeaveStartDate: lastLeave.startDate,//
+    lastLeaveEndDate: lastLeave.endDate,//
+    lastLeaveTotal: lastLeave.totalDays,//
+    contact: contact || "ไม่ระบุ",//
+    phone: user.phone || "ไม่ระบุ",//
+    signature: "ลายเซ็น",
+    commentApprover1: "โปรดพิจารณา",
+    signatureApprover1: "ลายเซ็น1",
+    positionApprover1: "HR",
+    DateApprover1: "12-06-2568",
+    commentApprover2: "โปรดพิจารณา2",
+    signatureApprover2: "ลายเซ็น2",
+    positionApprover2: "HR2",
+    DateApprover2: "12-06-2568",
+    commentApprover3: "โปรดพิจารณา3",
+    signatureApprover3: "ลายเซ็น3",
+    positionApprover3: "HR3",
+    DateApprover3: "12-06-2568",
+    signatureVerifier: "ลายเซ็นผู้ตรวจสอบ",
+    DateVerifier: "12-06-2568",
+    commentApprover4: "โปรดพิจารณา4",
+    signatureApprover4: "ลายเซ็น4",
+    DateApprover4: "12-06-2568"
+  };
+  console.log(leave)
+
+  const downloadReport = async () => {
+    setLoading(true);
+    try {
+      // เรียก API ด้วยข้อมูล leaveData ที่ส่งมาจาก props
+      // ต้องมั่นใจว่า leaveData มีโครงสร้างครบตามที่ backend ต้องการ
+      const response = await axios.post(
+        "https://backend-faculty-of-engineering-leave.onrender.com/api/download-report",
+        leaveData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          responseType: "blob", // สำคัญมาก! ให้รับไฟล์เป็น blob
+        }
+      );
+
+      // สร้าง URL ชั่วคราวจาก blob
+      const file = new Blob([response.data], { type: "application/pdf" });
+      const fileURL = URL.createObjectURL(file);
+
+      // เปิดไฟล์ PDF ในแท็บใหม่
+      window.open(fileURL);
+
+      // หรือถ้าจะให้ดาวน์โหลดอัตโนมัติให้ใช้ code นี้แทน
+      /*
+      const link = document.createElement("a");
+      link.href = fileURL;
+      link.setAttribute("download", `${leaveData.name || "report"}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      */
+    } catch (error) {
+      console.error("Download error:", error);
+      Swal.fire(
+        "เกิดข้อผิดพลาด",
+        error.response?.data?.error || "ไม่สามารถดาวน์โหลดรายงานได้",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center text-gray-500 font-kanit">
+        กำลังโหลด...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
@@ -418,6 +506,13 @@ export default function LeaveDetail() {
             className="inline-block px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition font-medium"
           >
             ← กลับหน้ารายการลา
+          </button>
+          <button
+            onClick={downloadReport}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+          >
+            {loading ? "กำลังดาวน์โหลด..." : "ส่งออก PDF"}
           </button>
         </div>
       </div>

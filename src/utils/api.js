@@ -110,4 +110,7 @@ export const apiEndpoints = {
   signatureDelete: (userId) => `${BASE_URL}/signature/delete/${userId}`, // DELETE
   signatureGetIsMine: `${BASE_URL}/signature/me`, // GET
   signatureGetByUserId: (userId) => `${BASE_URL}/signature/user/${userId}`, // GET
+
+  //PDF
+  generatePdf: `${BASE_URL}/api/download-report`, // POST
 };
