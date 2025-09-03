@@ -9,8 +9,7 @@ import clsx from "clsx"; // ✅ ใช้ควบคุม class แบบ dyna
 import useAuth from "../hooks/useAuth";
 
 import Login2 from "../layouts/oauth/Login";
-import OAuthCallback from "../layouts/oauth/OAuthCallback";
-import Dashboard from "../layouts/oauth/Dashboard";
+import Profile2 from "../layouts/oauth/Profile";
 /** Auth layouts **/
 import Login from "../layouts/auth/Login";
 import Register from "../layouts/auth/Register";
@@ -107,7 +106,7 @@ const guestRouter = createBrowserRouter([
       { path: "/", element: <Login2 /> },
       { path: "/login", element: <Login2 /> },
       { path: "/oauth/callback", element: <OAuthCallback /> },
-      { path: "/dashboard", element: <Dashboard /> },
+      { path: "/dashboard", element: <DashBoard /> },
       { path: "/register", element: <Register /> },
       { path: "/forgot-password", element: <ForgotPassword /> },
       { path: "/reset-password", element: <ResetPassword /> },
@@ -127,7 +126,8 @@ const userRouter = createBrowserRouter([
       { path: "leave/add", element: <AddLeave2 /> },
       { path: "leave/balance", element: <LeaveBalance /> },
       { path: "leave/:id", element: <LeaveDetail /> },
-      { path: "profile", element: <UserProfile2 /> },
+      { path: "profile", element: <Profile2 /> },
+      // { path: "profile", element: <UserProfile2 /> },
       { path: "profile/edit", element: <EditProfile /> },
       { path: "change-password", element: <ChangePassword /> },
       { path: "user/landing", element: <UserLanding /> },
