@@ -1,5 +1,5 @@
 import React from "react";
-import API, { setTokens } from "../api/axios";
+import API, { setTokens } from "../../utils/axios";
 
 function Login() {
   const handleGoogleLogin = () => {
