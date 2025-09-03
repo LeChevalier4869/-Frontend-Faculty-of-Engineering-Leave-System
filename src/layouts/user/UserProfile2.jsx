@@ -224,7 +224,7 @@ function UserProfile2() {
                     })
                   : "-",
               ],
-              ["สถานะการใช้งาน", user.inActive ? "อยู่" : "ไม่อยู่"],
+              // ["สถานะการใช้งาน", user.inActive ? "อยู่" : "ไม่อยู่"],
             ].map(([label, value], idx) => (
               <div key={idx}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
