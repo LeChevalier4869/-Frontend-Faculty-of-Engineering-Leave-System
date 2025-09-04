@@ -108,6 +108,7 @@ const guestRouter = createBrowserRouter([
     children: [
       { path: "/", element: <Login2 /> },
       { path: "/login", element: <Login2 /> },
+      { path: "callback", element: <Callback /> },
       // { path: "/oauth/callback", element: <OAuthCallback /> },
       { path: "/dashboard", element: <DashBoard /> },
       { path: "/register", element: <Register /> },
@@ -124,7 +125,7 @@ const userRouter = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { index: true, element: <UserDashBoard /> },
-      { path: "callback", element: <Callback /> },
+      // { path: "callback", element: <Callback /> },
       { path: "dashboard", element: <UserDashBoard /> },
       { path: "leave", element: <Leave2 /> },
       { path: "leave/add", element: <AddLeave2 /> },
