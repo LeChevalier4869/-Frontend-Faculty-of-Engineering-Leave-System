@@ -14,6 +14,9 @@ export default function Callback() {
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
 
+      console.log("Access:", accessToken);
+      console.log("Refresh:", refreshToken);
+
       // redirect ไป dashboard
       navigate("/dashboard");
     } else {

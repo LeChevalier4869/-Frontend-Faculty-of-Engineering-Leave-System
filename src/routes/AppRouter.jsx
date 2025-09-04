@@ -8,9 +8,10 @@ import { useState } from "react";
 import clsx from "clsx"; // ✅ ใช้ควบคุม class แบบ dynamic
 import useAuth from "../hooks/useAuth";
 
-
+/** OAuth layouts **/
 import Login2 from "../layouts/oauth/Login";
 import Profile2 from "../layouts/oauth/Profile";
+import Callback from "../layouts/oauth/Callback";
 
 /** Auth layouts **/
 import Login from "../layouts/auth/Login";
@@ -123,6 +124,7 @@ const userRouter = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { index: true, element: <UserDashBoard /> },
+      { path: "callback", element: <Callback /> },
       { path: "dashboard", element: <UserDashBoard /> },
       { path: "leave", element: <Leave2 /> },
       { path: "leave/add", element: <AddLeave2 /> },
