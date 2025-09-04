@@ -110,7 +110,7 @@ const guestRouter = createBrowserRouter([
       { path: "/login", element: <Login2 /> },
       { path: "/callback", element: <Callback /> },
       // { path: "/oauth/callback", element: <OAuthCallback /> },
-      { path: "/dashboard", element: <DashBoard /> },
+      // { path: "/dashboard", element: <DashBoard /> },
       { path: "/register", element: <Register /> },
       { path: "/forgot-password", element: <ForgotPassword /> },
       { path: "/reset-password", element: <ResetPassword /> },
