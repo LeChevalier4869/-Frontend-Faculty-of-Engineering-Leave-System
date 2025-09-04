@@ -13,7 +13,7 @@ function AuthContextProvider(props) {
     const run = async () => {
       try {
         setLoading(true)
-        const token = localStorage.getItem('token')
+        const token = localStorage.getItem('accessToken')
         if (!token) return
 
         const endpoint = 'auth/me'
@@ -37,7 +37,8 @@ function AuthContextProvider(props) {
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem('token')
+    localStorage.removeItem('acessToken')
+    localStorage.removeItem('refreshToken')
     localStorage.removeItem('status')
   }
 
