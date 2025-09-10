@@ -10,32 +10,39 @@ function AuthContextProvider(props) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const run = async () => {
-      try {
-        setLoading(true)
-        const token = localStorage.getItem('accessToken')
-        console.log('AuthContext token:', token)
-        if (!token) return
+  const fetchUser = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('accessToken')
+      console.log('AuthContext token:', token)
+      if (!token) return
 
-        const endpoint = 'auth/me'
-        const url = getApiUrl(endpoint)
-        const res = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+      const endpoint = 'auth/me'
+      const url = getApiUrl(endpoint)
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
 
-        // ดึงเฉพาะ object user จริง ๆ จาก response
-        const returned = res.data.data ?? res.data.user ?? res.data
-        setUser(returned)
-      } catch (err) {
-        console.error('Auth fetch error:', err)
-        setUser(null)
-      } finally {
-        setLoading(false)
-      }
+      // ดึงเฉพาะ object user จริง ๆ จาก response
+      const returned = res.data.data ?? res.data.user ?? res.data
+      setUser(returned)
+    } catch (err) {
+      console.error('Auth fetch error:', err)
+      setUser(null)
+    } finally {
+      setLoading(false)
     }
-    run()
-  }, [])
+  }
+
+  useEffect(() => {
+    fetchUser()
+  }, []) // ดึงข้อมูลเมื่อ component ถูก mount
+
+  useEffect(() => {
+    if (user) {
+      fetchUser() // ดึงข้อมูลอีกครั้งเมื่อ user เปลี่ยนแปลง (เช่น หลัง login)
+    }
+  }, [user])
 
   const logout = () => {
     setUser(null)
