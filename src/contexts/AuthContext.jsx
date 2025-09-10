@@ -34,7 +34,7 @@ function AuthContextProvider(props) {
       }
     }
     run()
-  }, [])
+  }, [token])
 
   const logout = () => {
     setUser(null)
