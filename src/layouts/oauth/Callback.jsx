@@ -6,7 +6,7 @@ export default function Callback() {
   const navigate = useNavigate();
   const { user ,setUser } = useAuth();
 
-  const token = res.data.token;
+  const token = user?.token;
   localStorage.setItem("token", token);
 
   const fetchUser = async () => {
