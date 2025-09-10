@@ -26,6 +26,7 @@ export default function Callback() {
           const res = await axios.get(url, {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
+          console.log('res.data:', res.data);
           const returned = res.data.data ?? res.data.user ?? res.data;
           console.log("Fetched user:", returned);
           setUser(returned);

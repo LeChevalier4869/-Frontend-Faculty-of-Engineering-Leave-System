@@ -50,7 +50,7 @@ export default function UserDashboard() {
     const fetchUserStats = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token"); // ✅ เพิ่มตรงนี้
+        const token = localStorage.getItem("accessToken"); // ✅ เพิ่มตรงนี้
 
         const [summaryRes, leavesRes] = await Promise.all([
           axios.get(getApiUrl("leave-balances/leave-summary"), {
