@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import axios from "axios";
+import { apiEndpoints } from "../../utils/api";
+
 
 export default function Callback() {
   const navigate = useNavigate();
