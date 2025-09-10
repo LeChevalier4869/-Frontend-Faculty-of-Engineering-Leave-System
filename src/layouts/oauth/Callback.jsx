@@ -1,9 +1,9 @@
 // Callback.jsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
+import useAuth from "../../hooks/useAuth";
 import axios from "axios";
-import getApiUrl from "../utils/apiUtils";
+import getApiUrl from "../../utils/apiUtils";
 
 export default function Callback() {
   const navigate = useNavigate();

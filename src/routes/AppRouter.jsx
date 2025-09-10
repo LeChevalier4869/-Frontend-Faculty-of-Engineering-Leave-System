@@ -14,7 +14,7 @@ import Profile2 from "../layouts/oauth/Profile";
 import Callback from "../layouts/oauth/Callback";
 
 /** Auth layouts **/
-import Login from "../layouts/auth/Login";
+// import Login from "../layouts/auth/Login";
 import Register from "../layouts/auth/Register";
 import ForgotPassword from "../layouts/auth/ForgotPassword";
 import ResetPassword from "../layouts/auth/ResetPassword";
