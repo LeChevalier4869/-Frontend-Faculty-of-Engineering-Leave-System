@@ -2,6 +2,7 @@
 import axios from 'axios'
 import { createContext, useState, useEffect } from 'react'
 import getApiUrl from '../utils/apiUtils.js'
+import { unix } from 'dayjs'
 
 const AuthContext = createContext()
 
@@ -34,7 +35,7 @@ function AuthContextProvider(props) {
       }
     }
     run()
-  }, [token])
+  }, [user])
 
   const logout = () => {
     setUser(null)
