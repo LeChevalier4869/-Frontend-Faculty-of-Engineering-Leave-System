@@ -7,28 +7,6 @@ import { apiEndpoints } from "../../utils/api";
 
 export default function Callback() {
   const navigate = useNavigate();
-  const { user ,setUser } = useAuth();
-
-  const token = user?.token;
-  console.log("Callback token:", token);
-  localStorage.setItem("token", token);
-
-  const fetchUser = async () => {
-    try {
-      const res = await axios.get(apiEndpoints.getMe, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const user = res.data;
-      setUser(user);
-    } catch (err) {
-      console.error("fetchUser error:", err);
-    }
-  };
-  fetchUser();
-
-  // ตรวจสอบ roles ในรูปแบบที่ถูกต้อง
-  // const roles = (user?.roles || []).map((role) => role.roleName);
-
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get("access");
