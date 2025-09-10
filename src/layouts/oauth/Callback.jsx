@@ -27,6 +27,7 @@ export default function Callback() {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
           const returned = res.data.data ?? res.data.user ?? res.data;
+          console.log("Fetched user:", returned);
           setUser(returned);
           navigate("/dashboard");
         } catch (err) {
