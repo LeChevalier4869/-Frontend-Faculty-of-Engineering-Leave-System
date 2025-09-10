@@ -22,7 +22,10 @@ export default function Callback() {
       // ดึงข้อมูล user แล้วเซฟเข้า context เลย
       const fetchUser = async () => {
         try {
+          console.log("in function fetchUser");
           const url = getApiUrl("auth/me");
+          console.log('AuthContext token:', accessToken);
+          console.log('Fetching user from:', url);
           const res = await axios.get(url, {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
