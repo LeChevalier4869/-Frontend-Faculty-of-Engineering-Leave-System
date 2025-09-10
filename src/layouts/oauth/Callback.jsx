@@ -10,6 +10,7 @@ export default function Callback() {
   const { user ,setUser } = useAuth();
 
   const token = user?.token;
+  console.log("Callback token:", token);
   localStorage.setItem("token", token);
 
   const fetchUser = async () => {
