@@ -12,12 +12,22 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(false);
 
   const authHeader = () => {
-    const token = localStorage.getItem("token");
+    // const token = localStorage.getItem("token");
+    // if (!token) {
+    //   Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
+    //     () => (window.location.href = "/login")
+    //   );
+    //   throw new Error("No token");
+    // }
+    // return { headers: { Authorization: `Bearer ${token}` } };
+    const token = localStorage.getItem("accessToken");
     if (!token) {
-      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => (window.location.href = "/login")
-      );
-      throw new Error("No token");
+      Swal.fire({
+        icon: "warning",
+        title: "กรุณาเข้าสู่ระบบ",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
     }
     return { headers: { Authorization: `Bearer ${token}` } };
   };
