@@ -11,7 +11,7 @@ export default function LeaveBalancePage() {
   useEffect(() => {
     const fetchLeaveBalance = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("accessToken");
         if (!token) {
           Swal.fire({
             icon: "warning",
