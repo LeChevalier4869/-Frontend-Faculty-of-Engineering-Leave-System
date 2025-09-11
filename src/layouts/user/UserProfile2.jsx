@@ -17,7 +17,7 @@ function UserProfile2() {
     try {
       const res = await axios.get(apiEndpoints.signatureGetByUserId(user.id), {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
 
