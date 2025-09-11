@@ -9,6 +9,7 @@ function Header({ onMenuClick, isSidebarOpen }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  console.log("Header user:", user);
   const handleLogout = () => {
     setIsOpen(false);
     logout();
