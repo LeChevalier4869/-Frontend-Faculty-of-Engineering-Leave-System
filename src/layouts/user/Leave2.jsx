@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
-import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -52,9 +51,10 @@ export default function Leave2() {
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(getApiUrl("leave-requests/me"), {
+      const token = localStorage.getItem("accessToken");
+      const res = await axios.get(apiEndpoints.leaveRequestMe, {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       const data = Array.isArray(res.data.data)
         ? res.data.data
