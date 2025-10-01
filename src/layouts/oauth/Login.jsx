@@ -17,13 +17,13 @@ export default function Login() {
 
   const handleContactClick = () => {
     Swal.fire({
-      title: "📞 ติดต่อเจ้าหน้าที่ระบบ",
+      title: "ติดต่อเจ้าหน้าที่ระบบ 📞",
       html: `
         <div style="text-align: left; line-height: 1.8;">
-          <p><b>ชื่อผู้ดูแล:</b> นายทดสอบ ระบบ</p>
-          <p><b>โทร:</b> 081-234-5678</p>
-          <p><b>อีเมล:</b> support@example.com</p>
-          <p><b>LINE ID:</b> @engineer-support</p>
+          <p><b> ชื่อผู้ดูแล:</b> นายทดสอบ ระบบ</p>
+          <p><b> โทร:</b> 081-234-5678</p>
+          <p><b> อีเมล:</b> support@example.com</p>
+          <p><b> LINE ID:</b> @engineer-support</p>
         </div>
       `,
       icon: "info",
