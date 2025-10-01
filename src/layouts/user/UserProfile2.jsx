@@ -45,7 +45,7 @@ function UserProfile2() {
             data: formData,
             headers: {
               "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             },
           });
 
@@ -75,7 +75,7 @@ function UserProfile2() {
           try {
             await axios.delete(apiEndpoints.signatureDelete(user.id), {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
               },
             });
 

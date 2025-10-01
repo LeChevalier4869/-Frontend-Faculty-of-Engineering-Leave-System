@@ -25,6 +25,7 @@ function AuthContextProvider(props) {
 
         // ดึงเฉพาะ object user จริง ๆ จาก response
         const returned = res.data.data ?? res.data.user ?? res.data
+        console.log('AuthContext fetched user:', returned)
         setUser(returned)
       } catch (err) {
         console.error('Auth fetch error:', err)
