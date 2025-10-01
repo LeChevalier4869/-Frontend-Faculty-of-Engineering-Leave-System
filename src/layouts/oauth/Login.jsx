@@ -19,7 +19,7 @@ export default function Login() {
     Swal.fire({
       title: "ติดต่อเจ้าหน้าที่ระบบ",
       html: `
-      <div style="text-align: left; line-height: 1.8; font-size: 15px;">
+      <div style="text-align: left; line-height: 1.8; font-size: 24px;">
         <p><i class="fas fa-user mr-2 text-red-400"></i> นายทดสอบ ระบบ</p>
         <p><i class="fas fa-phone mr-2 text-green-400"></i> 081-234-5678</p>
         <p><i class="fas fa-envelope mr-2 text-blue-400"></i> support@example.com</p>
