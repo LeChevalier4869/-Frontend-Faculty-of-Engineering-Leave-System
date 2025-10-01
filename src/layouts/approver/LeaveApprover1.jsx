@@ -40,7 +40,7 @@ export default function LeaveApprover1() {
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const res = await axios.get(apiEndpoints.leaveRequestForFirstApprover, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -80,7 +80,7 @@ export default function LeaveApprover1() {
       didOpen: () => Swal.showLoading(),
     });
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsByFirstApprover(detailId),
         {

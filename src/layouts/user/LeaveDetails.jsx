@@ -13,7 +13,7 @@ export default function LeaveDetail() {
   const [loading, setLoading] = useState(true);
 
   const authHeader = () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       Swal.fire("หมดเวลาการใช้งาน", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
         () => {
@@ -181,7 +181,7 @@ export default function LeaveDetail() {
         leaveData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
           responseType: "blob", // สำคัญมาก! ให้รับไฟล์เป็น blob
         }

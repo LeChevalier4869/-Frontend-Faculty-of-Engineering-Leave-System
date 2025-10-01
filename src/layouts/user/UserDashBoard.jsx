@@ -133,7 +133,7 @@ export default function UserDashboard() {
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const res = await axios.get(getApiUrl("leave-requests/me"), {
         withCredentials: true,
         headers: { Authorization: `Bearer ${token}` },

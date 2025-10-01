@@ -104,7 +104,7 @@ export default function AddUser() {
       });
       if (selectedFile) fd.append("profilePicture", selectedFile);
 
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       await axios.post(apiEndpoints.createUserByAdmin, fd, {
         headers: {
           "Content-Type": "multipart/form-data",

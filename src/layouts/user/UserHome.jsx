@@ -16,7 +16,7 @@ export default function UserHome() {
   useEffect(() => {
     const fetchLeaveBalance = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("accessToken");
         const res = await axios.get(apiEndpoints.leaveBalance, {
           headers: { Authorization: `Bearer ${token}` },
         });

@@ -25,7 +25,7 @@ function Approver() {
   useEffect(() => {
     const fetchPendingRequest = async () => {
       try {
-        let token = localStorage.getItem("token");
+        let token = localStorage.getItem("accessToken");
         const res = await axios.get(apiEndpoints.leaveRequestLanding, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -54,7 +54,7 @@ function Approver() {
   const handleApprove = async (id) => {
     setProcessingId(id);
     try {
-      let token = localStorage.getItem("token");
+      let token = localStorage.getItem("accessToken");
       await axios.post(
         `${apiEndpoints.leaveRequest}/${id}/approve`,      
         {},
@@ -80,7 +80,7 @@ function Approver() {
   const handleReject = async (id) => {
     setProcessingId(id);
     try {
-      let token = localStorage.getItem("token");
+      let token = localStorage.getItem("accessToken");
       await axios.post(
         `${apiEndpoints.leaveRequest}/${id}/reject`,      
         {},

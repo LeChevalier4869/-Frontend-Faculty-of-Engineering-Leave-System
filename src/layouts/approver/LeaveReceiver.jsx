@@ -40,7 +40,7 @@ export default function LeaveReceiver() {
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const res = await axios.get(apiEndpoints.leaveRequestForReceiver, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -87,7 +87,7 @@ export default function LeaveReceiver() {
     });
     setLoadingApprovals((p) => ({ ...p, [detailId]: true }));
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsByReceiver(detailId),
         { documentNumber: docNum, remarks: "อนุมัติ", comment: "อนุมัติ" },

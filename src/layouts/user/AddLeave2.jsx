@@ -50,7 +50,7 @@ function AddLeave2() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       Swal.fire({
         icon: "warning",

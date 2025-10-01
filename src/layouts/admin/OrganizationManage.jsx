@@ -14,7 +14,7 @@ export default function OrganizationManage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const authHeader = () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
         () => (window.location.href = "/login")
@@ -26,7 +26,7 @@ export default function OrganizationManage() {
 
   const handleApiError = (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem("token");
+      localStorage.removeItem("accessToken");
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
         () => (window.location.href = "/login")
       );

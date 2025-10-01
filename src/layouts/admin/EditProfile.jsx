@@ -72,7 +72,7 @@ export default function EditProfile() {
   useEffect(() => {
     (async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("accessToken");
         const headers = { Authorization: `Bearer ${token}` };
 
         const [d, p, e, pos] = await Promise.all([
@@ -106,7 +106,7 @@ export default function EditProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token   = localStorage.getItem("token");
+      const token   = localStorage.getItem("accessToken");
       const headers = { Authorization: `Bearer ${token}` };
 
       const payload = {

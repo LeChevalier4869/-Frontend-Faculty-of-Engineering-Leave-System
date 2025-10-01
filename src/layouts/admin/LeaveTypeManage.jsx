@@ -18,7 +18,7 @@ export default function LeaveTypeManage() {
     "text-white text-base px-4 py-2 rounded-lg transition";
 
   const authHeader = () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
         () => (window.location.href = "/login")
@@ -30,7 +30,7 @@ export default function LeaveTypeManage() {
 
   const handleApiError = (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem("token");
+      localStorage.removeItem("accessToken");
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
         () => (window.location.href = "/login")
       );

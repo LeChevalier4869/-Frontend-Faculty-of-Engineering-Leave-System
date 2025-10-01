@@ -50,7 +50,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     if (!isOpen) return;
     const fetchLeaveBalances = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("accessToken");
         if (!token) return;
         const res = await axios.get(getApiUrl("leave-balances/me"), {
           headers: { Authorization: `Bearer ${token}` },
@@ -124,7 +124,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       Swal.fire({
         icon: "warning",

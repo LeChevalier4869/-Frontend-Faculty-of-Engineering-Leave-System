@@ -16,7 +16,7 @@ export default function UserInfo() {
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
 
   const authHeader = () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
         () => {

@@ -43,7 +43,7 @@ export default function LeaveApprover12() {
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const res = await axios.get(apiEndpoints.leaveRequestForFirstApprover, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -102,7 +102,7 @@ export default function LeaveApprover12() {
   // Approve and remove from list
   const handleApprove = async (detailId, comment) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsByFirstApprover(detailId),
         { remarks: comment || "อนุมัติ", comment: comment || "อนุมัติ" },

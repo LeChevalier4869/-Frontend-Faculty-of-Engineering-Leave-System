@@ -39,7 +39,7 @@ export default function LeaveVerifier() {
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       const res = await axios.get(apiEndpoints.leaveRequestForVerifier, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -81,7 +81,7 @@ export default function LeaveVerifier() {
         allowEscapeKey: false,
         didOpen: () => Swal.showLoading(),
       });
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       await axios.patch(
         apiEndpoints.ApproveleaveRequestsByVerifier(detailId),
         { remarks: "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา", comment: "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา" },

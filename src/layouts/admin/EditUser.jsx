@@ -33,7 +33,7 @@ export default function UserEdit() {
     const fetchAll = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("accessToken");
         // const [userRes, deptRes, ptRes, empRes] = await Promise.all([
         const [userRes, deptRes, ptRes] = await Promise.all([
           axios.get(apiEndpoints.getUserByIdAdmin(id), {
@@ -87,7 +87,7 @@ export default function UserEdit() {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
 
       // convert inActiveRaw → inActive boolean
       const payload = {
