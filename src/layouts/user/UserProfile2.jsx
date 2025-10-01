@@ -164,7 +164,7 @@ function UserProfile2() {
 
   /* ---- ชื่อคณะ: มีได้สองแหล่ง ---- */
   const orgName =
-    user.organization?.name || user.department?.organization?.name || "-";
+    user.department?.organization?.name || "-";
 
   return (
     <div className="min-h-screen bg-white px-4 py-10 font-kanit">
@@ -203,7 +203,7 @@ function UserProfile2() {
               ["เพศ", user.sex],
               ["เบอร์มือถือ", user.phone],
               ["ตำแหน่ง", user.position], // ← ADD
-              ["คณะ", user.organization?.name],
+              ["คณะ", user.depertment?.organization?.name],
               ["สาขา", user.department?.name],
               ["ประเภทบุคลากร", user.personnelType?.name],
               [
