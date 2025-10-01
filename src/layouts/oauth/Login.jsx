@@ -1,6 +1,7 @@
 import { FiLogIn } from "react-icons/fi";
 import { FaGoogle } from "react-icons/fa";
 import { useState } from "react";
+import Swal from "sweetalert2";
 
 const BACKEND_URL =
   import.meta.env.VITE_BACKEND_URL ??
@@ -12,6 +13,26 @@ export default function Login() {
   const handleGoogleLogin = () => {
     setIsLoading(true);
     window.location.href = `${BACKEND_URL}/auth/google`;
+  };
+
+  const handleContactClick = () => {
+    Swal.fire({
+      title: "📞 ติดต่อเจ้าหน้าที่ระบบ",
+      html: `
+        <div style="text-align: left; line-height: 1.8;">
+          <p><b>ชื่อผู้ดูแล:</b> นายทดสอบ ระบบ</p>
+          <p><b>โทร:</b> 081-234-5678</p>
+          <p><b>อีเมล:</b> support@example.com</p>
+          <p><b>LINE ID:</b> @engineer-support</p>
+        </div>
+      `,
+      icon: "info",
+      confirmButtonText: "ปิด",
+      confirmButtonColor: "#d33",
+      width: 400,
+      background: "#1f2937", // bg-gray-800
+      color: "#fff",
+    });
   };
 
   return (
@@ -38,11 +59,15 @@ export default function Login() {
           {isLoading ? "กำลังนำไปยัง Google..." : "เข้าสู่ระบบด้วย Google"}
         </button>
 
-        {/* (ตัวเลือก) ลิงก์สมัคร / ลืมรหัสผ่าน เก็บไว้เผื่อโหมด manual ในอนาคต */}
         <div className="mt-6 text-center">
           <p className="text-gray-400 text-sm">
             ต้องการความช่วยเหลือ?{" "}
-            <span className="text-red-400">ติดต่อเจ้าหน้าที่ระบบ</span>
+            <button
+              onClick={handleContactClick}
+              className="text-red-400 hover:underline"
+            >
+              ติดต่อเจ้าหน้าที่ระบบ
+            </button>
           </p>
         </div>
       </div>
