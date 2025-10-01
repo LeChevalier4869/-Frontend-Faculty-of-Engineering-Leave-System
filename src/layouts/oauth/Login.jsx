@@ -15,31 +15,30 @@ export default function Login() {
     window.location.href = `${BACKEND_URL}/auth/google`;
   };
 
-const handleContactClick = () => {
-  Swal.fire({
-    title: "ติดต่อเจ้าหน้าที่ระบบ",
-    html: `
-      <div style="text-align: left; line-height: 1.8;">
-        <p><b> ชื่อผู้ดูแล:</b> นายทดสอบ ระบบ</p>
-        <p><b> โทร:</b> 081-234-5678</p>
-        <p><b> อีเมล:</b> support@example.com</p>
-        <p><b> LINE ID:</b> @engineer-support</p>
+  const handleContactClick = () => {
+    Swal.fire({
+      title: "ติดต่อเจ้าหน้าที่ระบบ",
+      html: `
+      <div style="text-align: left; line-height: 1.8; font-size: 15px;">
+        <p><i class="fas fa-user mr-2 text-red-400"></i> นายทดสอบ ระบบ</p>
+        <p><i class="fas fa-phone mr-2 text-green-400"></i> 081-234-5678</p>
+        <p><i class="fas fa-envelope mr-2 text-blue-400"></i> support@example.com</p>
+        <p><i class="fab fa-line mr-2 text-green-500"></i> @engineer-support</p>
       </div>
     `,
-    icon: "info",
-    confirmButtonText: "ปิด",
-    confirmButtonColor: "#d33",
-    width: 400,
-    background: "#1f2937", // bg-gray-800
-    color: "#fff",
-    customClass: {
-      popup: "font-kanit", // ✅ ใช้ฟอนต์ Kanit
-      title: "font-kanit text-lg",
-      confirmButton: "font-kanit",
-    },
-  });
-};
-
+      icon: "info",
+      confirmButtonText: "ปิด",
+      confirmButtonColor: "#d33",
+      width: 420,
+      background: "#1f2937",
+      color: "#fff",
+      customClass: {
+        popup: "font-kanit",
+        title: "font-kanit text-lg",
+        confirmButton: "font-kanit",
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 px-4 font-kanit">
