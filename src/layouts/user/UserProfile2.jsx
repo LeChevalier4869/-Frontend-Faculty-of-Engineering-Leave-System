@@ -203,7 +203,7 @@ function UserProfile2() {
               ["เพศ", user.sex],
               ["เบอร์มือถือ", user.phone],
               ["ตำแหน่ง", user.position], // ← ADD
-              ["คณะ", user.depertment.organization?.name],
+              ["คณะ", user.depertment?.organization?.name],
               ["สาขา", user.department?.name],
               ["ประเภทบุคลากร", user.personnelType?.name],
               [
