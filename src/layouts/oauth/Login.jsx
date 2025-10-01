@@ -20,16 +20,16 @@ export default function Login() {
       title: "ติดต่อเจ้าหน้าที่ระบบ",
       html: `
       <div style="text-align: left; line-height: 1.8; font-size: 20px;">
-        <p><i class="fas fa-user mr-2 text-red-400"></i> นายทดสอบ ระบบ</p>
-        <p><i class="fas fa-phone mr-2 text-green-400"></i> 081-234-5678</p>
-        <p><i class="fas fa-envelope mr-2 text-blue-400"></i> support@example.com</p>
-        <p><i class="fab fa-line mr-2 text-green-500"></i> @engineer-support</p>
+        <p><i class="fas fa-user ml-2 mr-2 text-red-400"></i> นายทดสอบ ระบบ</p>
+        <p><i class="fas fa-phone ml-2 mr-2 text-green-400"></i> 081-234-5678</p>
+        <p><i class="fas fa-envelope ml-2 mr-2 text-blue-400"></i> support@example.com</p>
+        <p><i class="fab fa-line ml-2 mr-2 text-green-400"></i> @engineer-support</p>
       </div>
     `,
       icon: "info",
       confirmButtonText: "ปิด",
       confirmButtonColor: "#d33",
-      width: 400,
+      width: 380,
       background: "#1f2937",
       color: "#fff",
       customClass: {
