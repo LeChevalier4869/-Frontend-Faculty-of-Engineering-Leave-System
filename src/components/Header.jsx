@@ -60,7 +60,7 @@ function Header({ onMenuClick, isSidebarOpen }) {
                   </p>
                   <p className="text-xs text-gray-500">{user.email}</p>
                   <p className="text-xs text-gray-500">
-                    คณะ: {user.organization?.name}
+                    คณะ: {user.department.organization?.name}
                   </p>
                   <p className="text-xs text-gray-500">
                     สาขา: {user.department?.name}
