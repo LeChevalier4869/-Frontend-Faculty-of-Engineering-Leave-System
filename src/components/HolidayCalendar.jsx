@@ -12,7 +12,7 @@ export default function HolidayCalendar() {
       try {
         const response = await axios.get(apiEndpoints.getHoliday, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
         if (response.data?.data) {

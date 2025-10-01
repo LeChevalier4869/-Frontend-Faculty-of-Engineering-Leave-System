@@ -9,7 +9,7 @@ import { apiEndpoints } from "../../utils/api";
 
 function UserProfile2() {
   const { user } = useAuth();
-  console.log("UserProfile2 – user context:", user);
+  // console.log("UserProfile2 – user context:", user);
 
   const MySwal = withReactContent(Swal);
 
@@ -203,7 +203,7 @@ function UserProfile2() {
               ["เพศ", user.sex],
               ["เบอร์มือถือ", user.phone],
               ["ตำแหน่ง", user.position], // ← ADD
-              ["คณะ", user.depertment?.organization?.name],
+              ["คณะ", user.depertment.organization?.name],
               ["สาขา", user.department?.name],
               ["ประเภทบุคลากร", user.personnelType?.name],
               [
