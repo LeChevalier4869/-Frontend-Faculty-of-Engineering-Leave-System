@@ -12,7 +12,7 @@ function LeaveRequestContextProvider(props) {
     useEffect( ()=>{
       const run = async () => {
         try {
-          let token = localStorage.getItem('token')
+          let token = localStorage.getItem('accessToken')
           if(!token) { return }
           const result = await axios.get(url, {
             headers : { Authorization : `Bearer ${token}` }
