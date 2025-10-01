@@ -19,7 +19,7 @@ export default function Login() {
     Swal.fire({
       title: "ติดต่อเจ้าหน้าที่ระบบ",
       html: `
-      <div style="text-align: left; line-height: 1.8; font-size: 24px;">
+      <div style="text-align: left; line-height: 1.8; font-size: 20px;">
         <p><i class="fas fa-user mr-2 text-red-400"></i> นายทดสอบ ระบบ</p>
         <p><i class="fas fa-phone mr-2 text-green-400"></i> 081-234-5678</p>
         <p><i class="fas fa-envelope mr-2 text-blue-400"></i> support@example.com</p>
@@ -29,12 +29,12 @@ export default function Login() {
       icon: "info",
       confirmButtonText: "ปิด",
       confirmButtonColor: "#d33",
-      width: 420,
+      width: 400,
       background: "#1f2937",
       color: "#fff",
       customClass: {
-        popup: "font-kanit",
-        title: "font-kanit text-lg",
+        popup: "font-kanit rounded-2xl", // เพิ่มความโค้งที่กรอบ
+        title: "font-kanit text-2xl",
         confirmButton: "font-kanit",
       },
     });
