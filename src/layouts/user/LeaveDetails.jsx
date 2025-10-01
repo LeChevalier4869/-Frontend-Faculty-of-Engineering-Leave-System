@@ -88,7 +88,7 @@ export default function LeaveDetail() {
           authHeader()
         );
         // ทดสอบ response
-        // console.log("Last Leave Details:", res.data);
+        console.log("Last Leave Details:", res.data);
         setLastLeave(res.data);
       } catch (err) {
         Swal.fire(
@@ -119,7 +119,6 @@ export default function LeaveDetail() {
     endDate,
     totalDays,
     contact,
-    contactPhone,
     status,
     documentNumber,
     documentIssuedDate,
