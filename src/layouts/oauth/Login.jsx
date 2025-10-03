@@ -33,7 +33,7 @@ export default function Login() {
       background: "#1f2937",
       color: "#fff",
       customClass: {
-        popup: "font-kanit rounded-2xl", // เพิ่มความโค้งที่กรอบ
+        popup: "font-kanit rounded-2xl",
         title: "font-kanit text-3xl",
         confirmButton: "font-kanit",
       },
