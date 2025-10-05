@@ -283,6 +283,66 @@ export default function HolidayManage() {
           </div>
         </div>
 
+        {/* Table */}
+        <div className="overflow-x-auto rounded-lg shadow border border-gray-300">
+          <table className="min-w-full bg-white text-sm">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="px-3 py-2 text-left">ลำดับ</th>
+                <th className="px-3 py-2 text-left">วันที่</th>
+                <th className="px-3 py-2 text-left">รายละเอียด</th>
+                <th className="px-3 py-2 text-left">ประเภท</th>
+                <th className="px-3 py-2">ประจำปี</th>
+                <th className="px-3 py-2 text-center">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-6 text-gray-500">
+                    กำลังโหลด...
+                  </td>
+                </tr>
+              ) : displayed.length > 0 ? (
+                displayed.map((h, idx) => (
+                  <tr
+                    key={h.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  >
+                    <td className="px-3 py-2">{startIndex + idx + 1}</td>
+                    <td className="px-3 py-2">{h.date.split("T")[0]}</td>
+                    <td className="px-3 py-2">{h.description}</td>
+                    <td className="px-3 py-2">{h.holidayType || "-"}</td>
+                    <td className="px-3 py-2 text-center">
+                      {h.isRecurring ? "✅" : "❌"}
+                    </td>
+                    <td className="px-3 py-2 text-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(h.id)}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded-lg text-xs"
+                      >
+                        แก้ไข
+                      </button>
+                      <button
+                        onClick={() => handleDelete(h.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg text-xs"
+                      >
+                        ลบ
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="text-center py-6">
+                    ยังไม่มีข้อมูลวันหยุดในปี {selectedYear}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-4">
