@@ -59,26 +59,26 @@ export default function LeaveBalancePage() {
   }, []);
 
   const iconMap = {
-    ลาป่วย: <HeartPulse className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
-    ลาคลอดบุตร: <Baby className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลาป่วย: <HeartPulse className="w-12 h-12 md:w-14 md:h-14 text-red-600" />,
+    ลาคลอดบุตร: <Baby className="w-12 h-12 md:w-14 md:h-14 text-pink-600" />,
     ลากิจส่วนตัว: (
       <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
     ),
-    ลาพักผ่อน: <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลาพักผ่อน: <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-orange-600" />,
     ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: (
-      <Church className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+      <Church className="w-12 h-12 md:w-14 md:h-14 text-purple-600" />
     ),
     ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: (
-      <Flag className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+      <Flag className="w-12 h-12 md:w-14 md:h-14 text-blue-600" />
     ),
     ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: (
-      <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+      <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-indigo-600" />
     ),
     ลาไปช่วยเหลือภริยาที่คลอดบุตร: (
-      <Home className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+      <Home className="w-12 h-12 md:w-14 md:h-14 text-rose-600" />
     ),
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: (
-      <Accessibility className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+      <Accessibility className="w-12 h-12 md:w-14 md:h-14 text-green-600" />
     ),
   };
 
