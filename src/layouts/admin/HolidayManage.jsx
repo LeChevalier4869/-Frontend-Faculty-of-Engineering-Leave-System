@@ -232,7 +232,7 @@ export default function HolidayManage() {
 
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             {/* Filter type */}
-            <div className={`${wrapperClass} flex-1 min-w-[140px]`}>
+            <div className={`${wrapperClass} flex-1 min-w-[150px]`}>
               <select
                 value={filterType}
                 onChange={(e) => {
@@ -263,7 +263,7 @@ export default function HolidayManage() {
             </div>
 
             {/* Year selection */}
-            <div className={`${wrapperClass} flex-1 min-w-[80px]`}>
+            <div className={`${wrapperClass} flex-1 min-w-[70px]`}>
               <select
                 value={selectedYear}
                 onChange={(e) => {
