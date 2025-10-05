@@ -142,10 +142,16 @@ export default function LeaveBalancePage() {
                 className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow p-4 md:p-6"
               >
                 {/* Header */}
-                <div className="bg-gray-50 rounded-md px-3 py-2 mb-3 border border-gray-200">
+                <div
+                  className={`bg-gray-50 rounded-md px-3 py-2 mb-3 border border-gray-200 ${
+                    type.length <= 40 ? "min-h-[3rem]" : "h-auto"
+                  }`}
+                >
                   <h3
                     className={`font-semibold text-gray-800 ${
-                      type.length > 35
+                      type.length > 40
+                        ? "text-xs sm:text-xs md:text-sm" // เกิน 40 ตัว → ลดมากที่สุด
+                        : type.length > 35
                         ? "text-xs sm:text-sm md:text-base" // เกิน 35 ตัว → ลดมาก
                         : type.length > 30
                         ? "text-sm sm:text-base md:text-lg" // เกิน 30 ตัว → ลดเล็กน้อย
