@@ -302,7 +302,7 @@ export default function HolidayManage() {
                 setSelectedYear(new Date().getFullYear());
                 setCurrentPage(1);
               }}
-              className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition min-w-[120px]"
+              className="bg-red-500 hover:bg-red-600 text-white rounded-lg px-5 py-2 w-full transition"
             >
               ล้างตัวกรอง
             </button>
