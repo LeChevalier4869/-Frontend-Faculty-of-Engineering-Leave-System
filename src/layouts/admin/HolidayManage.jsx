@@ -211,7 +211,7 @@ export default function HolidayManage() {
               <ArrowIcon />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 max-w-[]">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
