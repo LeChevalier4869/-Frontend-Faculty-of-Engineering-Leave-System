@@ -8,13 +8,14 @@ import {
   FaUser,
   FaCheckCircle,
   FaUsersCog,
+  FcLeave
 } from "react-icons/fa";
 import useAuth from "../hooks/useAuth";
 
 const userNav = [
   { to: "/", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
   { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaClipboardList /> },
-  { to: "/leave", text: "การลา", icon: <FaCheckCircle /> },
+  { to: "/leave", text: "การลา", icon: <FcLeave /> },
   { to: "/Calendar", text: "ปฏิทิน", icon: <FaCalendarAlt /> },
   { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser /> },
 ];
