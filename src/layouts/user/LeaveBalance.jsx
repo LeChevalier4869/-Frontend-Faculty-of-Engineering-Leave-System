@@ -75,7 +75,7 @@ export default function LeaveBalancePage() {
       <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-indigo-600" />
     ),
     ลาไปช่วยเหลือภริยาที่คลอดบุตร: (
-      <Home className="w-12 h-12 md:w-14 md:h-14 text-rose-600" />
+      <Home className="w-12 h-12 md:w-14 md:h-14 text-amber-700" />
     ),
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: (
       <Accessibility className="w-12 h-12 md:w-14 md:h-14 text-green-700" />
