@@ -250,7 +250,7 @@ export default function HolidayManage() {
             </div>
 
             {/* Sort order */}
-            <div className={`${wrapperClass} flex-1 min-w-[150px]`}>
+            <div className={`${wrapperClass} flex-1 min-w-[120px]`}>
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
@@ -263,7 +263,7 @@ export default function HolidayManage() {
             </div>
 
             {/* Year selection */}
-            <div className={`${wrapperClass} flex-1 min-w-[120px]`}>
+            <div className={`${wrapperClass} flex-1 min-w-[80px]`}>
               <select
                 value={selectedYear}
                 onChange={(e) => {
