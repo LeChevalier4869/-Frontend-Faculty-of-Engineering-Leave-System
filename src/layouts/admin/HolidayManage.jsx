@@ -82,6 +82,13 @@ export default function HolidayManage() {
     setEditId(null);
   };
 
+  const resetFilters = () => {
+    setFilterType("");
+    setSortOrder("asc");
+    setSelectedYear(new Date().getFullYear());
+    setCurrentPage(1);
+  };
+
   const handleAdd = async () => {
     if (!date || !description.trim()) {
       return Swal.fire("Error", "กรุณาระบุข้อมูลให้ครบถ้วน", "error");
