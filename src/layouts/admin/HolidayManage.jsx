@@ -232,20 +232,41 @@ export default function HolidayManage() {
         </div>
 
         {/* Button + Filter & Sort */}
-        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex gap-2 flex-wrap">
-            {/* เพิ่ม/อัปเดต */}
-            <button
-              onClick={editId ? handleUpdate : handleAdd}
-              className="bg-gray-700 hover:bg-gray-800 text-white text-base px-5 py-2 rounded-lg transition flex-shrink-0"
-            >
-              {editId ? "อัปเดต" : "เพิ่ม"}
-            </button>
-          </div>
+        {/* ฟอร์มเพิ่ม / อัปเดต + ตัวกรอง */}
+        <div className="mb-6 space-y-4">
+          {/* แถวแรก: ปุ่มเพิ่ม/อัปเดต + ล้างแบบฟอร์ม + เช็กบ็อกซ์ประจำปี */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full">
+            {/* ปุ่มเพิ่ม/อัปเดต */}
+            <div className="flex items-center">
+              <button
+                onClick={editId ? handleUpdate : handleAdd}
+                className="w-full bg-gray-700 hover:bg-gray-800 text-white text-base px-5 py-[9px] rounded-lg transition"
+              >
+                {editId ? "อัปเดต" : "เพิ่ม"}
+              </button>
+            </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            {/* Filter type */}
-            <div className={`${wrapperClass} flex-1 min-w-[150px]`}>
+            {/* ประจำทุกปี + ปุ่มล้างแบบฟอร์ม */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <label className="flex items-center space-x-2 text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span>ประจำทุกปี</span>
+              </label>
+              <button
+                onClick={resetForm}
+                className="px-4 py-[9px] bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+              >
+                ล้างแบบฟอร์ม
+              </button>
+            </div>
+
+            {/* ตัวกรองประเภทวันหยุด */}
+            <div className={wrapperClass}>
               <select
                 value={filterType}
                 onChange={(e) => {
@@ -262,47 +283,45 @@ export default function HolidayManage() {
               <ArrowIcon />
             </div>
 
-            {/* Sort order */}
-            <div className={`${wrapperClass} flex-1 min-w-[130px]`}>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className={dropdownClass}
-              >
-                <option value="asc">เรียงจากต้นปี</option>
-                <option value="desc">เรียงจากท้ายปี</option>
-              </select>
-              <ArrowIcon />
-            </div>
+            {/* เรียงลำดับ + ปี */}
+            <div className="flex gap-2">
+              <div className={wrapperClass + " flex-1"}>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                  className={dropdownClass}
+                >
+                  <option value="asc">เรียงจากต้นปี</option>
+                  <option value="desc">เรียงจากท้ายปี</option>
+                </select>
+                <ArrowIcon />
+              </div>
 
-            {/* Year selection */}
-            <div className={`${wrapperClass} flex-1 min-w-[70px]`}>
-              <select
-                value={selectedYear}
-                onChange={(e) => {
-                  setSelectedYear(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className={dropdownClass}
-              >
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-              <ArrowIcon />
+              <div className={wrapperClass + " flex-1"}>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => {
+                    setSelectedYear(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className={dropdownClass}
+                >
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+                <ArrowIcon />
+              </div>
             </div>
+          </div>
 
-            {/* ล้างตัวกรอง */}
+          {/* ปุ่มรีเซ็ตตัวกรอง */}
+          <div className="flex justify-end">
             <button
-              onClick={() => {
-                setFilterType("");
-                setSortOrder("asc");
-                setSelectedYear(new Date().getFullYear());
-                setCurrentPage(1);
-              }}
-              className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition min-w-[120px]"
+              onClick={resetFilters}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-[9px] rounded-lg transition"
             >
               ล้างตัวกรอง
             </button>
