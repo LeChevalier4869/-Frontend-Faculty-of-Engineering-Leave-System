@@ -232,12 +232,25 @@ export default function HolidayManage() {
               {editId ? "อัปเดต" : "เพิ่ม"}
             </button>
 
-            {/* ล้างฟอร์ม */}
+            {/* ล้างแบบฟอร์ม */}
             <button
               onClick={resetForm}
               className="bg-gray-300 hover:bg-gray-400 text-black text-base px-5 py-2 rounded-lg transition flex-shrink-0"
             >
-              ล้าง
+              ล้างแบบฟอร์ม
+            </button>
+
+            {/* ล้างตัวกรอง */}
+            <button
+              onClick={() => {
+                setFilterType("");
+                setSortOrder("asc");
+                setSelectedYear(new Date().getFullYear());
+                setCurrentPage(1);
+              }}
+              className="bg-gray-300 hover:bg-gray-400 text-black text-base px-5 py-2 rounded-lg transition flex-shrink-0"
+            >
+              ล้างตัวกรอง
             </button>
           </div>
 
