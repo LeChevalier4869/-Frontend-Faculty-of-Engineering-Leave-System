@@ -145,10 +145,12 @@ export default function LeaveBalancePage() {
                 <div className="bg-gray-50 rounded-md px-3 py-2 mb-3 border border-gray-200">
                   <h3
                     className={`font-semibold text-gray-800 ${
-                      type.length > 35
-                        ? "text-xs sm:text-sm md:text-base" // เกิน 30 ตัว → ลดมากสุด
+                      type.length > 40
+                        ? "text-xs sm:text-xs md:text-sm" // เกิน 40 ตัว → ลดมากที่สุด
+                        : type.length > 35
+                        ? "text-xs sm:text-sm md:text-base" // เกิน 35 ตัว → ลดมาก
                         : type.length > 30
-                        ? "text-sm sm:text-base md:text-lg" // เกิน 25 ตัว → ลดเล็กน้อย
+                        ? "text-sm sm:text-base md:text-lg" // เกิน 30 ตัว → ลดเล็กน้อย
                         : "text-base sm:text-lg md:text-xl" // ปกติ
                     }`}
                   >
