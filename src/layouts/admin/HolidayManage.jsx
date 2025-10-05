@@ -180,7 +180,7 @@ export default function HolidayManage() {
         <h1 className="text-3xl font-bold mb-8 text-center">จัดการวันหยุด</h1>
 
         {/* Form */}
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 ">
           <input
             type="date"
             value={date}
