@@ -176,59 +176,60 @@ export default function HolidayManage() {
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
-      <div className="max-w-5xl mx-auto w-full">
+      <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold mb-8 text-center">จัดการวันหยุด</h1>
 
-        {/* Form */}
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className={inputClass}
-          />
-          <input
-            type="text"
-            placeholder="รายละเอียด"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className={inputClass}
-          />
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between ">
+          {/* Form */}
+          <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className={inputClass}
+            />
+            <input
+              type="text"
+              placeholder="รายละเอียด"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className={inputClass}
+            />
 
-          {/* holidayType dropdown */}
-          <div className={wrapperClass}>
-            <select
-              value={holidayType}
-              onChange={(e) => setHolidayType(e.target.value)}
-              className={dropdownClass}
-            >
-              <option value="">เลือกประเภท</option>
-              <option value="หยุดนักขัตฤกษ์">หยุดนักขัตฤกษ์</option>
-              <option value="หยุดราชการพิเศษ">หยุดราชการพิเศษ</option>
-              <option value="วันสำคัญอื่น ๆ">วันสำคัญอื่น ๆ</option>
-            </select>
-            <ArrowIcon />
+            {/* holidayType dropdown */}
+            <div className={wrapperClass}>
+              <select
+                value={holidayType}
+                onChange={(e) => setHolidayType(e.target.value)}
+                className={dropdownClass}
+              >
+                <option value="">เลือกประเภท</option>
+                <option value="หยุดนักขัตฤกษ์">หยุดนักขัตฤกษ์</option>
+                <option value="หยุดราชการพิเศษ">หยุดราชการพิเศษ</option>
+                <option value="วันสำคัญอื่น ๆ">วันสำคัญอื่น ๆ</option>
+              </select>
+              <ArrowIcon />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={() => setIsRecurring(!isRecurring)}
+                  className="w-5 h-5 accent-gray-700"
+                />
+                <span className="text-base">ประจำทุกปี</span>
+              </label>
+            </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={isRecurring}
-                onChange={() => setIsRecurring(!isRecurring)}
-                className="w-5 h-5 accent-gray-700"
-              />
-              <span className="text-base">ประจำทุกปี</span>
-            </label>
-
-            {/* ล้างแบบฟอร์ม */}
-            <button
-              onClick={resetForm}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
-            >
-              ล้างแบบฟอร์ม
-            </button>
-          </div>
+          {/* ล้างแบบฟอร์ม */}
+          <button
+            onClick={resetForm}
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+          >
+            ล้างแบบฟอร์ม
+          </button>
         </div>
 
         {/* Button + Filter & Sort */}
