@@ -64,7 +64,9 @@ export default function LeaveBalancePage() {
     ลากิจส่วนตัว: (
       <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
     ),
-    ลาพักผ่อน: <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-amber-700" />,
+    ลาพักผ่อน: (
+      <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-amber-700" />
+    ),
     ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: (
       <Church className="w-12 h-12 md:w-14 md:h-14 text-purple-500" />
     ),
@@ -139,9 +141,14 @@ export default function LeaveBalancePage() {
                 key={item.id ?? index}
                 className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow p-4 md:p-6"
               >
-                {/* Header */}
                 <div className="bg-gray-50 rounded-md px-3 py-2 mb-3 border border-gray-200">
-                  <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800">
+                  <h3
+                    className={`font-semibold text-gray-800 ${
+                      type.length > 25
+                        ? "text-sm sm:text-base md:text-lg" // ลดขนาดถ้าเกิน 25 ตัว
+                        : "text-base sm:text-lg md:text-xl" // ปกติ
+                    }`}
+                  >
                     {type}
                   </h3>
                 </div>
