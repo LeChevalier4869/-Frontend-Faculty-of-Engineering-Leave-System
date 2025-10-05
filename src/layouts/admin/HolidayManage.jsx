@@ -152,9 +152,8 @@ export default function HolidayManage() {
   };
 
   // Filter & Sort
-  const filtered = (filterType
-    ? holidays.filter((h) => h.holidayType === filterType)
-    : holidays
+  const filtered = (
+    filterType ? holidays.filter((h) => h.holidayType === filterType) : holidays
   ).sort((a, b) =>
     sortOrder === "asc"
       ? new Date(a.date) - new Date(b.date)
@@ -170,8 +169,10 @@ export default function HolidayManage() {
   const startIndex = (currentPage - 1) * PAGE_SIZE;
   const displayed = filteredByYear.slice(startIndex, startIndex + PAGE_SIZE);
 
-  // Years for dropdown (5 ปีย้อนหลัง + 5 ปีถัดไป)
-  const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
+  // ดึงปีทั้งหมดจากข้อมูลวันหยุด และ remove duplicates
+  const years = Array.from(
+    new Set(holidays.map((h) => new Date(h.date).getFullYear()))
+  ).sort((a, b) => b - a); // เรียงจากปีล่าสุดลงไป
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
