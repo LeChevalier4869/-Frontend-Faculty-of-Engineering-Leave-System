@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Briefcase, HeartPulse, User , Baby, Church, GraduationCap,Home,Accessibility,Flag,TreePalm} from "lucide-react";
+import {
+  Briefcase,
+  HeartPulse,
+  User,
+  Baby,
+  Church,
+  GraduationCap,
+  Home,
+  Accessibility,
+  Flag,
+  TreePalm,
+} from "lucide-react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { apiEndpoints } from "../../utils/api";
@@ -50,26 +61,37 @@ export default function LeaveBalancePage() {
   const iconMap = {
     ลาป่วย: <HeartPulse className="w-12 h-12 md:w-14 md:h-14 text-red-500" />,
     ลาคลอดบุตร: <Baby className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
-    ลากิจส่วนตัว: <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลากิจส่วนตัว: (
+      <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+    ),
     ลาพักผ่อน: <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-blue-600" />,
-    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: <Church className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
-    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: <Flag className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
-    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
-    ลาไปช่วยเหลือภริยาที่คลอดบุตร: <Home className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
-    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: <Accessibility className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: (
+      <Church className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+    ),
+    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: (
+      <Flag className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+    ),
+    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: (
+      <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+    ),
+    ลาไปช่วยเหลือภริยาที่คลอดบุตร: (
+      <Home className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+    ),
+    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: (
+      <Accessibility className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+    ),
   };
 
-  console.log(entitlements)
   const bgColorMap = {
     ลาป่วย: "bg-red-100",
-    ลาคลอดบุตร: "bg-red-100",
+    ลาคลอดบุตร: "bg-pink-100",
     ลากิจส่วนตัว: "bg-gray-200",
     ลาพักผ่อน: "bg-blue-100",
-    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: "bg-blue-100",
-    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "bg-blue-100",
-    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: "bg-blue-100",
-    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "bg-blue-100",
-    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "bg-blue-100",
+    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: "bg-purple-100",
+    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "bg-orange-100",
+    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: "bg-indigo-100",
+    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "bg-rose-100",
+    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "bg-green-100",
   };
 
   if (isLoading) {
@@ -97,7 +119,9 @@ export default function LeaveBalancePage() {
 
         <div
           className="grid gap-4 sm:gap-6 md:gap-8"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}
+          style={{
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          }}
         >
           {entitlements.map((item, index) => {
             const type = item.leaveType?.name ?? "ไม่ระบุ";
@@ -105,10 +129,9 @@ export default function LeaveBalancePage() {
             const used = item.usedDays ?? 0;
             const pending = item.pendingDays ?? 0;
             const remaining = item.remainingDays ?? total - used - pending;
-            const icon =
-              iconMap[type] || (
-                <User className="w-12 h-12 md:w-14 md:h-14 text-gray-400" />
-              );
+            const icon = iconMap[type] || (
+              <User className="w-12 h-12 md:w-14 md:h-14 text-gray-400" />
+            );
             const bgColor = bgColorMap[type] || "bg-gray-100";
 
             return (
