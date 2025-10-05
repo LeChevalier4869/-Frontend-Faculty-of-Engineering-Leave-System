@@ -16,8 +16,8 @@ export default function HolidayManage() {
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  // ปรับขนาดฟิลด์ให้เล็กลง
   const inputClass =
     "w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400";
   const dropdownClass =
@@ -151,6 +151,7 @@ export default function HolidayManage() {
     }
   };
 
+  // Filter & Sort
   const filtered = (filterType
     ? holidays.filter((h) => h.holidayType === filterType)
     : holidays
@@ -160,9 +161,17 @@ export default function HolidayManage() {
       : new Date(b.date) - new Date(a.date)
   );
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  // Filter by selectedYear
+  const filteredByYear = filtered.filter(
+    (h) => new Date(h.date).getFullYear() === selectedYear
+  );
+
+  const totalPages = Math.ceil(filteredByYear.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const displayed = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+  const displayed = filteredByYear.slice(startIndex, startIndex + PAGE_SIZE);
+
+  // Years for dropdown (5 ปีย้อนหลัง + 5 ปีถัดไป)
+  const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
@@ -220,8 +229,8 @@ export default function HolidayManage() {
             {editId ? "อัปเดต" : "เพิ่ม"}
           </button>
 
-          <div className="flex gap-4 w-full sm:w-auto">
-            {/* filterType dropdown */}
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            {/* Filter type */}
             <div className={wrapperClass}>
               <select
                 value={filterType}
@@ -239,7 +248,7 @@ export default function HolidayManage() {
               <ArrowIcon />
             </div>
 
-            {/* sortOrder dropdown */}
+            {/* Sort order */}
             <div className={wrapperClass}>
               <select
                 value={sortOrder}
@@ -248,6 +257,25 @@ export default function HolidayManage() {
               >
                 <option value="asc">เรียงจากต้นปี</option>
                 <option value="desc">เรียงจากท้ายปี</option>
+              </select>
+              <ArrowIcon />
+            </div>
+
+            {/* Year selection */}
+            <div className={wrapperClass}>
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  setSelectedYear(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className={dropdownClass}
+              >
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
               </select>
               <ArrowIcon />
             </div>
@@ -306,7 +334,7 @@ export default function HolidayManage() {
               ) : (
                 <tr>
                   <td colSpan="6" className="text-center py-6">
-                    ยังไม่มีข้อมูลวันหยุด
+                    ยังไม่มีข้อมูลวันหยุดในปี {selectedYear}
                   </td>
                 </tr>
               )}
