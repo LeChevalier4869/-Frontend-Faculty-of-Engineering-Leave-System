@@ -226,7 +226,7 @@ export default function HolidayManage() {
           {/* ล้างแบบฟอร์ม */}
           <button
             onClick={resetForm}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition min-w-[120px]"
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition min-w-[200px]"
           >
             ล้างแบบฟอร์ม
           </button>
