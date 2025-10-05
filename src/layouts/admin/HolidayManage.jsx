@@ -180,7 +180,6 @@ export default function HolidayManage() {
         <h1 className="text-3xl font-bold mb-8 text-center">จัดการวันหยุด</h1>
 
         {/* Form */}
-        {/* Form */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <input
             type="date"
@@ -303,7 +302,7 @@ export default function HolidayManage() {
                 setSelectedYear(new Date().getFullYear());
                 setCurrentPage(1);
               }}
-              className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition min-w-[130px]"
+              className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition min-w-[120px]"
             >
               ล้างตัวกรอง
             </button>
