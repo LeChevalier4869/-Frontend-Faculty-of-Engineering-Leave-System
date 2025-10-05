@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Briefcase, HeartPulse, User } from "lucide-react";
+import { Briefcase, HeartPulse, User , Baby, Church, GraduationCap,Home,Accessibility,Flag,TreePalm} from "lucide-react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { apiEndpoints } from "../../utils/api";
@@ -26,7 +26,6 @@ export default function LeaveBalancePage() {
             Authorization: `Bearer ${token}`,
           },
         });
-
         if (Array.isArray(res.data.data)) {
           setEntitlements(res.data.data);
         } else {
@@ -49,17 +48,28 @@ export default function LeaveBalancePage() {
   }, []);
 
   const iconMap = {
-    ลาพักผ่อน: (
-      <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-blue-600" />
-    ),
     ลาป่วย: <HeartPulse className="w-12 h-12 md:w-14 md:h-14 text-red-500" />,
-    ลากิจส่วนตัว: <User className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลาคลอดบุตร: <Baby className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลากิจส่วนตัว: <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลาพักผ่อน: <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-blue-600" />,
+    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: <Church className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: <Flag className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลาไปช่วยเหลือภริยาที่คลอดบุตร: <Home className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
+    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: <Accessibility className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
   };
 
+  console.log(entitlements)
   const bgColorMap = {
-    ลาพักผ่อน: "bg-blue-100",
     ลาป่วย: "bg-red-100",
+    ลาคลอดบุตร: "bg-red-100",
     ลากิจส่วนตัว: "bg-gray-200",
+    ลาพักผ่อน: "bg-blue-100",
+    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: "bg-blue-100",
+    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "bg-blue-100",
+    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: "bg-blue-100",
+    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "bg-blue-100",
+    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "bg-blue-100",
   };
 
   if (isLoading) {
