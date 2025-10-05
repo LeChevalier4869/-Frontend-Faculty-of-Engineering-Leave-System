@@ -180,6 +180,7 @@ export default function HolidayManage() {
         <h1 className="text-3xl font-bold mb-8 text-center">จัดการวันหยุด</h1>
 
         {/* Form */}
+        {/* Form */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <input
             type="date"
@@ -210,15 +211,25 @@ export default function HolidayManage() {
             <ArrowIcon />
           </div>
 
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={isRecurring}
-              onChange={() => setIsRecurring(!isRecurring)}
-              className="w-5 h-5 accent-gray-700"
-            />
-            <span className="text-base">ประจำทุกปี</span>
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={() => setIsRecurring(!isRecurring)}
+                className="w-5 h-5 accent-gray-700"
+              />
+              <span className="text-base">ประจำทุกปี</span>
+            </label>
+
+            {/* ล้างแบบฟอร์ม */}
+            <button
+              onClick={resetForm}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+            >
+              ล้างแบบฟอร์ม
+            </button>
+          </div>
         </div>
 
         {/* Button + Filter & Sort */}
@@ -230,27 +241,6 @@ export default function HolidayManage() {
               className="bg-gray-700 hover:bg-gray-800 text-white text-base px-5 py-2 rounded-lg transition flex-shrink-0"
             >
               {editId ? "อัปเดต" : "เพิ่ม"}
-            </button>
-
-            {/* ล้างแบบฟอร์ม */}
-            <button
-              onClick={resetForm}
-              className="bg-gray-300 hover:bg-gray-400 text-black text-base px-5 py-2 rounded-lg transition flex-shrink-0"
-            >
-              ล้างแบบฟอร์ม
-            </button>
-
-            {/* ล้างตัวกรอง */}
-            <button
-              onClick={() => {
-                setFilterType("");
-                setSortOrder("asc");
-                setSelectedYear(new Date().getFullYear());
-                setCurrentPage(1);
-              }}
-              className="bg-gray-300 hover:bg-gray-400 text-black text-base px-5 py-2 rounded-lg transition flex-shrink-0"
-            >
-              ล้างตัวกรอง
             </button>
           </div>
 
@@ -304,6 +294,19 @@ export default function HolidayManage() {
               </select>
               <ArrowIcon />
             </div>
+
+            {/* ล้างตัวกรอง */}
+            <button
+              onClick={() => {
+                setFilterType("");
+                setSortOrder("asc");
+                setSelectedYear(new Date().getFullYear());
+                setCurrentPage(1);
+              }}
+              className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition min-w-[130px]"
+            >
+              ล้างตัวกรอง
+            </button>
           </div>
         </div>
 
