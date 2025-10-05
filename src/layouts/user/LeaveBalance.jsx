@@ -72,7 +72,7 @@ export default function LeaveBalancePage() {
       <Flag className="w-12 h-12 md:w-14 md:h-14 text-blue-700" />
     ),
     ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: (
-      <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-indigo-00" />
+      <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-indigo-600" />
     ),
     ลาไปช่วยเหลือภริยาที่คลอดบุตร: (
       <Home className="w-12 h-12 md:w-14 md:h-14 text-rose-600" />
