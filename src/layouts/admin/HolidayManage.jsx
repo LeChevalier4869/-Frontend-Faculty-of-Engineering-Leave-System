@@ -232,7 +232,7 @@ export default function HolidayManage() {
 
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             {/* Filter type */}
-            <div className={`${wrapperClass} flex-1 min-w-[150px]`}>
+            <div className={`${wrapperClass} flex-1 min-w-[140px]`}>
               <select
                 value={filterType}
                 onChange={(e) => {
@@ -250,7 +250,7 @@ export default function HolidayManage() {
             </div>
 
             {/* Sort order */}
-            <div className={`${wrapperClass} flex-1 min-w-[120px]`}>
+            <div className={`${wrapperClass} flex-1 min-w-[130px]`}>
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
