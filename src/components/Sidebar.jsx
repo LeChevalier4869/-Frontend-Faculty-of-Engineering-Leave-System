@@ -9,13 +9,13 @@ import {
   FaCheckCircle,
   FaUsersCog,
 } from "react-icons/fa";
-import { FcLeave } from "react-icons/fc";
+import { FaChartSimple } from "react-icons/fa6";
 import useAuth from "../hooks/useAuth";
 
 const userNav = [
   { to: "/", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
-  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaClipboardList /> },
-  { to: "/leave", text: "การลา", icon: <FcLeave /> },
+  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaChartSimple /> },
+  { to: "/leave", text: "การลา", icon: <FaClipboardList /> },
   { to: "/Calendar", text: "ปฏิทิน", icon: <FaCalendarAlt /> },
   { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser /> },
 ];
