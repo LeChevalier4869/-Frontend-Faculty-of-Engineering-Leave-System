@@ -8,7 +8,6 @@ import {
   FaUser,
   FaCheckCircle,
   FaUsersCog,
-  FaCheckCircle
 } from "react-icons/fa";
 import useAuth from "../hooks/useAuth";
 
