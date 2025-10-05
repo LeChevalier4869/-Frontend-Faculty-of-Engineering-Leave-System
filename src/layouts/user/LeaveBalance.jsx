@@ -64,7 +64,7 @@ export default function LeaveBalancePage() {
     ลากิจส่วนตัว: (
       <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
     ),
-    ลาพักผ่อน: <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-orange-700" />,
+    ลาพักผ่อน: <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-amber-700" />,
     ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: (
       <Church className="w-12 h-12 md:w-14 md:h-14 text-purple-500" />
     ),
@@ -75,7 +75,7 @@ export default function LeaveBalancePage() {
       <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-indigo-600" />
     ),
     ลาไปช่วยเหลือภริยาที่คลอดบุตร: (
-      <Home className="w-12 h-12 md:w-14 md:h-14 text-amber-700" />
+      <Home className="w-12 h-12 md:w-14 md:h-14 text-orange-700" />
     ),
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: (
       <Accessibility className="w-12 h-12 md:w-14 md:h-14 text-green-700" />
@@ -86,11 +86,11 @@ export default function LeaveBalancePage() {
     ลาป่วย: "bg-red-200",
     ลาคลอดบุตร: "bg-pink-200",
     ลากิจส่วนตัว: "bg-gray-300",
-    ลาพักผ่อน: "bg-orange-200",
+    ลาพักผ่อน: "bg-amber-200",
     ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: "bg-purple-200",
     ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "bg-blue-200",
     ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: "bg-indigo-200",
-    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "bg-amber-200",
+    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "bg-orange-200",
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "bg-green-200",
   };
 
