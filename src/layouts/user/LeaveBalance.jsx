@@ -59,12 +59,12 @@ export default function LeaveBalancePage() {
   }, []);
 
   const iconMap = {
-    ลาป่วย: <HeartPulse className="w-12 h-12 md:w-14 md:h-14 text-red-500" />,
+    ลาป่วย: <HeartPulse className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
     ลาคลอดบุตร: <Baby className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
     ลากิจส่วนตัว: (
       <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
     ),
-    ลาพักผ่อน: <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-blue-600" />,
+    ลาพักผ่อน: <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />,
     ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: (
       <Church className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
     ),
@@ -86,9 +86,9 @@ export default function LeaveBalancePage() {
     ลาป่วย: "bg-red-100",
     ลาคลอดบุตร: "bg-pink-100",
     ลากิจส่วนตัว: "bg-gray-200",
-    ลาพักผ่อน: "bg-blue-100",
+    ลาพักผ่อน: "bg-orange-100",
     ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: "bg-purple-100",
-    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "bg-orange-100",
+    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "bg-blue-100",
     ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: "bg-indigo-100",
     ลาไปช่วยเหลือภริยาที่คลอดบุตร: "bg-rose-100",
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "bg-green-100",
