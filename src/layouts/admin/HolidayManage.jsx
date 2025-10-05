@@ -211,7 +211,7 @@ export default function HolidayManage() {
               <ArrowIcon />
             </div>
 
-            <div className="flex items-center gap-2 max-w-[100px]">
+            <div className="flex items-center gap-2">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -226,7 +226,7 @@ export default function HolidayManage() {
           {/* ล้างแบบฟอร์ม */}
           <button
             onClick={resetForm}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition min-w-[120px]"
           >
             ล้างแบบฟอร์ม
           </button>
