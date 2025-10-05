@@ -146,7 +146,7 @@ export default function LeaveBalancePage() {
                   <h3
                     className={`font-semibold text-gray-800 ${
                       type.length > 40
-                        ? "text-xs sm:text-xs md:text-sm" // เกิน 40 ตัว → ลดมากที่สุด
+                        ? "text-xs sm:text-xs md:text-xs" // เกิน 40 ตัว → ลดมากที่สุด
                         : type.length > 35
                         ? "text-xs sm:text-sm md:text-base" // เกิน 35 ตัว → ลดมาก
                         : type.length > 30
