@@ -180,8 +180,7 @@ export default function HolidayManage() {
         <h1 className="text-3xl font-bold mb-8 text-center">จัดการวันหยุด</h1>
 
         {/* Form */}
-        <div className="mb-6 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
-
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 ">
           <input
             type="date"
             value={date}
@@ -225,7 +224,7 @@ export default function HolidayManage() {
             {/* ล้างแบบฟอร์ม */}
             <button
               onClick={resetForm}
-              className="bg-red-500 hover:bg-red-600 text-white rounded-lg px-5 py-2 w-full transition"
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
             >
               ล้างแบบฟอร์ม
             </button>
