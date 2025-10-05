@@ -223,12 +223,23 @@ export default function HolidayManage() {
 
         {/* Button + Filter & Sort */}
         <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <button
-            onClick={editId ? handleUpdate : handleAdd}
-            className="bg-gray-700 hover:bg-gray-800 text-white text-base px-5 py-2 rounded-lg transition flex-shrink-0"
-          >
-            {editId ? "อัปเดต" : "เพิ่ม"}
-          </button>
+          <div className="flex gap-2 flex-wrap">
+            {/* เพิ่ม/อัปเดต */}
+            <button
+              onClick={editId ? handleUpdate : handleAdd}
+              className="bg-gray-700 hover:bg-gray-800 text-white text-base px-5 py-2 rounded-lg transition flex-shrink-0"
+            >
+              {editId ? "อัปเดต" : "เพิ่ม"}
+            </button>
+
+            {/* ล้างฟอร์ม */}
+            <button
+              onClick={resetForm}
+              className="bg-gray-300 hover:bg-gray-400 text-black text-base px-5 py-2 rounded-lg transition flex-shrink-0"
+            >
+              ล้าง
+            </button>
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             {/* Filter type */}
