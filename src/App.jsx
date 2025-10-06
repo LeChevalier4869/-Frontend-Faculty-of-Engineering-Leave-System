@@ -2,44 +2,51 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import useAuth from "./hooks/useAuth";
 import AppRouter from "./routes/AppRouter";
-import logo from "./assets/logo.png"; // โลโก้ใน src/assets/
+import logo from "./assets/logo.png";
 
 function App() {
   const { loading } = useAuth();
-  const [showSplash, setShowSplash] = useState(true);
+
+  // แสดง Splash เฉพาะตอนไม่มี token
+  const [showSplash, setShowSplash] = useState(() => {
+    const token = localStorage.getItem("accessToken");
+    return !token; // true = ยังไม่มี token → แสดง Splash
+  });
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
-      // เริ่ม fade-out หลัง splash แสดง 2 วินาที
+    if (!loading && showSplash) {
       const timer1 = setTimeout(() => setFadeOut(true), 1500);
-      // ซ่อน splash 1 วินาทีหลังเริ่ม fade-out
       const timer2 = setTimeout(() => setShowSplash(false), 3000);
 
       return () => {
-        clearTimeout(timer1)
+        clearTimeout(timer1);
         clearTimeout(timer2);
       };
     }
-  }, [loading]);
+  }, [loading, showSplash]);
 
-  if (showSplash) {
-    return (
-      <div
-        className={`flex flex-col items-center justify-center h-screen bg-gray-900 text-white font-kanit
-        ${fadeOut ? "animate-fade-out" : "animate-fade-in"}`}
-      >
-        <img
-          src={logo}
-          alt="Logo"
-          className="w-24 h-24 mb-6 animate-bounce"
-        />
-        <p className="text-3xl font-semibold">กำลังโหลดระบบ...</p>
-      </div>
-    );
-  }
+  return (
+    <>
+      {/* AppRouter จะอยู่ตลอด */}
+      <AppRouter />
 
-  return <AppRouter />;
+      {/* Splash overlay */}
+      {showSplash && (
+        <div
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900 text-white font-kanit
+            ${fadeOut ? "animate-fade-out" : "animate-fade-in"}`}
+        >
+          <img
+            src={logo}
+            alt="Logo"
+            className="w-24 h-24 mb-6 animate-bounce"
+          />
+          <p className="text-3xl font-semibold">กำลังโหลดระบบ...</p>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default App;
