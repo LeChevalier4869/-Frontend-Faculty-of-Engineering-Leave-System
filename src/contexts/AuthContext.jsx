@@ -42,6 +42,8 @@ function AuthContextProvider(props) {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('status')
+    localStorage.removeItem("hasShownSplash")
+
   }
 
   return (
