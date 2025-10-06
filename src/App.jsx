@@ -1,21 +1,28 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import "./App.css";
 import useAuth from "./hooks/useAuth";
 import AppRouter from "./routes/AppRouter";
-import logo from "./assets/logo.png"; // โลโก้ใน src/assets/
+import logo from "./assets/logo.png";
 
 function App() {
   const { loading } = useAuth();
+  const location = useLocation(); // ✅ ใช้ตรวจเส้นทางปัจจุบัน
+
   const [showSplash, setShowSplash] = useState(() => {
-    // ✅ ถ้าเคยแสดง Splash แล้ว (มีค่าใน localStorage) ให้ข้าม
     const hasShown = localStorage.getItem("hasShownSplash");
-    return !hasShown; // true = ยังไม่เคยแสดง
+    return !hasShown;
   });
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
+    // ✅ ถ้าอยู่หน้า login → ไม่ต้องแสดง Splash
+    if (location.pathname === "/login") {
+      setShowSplash(false);
+      return;
+    }
+
     if (!loading && showSplash) {
-      // ✅ บันทึกว่าเคยแสดงแล้ว
       localStorage.setItem("hasShownSplash", "true");
 
       const timer1 = setTimeout(() => setFadeOut(true), 1500);
@@ -26,7 +33,7 @@ function App() {
         clearTimeout(timer2);
       };
     }
-  }, [loading, showSplash]);
+  }, [loading, showSplash, location.pathname]);
 
   if (showSplash) {
     return (
