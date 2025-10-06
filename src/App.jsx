@@ -2,22 +2,22 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import useAuth from "./hooks/useAuth";
 import AppRouter from "./routes/AppRouter";
-import logo from "./assets/logo.png"; // โลโก้ใน src/assets/
+import logo from "./assets/logo.png";
 
 function App() {
   const { loading } = useAuth();
+
   const [showSplash, setShowSplash] = useState(() => {
-    // ✅ ถ้าเคยแสดง Splash แล้ว (มีค่าใน localStorage) ให้ข้าม
-    const hasShown = localStorage.getItem("hasShownSplash");
-    return !hasShown; // true = ยังไม่เคยแสดง
+    // ✅ ถ้ามี token แล้ว (login แล้ว) → ไม่ต้องโชว์ Splash
+    const token = localStorage.getItem("accessToken");
+    return !token; // true = ยังไม่มี token (เข้าเว็บครั้งแรก)
   });
+
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
     if (!loading && showSplash) {
-      // ✅ บันทึกว่าเคยแสดงแล้ว
-      localStorage.setItem("hasShownSplash", "true");
-
+      // ✅ ถ้าไม่มี token → แสดง Splash แล้วค่อยซ่อน
       const timer1 = setTimeout(() => setFadeOut(true), 1500);
       const timer2 = setTimeout(() => setShowSplash(false), 3000);
 
@@ -28,6 +28,7 @@ function App() {
     }
   }, [loading, showSplash]);
 
+  // ✅ ถ้ามี token แล้วจะไม่เข้าบล็อกนี้เลย
   if (showSplash) {
     return (
       <div
