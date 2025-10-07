@@ -9,7 +9,7 @@ export default function LeaveDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [leave, setLeave] = useState(null);
-  const [lastLeave, setLastLeave] = useState([]);
+  const [lastLeave, setLastLeave] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const authHeader = () => {
@@ -60,7 +60,8 @@ export default function LeaveDetail() {
         );
         // ทดสอบ response
         // console.log("Leave Details:", res.data.data);
-        setLeave(res.data.data);
+        const payload = res?.data?.data ?? res?.data ?? null;
+        setLeave(payload);
       } catch (err) {
         Swal.fire(
           "ผิดพลาด",
@@ -88,8 +89,9 @@ export default function LeaveDetail() {
           authHeader()
         );
         // ทดสอบ response
-        console.log("Last Leave Details:", res.data);
-        setLastLeave(res.data);
+        // console.log("Last Leave Details:", res.data);
+        const payload = res?.data?.data ?? res?.data ?? null;
+        setLastLeave(payload);
       } catch (err) {
         Swal.fire(
           "ผิดพลาด",
@@ -102,6 +104,13 @@ export default function LeaveDetail() {
     loadLastLeave();
   }, [leave]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center text-gray-500 font-kanit">
+        กำลังโหลด...
+      </div>
+    );
+  }
 
   if (!leave) {
     return (
@@ -127,7 +136,11 @@ export default function LeaveDetail() {
     approvalSteps,
   } = leave;
 
-    const leaveData = {
+  const lastStart = lastLeave?.startDate ?? null;
+  const lastEnd = lastLeave?.endDate ?? null;
+  const lastTotal = lastLeave?.totalDays ?? null;
+
+  const leaveData = {
     documentNumber: documentNumber || "ไม่ระบุ",//
     documentDate: documentIssuedDate || "ไม่ระบุ",//
     title: `ขอ${leaveType?.name}`,//
@@ -144,11 +157,11 @@ export default function LeaveDetail() {
     endDate: endDate,//
     total: totalDays,//
     lastLeave: "/",
-    lastLeaveStartDate: lastLeave.startDate,//
-    lastLeaveEndDate: lastLeave.endDate,//
-    lastLeaveTotal: lastLeave.totalDays,//
+    lastLeaveStartDate: lastStart,//
+    lastLeaveEndDate: lastEnd,//
+    lastLeaveTotal: lastTotal,//
     contact: contact || "ไม่ระบุ",//
-    phone: user.phone || "ไม่ระบุ",//
+    phone: user?.phone || "ไม่ระบุ",//
     signature: "ลายเซ็น",
     commentApprover1: "โปรดพิจารณา",
     signatureApprover1: "ลายเซ็น1",
@@ -213,14 +226,6 @@ export default function LeaveDetail() {
       setLoading(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center text-gray-500 font-kanit">
-        กำลังโหลด...
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
