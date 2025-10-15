@@ -212,7 +212,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
           {/* ประเภทการลา */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              ประเภทการลา
+              ประเภทการลา <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <select
