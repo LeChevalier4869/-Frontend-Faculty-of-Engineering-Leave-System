@@ -504,7 +504,7 @@ export default function LeaveDetail() {
           </span>
         </div>
 
-        <div className="mt-6 text-center sm:text-left">
+        <div className="mt-6 flex flex-wrap item-center justify-center sm:justify-start gap-3">
           <button
             onClick={() => navigate(-1)}
             className="inline-block px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition font-medium"
