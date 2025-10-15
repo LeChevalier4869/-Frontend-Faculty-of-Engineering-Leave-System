@@ -134,7 +134,7 @@ const userRouter = createBrowserRouter([
       // { path: "profile", element: <Profile2 /> },
       { path: "profile", element: <UserProfile2 /> },
       { path: "profile/edit", element: <EditProfile /> },
-      { path: "change-password", element: <ChangePassword /> },
+      // { path: "change-password", element: <ChangePassword /> },
       { path: "user/landing", element: <UserLanding /> },
       { path: "Calendar", element: <CalendarPage /> },
 

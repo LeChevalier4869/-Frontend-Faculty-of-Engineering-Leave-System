@@ -247,18 +247,12 @@ function UserProfile2() {
               ลายเซ็น
             </Link>
 
-            <Link
+            {/* <Link
               to="/change-password"
               className="inline-block px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white transition font-medium"
             >
               เปลี่ยนรหัสผ่าน
-            </Link>
-            {/* {<Link
-              to="/profile/edit"
-              className="inline-block rounded-lg bg-blue-400 px-6 py-2 font-medium text-white transition hover:bg-blue-500"
-            >
-              แก้ไขโปรไฟล์
-            </Link>} */}
+            </Link> */}
           </div>
         </div>
       </div>
