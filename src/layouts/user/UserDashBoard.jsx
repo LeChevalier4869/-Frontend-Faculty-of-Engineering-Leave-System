@@ -183,7 +183,7 @@ export default function UserDashboard() {
 
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-black">
+      <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
         กำลังโหลดแดชบอร์ด...
       </div>
     );

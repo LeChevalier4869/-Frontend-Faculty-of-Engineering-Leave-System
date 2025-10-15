@@ -152,7 +152,7 @@ export default function LeaveTypeManage() {
           </label>
           <button
             onClick={editId ? handleUpdate : handleAdd}
-            className={`${buttonClass} ${editId ? "bg-gray-700 hover:bg-gray-800" : "bg-green-600 hover:bg-green-700"
+            className={`${buttonClass} ${editId ? "bg-gray-700 hover:bg-gray-800" : "bg-gray-600 hover:bg-gray-700"
               }`}
           >
             {editId ? "อัปเดต" : "เพิ่ม"}

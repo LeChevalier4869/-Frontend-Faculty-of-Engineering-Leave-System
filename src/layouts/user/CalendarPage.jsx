@@ -97,7 +97,7 @@ export default function CalendarPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
-        กำลังโหลด...
+        กำลังโหลดปฎิทิน...
       </div>
     );
   }
