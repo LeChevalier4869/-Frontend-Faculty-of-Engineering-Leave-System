@@ -244,7 +244,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
           {/* วันที่เริ่มต้น */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              วันที่เริ่มต้น
+              วันที่เริ่มต้น <span className="text-red-500">*</span>
             </label>
             <DatePicker
               selected={
@@ -267,7 +267,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
           {/* วันที่สิ้นสุด */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              วันที่สิ้นสุด
+              วันที่สิ้นสุด <span className="text-red-500">*</span>
             </label>
             <DatePicker
               selected={formData.endDate ? new Date(formData.endDate) : null}
