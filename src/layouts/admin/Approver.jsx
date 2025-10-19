@@ -6,7 +6,7 @@ import { apiEndpoints } from "../../utils/api";
 import { Check, X, Users, Loader2 } from "lucide-react"; // ✅ เพิ่ม Loader2 (icon หมุน)
 
 function Approver() {
-  const [pendingRequest, setPendingRequest] = useState([]);
+  const [pendingRequest, setPendingRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,6 +25,7 @@ function Approver() {
   useEffect(() => {
     const fetchPendingRequest = async () => {
       try {
+        setLoading(true);
         let token = localStorage.getItem("accessToken");
         const res = await axios.get(apiEndpoints.leaveRequestLanding, {
           headers: { Authorization: `Bearer ${token}` },
