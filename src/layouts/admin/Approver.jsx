@@ -109,11 +109,13 @@ function Approver() {
     return date.toLocaleDateString("th-TH");
   };
 
-  const filteredRequests = pendingRequest.filter((leave) =>
-    `${leave.users.prefixName}${leave.users.firstName} ${leave.users.lastName}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  if (loading == false) {
+    const filteredRequests = pendingRequest?.filter((leave) =>
+      `${leave.users.prefixName}${leave.users.firstName} ${leave.users.lastName}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+    );
+  }
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
