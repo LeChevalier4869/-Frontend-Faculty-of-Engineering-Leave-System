@@ -31,7 +31,7 @@ function Approver() {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("✅ API Response:", res.data);
-  
+
         // --- เช็กว่ามันมี leaveRequest ไหม
         if (Array.isArray(res.data.leaveRequest)) {
           setPendingRequest(res.data.leaveRequest);
@@ -50,14 +50,14 @@ function Approver() {
       }
     };
     fetchPendingRequest();
-  }, []);  
+  }, []);
 
   const handleApprove = async (id) => {
     setProcessingId(id);
     try {
       let token = localStorage.getItem("accessToken");
       await axios.post(
-        `${apiEndpoints.leaveRequest}/${id}/approve`,      
+        `${apiEndpoints.leaveRequest}/${id}/approve`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -83,7 +83,7 @@ function Approver() {
     try {
       let token = localStorage.getItem("accessToken");
       await axios.post(
-        `${apiEndpoints.leaveRequest}/${id}/reject`,      
+        `${apiEndpoints.leaveRequest}/${id}/reject`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -109,13 +109,11 @@ function Approver() {
     return date.toLocaleDateString("th-TH");
   };
 
-  if (loading == false) {
-    const filteredRequests = pendingRequest?.filter((leave) =>
-      `${leave.users.prefixName}${leave.users.firstName} ${leave.users.lastName}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
-    );
-  }
+  const filteredRequests = pendingRequest?.filter((leave) =>
+    `${leave.users.prefixName}${leave.users.firstName} ${leave.users.lastName}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -272,11 +270,10 @@ function Approver() {
               <button
                 key={i + 1}
                 onClick={() => paginate(i + 1)}
-                className={`px-4 py-2 rounded ${
-                  currentPage === i + 1
+                className={`px-4 py-2 rounded ${currentPage === i + 1
                     ? "bg-blue-500 text-white"
                     : "bg-gray-200 hover:bg-gray-300"
-                }`}
+                  }`}
               >
                 {i + 1}
               </button>
