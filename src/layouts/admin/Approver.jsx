@@ -6,7 +6,7 @@ import { apiEndpoints } from "../../utils/api";
 import { Check, X, Users, Loader2 } from "lucide-react"; // ✅ เพิ่ม Loader2 (icon หมุน)
 
 function Approver() {
-  const [pendingRequest, setPendingRequest] = useState(null);
+  const [pendingRequest, setPendingRequest] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -109,7 +109,7 @@ function Approver() {
     return date.toLocaleDateString("th-TH");
   };
 
-  const filteredRequests = pendingRequest?.filter((leave) =>
+  const filteredRequests = (pendingRequest || []).filter((leave) =>
     `${leave.users.prefixName}${leave.users.firstName} ${leave.users.lastName}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
@@ -213,8 +213,8 @@ function Approver() {
                   </td>
                   <td className="p-3 flex items-center gap-2">
                     <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">
-                      {leave.users.firstName.charAt(0)}
-                      {leave.users.lastName.charAt(0)}
+                      {leave.users?.firstName?.charAt(0)}
+                      {leave.users?.lastName?.charAt(0)}
                     </div>
                     <span>{leave.users.prefixName}{leave.users.firstName} {leave.users.lastName}</span>
                   </td>
