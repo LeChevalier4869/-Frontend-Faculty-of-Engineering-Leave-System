@@ -30,7 +30,7 @@ function Approver() {
         const res = await axios.get(apiEndpoints.leaveRequestLanding, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("✅ API Response:", res.data);
+        // console.log("✅ API Response:", res.data);
 
         // --- เช็กว่ามันมี leaveRequest ไหม
         if (Array.isArray(res.data.leaveRequest)) {
@@ -110,7 +110,7 @@ function Approver() {
   };
 
   const filteredRequests = (pendingRequest || []).filter((leave) =>
-    `${leave.users.prefixName || ""}${leave.users.firstName || ""} ${leave.users.lastName || ""}`
+    `${leave.user.prefixName || ""}${leave.user.firstName || ""} ${leave.user.lastName || ""}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
@@ -213,10 +213,10 @@ function Approver() {
                   </td>
                   <td className="p-3 flex items-center gap-2">
                     <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">
-                      {leave.users?.firstName?.charAt(0)}
-                      {leave.users?.lastName?.charAt(0)}
+                      {leave.user?.firstName?.charAt(0)}
+                      {leave.user?.lastName?.charAt(0)}
                     </div>
-                    <span>{leave.users?.prefixName}{leave.users?.firstName} {leave.users?.lastName}</span>
+                    <span>{leave.user?.prefixName}{leave.user?.firstName} {leave.user?.lastName}</span>
                   </td>
                   <td className="p-3">{leaveTypes[leave.leaveTypeId] || "ไม่ระบุ"}</td>
                   <td className="p-3">{formatDate(leave.startDate)}</td>
