@@ -216,7 +216,7 @@ function Approver() {
                       {leave.users?.firstName?.charAt(0)}
                       {leave.users?.lastName?.charAt(0)}
                     </div>
-                    <span>{leave.users.prefixName}{leave.users.firstName} {leave.users.lastName}</span>
+                    <span>{leave.users?.prefixName}{leave.users?.firstName} {leave.users?.lastName}</span>
                   </td>
                   <td className="p-3">{leaveTypes[leave.leaveTypeId] || "ไม่ระบุ"}</td>
                   <td className="p-3">{formatDate(leave.startDate)}</td>
