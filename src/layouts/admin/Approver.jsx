@@ -110,7 +110,7 @@ function Approver() {
   };
 
   const filteredRequests = (pendingRequest || []).filter((leave) =>
-    `${leave.users.prefixName}${leave.users.firstName} ${leave.users.lastName}`
+    `${leave.users.prefixName || ""}${leave.users.firstName || ""} ${leave.users.lastName || ""}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
