@@ -153,9 +153,9 @@ export default function Leave2() {
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
-      <div className="max-w-7xl mx-auto">
+      <div className="border border-red-500 max-w-7xl mx-auto">
         {/* header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+        <div className="border border-blue-500 flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <h1 className="text-3xl font-bold">รายการการลา</h1>
           <button
             onClick={() => setModalOpen(true)}
@@ -166,9 +166,9 @@ export default function Leave2() {
         </div>
 
         {/* filters */}
-        <div className="flex flex-wrap items-center gap-4 mb-6">
+        <div className="border border-blue-500 flex flex-wrap items-center gap-4 mb-6">
           {/* Date range */}
-          <div className="flex items-center gap-2">
+          <div className="border border-yellow-500 flex items-center gap-2">
             <label className="text-sm">จาก</label>
             <input
               type="date"
@@ -192,7 +192,7 @@ export default function Leave2() {
           </div>
 
           {/* Status dropdown */}
-          <div className="relative w-48">
+          <div className="border border-yellow-500 relative w-48">
             <select
               value={filterStatus}
               onChange={(e) => {
@@ -208,13 +208,13 @@ export default function Leave2() {
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+            <div className="border border-green-500 pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
               <ChevronDown className="w-4 h-4 text-gray-500" />
             </div>
           </div>
 
           {/* Leave-type dropdown */}
-          <div className="relative w-48">
+          <div className="border border-yellow-500 relative w-48">
             <select
               value={filterLeaveType}
               onChange={(e) => {
@@ -236,7 +236,7 @@ export default function Leave2() {
           </div>
 
           {/* Sort order */}
-          <div className="relative w-48">
+          <div className="border border-yellow-500 relative w-48">
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
@@ -266,7 +266,7 @@ export default function Leave2() {
         </div>
 
         {/* legend */}
-        <div className="flex gap-6 items-center text-sm mb-6">
+        <div className="border border-blue-500 flex gap-6 items-center text-sm mb-6">
           {Object.entries(statusLabels).map(([key, label]) => (
             <div key={key} className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${statusColors[key]}`} />
@@ -276,7 +276,7 @@ export default function Leave2() {
         </div>
 
         {/* table */}
-        <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
+        <div className="border border-blue-500 rounded-lg shadow border border-gray-300 overflow-hidden">
           <table className="table-fixed w-full bg-white text-sm text-black">
             <thead>
               <tr className="bg-gray-100 text-gray-800">

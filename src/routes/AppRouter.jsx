@@ -115,6 +115,8 @@ const guestRouter = createBrowserRouter([
       { path: "/register", element: <Register /> },
       { path: "/forgot-password", element: <ForgotPassword /> },
       { path: "/reset-password", element: <ResetPassword /> },
+      { path: "/add-other-request-dev", element: <AddOtherRequest /> }, // for dev testing
+      { path: "/leave-dev", element: <Leave2 /> }, // for dev testing
       { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
