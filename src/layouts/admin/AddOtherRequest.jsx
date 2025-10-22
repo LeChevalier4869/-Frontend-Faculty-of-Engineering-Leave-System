@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import apiEndpoints from "../../utils/api";
+import { apiEndpoints } from "../../utils/api";
 
 function AddOtherRequest() {
 
