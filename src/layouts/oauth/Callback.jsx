@@ -14,10 +14,11 @@ export default function Callback() {
     const accessToken = urlParams.get("access");
     const refreshToken = urlParams.get("refresh");
 
-    if (accessToken && refreshToken) {
+    // if (accessToken && refreshToken) {
+    if (accessToken) {
       // เก็บ token
       localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
+      // localStorage.setItem("refreshToken", refreshToken);
 
       // ดึงข้อมูล user แล้วเซฟเข้า context เลย
       const fetchUser = async () => {
@@ -25,6 +26,7 @@ export default function Callback() {
           const url = getApiUrl("auth/me");
           const res = await axios.get(url, {
             headers: { Authorization: `Bearer ${accessToken}` },
+            withCredentials: true,
           });
           const returned = res.data.data ?? res.data.user ?? res.data;
           setUser(returned);
