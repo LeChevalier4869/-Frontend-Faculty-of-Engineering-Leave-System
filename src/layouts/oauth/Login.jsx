@@ -19,8 +19,8 @@ export default function Login() {
 
   const handleContactClick = async () => {
     try {
-      const res = await axios.get(`http://localhost:8000/api/contact`);
-      // ต้องใช้อันนี้ ----------------> const res = await axios.get(`${apiEndpoints.getContact}`);
+      // const res = await axios.get(`http://localhost:8000/api/contact`);
+      const res = await axios.get(`${apiEndpoints.getContact}`);
       const data = res.data;
 
       // แปลงข้อมูลให้อยู่ในรูปแบบ key:value

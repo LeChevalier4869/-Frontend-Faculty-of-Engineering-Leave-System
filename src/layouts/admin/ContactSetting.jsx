@@ -26,8 +26,8 @@ export default function AdminContactSetting() {
 
   const fetchContacts = async () => {
     try {
-      const res = await axios.get(`http://localhost:8000/api/contact`);
-      // ต้องใช้อันนี้ ----------------> const res = await axios.get(`${apiEndpoints.getContact}`);
+      // const res = await axios.get(`http://localhost:8000/api/contact`);
+      const res = await axios.get(`${apiEndpoints.getContact}`);
       const data = res.data;
       const map = {};
       data.forEach((item) => {
@@ -58,12 +58,16 @@ export default function AdminContactSetting() {
     try {
       setSaving(true);
       const value = contacts[key];
+      // await axios.put(
+      //   `http://localhost:8000/api/contact/${key}`,
+      //   { value },
+      //   authHeader()
+      // );
       await axios.put(
-        `http://localhost:8000/api/contact/${key}`,
+        `${BASE_URL}/api/contact/${key}`,
         { value },
         authHeader()
       );
-      // ต้องใช้อันนี้ ----------------> await axios.put(`${BASE_URL}/api/contact/${key}`, { value }, authHeader());
       Swal.fire({
         icon: "success",
         title: "บันทึกสำเร็จ",
