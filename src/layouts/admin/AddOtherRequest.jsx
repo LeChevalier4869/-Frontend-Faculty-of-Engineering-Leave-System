@@ -13,7 +13,7 @@ const PAGE_SIZE = 10;
 export default function AddOtherRequest() {
 
     return (
-        <div className="p-6 bg-white min-h-screen text-black font-kanit">
+        <div className="px-6 py-10 bg-white min-h-screen text-black font-kanit">
             <div className="max-w-7xl mx-auto border border-red-500">
                 {  /* Header Section */}
                 <div className="border border-blue-300 flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
@@ -29,23 +29,68 @@ export default function AddOtherRequest() {
                 { /* Filter Section */}
                 <div className="border border-blue-500 flex flex-wrap items-center gap-4 mb-6">
                     {/* Date_Range */}
-                    <div>
-
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm">จาก</label>
+                        <input 
+                            type="date"
+                            value={null}
+                            onchange={(e) => {}}
+                            className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <label className="text-sm">ถึง</label>
+                        <input 
+                            type="date"
+                            value={null}
+                            onchange={(e) => {}}
+                            className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
                     </div>
 
                     {/* Status */}
-                    <div>
+                    <div className="relative w-48"> 
+                        <select
+                            value={null}
+                            onChange={(e) => {}}
+                            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option value="">สถานะทั้งหมด</option>
+                            {/* map object */}
 
+                        </select>
+                        <div className="pointer-events-none absolute insert-y-0 right-0 flex items-center px-2">
+                            <ChevronDown className="w-4 h-4 text-gray-500" />
+                        </div>
                     </div>
 
                     {/* Leave-Type */}
-                    <div>
+                    <div className="relative w-48">
+                        <select
+                            value={null}
+                            onchange={(e) => {}}
+                            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option value="">ประเภทการลาทั้งหมด</option>
+                            {/* map option */}
 
+                        </select>
+                        <div className="pointer-events-none absolute insert-y-0 right-0 flex items-center px-2">
+                            <ChevronDown className="w-4 h-4 text-gray-500" />
+                        </div>
                     </div>
 
                     {/* Sort_Order */ }
-                    <div>
-
+                    <div className="relative w-48">
+                        <select
+                            value={null}
+                            onChange={(e) => {}}
+                            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option value="desc">เรียงจากใหม่ไปเก่า</option>
+                            <option value="asc">เรียงจากเก่าไปใหม่</option>
+                        </select>
+                        <div className="pointer-events-none absolute insert-y-0 right-0 flex items-center px-2">
+                            <ChevronDown className="w-4 h-4 text-gray-500" />
+                        </div>
                     </div>
 
                     {/* Clear_Filters */}
@@ -56,8 +101,50 @@ export default function AddOtherRequest() {
                         ล้าง
                     </button>
                 </div>
+
+                {/* Legend */}
+                <div className="flex gap-6 items-center text-sm mb-6">
+                    {/* map object */}
+
+                </div>
+
+                {/* table */}
+                <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
+                    <table className="table-fixed w-full bg-white text-sm text-black">
+                        <thead>
+                            <tr className="bg-gray-100 text-gray-800">
+                                {[
+                                    "วันที่ยื่น",
+                                    "ประเภทการลา",
+                                    "วันที่เริ่มต้น",
+                                    "วันที่สิ้นสุด",
+                                    "สถานะ",
+                                ].map((h, i) => (
+                                    <th key={i} className="px-4 py-3 text-left">
+                                        {h}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {/* leave data */}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+     
             </div>
 
+                {/* Floating_Button */}
+                <button
+                    onClick={() => {}}
+                    className="fixed bottom-8 right-8 bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full shadow-lg transition"
+                >
+                    <Plus className="w-6 h-6" />
+                </button>
+
+                {/* LeaveRequestModal */}
         </div>
     );
 };
