@@ -11,6 +11,24 @@ dayjs.extend(isBetween);
 const PAGE_SIZE = 10;
 
 export default function AddOtherRequest() {
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [leaveTypesMap, setLeaveTypesMap] = useState({});
+
+    //filter
+    const [filterStartDate, setFilterStartDate] = useState("");
+    const [filterEndDate, setFilterEndDate] = useState("");
+    const [filterStatus, setFilterStatus] = useState("");
+    const [filterLeaveType, setFilterLeaveType] = useState("");
+    const [sortOrder, setSortOrder] = useState("desc");
+
+    const statusLabels = {
+        APPROVED: "อนุมัติแล้ว",
+        PENDING: "รอดำเนินการ",
+        REJECTED: "ถูกปฏิเสธ",
+        CANCELLED: "ยกเลิกแล้ว",
+    };
 
     return (
         <div className="px-6 py-10 bg-white min-h-screen text-black font-kanit">
