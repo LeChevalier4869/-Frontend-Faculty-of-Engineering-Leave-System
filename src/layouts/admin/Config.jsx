@@ -35,6 +35,14 @@ export default function ConfigPage() {
     });
   };
 
+  // เช็คว่าเป็นลิงก์ Google Drive รูปแบบ file/open ถูกต้องหรือไม่
+  const isValidDriveLink = (link) => {
+    if (!link || !link.trim()) return false;
+    const regex =
+      /^https?:\/\/(www\.)?drive\.google\.com\/(file\/d\/[\w-]+\/view(\?usp=sharing)?|open\?id=[\w-]+|drive\/folders\/[\w-]+)/;
+    return regex.test(link);
+  };
+
   const fetchContacts = async () => {
     try {
       const res = await axios.get(`${apiEndpoints.getContact}`);
@@ -50,7 +58,11 @@ export default function ConfigPage() {
       });
     } catch (err) {
       console.error(err);
-      showAlert("error", "โหลดข้อมูลไม่สำเร็จ", "ไม่สามารถดึงข้อมูลจากเซิร์ฟเวอร์ได้");
+      showAlert(
+        "error",
+        "โหลดข้อมูลไม่สำเร็จ",
+        "ไม่สามารถดึงข้อมูลจากเซิร์ฟเวอร์ได้"
+      );
     } finally {
       setLoading(false);
     }
@@ -58,7 +70,10 @@ export default function ConfigPage() {
 
   const fetchDriveLink = async () => {
     try {
-      const res = await axios.get(`http://localhost:8000/api/dowload-template`, authHeader());
+      const res = await axios.get(
+        `http://localhost:8000/api/dowload-template`,
+        authHeader()
+      );
       if (res.data?.url) setDriveLink(res.data.url);
     } catch (err) {
       console.error("ไม่สามารถโหลดลิงก์ Google Drive:", err);
@@ -82,13 +97,26 @@ export default function ConfigPage() {
 
       const keys = ["AdminName", "AdminPhone", "AdminMail"];
       for (const key of keys) {
-        await axios.put(`${BASE_URL}/api/contact/${key}`, { value: contacts[key] }, authHeader());
+        await axios.put(
+          `${BASE_URL}/api/contact/${key}`,
+          { value: contacts[key] },
+          authHeader()
+        );
       }
 
-      showAlert("success", "บันทึกสำเร็จ", "อัปเดตข้อมูลเจ้าหน้าที่เรียบร้อยแล้ว", 1500);
+      showAlert(
+        "success",
+        "บันทึกสำเร็จ",
+        "อัปเดตข้อมูลเจ้าหน้าที่เรียบร้อยแล้ว",
+        1500
+      );
     } catch (err) {
       console.error(err);
-      showAlert("error", "เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลเจ้าหน้าที่ได้");
+      showAlert(
+        "error",
+        "เกิดข้อผิดพลาด",
+        "ไม่สามารถบันทึกข้อมูลเจ้าหน้าที่ได้"
+      );
     } finally {
       setSaving(false);
     }
@@ -100,9 +128,18 @@ export default function ConfigPage() {
       return;
     }
 
+    if (!isValidDriveLink(driveLink)) {
+      showAlert("warning", "กรุณากรอกลิงก์ Google Drive ที่ถูกต้อง");
+      return;
+    }
+
     try {
       setSaving(true);
-      await axios.put(`http://localhost:8000/api/drive-link`, { value: driveLink }, authHeader());
+      await axios.put(
+        `http://localhost:8000/api/drive-link`,
+        { value: driveLink },
+        authHeader()
+      );
       showAlert("success", "บันทึกลิงก์สำเร็จ", "", 1500);
     } catch (err) {
       console.error(err);
