@@ -390,7 +390,7 @@ export default function Leave2() {
       {/* floating button */}
       <button
         onClick={() => setModalOpen(true)}
-        className="fixed bottom-8 right-8 bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full shadow-lg transition"
+        className="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition"
       >
         <Plus className="w-6 h-6" />
       </button>
