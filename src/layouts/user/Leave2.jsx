@@ -12,6 +12,7 @@ import {
   Clock,
   PlusCircle,
   List,
+  Download,
 } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
@@ -26,6 +27,7 @@ export default function Leave2() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
+  const [driveUrl, setDriveUrl] = useState(null);
 
   // filters: start/end dates, status, leave type
   const [filterStartDate, setFilterStartDate] = useState("");
@@ -69,6 +71,16 @@ export default function Leave2() {
     }
   };
 
+  const fetchGoogleDriveLink = async () => {
+    try {
+      // const res = await axios.get(apiEndpoints.getDriveLink);
+      const res = await axios.get("http://localhost:8000/api/dowload-template");
+      setDriveUrl(res.data.url);
+    } catch (err) {
+      console.error("Error fetching Google Link:", err);
+    }
+  };
+
   // fetch available leave types for mapping id → name
   const fetchLeaveTypes = async () => {
     try {
@@ -88,6 +100,7 @@ export default function Leave2() {
   useEffect(() => {
     fetchLeaveRequests();
     fetchLeaveTypes();
+    fetchGoogleDriveLink();
   }, []);
 
   const formatDateTime = (iso) =>
@@ -157,12 +170,20 @@ export default function Leave2() {
         {/* header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <h1 className="text-3xl font-bold">รายการการลา</h1>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
-          >
-            <PlusCircle className="mr-2" /> ยื่นลา
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.open(driveUrl, "_blank")}
+              className="flex items-center bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700"
+            >
+              <Download className="mr-2" /> ดาวน์โหลดใบลา
+            </button>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="flex items-center bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
+            >
+              <PlusCircle className="mr-2" /> ยื่นลา
+            </button>
+          </div>
         </div>
 
         {/* filters */}

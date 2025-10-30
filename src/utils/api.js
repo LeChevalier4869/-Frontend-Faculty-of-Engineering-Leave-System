@@ -37,8 +37,12 @@ export const apiEndpoints = {
   deleteUserByAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   userInfoById: (id) => `${BASE_URL}/auth/user-info/${id}`,
   getHoliday : `${BASE_URL}/admin/holiday`, // GET
+
+  //API
   getContact : `${BASE_URL}/api/contact`, // GET
   updateAdminContact: (key) => `${BASE_URL}/api/contact/${key}`, //PUT
+  getDriveLink : `${BASE_URL}/api/dowload-template`, //GET
+  updateDriveLink : `${BASE_URL}/api/drive-link`, //PUT
   
 
   // admin manage department
