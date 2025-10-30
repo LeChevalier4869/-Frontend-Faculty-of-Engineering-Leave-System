@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { apiEndpoints, BASE_URL } from "../../utils/api";
 import { FaCog } from "react-icons/fa";
 
-export default function AdminContactSetting() {
+export default function ConfigPage() {
   const [contacts, setContacts] = useState({
     AdminName: "",
     AdminPhone: "",
