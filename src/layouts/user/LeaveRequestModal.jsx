@@ -8,14 +8,12 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { th } from "date-fns/locale";
 import { apiEndpoints } from "../../utils/api";
-import getApiUrl from "../../utils/apiUtils";
 import Swal from "sweetalert2";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-const holidays = ["2025-04-25", "2025-05-01"];
-
 function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
   const [leaveTypes, setLeaveTypes] = useState([]);
+  const [holidays, setHolidays] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -47,12 +45,12 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     "w-full bg-white text-black border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400";
 
   useEffect(() => {
-    if (!isOpen) return;
+    // if (!isOpen) return;
     const fetchLeaveBalances = async () => {
       try {
         const token = localStorage.getItem("accessToken");
         if (!token) return;
-        const res = await axios.get(getApiUrl("leave-balances/me"), {
+        const res = await axios.get(apiEndpoints.getLeaveBalanceForMe, {
           headers: { Authorization: `Bearer ${token}` },
         });
         // ทดสอบ response
@@ -65,7 +63,26 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         console.error("Error fetching leave balances:", error);
       }
     };
-    fetchLeaveBalances();
+
+    const fetchHolidays = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) return;
+        const res = await axios.get(apiEndpoints.getHoliday, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        const holidayDates = res.data.data.map((h) => h.date);
+        setHolidays(holidayDates);
+      } catch (error) {
+        console.error("Error fetching holidays:", error);
+      }
+    };
+
+    if (isOpen) {
+      fetchLeaveBalances();
+      fetchHolidays();
+    }
   }, [isOpen]);
 
   const handleChange = (e) => {
@@ -147,7 +164,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         formDataToSend.append("images", formData.images);
       }
 
-      await axios.post(getApiUrl("leave-requests/"), formDataToSend, {
+      await axios.post(apiEndpoints.leaveRequest, formDataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

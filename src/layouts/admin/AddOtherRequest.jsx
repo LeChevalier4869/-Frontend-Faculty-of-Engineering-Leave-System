@@ -12,6 +12,7 @@ const PAGE_SIZE = 10;
 
 export default function AddOtherRequest() {
     const navigate = useNavigate();
+    const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setModalOpen] = useState(false);
     const [leaveTypesMap, setLeaveTypesMap] = useState({});
