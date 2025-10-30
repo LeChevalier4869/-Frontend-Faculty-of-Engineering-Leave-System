@@ -110,10 +110,39 @@ export default function AddOtherRequest() {
   const statusColors = { APPROVED: "bg-green-500 text-white", PENDING: "bg-yellow-500 text-white", REJECTED: "bg-red-500 text-white", CANCELLED: "bg-gray-500 text-white" };
 
   const fetchLeaveRequests = async () => {
-    setLoading(false);
+    setLoading(true);
+    try {
+        const token = localStorage.getItem("accessToken");
+        const res = await axios.get(apiEndpoints.leaveRequest, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("Leave requests response:", res.data.data);
+        const data = Array.isArray(res.data.data)
+            ? res.data.data
+            : Array.isArray(res.data.leaveRequest || res.data.leaveRequests)
+            ? res.data.leaveRequest || res.data.leaveRequests
+            : [];
+        setLeaveRequest(data);
+    } catch (error) {
+        console.error("Error fetching leave requests:", error);
+        setLeaveRequest([]);
+    } finally {
+        setLoading(false);
+    }
   };
 
-  const fetchLeaveTypes = async () => {};
+  const fetchLeaveTypes = async () => {
+    try {
+        const res = await axios.get(apiEndpoints.getAllLeaveTypes);
+        const map = {};
+        (res.data.data || []).forEach((lt) => {
+            map[lt.id] = lt.name;
+        });
+        setLeaveTypesMap(map);
+    } catch (error) {
+        console.error("Error fetching leave types:", error);
+    }
+  };
 
   useEffect(() => {
     fetchLeaveRequests();
@@ -157,13 +186,18 @@ export default function AddOtherRequest() {
     <div className="px-6 py-10 bg-white min-h-screen text-black font-kanit">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-center text-3xl font-bold">บันทึกคำขอการลาลงระบบ</h1>
-          <button onClick={() => setModalOpen(true)} className="flex items-center rounded bg-blue-500 px-4 py-2 text-white shadow transition duration-300 hover:bg-blue-700">
+          <h1 className="text-3xl font-bold">บันทึกคำขอการลาลงระบบ</h1>
+          <button 
+            onClick={() => setModalOpen(true)} 
+            className="flex items-center rounded bg-blue-600 px-4 py-2 text-white shadow transition duration-300 hover:bg-blue-700 whitespace-nowrap"
+          >
             <PlusCircle className="mr-2" /> บันทึกคำขอการลา
           </button>
         </div>
 
+        {/* filters */}
         <div className="mb-6 flex flex-wrap items-center gap-4">
+            {/* date */}
           <div className="flex items-center gap-2">
             <label className="text-sm">จาก</label>
             <input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-400" />
@@ -171,6 +205,7 @@ export default function AddOtherRequest() {
             <input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-400" />
           </div>
 
+            {/* status */}
           <div className="relative w-48">
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
               <option value="">สถานะทั้งหมด</option>
@@ -183,6 +218,7 @@ export default function AddOtherRequest() {
             </div>
           </div>
 
+            {/* leaveType */}
           <div className="relative w-48">
             <select value={filterLeaveType} onChange={(e) => setFilterLeaveType(e.target.value)} className="w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
               <option value="">ประเภทการลาทั้งหมด</option>
@@ -195,6 +231,7 @@ export default function AddOtherRequest() {
             </div>
           </div>
 
+            {/* sortOrder */}
           <div className="relative w-48">
             <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 text-base focus:outline-none focus:ring-2 focus:ring-blue-400">
               <option value="desc">เรียงจากใหม่ไปเก่า</option>
@@ -205,15 +242,16 @@ export default function AddOtherRequest() {
             </div>
           </div>
 
+            {/* clear */}
           <button onClick={() => { setFilterStartDate(""); setFilterEndDate(""); setFilterStatus(""); setFilterLeaveType(""); setSortOrder("desc"); }} className="rounded-lg bg-red-500 px-3 py-2 text-white transition hover:bg-red-600">
             ล้าง
           </button>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-gray-300 shadow">
-          <table className="w-full table-fixed text-sm text-black">
+        <div className="overflow-hidden rounded-lg border border-gray-300 shadow overflow-x-auto width-full">
+          <table className="min-w-full w-full text-sm text-black">
             <thead>
-              <tr className="bg-gray-100 text-gray-800">
+              <tr className="bg-gray-100 text-gray-800 whitespace-nowrap">
                 {["วันที่ยื่น", "ประเภทการลา", "วันที่เริ่มต้น", "วันที่สิ้นสุด", "สถานะ"].map((h, i) => (
                   <th key={i} className="px-4 py-3 text-left">{h}</th>
                 ))}
@@ -221,7 +259,7 @@ export default function AddOtherRequest() {
             </thead>
             <tbody>
               {displayItems.map((r) => (
-                <tr key={r.id} className="border-t">
+                <tr key={r.id} className="border-t whitespace-nowrap hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/leave/${r.id}`)}>
                   <td className="px-4 py-3">{formatDateTime(r.createdAt)}</td>
                   <td className="px-4 py-3">{leaveTypesMap[r.leaveTypeId] || "-"}</td>
                   <td className="px-4 py-3">{formatDate(r.startDate)}</td>

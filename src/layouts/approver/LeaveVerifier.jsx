@@ -260,10 +260,10 @@ export default function LeaveVerifier() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
+      <div className="rounded-lg shadow border border-gray-300 overflow-hidden overflow-x-auto width-full">
         <table className="min-w-full bg-white text-sm text-black">
           <thead>
-            <tr className="bg-gray-100 text-gray-800">
+            <tr className="bg-gray-100 text-gray-800 whitespace-nowrap">
               {[
                 "วันที่ยื่น",
                 "ชื่อผู้ลา",
@@ -275,7 +275,7 @@ export default function LeaveVerifier() {
               ].map((h, i) => (
                 <th
                   key={i}
-                  className={`px-4 py-3 text-left ${
+                  className={`px-4 py-2 text-left ${
                     h === "ชื่อผู้ลา" ? "w-[220px]" : ""
                   }`}
                 >
@@ -297,12 +297,11 @@ export default function LeaveVerifier() {
                     } hover:bg-gray-100 transition cursor-pointer`}
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       {formatDateTime(leave.createdAt)}
                     </td>
-                    <td className="px-4 py-2 w-[220px]">
-                      {leave.user.prefixName}
-                      {leave.user.firstName} {leave.user.lastName}
+                    <td className="px-4 py-2 w-[220px] whitespace-nowrap overflow-hidden text-ellipsis">
+                      {leave.user.prefixName} {leave.user.firstName} {leave.user.lastName}
                     </td>
                     <td className="px-4 py-2">
                       {leaveTypesMap[leave.leaveTypeId] || "-"}
@@ -323,7 +322,8 @@ export default function LeaveVerifier() {
                         {statusLabels[statusKey] || leave.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2 flex space-x-2">
+                    <td className="p-3 text-center">
+                      <div className="flex flex-col sm:flex-row justify-center gap-2">
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
@@ -376,6 +376,7 @@ export default function LeaveVerifier() {
                       >
                         ปฏิเสธ
                       </button>
+                      </div>
                     </td>
                   </tr>
                 );

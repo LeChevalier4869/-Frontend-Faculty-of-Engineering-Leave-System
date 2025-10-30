@@ -24,6 +24,7 @@ export const apiEndpoints = {
   register: `${BASE_URL}/auth/register`, // POST
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
+  getVerifier: `${BASE_URL}/auth/verifier`, // GET
   updateUserRole: `${BASE_URL}/auth/update-role`,
   forgotPassword: `${BASE_URL}/auth/forgot-password`,
   resetPassword: `${BASE_URL}/auth/reset-password`,
@@ -53,6 +54,7 @@ export const apiEndpoints = {
 
   // leave type
   availableLeaveType: `${BASE_URL}/leave-types/available`,
+  getAllLeaveTypes: `${BASE_URL}/leave-types`,
 
   // leave request
   leaveRequest: `${BASE_URL}/leave-requests`, // CRUD

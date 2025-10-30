@@ -276,8 +276,8 @@ export default function Leave2() {
         </div>
 
         {/* table */}
-        <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
-          <table className="table-fixed w-full bg-white text-sm text-black">
+        <div className="rounded-lg shadow border border-gray-300 overflow-hidden overflow-x-auto width-full">
+          <table className="min-w-full w-full bg-white text-sm text-black">
             <thead>
               <tr className="bg-gray-100 text-gray-800">
                 {[
@@ -305,17 +305,17 @@ export default function Leave2() {
                       } hover:bg-gray-100 transition cursor-pointer`}
                       onClick={() => navigate(`/leave/${leave.id}`)}
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2 whitespace-nowrap">
                         {formatDateTime(leave.createdAt)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2">
                         {leaveTypesMap[leave.leaveTypeId] || "-"}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2">
                         {formatDate(leave.startDate)}
                       </td>
-                      <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2">{formatDate(leave.endDate)}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                             statusColors[statusKey] ||
