@@ -61,7 +61,7 @@ import AddnewUser from "../layouts/admin/AddnewUser";
 import LeaveAdmin from "../layouts/admin/LeaveAdmin";
 import LeaveReport from "../layouts/admin/LeaveReport";
 import AddOtherRequest from "../layouts/admin/AddOtherRequest";
-import ContactSetting from "../layouts/admin/ContactSetting"
+import Config from "../layouts/admin/Config"
 
 /** Layout หลักพร้อม Sidebar */
 function AppLayout() {
@@ -176,7 +176,7 @@ const userRouter = createBrowserRouter([
           { path: "edit-profile", element: <EditProfile /> },
           { path: "user/:id", element: <EditUser /> },
           { path: "add-other-request", element: <AddOtherRequest /> },
-          { path: "contact", element: <ContactSetting /> },
+          { path: "config", element: <Config />},
         ],
       },
 

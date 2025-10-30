@@ -8,6 +8,7 @@ import {
   FaUser,
   FaCheckCircle,
   FaUsersCog,
+  FaCog 
 } from "react-icons/fa";
 import { FaChartSimple } from "react-icons/fa6";
 import useAuth from "../hooks/useAuth";
@@ -95,9 +96,9 @@ const adminNav = [
     icon: <FaUsersCog />,
   },
   {
-    to: "/admin/contact",
-    text: "ตั้งค่าข้อมูลติดต่อ",
-    icon: <FaUsersCog />,
+    to: "/admin/config",
+    text: "ตั้งค่า",
+    icon: <FaCog />,
   },
 ];
 
