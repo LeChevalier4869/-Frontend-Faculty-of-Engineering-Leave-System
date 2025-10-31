@@ -74,7 +74,7 @@ export default function Leave2() {
   const fetchGoogleDriveLink = async () => {
     try {
       // const res = await axios.get(apiEndpoints.getDriveLink);
-      const res = await axios.get("http://localhost:8000/api/dowload-template");
+      const res = await axios.get(apiEndpoints.getDriveLink);
       setDriveUrl(res.data.url);
     } catch (err) {
       console.error("Error fetching Google Link:", err);

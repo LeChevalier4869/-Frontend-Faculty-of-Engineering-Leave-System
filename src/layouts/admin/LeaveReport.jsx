@@ -65,7 +65,7 @@ export default function LeaveReportMockup() {
       //   { responseType: 'blob' } // important! รับเป็นไฟล์ binary
       // );
       const response = await axios.post(
-        'http://localhost:8000/api/export-report', // เปลี่ยนเป็น endpoint จริง
+        apiEndpoints.exportReport, // เปลี่ยนเป็น endpoint จริง
         payload,
         { responseType: 'blob' } // important! รับเป็นไฟล์ binary
       );

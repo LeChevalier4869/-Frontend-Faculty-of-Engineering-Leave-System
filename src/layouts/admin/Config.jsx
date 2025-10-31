@@ -75,7 +75,7 @@ export default function ConfigPage() {
       //   authHeader()
       // );
       const res = await axios.get(
-        `http://localhost:8000/api/dowload-template`,
+        apiEndpoints.getDriveLink,
         authHeader()
       );
       if (res.data?.url) setDriveLink(res.data.url);
@@ -145,7 +145,7 @@ export default function ConfigPage() {
       //   authHeader()
       // );
       await axios.put(
-        `http://localhost:8000/api/drive-link`,
+        apiEndpoints.updateDriveLink,
         { value: driveLink },
         authHeader()
       );
