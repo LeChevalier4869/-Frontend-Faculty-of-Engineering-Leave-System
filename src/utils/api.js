@@ -43,6 +43,7 @@ export const apiEndpoints = {
   updateAdminContact: (key) => `${BASE_URL}/api/contact/${key}`, //PUT
   getDriveLink : `${BASE_URL}/api/dowload-template`, //GET
   updateDriveLink : `${BASE_URL}/api/drive-link`, //PUT
+  exportReport : `${BASE_URL}/api/export-report`, //POST
   
 
   // admin manage department

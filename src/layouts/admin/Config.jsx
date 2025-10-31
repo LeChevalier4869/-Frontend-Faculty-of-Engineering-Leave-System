@@ -70,6 +70,10 @@ export default function ConfigPage() {
 
   const fetchDriveLink = async () => {
     try {
+      // const res = await axios.get(
+      //   apiEndpoints.getDriveLink,
+      //   authHeader()
+      // );
       const res = await axios.get(
         `http://localhost:8000/api/dowload-template`,
         authHeader()
@@ -98,7 +102,7 @@ export default function ConfigPage() {
       const keys = ["AdminName", "AdminPhone", "AdminMail"];
       for (const key of keys) {
         await axios.put(
-          `${BASE_URL}/api/contact/${key}`,
+          apiEndpoints.updateAdminContact(key),
           { value: contacts[key] },
           authHeader()
         );
@@ -135,6 +139,11 @@ export default function ConfigPage() {
 
     try {
       setSaving(true);
+      // await axios.put(
+      //   apiEndpoints.updateDriveLink,
+      //   { value: driveLink },
+      //   authHeader()
+      // );
       await axios.put(
         `http://localhost:8000/api/drive-link`,
         { value: driveLink },
