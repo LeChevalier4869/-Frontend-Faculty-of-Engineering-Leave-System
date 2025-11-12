@@ -2,11 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
+import { FiUser, FiUsers } from "react-icons/fi";
 
 const PAGE_SIZE = 10;
 const DEBOUNCE_MS = 200;
+
+const MySwal = withReactContent(Swal);
 
 export default function UserManage() {
   const [users, setUsers] = useState([]);
@@ -102,6 +106,53 @@ export default function UserManage() {
     currentPage * PAGE_SIZE
   );
 
+  /* ---------- pop up add user ---------- */
+  const showPopup = () => {
+    MySwal.fire({
+      title: "เลือกวิธีเพิ่มผู้ใช้งาน",
+      html: (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+          {/* เพิ่มผู้ใช้งานคนเดียว */}
+          <div
+            className="cursor-pointer flex flex-col items-center justify-center border border-gray-300 rounded-xl p-6 hover:shadow-lg transition"
+            onClick={() => {
+              MySwal.close();
+              navigate("/admin/add-user");
+            }}
+          >
+            <FiUser className="text-8xl text-blue-500 mb-2" />
+            <span className="text-lg font-medium text-gray-700">
+              เพิ่มผู้ใช้คนเดียว
+            </span>
+          </div>
+
+          {/* เพิ่มผู้ใช้งานหลายคน */}
+          <div
+            className="cursor-pointer flex flex-col items-center justify-center border border-gray-300 rounded-xl p-6 hover:shadow-lg transition"
+            onClick={() => {
+              MySwal.close();
+              navigate("/admin/add-user-excel");
+            }}
+          >
+            <FiUsers className="text-8xl text-green-500 mb-2" />
+            <span className="text-lg font-medium text-gray-700">
+              เพิ่มผู้ใช้หลายคน
+            </span>
+          </div>
+        </div>
+      ),
+      showConfirmButton: false,
+      showCloseButton: true,
+      width: 500,
+      padding: "2rem",
+      customClass: {
+        popup: "font-kanit text-black",
+        title: "font-kanit font-bold text-4xl", // ขนาดใหญ่ขึ้น
+        htmlContainer: "font-kanit text-base text-gray-800",
+      },
+    });
+  };
+
   /* ---------- render ---------- */
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
@@ -125,12 +176,18 @@ export default function UserManage() {
                        bg-white text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
-          <Link
+          {/* <Link
             to="/admin/add-user"
             className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition whitespace-nowrap"
           >
             + เพิ่มผู้ใช้งาน
-          </Link>
+          </Link> */}
+          <button
+            onClick={showPopup}
+            className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+          >
+            + เพิ่มผู้ใช้งาน
+          </button>
         </div>
 
         {/* table */}
@@ -179,7 +236,7 @@ export default function UserManage() {
                     <td className="px-4 py-3 truncate">
                       {user.personnelType?.name || "-"}
                     </td>
-                      <td className="px-4 py-3 truncate">{user.phone}</td>
+                    <td className="px-4 py-3 truncate">{user.phone}</td>
                     <td
                       className="px-4 py-3 text-center space-x-2"
                       onClick={(e) => e.stopPropagation()} // 👈 ป้องกันเด้งเมื่อกดปุ่มในแถว
