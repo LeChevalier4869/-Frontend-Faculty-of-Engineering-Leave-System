@@ -62,6 +62,7 @@ import LeaveAdmin from "../layouts/admin/LeaveAdmin";
 import LeaveReport from "../layouts/admin/LeaveReport";
 import AddOtherRequest from "../layouts/admin/AddOtherRequest";
 import ConfigPage from "../layouts/admin/Config";
+import AddUsersByExcel from "../layouts/admin/AddUsersByExcel";
 
 /** Layout หลักพร้อม Sidebar */
 function AppLayout() {
@@ -173,6 +174,7 @@ const userRouter = createBrowserRouter([
           { path: "leave-type-manage", element: <LeaveTypeManage /> },
           { path: "user-info/:id", element: <UserInfo /> },
           { path: "add-user", element: <AddnewUser /> },
+          { path: "add-user-excel", element: <AddUsersByExcel /> },
           { path: "edit-profile", element: <EditProfile /> },
           { path: "user/:id", element: <EditUser /> },
           { path: "add-other-request", element: <AddOtherRequest /> },
