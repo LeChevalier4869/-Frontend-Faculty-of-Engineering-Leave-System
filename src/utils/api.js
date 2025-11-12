@@ -44,6 +44,8 @@ export const apiEndpoints = {
   getDriveLink : `${BASE_URL}/api/dowload-template`, //GET
   updateDriveLink : `${BASE_URL}/api/drive-link`, //PUT
   exportReport : `${BASE_URL}/api/export-report`, //POST
+  uploadUserExcel : `${BASE_URL}/excel/upload-users`, //POST
+
   
 
   // admin manage department
