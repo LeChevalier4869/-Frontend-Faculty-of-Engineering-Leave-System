@@ -32,6 +32,9 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
   const hasFetched = useRef(false);
   const debounceRef = useRef(null);
 
+    const inputStyle =
+    "w-full bg-white text-black border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400";
+
   const normalizeUsers = (payload) => {
     const arr = Array.isArray(payload?.data)
       ? payload.data
@@ -159,13 +162,13 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <form onSubmit={submit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 relative">
-              <div>
+              <div >
                 <label className="mb-1 block text-sm">คำนำหน้า</label>
                 <input
                   type="text"
                   value={prefixName}
                   onChange={(e) => setPrefixName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  className={inputStyle}
                   placeholder="นาย/นาง/น.ส."
                   required
                 />
@@ -176,7 +179,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  className={inputStyle}
                   placeholder="พิมพ์เพื่อค้นหา"
                   required
                 />
@@ -187,7 +190,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  className={inputStyle}
                   required
                 />
               </div>
@@ -219,7 +222,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                 <select
                   value={leaveTypeId}
                   onChange={(e) => setLeaveTypeId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  className={inputStyle}
                   required
                 >
                   <option value="">-- เลือกประเภทการลา --</option>
@@ -231,27 +234,27 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
 
               <div>
                 <label className="mb-1 block text-sm">วันที่เริ่มลา</label>
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" required />
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputStyle} required />
               </div>
               <div>
                 <label className="mb-1 block text-sm">วันที่สิ้นสุด</label>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" required />
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputStyle} required />
               </div>
               <div>
                 <label className="mb-1 block text-sm">เหตุผล</label>
-                <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" required />
+                <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} className={inputStyle} />
               </div>
               <div>
                 <label className="mb-1 block text-sm">ช่องทางติดต่อ</label>
-                <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+                <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} className={inputStyle} />
               </div>
               <div>
                 <label className="mb-1 block text-sm">เลขที่เอกสาร</label>
-                <input type="text" value={documentNumber} onChange={(e) => setDocumentNumber(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+                <input type="text" value={documentNumber} onChange={(e) => setDocumentNumber(e.target.value)} className={inputStyle} />
               </div>
               <div>
                 <label className="mb-1 block text-sm">วันที่ออกเอกสาร</label>
-                <input type="date" value={documentIssuedDate} onChange={(e) => setDocumentIssuedDate(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+                <input type="date" value={documentIssuedDate} onChange={(e) => setDocumentIssuedDate(e.target.value)} className={inputStyle} />
               </div>
               <div>
                 <label className="mb-1 block text-sm">แนบรูปภาพ</label>
