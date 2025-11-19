@@ -37,6 +37,7 @@ export const apiEndpoints = {
   deleteUserByAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   userInfoById: (id) => `${BASE_URL}/auth/user-info/${id}`,
   getHoliday : `${BASE_URL}/admin/holiday`, // GET
+  adminLeaveRequests : `${BASE_URL}/admin/leave-requests`, //POST
 
   //API
   getContact : `${BASE_URL}/api/contact`, // GET

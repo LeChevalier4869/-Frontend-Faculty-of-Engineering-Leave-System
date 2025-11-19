@@ -14,7 +14,7 @@ function AuthContextProvider(props) {
       try {
         setLoading(true)
         const token = localStorage.getItem('accessToken')
-        console.log('AuthContext token:', token)
+        // console.log('AuthContext token:', token)
         if (!token) return
 
         const endpoint = 'auth/me'

@@ -38,7 +38,7 @@ function Header({ onMenuClick, isSidebarOpen }) {
 
         {/* ✅ User Dropdown */}
         {user?.id && (
-          <div className="relative ml-auto" ref={dropdownRef}>
+          <div className="relative ml-auto whitespace-nowrap" ref={dropdownRef}>
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="flex items-center space-x-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg shadow hover:bg-gray-200 transition duration-200"

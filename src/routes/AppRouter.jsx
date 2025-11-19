@@ -69,13 +69,9 @@ function AppLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMiniSidebar, setMiniSidebar] = useState(false);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
+  const toggleSidebar = () => setSidebarOpen((v) => !v);
 
-  const toggleMiniSidebar = () => {
-    setMiniSidebar(!isMiniSidebar);
-  };
+  const toggleMiniSidebar = () => setMiniSidebar((v) => !v);
 
   const mainShift = clsx(
     "transition-all duration-300",
