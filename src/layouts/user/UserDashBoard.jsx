@@ -8,6 +8,16 @@ import {
   PlusCircle,
   List,
   XCircle,
+  Briefcase,
+  HeartPulse,
+  User,
+  Baby,
+  Church,
+  GraduationCap,
+  Home,
+  Accessibility,
+  Flag,
+  TreePalm,
 } from "lucide-react";
 import {
   BarChart,
@@ -269,7 +279,7 @@ export default function UserDashboard() {
 
   if (loading || isLoading)
     return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-slate-200 bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] px-4 py-6">
+      <div className="min-h-screen bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] text-slate-100 font-kanit px-4 py-8 md:px-8 rounded-3xl shadow-xl backdrop-blur-sm border border-white/10">
         <div className="w-full max-w-md rounded-3xl bg-slate-950/70 border border-sky-500/20 shadow-[0_22px_60px_rgba(8,47,73,0.9)] backdrop-blur-2xl p-5">
           <div className="flex items-center gap-3 text-sm">
             <span className="h-2 w-2 rounded-full bg-sky-400 animate-ping" />
@@ -280,7 +290,7 @@ export default function UserDashboard() {
     );
 
   return (
-<div className="min-h-screen bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] text-slate-100 font-kanit px-4 py-8 md:px-8 rounded-3xl shadow-xl backdrop-blur-sm border border-white/10">
+    <div className="min-h-screen bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] text-slate-100 font-kanit px-4 py-8 md:px-8 rounded-3xl shadow-xl backdrop-blur-sm border border-white/10">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
