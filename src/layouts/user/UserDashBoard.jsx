@@ -8,6 +8,16 @@ import {
   PlusCircle,
   List,
   XCircle,
+  Briefcase,
+  HeartPulse,
+  User,
+  Baby,
+  Church,
+  GraduationCap,
+  Home,
+  Accessibility,
+  Flag,
+  TreePalm,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
@@ -38,6 +48,44 @@ export default function UserDashboard() {
     APPROVED: "อนุมัติแล้ว",
     PENDING: "รออนุมัติ",
     REJECTED: "ปฏิเสธแล้ว",
+  };
+
+  const iconMap = {
+    ลาป่วย: <HeartPulse className="w-12 h-12 md:w-14 md:h-14 text-red-700" />,
+    ลาคลอดบุตร: <Baby className="w-12 h-12 md:w-14 md:h-14 text-pink-700" />,
+    ลากิจส่วนตัว: (
+      <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+    ),
+    ลาพักผ่อน: (
+      <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-amber-700" />
+    ),
+    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: (
+      <Church className="w-12 h-12 md:w-14 md:h-14 text-purple-500" />
+    ),
+    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: (
+      <Flag className="w-12 h-12 md:w-14 md:h-14 text-blue-700" />
+    ),
+    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: (
+      <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-indigo-600" />
+    ),
+    ลาไปช่วยเหลือภริยาที่คลอดบุตร: (
+      <Home className="w-12 h-12 md:w-14 md:h-14 text-orange-700" />
+    ),
+    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: (
+      <Accessibility className="w-12 h-12 md:w-14 md:h-14 text-green-700" />
+    ),
+  };
+
+  const bgColorMap = {
+    ลาป่วย: "bg-red-200",
+    ลาคลอดบุตร: "bg-pink-200",
+    ลากิจส่วนตัว: "bg-gray-300",
+    ลาพักผ่อน: "bg-amber-200",
+    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: "bg-purple-200",
+    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "bg-blue-200",
+    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: "bg-indigo-200",
+    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "bg-orange-200",
+    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "bg-green-200",
   };
 
   const statusColors = {
@@ -141,8 +189,8 @@ export default function UserDashboard() {
       const data = Array.isArray(res.data.data)
         ? res.data.data
         : Array.isArray(res.data.leaveRequest)
-          ? res.data.leaveRequest
-          : [];
+        ? res.data.leaveRequest
+        : [];
       setLeaveRequest(data);
     } catch (err) {
       console.error("Error fetching leave requests:", err);
@@ -197,20 +245,30 @@ export default function UserDashboard() {
 
       {/* Leave Balance by Type */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {entitlements.map((item) => (
-          <div
-            key={item.leaveType.name}
-            className="bg-white p-6 rounded-lg shadow flex items-center"
-          >
-            <CalendarDays className="w-8 h-8 text-blue-500" />
-            <div className="ml-4">
-              <p className="text-2xl font-semibold text-black">
-                {item.remainingDays}
-              </p>
-              <p className="text-black">วันลาคงเหลือ ({item.leaveType.name})</p>
+        {entitlements.map((item) => {
+          const typeName = item.leaveType.name;
+
+          return (
+            <div
+              key={typeName}
+              className={`p-6 rounded-lg shadow flex items-center gap-4 ${
+                bgColorMap[typeName] || "bg-gray-200"
+              }`}
+            >
+              {/* icon */}
+              {iconMap[typeName] || (
+                <CalendarDays className="w-12 h-12 text-gray-600" />
+              )}
+
+              <div>
+                <p className="text-2xl font-semibold text-black">
+                  {item.remainingDays}
+                </p>
+                <p className="text-black">วันลาคงเหลือ ({typeName})</p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Summary Cards */}
@@ -270,7 +328,11 @@ export default function UserDashboard() {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend layout="horizontal" align="center" verticalAlign="bottom" />
+              <Legend
+                layout="horizontal"
+                align="center"
+                verticalAlign="bottom"
+              />
             </PieChart>
           </div>
         </div>
@@ -317,8 +379,9 @@ export default function UserDashboard() {
         {Object.entries(statusLabels).map(([key, label]) => (
           <div key={key} className="flex items-center gap-2">
             <span
-              className={`w-3 h-3 rounded-full ${statusColors[key]?.split(" ")[0] || "bg-gray-300"
-                }`}
+              className={`w-3 h-3 rounded-full ${
+                statusColors[key]?.split(" ")[0] || "bg-gray-300"
+              }`}
             />
             <span className="text-gray-700">{label}</span>
           </div>
@@ -344,8 +407,9 @@ export default function UserDashboard() {
                 return (
                   <tr
                     key={leave.id}
-                    className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      } hover:bg-gray-100 transition cursor-pointer`}
+                    className={`${
+                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } hover:bg-gray-100 transition cursor-pointer`}
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
                     <td className="px-4 py-3">
@@ -358,8 +422,9 @@ export default function UserDashboard() {
                     <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColors[statusKey] || "bg-gray-200 text-gray-700"
-                          }`}
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          statusColors[statusKey] || "bg-gray-200 text-gray-700"
+                        }`}
                       >
                         {statusLabels[statusKey] || leave.status}
                       </span>
