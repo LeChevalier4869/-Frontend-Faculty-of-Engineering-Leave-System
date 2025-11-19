@@ -51,7 +51,7 @@ const chipClass = {
 
 const Panel = ({ className = "", children }) => (
   <div
-    className={`rounded-2xl bg-white/5 border border-white/10 shadow-[0_22px_60px_rgba(15,23,42,0.9)] backdrop-blur-xl transition-transform duration-200 hover:-translate-y-0.5 ${className}`}
+    className={`rounded-2xl overflow-hidden bg-slate-900/60 border border-sky-500/15 shadow-[0_22px_60px_rgba(8,47,73,0.85)] backdrop-blur-xl transition-transform duration-200 hover:-translate-y-0.5 ${className}`}
   >
     {children}
   </div>
@@ -147,6 +147,8 @@ export default function UserDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
 
+  const todayText = dayjs().locale("th").format("DD MMMM YYYY");
+
   useEffect(() => {
     const run = async () => {
       setLoading(true);
@@ -230,8 +232,8 @@ export default function UserDashboard() {
       const data = Array.isArray(res.data.data)
         ? res.data.data
         : Array.isArray(res.data.leaveRequest)
-        ? res.data.leaveRequest
-        : [];
+          ? res.data.leaveRequest
+          : [];
       setLeaveRequest(data);
     } catch (e) {
       console.error(e);
@@ -267,17 +269,20 @@ export default function UserDashboard() {
 
   if (loading || isLoading)
     return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-slate-200 bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c]">
-        <div className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-[0_22px_60px_rgba(15,23,42,0.9)] text-sm flex items-center gap-3">
-          <span className="h-2 w-2 rounded-full bg-sky-400 animate-ping" />
-          <span>กำลังโหลดแดชบอร์ดของคุณ...</span>
+      <div className="min-h-screen flex items-center justify-center font-kanit text-slate-200 bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] px-4 py-6">
+        <div className="w-full max-w-md rounded-3xl bg-slate-950/70 border border-sky-500/20 shadow-[0_22px_60px_rgba(8,47,73,0.9)] backdrop-blur-2xl p-5">
+          <div className="flex items-center gap-3 text-sm">
+            <span className="h-2 w-2 rounded-full bg-sky-400 animate-ping" />
+            <span>กำลังโหลดแดชบอร์ดของคุณ...</span>
+          </div>
         </div>
       </div>
     );
 
   return (
-    <div className="font-kanit">
+<div className="min-h-screen bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] text-slate-100 font-kanit px-4 py-8 md:px-8 rounded-3xl shadow-xl backdrop-blur-sm border border-white/10">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/40 mb-3 shadow-[0_0_30px_rgba(56,189,248,0.25)]">
@@ -286,17 +291,34 @@ export default function UserDashboard() {
                 Leave Dashboard
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
-              สวัสดีคุณ{" "}
-              <span className="text-sky-300">
-                {user?.firstName || ""} {user?.lastName || ""}
-              </span>{" "}
-              👋
+
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-50">
+              <span className="inline-flex items-center gap-2">
+                <span className="relative inline-flex">
+                  <span
+                    className="absolute inset-0 bg-sky-500/25 blur-xl opacity-70"
+                    aria-hidden="true"
+                  />
+                  <span className="relative">
+                    สวัสดีคุณ{" "}
+                    <span className="bg-gradient-to-r from-sky-300 via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
+                      {user?.firstName || ""} {user?.lastName || ""}
+                    </span>
+                  </span>
+                </span>
+                <span className="text-2xl md:text-3xl">👋</span>
+              </span>
             </h1>
+
             <p className="mt-2 text-sm text-slate-300">
               ภาพรวมการลาของคุณในปีการทำงานนี้
             </p>
+            <p className="mt-1 text-xs md:text-sm text-slate-400 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-sky-300" />
+              <span>วันนี้วันที่ {todayText}</span>
+            </p>
           </div>
+
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setModalOpen(true)}
@@ -315,6 +337,7 @@ export default function UserDashboard() {
           </div>
         </div>
 
+        {/* Stat cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           <StatCard
             accent="sky"
@@ -350,6 +373,7 @@ export default function UserDashboard() {
           />
         </div>
 
+        {/* Leave balance by type */}
         <Panel className="p-5">
           <SectionHeader
             eyebrow="Leave Balance"
@@ -394,6 +418,7 @@ export default function UserDashboard() {
           )}
         </Panel>
 
+        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Panel className="p-6">
             <SectionHeader
@@ -478,6 +503,7 @@ export default function UserDashboard() {
           </Panel>
         </div>
 
+        {/* Legend */}
         <Panel className="p-4">
           <div className="flex flex-wrap gap-4 items-center text-sm">
             {Object.entries(statusLabels).map(([key, label]) => (
@@ -492,6 +518,7 @@ export default function UserDashboard() {
           </div>
         </Panel>
 
+        {/* Recent table */}
         <Panel className="overflow-hidden">
           <div className="px-4 pt-4 pb-3">
             <SectionHeader
@@ -545,10 +572,9 @@ export default function UserDashboard() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              chipClass[key] ||
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${chipClass[key] ||
                               "bg-slate-500/20 text-slate-200 border border-slate-400/40"
-                            }`}
+                              }`}
                           >
                             {statusLabels[key] || leave.status}
                           </span>
