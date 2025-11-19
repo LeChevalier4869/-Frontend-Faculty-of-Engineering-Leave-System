@@ -10,7 +10,6 @@ import Swal from "sweetalert2";
 export default function Login() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
-  // const [input, setInput] = useState({ email: "", password: "" });
   const [input, setInput] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,7 +20,6 @@ export default function Login() {
     e.preventDefault();
     try {
       const res = await axios.post(apiEndpoints.login, input);
-      // const res = await axios.post(apiEndpoints.loginByUsername, input);
       const token = res.data.token;
       localStorage.setItem("token", token);
 
@@ -32,8 +30,7 @@ export default function Login() {
       const user = userRes.data;
       setUser(user);
 
-      // ตรวจสอบ roles ในรูปแบบที่ถูกต้อง
-      const roles = (user?.roles || []).map(role => role.roleName);
+      const roles = (user?.roles || []).map((role) => role.roleName);
 
       Swal.fire({
         icon: "success",
@@ -59,99 +56,95 @@ export default function Login() {
     }
   };
 
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 px-4 font-kanit">
-      {/* Title */}
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 text-white drop-shadow">
-        ระบบลา <span className="text-red-500">คณะวิศวกรรมศาสตร์</span>
-      </h1>
+    <div className="relative flex items-center justify-center min-h-screen w-screen overflow-hidden font-kanit">
+      {/* 🔹 Background Image + Overlay */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1950&q=80')",
+        }}
+      ></div>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-      {/* Login Card */}
-      <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-700">
-        <div className="flex justify-center mb-4">
-          <FiLogIn className="text-white text-5xl" />
-        </div>
-        <h2 className="text-xl sm:text-2xl font-semibold text-center text-white mb-6">
-          เข้าสู่ระบบ
-        </h2>
+      {/* 🔹 Login Content */}
+      <div className="relative z-10 text-center text-white px-6">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-8 drop-shadow-lg">
+          ระบบลา <span className="text-red-400">คณะวิศวกรรมศาสตร์</span>
+        </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* <div>
-            <label className="block text-gray-300 font-medium mb-1">อีเมล</label>
-            <input
-              type="email"
-              name="email"
-              value={input.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-            />
-          </div> */}
-
-          <div>
-            <label className="block text-gray-300 font-medium mb-1">ชื่อผู้ใช้งาน</label>
-            <input
-              type="text"
-              name="email"
-              value={input.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-            />
+        <div className="bg-gray-900/80 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700 backdrop-blur-md">
+          <div className="flex justify-center mb-4">
+            <FiLogIn className="text-white text-5xl" />
           </div>
+          <h2 className="text-2xl font-semibold text-center mb-6">เข้าสู่ระบบ</h2>
 
-          <div>
-            <label className="block text-gray-300 font-medium mb-1">รหัสผ่าน</label>
-            <input
-              type="password"
-              name="password"
-              value={input.password}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
-            />
-            <div className="text-right mt-1">
-              <button
-                type="button"
-                className="text-sm text-red-400 hover:underline focus:outline-none"
-                onClick={() => navigate("/forgot-password")}
-              >
-                ลืมรหัสผ่าน?
-              </button>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-gray-300 font-medium mb-1">ชื่อผู้ใช้งาน</label>
+              <input
+                type="text"
+                name="email"
+                value={input.email}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 bg-gray-700/70 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
             </div>
-          </div>
 
-          <button
-            type="submit"
-            className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition duration-300 font-medium flex justify-center items-center gap-2"
-          >
-            <FiLogIn className="text-lg" />
-            เข้าสู่ระบบ
-          </button>
-        </form>
+            <div>
+              <label className="block text-gray-300 font-medium mb-1">รหัสผ่าน</label>
+              <input
+                type="password"
+                name="password"
+                value={input.password}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 bg-gray-700/70 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <div className="text-right mt-1">
+                <button
+                  type="button"
+                  className="text-sm text-red-400 hover:underline"
+                  onClick={() => navigate("/forgot-password")}
+                >
+                  ลืมรหัสผ่าน?
+                </button>
+              </div>
+            </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-400 text-sm">
-            ยังไม่มีบัญชี?{" "}
             <button
-              className="text-red-400 font-medium cursor-pointer hover:underline disabled:opacity-50"
-              disabled={isLoading}
-              onClick={() => {
-                setIsLoading(true);
-                setTimeout(() => navigate("/register"), 1500);
-              }}
+              type="submit"
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition duration-300 font-medium flex justify-center items-center gap-2"
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <FaCog className="animate-spin h-4 w-4 text-red-400" />
-                  กำลังโหลด...
-                </span>
-              ) : (
-                "สมัครสมาชิก"
-              )}
+              <FiLogIn className="text-lg" />
+              เข้าสู่ระบบ
             </button>
-          </p>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-300 text-sm">
+              ยังไม่มีบัญชี?{" "}
+              <button
+                className="text-red-400 font-medium hover:underline disabled:opacity-50"
+                disabled={isLoading}
+                onClick={() => {
+                  setIsLoading(true);
+                  setTimeout(() => navigate("/register"), 1500);
+                }}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <FaCog className="animate-spin h-4 w-4 text-red-400" />
+                    กำลังโหลด...
+                  </span>
+                ) : (
+                  "สมัครสมาชิก"
+                )}
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

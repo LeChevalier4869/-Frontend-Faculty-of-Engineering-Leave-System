@@ -1,49 +1,39 @@
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
-import { useState, useEffect, useCallback } from "react";
-import { Outlet } from "react-router-dom";
+import bg from "../assets/bg.jpg";
 
-export default function AppLayout() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarMini, setIsSidebarMini] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+function AppLayout() {
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isMiniSidebar, setMiniSidebar] = useState(false);
 
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023.98px)");
-    const handler = (e) => {
-      setIsMobile(e.matches);
-      setIsSidebarOpen(false);
-    };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
+  const toggleMiniSidebar = () => setMiniSidebar(!isMiniSidebar);
 
-  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-  const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
-  const toggleMiniSidebar = () => setIsSidebarMini((prev) => !prev);
+  const mainShift = clsx("transition-all duration-300", isMiniSidebar ? "ml-16" : "ml-64");
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar
-        isOpen={isSidebarOpen}
-        isMini={isSidebarMini}
-        toggleMiniSidebar={toggleMiniSidebar}
-        isMobile={isMobile}
-        onClose={closeSidebar}
-      />
+    <div
+      className="relative min-h-screen w-full overflow-hidden"
+      style={{
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      <div className="absolute inset-0 bg-black/25 backdrop-blur-[1.5px]" />
 
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30"
-          onClick={closeSidebar}
+      <div className="relative z-10 flex h-screen overflow-hidden">
+        <Sidebar
+          isOpen={isSidebarOpen}
+          isMini={isMiniSidebar}
+          toggleMiniSidebar={toggleMiniSidebar}
         />
-      )}
 
-      <div className="flex flex-col flex-1 overflow-hidden">
-       <Header onMenuClick={toggleSidebar} isSidebarOpen={isSidebarOpen} />
-        <main className="flex-1 overflow-auto bg-gray-100 p-4 lg:p-6">
-          <Outlet />
-        </main>
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <Header onToggleSidebar={toggleSidebar} />
+          <main className={clsx("flex-1 overflow-auto p-4", mainShift)}>
+            <Outlet />
+          </main>
+        </div>
       </div>
     </div>
   );
