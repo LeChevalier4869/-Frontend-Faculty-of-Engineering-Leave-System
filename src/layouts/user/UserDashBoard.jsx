@@ -245,30 +245,38 @@ export default function UserDashboard() {
 
       {/* Leave Balance by Type */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {entitlements.map((item) => {
-          const typeName = item.leaveType.name;
+        {entitlements
+          .filter((item) =>
+            ["ลาป่วย", "ลากิจส่วนตัว", "ลาพักผ่อน"].includes(
+              item.leaveType.name
+            )
+          )
+          .map((item) => {
+            const typeName = item.leaveType.name;
 
-          return (
-            <div
-              key={typeName}
-              className={`p-6 rounded-lg shadow flex items-center gap-4 ${
-                bgColorMap[typeName] || "bg-gray-200"
-              }`}
-            >
-              {/* icon */}
-              {iconMap[typeName] || (
-                <CalendarDays className="w-12 h-12 text-gray-600" />
-              )}
+            return (
+              <div
+                key={typeName}
+                className={`p-6 rounded-lg shadow flex items-center gap-4 ${
+                  bgColorMap[typeName] || "bg-gray-200"
+                }`}
+              >
+                {/* icon */}
+                {iconMap[typeName] || (
+                  <CalendarDays className="w-12 h-12 text-gray-600" />
+                )}
 
-              <div>
-                <p className="text-2xl font-semibold text-black">
-                  {item.remainingDays}
-                </p>
-                <p className="text-black">วันลาคงเหลือ ({typeName})</p>
+                <div>
+                  <p className="text-lg font-semibold text-black">
+                    วันลาคงเหลือ ({typeName})
+                  </p>
+                  <p className="text-2xl font-semibold text-black">
+                    {item.remainingDays} วัน
+                  </p>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* Summary Cards */}
@@ -276,28 +284,28 @@ export default function UserDashboard() {
         <div className="bg-white p-6 rounded-lg shadow flex items-center">
           <CheckCircle className="w-8 h-8 text-green-500" />
           <div className="ml-4">
+            <p className="text-black">อนุมัติแล้ว</p>
             <p className="text-2xl font-semibold text-black">
               {stats.approved}
             </p>
-            <p className="text-black">อนุมัติแล้ว</p>
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow flex items-center">
           <Clock className="w-8 h-8 text-yellow-500" />
           <div className="ml-4">
-            <p className="text-2xl font-semibold text-black">{stats.pending}</p>
             <p className="text-black">รออนุมัติ</p>
+            <p className="text-2xl font-semibold text-black">{stats.pending}</p>
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow flex items-center">
           <XCircle className="w-8 h-8 text-red-500" />
           <div className="ml-4">
+            <p className="text-black">ปฏิเสธแล้ว</p>
             <p className="text-2xl font-semibold text-black">
               {stats.rejected}
             </p>
-            <p className="text-black">ปฏิเสธแล้ว</p>
           </div>
         </div>
       </div>
