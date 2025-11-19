@@ -1,52 +1,38 @@
-// import Sidebar from "../components/Sidebar";
-// import Header from "../components/Header";
-// import Footer from "../components/Footer";
-// import { useState, useEffect, useCallback } from "react";
-// import { Outlet } from "react-router-dom";
+import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
+import clsx from "clsx";
 
-// export default function AppLayout() {
-//   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-//   const [isSidebarMini, setIsSidebarMini] = useState(false);
-//   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+import Header from "../components/Header";
+import Sidebar from "../components/Sidebar";
 
-//   useEffect(() => {
-//     const mq = window.matchMedia("(max-width: 1023.98px)");
-//     const handler = (e) => {
-//       setIsMobile(e.matches);
-//       setIsSidebarOpen(false);
-//     };
-//     mq.addEventListener("change", handler);
-//     return () => mq.removeEventListener("change", handler);
-//   }, []);
+export default function AppLayout() {
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
+    const [isMiniSidebar, setMiniSidebar] = useState(false);
 
-//   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-//   const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
-//   const toggleMiniSidebar = () => setIsSidebarMini((prev) => !prev);
+    const toggleSidebar = () => setSidebarOpen((v) => !v);
+    const toggleMiniSidebar = () => setMiniSidebar((v) => !v);
 
-//   return (
-//     <div className="flex h-screen overflow-hidden">
-//       <Sidebar
-//         isOpen={isSidebarOpen}
-//         isMini={isSidebarMini}
-//         toggleMiniSidebar={toggleMiniSidebar}
-//         isMobile={isMobile}
-//         onClose={closeSidebar}
-//       />
+    const mainShift = clsx(
+        "transition-all duration-300",
+        isMiniSidebar ? "ml-16" : "ml-64"
+    );
 
-//       {isSidebarOpen && (
-//         <div
-//           className="fixed inset-0 bg-black/50 z-30"
-//           onClick={closeSidebar}
-//         />
-//       )}
+    return (
+        <div className="flex h-screen overflow-hidden">
+            {/* Sidebar */}
+            <Sidebar 
+                isOpen={isSidebarOpen}
+                isMini={isMiniSidebar}
+                toggleMiniSidebar={toggleMiniSidebar}
+            />
 
-//       <div className="flex flex-col flex-1 overflow-hidden min-h-0">
-//        <Header onMenuClick={toggleSidebar} isSidebarOpen={isSidebarOpen} />
-//         <main className="flex-1 overflow-auto bg-gray-100 p-4 lg:p-6 flex flex-col min-h-0">
-//             <Outlet />
-//         </main>
-//         {/* <Footer /> */}
-//       </div>
-//     </div>
-//   );
-// }
+            {/* Main Content */}
+            <div className="flex flex-col flex-1 overflow-hidden">
+                <Header onToggleSidebar={toggleSidebar} />
+                <main className={clsx("flex-1 overflow-auto p-4 bg-gray-100", mainShift)}>
+                    <Outlet />
+                </main>
+            </div>
+        </div>
+    );
+}

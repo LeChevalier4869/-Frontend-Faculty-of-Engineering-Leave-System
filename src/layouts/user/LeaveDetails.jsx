@@ -25,32 +25,7 @@ export default function LeaveDetail() {
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
-  // const loadLeave = async () => {
-  //   try {
-  //     const res = await axios.get(apiEndpoints.getLeaveById(id), authHeader());
-  //     setLeave(res.data.data);
-  //     console.log("Leave Details:", res.data.data);
-  //   } catch (err) {
-  //     Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-  // const loadLastLeave = async () => {
-  //   try {
-  //     const res = await axios.post(apiEndpoints.getLastLeaveRequestByUserAndType(user?.id),{
-  //       leaveTypeId: leaveType?.id,
-  //     }, authHeader());
-  //     setLeave(res.data.data);
-  //     console.log("Leave Last Details:", res.data.data);
-  //   } catch (err) {
-  //     Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // useEffect ที่ 1: โหลดข้อมูล leave ตาม id
+  // useEffect ที่ 1: โหลดข้อมูล leave ตาม id (ใบปัจจุบัน)
   useEffect(() => {
     const loadLeave = async () => {
       try {
@@ -76,16 +51,18 @@ export default function LeaveDetail() {
     loadLeave();
   }, [id]);
 
-  // useEffect ที่ 2: โหลดข้อมูล leave ล่าสุดของผู้ใช้และประเภทลานี้
-  // ตัวอย่างใน useEffect ที่ 2
+  // useEffect ที่ 2: โหลดข้อมูล leave ล่าสุดของผู้ใช้และประเภทลานี้ (ใบก่อนหน้า startDate < ใบปัจจุบัน)
   useEffect(() => {
     if (!leave || !leave.userId || !leave.leaveType?.id) return;
 
     const loadLastLeave = async () => {
       try {
         const res = await axios.post(
-          apiEndpoints.getLastLeaveRequestByUserAndType(leave.userId),
-          { leaveTypeId: leave.leaveType.id },
+          apiEndpoints.getLastLeaveBefore(leave.userId),
+          { 
+            leaveTypeId: leave.leaveType.id,
+            beforeDate: new Date(leave.startDate).toISOString(),
+          },
           authHeader()
         );
         // ทดสอบ response
@@ -127,6 +104,7 @@ export default function LeaveDetail() {
     startDate,
     endDate,
     totalDays,
+    thisTimeDays,
     contact,
     status,
     documentNumber,
@@ -181,7 +159,7 @@ export default function LeaveDetail() {
     signatureApprover4: "ลายเซ็น4",
     DateApprover4: "12-06-2568"
   };
-  console.log(leave)
+  // console.log(leave)
 
   const downloadReport = async () => {
     setLoading(true);
@@ -360,7 +338,7 @@ export default function LeaveDetail() {
                   มีกำหนด
                 </label>
                 <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 text-center w-full">
-                  {totalDays}
+                  {thisTimeDays}
                 </p>
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   วัน
@@ -405,7 +383,7 @@ export default function LeaveDetail() {
                   มีกำหนด
                 </label>
                 <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {lastLeave?.totalDays ? lastLeave.totalDays : "-"}
+                  {lastLeave?.thisTimeDays ? lastLeave.thisTimeDays : "-"}
                 </p>
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   วัน
@@ -504,7 +482,7 @@ export default function LeaveDetail() {
           </span>
         </div>
 
-        <div className="mt-6 flex flex-wrap item-center justify-center sm:justify-start gap-3">
+        <div className="mt-6 flex flex-wrap items-center justify-center sm:justify-start gap-3">
           <button
             onClick={() => navigate(-1)}
             className="inline-block px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition font-medium"
