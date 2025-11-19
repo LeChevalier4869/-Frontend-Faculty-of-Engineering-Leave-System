@@ -4,6 +4,14 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { saveAs } from "file-saver";
+
+const handleDownloadTemplate = () => {
+  saveAs("/Add_Users_Template.xlsx", "Add_Users_Template.xlsx");
+};
+const handleDownloadTemplateExample = () => {
+  saveAs("/Add_Users_Template.xlsx", "Add_Users_Template.xlsx");
+};
 
 export default function AddUsersByExcel() {
   const navigate = useNavigate();
@@ -113,21 +121,41 @@ export default function AddUsersByExcel() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={() => navigate("/admin/manage-user")}
-              className="px-5 py-2 bg-white border border-black rounded-lg text-black hover:bg-gray-200"
-            >
-              ยกเลิก
-            </button>
-            <button
-              onClick={handleUpload}
-              disabled={uploading || !!fileError}
-              className="px-5 py-2 bg-blue-500 rounded-lg text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {uploading ? "กำลังอัปโหลด..." : "อัปโหลด"}
-            </button>
+          <div className="flex justify-between items-center">
+            {/* ปุ่มฝั่งซ้าย */}
+            <div className="flex space-x-2">
+              <button
+                onClick={handleDownloadTemplateExample}
+                className="px-5 py-2 rounded-lg font-medium text-white bg-yellow-500 hover:bg-yellow-600 transition"
+              >
+                โหลดเทมเพลต
+              </button>
+              <button
+                onClick={handleDownloadTemplate}
+                className="px-5 py-2 rounded-lg font-medium text-white bg-green-500 hover:bg-green-600 transition"
+              >
+                โหลดเทมเพลต
+              </button>
+            </div>
+
+            {/* ปุ่มฝั่งขวา */}
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={() => navigate("/admin/manage-user")}
+                className="px-5 py-2 rounded-lg font-medium text-white bg-gray-400 hover:bg-gray-500 transition disabled:opacity-50"
+              >
+                ยกเลิก
+              </button>
+
+              <button
+                onClick={handleUpload}
+                disabled={uploading || !!fileError}
+                className="px-5 py-2 rounded-lg font-medium text-white bg-blue-500 hover:bg-blue-600 transition disabled:opacity-50"
+              >
+                {uploading ? "กำลังอัปโหลด..." : "อัปโหลด"}
+              </button>
+            </div>
           </div>
 
           {/* Upload Result */}
