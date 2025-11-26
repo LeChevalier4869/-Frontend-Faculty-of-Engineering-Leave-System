@@ -16,7 +16,7 @@ const handleDownloadTemplateExample = () => {
 export default function AddUsersByExcel() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
-  const [fileError, setFileError] = useState(""); // สำหรับข้อความเตือนไฟล์
+  const [fileError, setFileError] = useState(""); 
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState(null);
 

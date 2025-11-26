@@ -30,11 +30,12 @@ export default function LeaveApprover1() {
     REJECTED: "ปฏิเสธ",
     CANCELLED: "ยกเลิก",
   };
+
   const statusColors = {
-    APPROVED: "bg-green-500 text-white",
-    PENDING: "bg-yellow-500 text-white",
-    REJECTED: "bg-red-500 text-white",
-    CANCELLED: "bg-gray-500 text-white",
+    APPROVED: "bg-emerald-500/20 text-emerald-200 border border-emerald-400/50",
+    PENDING: "bg-amber-500/20 text-amber-200 border border-amber-400/50",
+    REJECTED: "bg-rose-500/20 text-rose-200 border border-rose-400/50",
+    CANCELLED: "bg-slate-500/30 text-slate-200 border border-slate-400/50",
   };
 
   const fetchLeaveRequests = async () => {
@@ -113,6 +114,7 @@ export default function LeaveApprover1() {
     return sorted.filter((lr) => {
       const created = dayjs(lr.createdAt).format("YYYY-MM-DD");
       let byDate = true;
+
       if (filterStartDate && filterEndDate) {
         byDate = dayjs(created).isBetween(
           filterStartDate,
@@ -125,10 +127,12 @@ export default function LeaveApprover1() {
       } else if (filterEndDate) {
         byDate = created <= filterEndDate;
       }
+
       const byStatus = filterStatus ? lr.status === filterStatus : true;
       const byType = filterLeaveType
         ? String(lr.leaveTypeId) === filterLeaveType
         : true;
+
       return byDate && byStatus && byType;
     });
   }, [
@@ -149,258 +153,280 @@ export default function LeaveApprover1() {
 
   const formatDateTime = (iso) =>
     dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
-  const formatDate = (iso) =>
-    dayjs(iso).locale("th").format("DD/MM/YYYY");
+  const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY");
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
-        กำลังโหลดข้อมูลการลา...
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] font-kanit text-slate-100">
+        <div className="w-full max-w-md rounded-3xl bg-slate-950/80 border border-sky-500/30 shadow-[0_22px_60px_rgba(8,47,73,0.9)] backdrop-blur-2xl p-6">
+          <div className="flex flex-col items-center gap-3 text-sm">
+            <div className="relative flex h-10 w-10 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400/40 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-300 shadow-[0_0_18px_rgba(56,189,248,0.9)]" />
+            </div>
+            <span className="font-medium">กำลังโหลดรายการการลาที่รออนุมัติ...</span>
+            <span className="text-xs text-slate-400">
+              กรุณารอสักครู่ ระบบกำลังดึงข้อมูล
+            </span>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6 bg-white font-kanit text-black">
-      {/* header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-        <h1 className="text-3xl font-bold">รายการการลาที่รออนุมัติ</h1>
-      </div>
-
-      {/* filters */}
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        {/* Date range */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm">จาก</label>
-          <input
-            type="date"
-            value={filterStartDate}
-            onChange={(e) => {
-              setFilterStartDate(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <label className="text-sm">ถึง</label>
-          <input
-            type="date"
-            value={filterEndDate}
-            onChange={(e) => {
-              setFilterEndDate(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="bg-white text-base px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-
-        {/* Leave-type dropdown */}
-        <div className="relative w-48">
-          <select
-            value={filterLeaveType}
-            onChange={(e) => {
-              setFilterLeaveType(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="">ประเภทการลาทั้งหมด</option>
-            {Object.entries(leaveTypesMap).map(([id, name]) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-            <ChevronDown className="w-4 h-4 text-gray-500" />
+    <div className="min-h-screen bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] font-kanit text-slate-100 px-4 py-8 md:px-8 rounded-3xl shadow-xl backdrop-blur-sm border border-white/10">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/40 shadow-[0_0_30px_rgba(56,189,248,0.25)] mb-3">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[11px] uppercase tracking-[0.2em] text-sky-100">
+                Pending Approval
+              </span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+              รายการการลาที่รออนุมัติ
+            </h1>
+            <p className="mt-1 text-sm text-slate-300">
+              ตรวจสอบและรับรองคำขอลา พร้อมระบุความคิดเห็นเพิ่มเติมได้จากที่นี่
+            </p>
           </div>
         </div>
 
-        {/* Sort order dropdown */}
-        <div className="relative w-48">
-          <select
-            value={sortOrder}
-            onChange={(e) => {
-              setSortOrder(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="desc">ล่าสุดก่อน</option>
-            <option value="asc">เก่าสุดก่อน</option>
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-            <ChevronDown className="w-4 h-4 text-gray-500" />
+        <div className="rounded-2xl bg-slate-900/60 border border-sky-500/20 shadow-[0_22px_60px_rgba(8,47,73,0.85)] backdrop-blur-xl p-4 md:p-5">
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-200">จาก</span>
+              <input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => {
+                  setFilterStartDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="bg-slate-900/80 text-sm text-slate-100 px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+              />
+              <span className="text-sm text-slate-200">ถึง</span>
+              <input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => {
+                  setFilterEndDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="bg-slate-900/80 text-sm text-slate-100 px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+              />
+            </div>
+
+            <div className="relative w-52">
+              <select
+                value={filterLeaveType}
+                onChange={(e) => {
+                  setFilterLeaveType(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-slate-900/80 text-sm text-slate-100 px-3 py-2 pr-8 border border-slate-600 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+              >
+                <option value="">ประเภทการลาทั้งหมด</option>
+                {Object.entries(leaveTypesMap).map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              </div>
+            </div>
+
+            <div className="relative w-52">
+              <select
+                value={sortOrder}
+                onChange={(e) => {
+                  setSortOrder(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-slate-900/80 text-sm text-slate-100 px-3 py-2 pr-8 border border-slate-600 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+              >
+                <option value="desc">ล่าสุดก่อน</option>
+                <option value="asc">เก่าสุดก่อน</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setFilterStartDate("");
+                setFilterEndDate("");
+                setFilterStatus("");
+                setFilterLeaveType("");
+                setCurrentPage(1);
+                setSortOrder("desc");
+              }}
+              className="px-4 py-2 bg-rose-500/90 hover:bg-rose-500 text-sm text-white rounded-lg shadow-md shadow-rose-500/40 transition"
+            >
+              ล้างตัวกรอง
+            </button>
           </div>
-        </div>
 
-        {/* Clear filters */}
-        <button
-          onClick={() => {
-            setFilterStartDate("");
-            setFilterEndDate("");
-            setFilterStatus("");
-            setFilterLeaveType("");
-            setCurrentPage(1);
-            setSortOrder("desc");
-          }}
-          className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
-        >
-          ล้าง
-        </button>
-      </div>
-
-      {/* table */}
-      <div className="rounded-lg shadow border border-gray-300 overflow-visible">
-        <table className="w-full table-auto bg-white text-sm text-black">
-          <thead>
-            <tr className="bg-gray-100 text-gray-800">
-              {[
-                "วันที่ยื่น",
-                "ชื่อผู้ลา",
-                "ประเภทการลา",
-                "วันเริ่มต้น",
-                "วันสิ้นสุด",
-                "สถานะ",
-                "ความคิดเห็น",
-                "ดำเนินการ",
-              ].map((h, i) => (
-                <th
-                  key={i}
-                  className={`px-4 py-3 text-left whitespace-normal ${
-                    h === "ชื่อผู้ลา" ? "w-[220px]" : ""
-                  }`}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {displayItems.length > 0 ? (
-              displayItems.map((leave, idx) => {
-                const detailId = leave.leaveRequestDetails?.[0]?.id;
-                const statusKey = (leave.status || "").toUpperCase();
-                return (
-                  <tr
-                    key={leave.id}
-                    className={`${
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-gray-100 transition cursor-pointer`}
-                    onClick={() => navigate(`/leave/${leave.id}`)}
-                  >
-                    <td className="px-4 py-2 whitespace-normal break-words">
-                      {formatDateTime(leave.createdAt)}
-                    </td>
-                    <td className="px-4 py-2 whitespace-normal break-words w-[220px]">
-                      {leave.user.prefixName}
-                      {leave.user.firstName} {leave.user.lastName}
-                    </td>
-                    <td className="px-4 py-2 whitespace-normal break-words">
-                      {leaveTypesMap[leave.leaveTypeId] || "-"}
-                    </td>
-                    <td className="px-4 py-2 whitespace-normal break-words">
-                      {formatDate(leave.startDate)}
-                    </td>
-                    <td className="px-4 py-2 whitespace-normal break-words">
-                      {formatDate(leave.endDate)}
-                    </td>
-                    <td className="px-4 py-2 whitespace-normal break-words">
-                      <span
-                        className={`inline-block text-center px-2 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
-                          statusColors[statusKey] || "bg-gray-100 text-gray-700"
-                        }`}
+          <div className="rounded-xl border border-white/10 overflow-visible bg-slate-950/40">
+            <table className="w-full table-auto text-sm text-slate-100">
+              <thead>
+                <tr className="bg-white/5 border-b border-white/10">
+                  {[
+                    "วันที่ยื่น",
+                    "ชื่อผู้ลา",
+                    "ประเภทการลา",
+                    "วันเริ่มต้น",
+                    "วันสิ้นสุด",
+                    "สถานะ",
+                    "ความคิดเห็น",
+                    "ดำเนินการ",
+                  ].map((h, i) => (
+                    <th
+                      key={i}
+                      className={`px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-300 ${
+                        h === "ชื่อผู้ลา" ? "w-[220px]" : ""
+                      }`}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {displayItems.length > 0 ? (
+                  displayItems.map((leave, idx) => {
+                    const detailId = leave.leaveRequestDetails?.[0]?.id;
+                    const statusKey = (leave.status || "").toUpperCase();
+                    return (
+                      <tr
+                        key={leave.id}
+                        className={`${
+                          idx % 2 === 0 ? "bg-slate-900/40" : "bg-slate-900/20"
+                        } border-b border-white/5 hover:bg-slate-800/70 transition cursor-pointer`}
+                        onClick={() => navigate(`/leave/${leave.id}`)}
                       >
-                        {statusLabels[statusKey] || leave.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 whitespace-normal break-words">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={comments[detailId] || ""}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) =>
-                            setComments((c) => ({
-                              ...c,
-                              [detailId]: e.target.value,
-                            }))
-                          }
-                          className="w-full bg-white text-black border border-gray-300 rounded-lg px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
-                          placeholder="ใส่ความคิดเห็น"
-                        />
-                        <Pencil
-                          className="w-5 h-5 text-gray-500 cursor-pointer"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 whitespace-normal break-words">
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const result = await Swal.fire({
-                            title: "รับรองคำขอลา",
-                            text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "ใช่, รับรอง",
-                            cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#16a34a",
-                            cancelButtonColor: "#d33",
-                          });
-                          if (result.isConfirmed) {
-                            handleApprove(detailId);
-                          }
-                        }}
-                        disabled={loadingApprovals[detailId]}
-                        className={`px-4 py-1 rounded text-white ${
-                          loadingApprovals[detailId]
-                            ? "bg-green-300 cursor-not-allowed"
-                            : "bg-green-500 hover:bg-green-600"
-                        }`}
-                      >
-                        ตกลง
-                      </button>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {formatDateTime(leave.createdAt)}
+                        </td>
+                        <td className="px-4 py-2 whitespace-normal break-words w-[220px]">
+                          {leave.user.prefixName}
+                          {leave.user.firstName} {leave.user.lastName}
+                        </td>
+                        <td className="px-4 py-2 whitespace-normal break-words">
+                          {leaveTypesMap[leave.leaveTypeId] || "-"}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {formatDate(leave.startDate)}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {formatDate(leave.endDate)}
+                        </td>
+                        <td className="px-4 py-2">
+                          <span
+                            className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                              statusColors[statusKey] ||
+                              "bg-slate-600/40 text-slate-100 border border-slate-400/40"
+                            }`}
+                          >
+                            {statusLabels[statusKey] || leave.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 align-top">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={comments[detailId] || ""}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) =>
+                                setComments((c) => ({
+                                  ...c,
+                                  [detailId]: e.target.value,
+                                }))
+                              }
+                              className="w-full bg-slate-900/70 text-slate-100 border border-slate-600 rounded-lg px-3 py-2 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                              placeholder="ใส่ความคิดเห็นสำหรับผู้อนุมัติถัดไป"
+                            />
+                            <Pencil
+                              className="w-4 h-4 text-slate-400 cursor-pointer"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const result = await Swal.fire({
+                                title: "รับรองคำขอลา",
+                                text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "ใช่, รับรอง",
+                                cancelButtonText: "ยกเลิก",
+                                confirmButtonColor: "#16a34a",
+                                cancelButtonColor: "#d33",
+                              });
+                              if (result.isConfirmed) {
+                                handleApprove(detailId);
+                              }
+                            }}
+                            disabled={loadingApprovals[detailId]}
+                            className={`px-4 py-1 rounded-lg text-xs font-medium shadow-md shadow-emerald-500/30 ${
+                              loadingApprovals[detailId]
+                                ? "bg-emerald-400/60 cursor-not-allowed"
+                                : "bg-emerald-500 hover:bg-emerald-400"
+                            } text-white`}
+                          >
+                            ตกลง
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="8"
+                      className="px-4 py-6 text-center text-slate-300"
+                    >
+                      ไม่มีข้อมูลการลา
                     </td>
                   </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td
-                  colSpan="8"
-                  className="px-4 py-6 text-center text-gray-500 whitespace-normal"
-                >
-                  ไม่มีข้อมูลการลา
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-      {/* pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border border-gray-300 rounded-lg bg-white disabled:opacity-50 transition"
-          >
-            ก่อนหน้า
-          </button>
-          <span className="px-3 py-1 text-gray-800">
-            หน้า {currentPage} / {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border border-gray-300 rounded-lg bg-white disabled:opacity-50 transition"
-          >
-            ถัดไป
-          </button>
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-5">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border border-slate-600 rounded-lg bg-slate-900/80 text-slate-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800/80 transition"
+              >
+                ก่อนหน้า
+              </button>
+              <span className="px-3 py-1 text-slate-200 text-sm">
+                หน้า {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border border-slate-600 rounded-lg bg-slate-900/80 text-slate-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800/80 transition"
+              >
+                ถัดไป
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
