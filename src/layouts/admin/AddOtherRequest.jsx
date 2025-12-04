@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import axios from "axios";
+// import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { apiEndpoints } from "../../utils/api";
+import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import { Plus, ChevronDown, PlusCircle, X } from "lucide-react";
@@ -57,10 +57,8 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
 
   const fetchUserLand = useCallback(async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(apiEndpoints.userLanding, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // const token = localStorage.getItem("accessToken");
+      const res = await API.get(apiEndpoints.userLanding);
       const list = normalizeUsers(res?.data);
       setUserLand(list);
     } catch (err) {
@@ -129,12 +127,8 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       if (documentIssuedDate) fd.append("documentIssuedDate", documentIssuedDate);
       if (imageFile) fd.append("images", imageFile);
 
-      const token = localStorage.getItem("accessToken");
-      await axios.post(apiEndpoints.adminLeaveRequests, fd, {
-        headers: { 
-          // "Content-Type": "multipart/form-data", 
-          Authorization: `Bearer ${token}` 
-        },
+      // const token = localStorage.getItem("accessToken");
+      await API.post(apiEndpoints.adminLeaveRequests, fd, {
         withCredentials: true,
       });
       onSuccess?.();
@@ -254,7 +248,12 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
               </div>
               <div>
                 <label className="mb-1 block text-sm">วันที่ออกเอกสาร</label>
-                <input type="date" value={documentIssuedDate} onChange={(e) => setDocumentIssuedDate(e.target.value)} className={inputStyle} />
+                <input 
+                  type="date" 
+                  value={documentIssuedDate} 
+                  onChange={(e) => setDocumentIssuedDate(e.target.value)} 
+                  className={inputStyle}
+                />
               </div>
               <div>
                 <label className="mb-1 block text-sm">แนบรูปภาพ</label>
@@ -291,11 +290,9 @@ export default function AddOtherRequest() {
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(apiEndpoints.leaveRequest, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("Leave requests response:", res.data.data);
+      // const token = localStorage.getItem("accessToken");
+      const res = await API.get(apiEndpoints.leaveRequest);
+      // console.log("Leave requests response:", res.data.data);
       const data = Array.isArray(res.data.data)
         ? res.data.data
         : Array.isArray(res.data.leaveRequest || res.data.leaveRequests)
@@ -312,7 +309,7 @@ export default function AddOtherRequest() {
 
   const fetchLeaveTypes = async () => {
     try {
-      const res = await axios.get(apiEndpoints.getAllLeaveTypes);
+      const res = await API.get(apiEndpoints.getAllLeaveTypes);
       const map = {};
       (res.data.data || []).forEach((lt) => {
         map[lt.id] = lt.name;

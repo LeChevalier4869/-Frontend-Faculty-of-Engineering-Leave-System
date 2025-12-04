@@ -4,8 +4,6 @@ import {
   Outlet,
   Navigate,
 } from "react-router-dom";
-import { useState } from "react";
-import clsx from "clsx"; // ✅ ใช้ควบคุม class แบบ dynamic
 import useAuth from "../hooks/useAuth";
 
 /** OAuth layouts **/
@@ -19,9 +17,8 @@ import Register from "../layouts/auth/Register";
 import ForgotPassword from "../layouts/auth/ForgotPassword";
 import ResetPassword from "../layouts/auth/ResetPassword";
 
-/** Main components **/
-import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
+/** Main Layout **/
+import AppLayout from "../layouts/AppLayout";
 
 /** User pages **/
 import UserHome from "../layouts/user/UserHome";
@@ -65,43 +62,7 @@ import AddOtherRequest from "../layouts/admin/AddOtherRequest";
 import ConfigPage from "../layouts/admin/Config";
 import AddUsersByExcel from "../layouts/admin/AddUsersByExcel";
 
-/** Layout หลักพร้อม Sidebar */
-function AppLayout() {
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [isMiniSidebar, setMiniSidebar] = useState(false);
-
-  const toggleSidebar = () => setSidebarOpen((v) => !v);
-
-  const toggleMiniSidebar = () => setMiniSidebar((v) => !v);
-
-  const mainShift = clsx(
-    "transition-all duration-300",
-    isMiniSidebar ? "ml-16" : "ml-64"
-  );
-
-  return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar
-        isOpen={isSidebarOpen}
-        isMini={isMiniSidebar}
-        toggleMiniSidebar={toggleMiniSidebar}
-      />
-
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <Header onToggleSidebar={toggleSidebar} />
-        <main
-          className={clsx("flex-1 overflow-auto p-4 bg-gray-100", mainShift)}
-        >
-          <Outlet />
-        </main>
-      </div>
-    </div>
-  );
-}
-
-/** Routes สำหรับผู้ที่ยังไม่ล็อกอิน */
+/** Routes สำหรับผู้ที่ยังไม่ล็อกอิน **/
 const guestRouter = createBrowserRouter([
   {
     element: <Outlet />,
@@ -121,7 +82,7 @@ const guestRouter = createBrowserRouter([
   },
 ]);
 
-/** Routes สำหรับผู้ที่ล็อกอินแล้ว */
+/** Routes สำหรับผู้ที่ล็อกอินแล้ว **/
 const userRouter = createBrowserRouter([
   {
     element: <AppLayout />,
@@ -184,7 +145,7 @@ const userRouter = createBrowserRouter([
   },
 ]);
 
-/** AppRouter หลัก */
+/** AppRouter หลัก **/
 export default function AppRouter() {
   const { user } = useAuth();
   const finalRouter = user?.id ? userRouter : guestRouter;

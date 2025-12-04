@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { FaFileAlt, FaFilePdf } from "react-icons/fa";
-import { apiEndpoints } from "../../utils/api";
+import { apiEndpoints, API } from "../../utils/api";
 
 export default function LeaveDetail() {
   const { id } = useParams();
@@ -12,51 +12,26 @@ export default function LeaveDetail() {
   const [lastLeave, setLastLeave] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const authHeader = () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      Swal.fire("หมดเวลาการใช้งาน", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => {
-          window.location.href = "/login";
-        }
-      );
-      throw new Error("No token");
-    }
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
-
-  // const loadLeave = async () => {
-  //   try {
-  //     const res = await axios.get(apiEndpoints.getLeaveById(id), authHeader());
-  //     setLeave(res.data.data);
-  //     console.log("Leave Details:", res.data.data);
-  //   } catch (err) {
-  //     Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
-  //   } finally {
-  //     setLoading(false);
+  // const authHeader = () => {
+  //   const token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     Swal.fire("หมดเวลาการใช้งาน", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
+  //       () => {
+  //         window.location.href = "/login";
+  //       }
+  //     );
+  //     throw new Error("No token");
   //   }
-  // };
-  // const loadLastLeave = async () => {
-  //   try {
-  //     const res = await axios.post(apiEndpoints.getLastLeaveRequestByUserAndType(user?.id),{
-  //       leaveTypeId: leaveType?.id,
-  //     }, authHeader());
-  //     setLeave(res.data.data);
-  //     console.log("Leave Last Details:", res.data.data);
-  //   } catch (err) {
-  //     Swal.fire("ผิดพลาด", err.response?.data?.message || err.message, "error");
-  //   } finally {
-  //     setLoading(false);
-  //   }
+  //   return { headers: { Authorization: `Bearer ${token}` } };
   // };
 
-  // useEffect ที่ 1: โหลดข้อมูล leave ตาม id
+  // useEffect ที่ 1: โหลดข้อมูล leave ตาม id (ใบปัจจุบัน)
   useEffect(() => {
     const loadLeave = async () => {
       try {
-        const res = await axios.get(
+        const res = await API.get(
           apiEndpoints.getLeaveById(id),
-          authHeader()
+          // authHeader()
         );
         // ทดสอบ response
         // console.log("Leave Details:", res.data.data);
@@ -76,17 +51,19 @@ export default function LeaveDetail() {
     loadLeave();
   }, [id]);
 
-  // useEffect ที่ 2: โหลดข้อมูล leave ล่าสุดของผู้ใช้และประเภทลานี้
-  // ตัวอย่างใน useEffect ที่ 2
+  // useEffect ที่ 2: โหลดข้อมูล leave ล่าสุดของผู้ใช้และประเภทลานี้ (ใบก่อนหน้า startDate < ใบปัจจุบัน)
   useEffect(() => {
     if (!leave || !leave.userId || !leave.leaveType?.id) return;
 
     const loadLastLeave = async () => {
       try {
-        const res = await axios.post(
-          apiEndpoints.getLastLeaveRequestByUserAndType(leave.userId),
-          { leaveTypeId: leave.leaveType.id },
-          authHeader()
+        const res = await API.post(
+          apiEndpoints.getLastLeaveBefore(leave.userId),
+          { 
+            leaveTypeId: leave.leaveType.id,
+            beforeDate: new Date(leave.startDate).toISOString(),
+          },
+          // authHeader()
         );
         // ทดสอบ response
         // console.log("Last Leave Details:", res.data);
@@ -127,6 +104,7 @@ export default function LeaveDetail() {
     startDate,
     endDate,
     totalDays,
+    thisTimeDays,
     contact,
     status,
     documentNumber,
@@ -181,21 +159,30 @@ export default function LeaveDetail() {
     signatureApprover4: "ลายเซ็น4",
     DateApprover4: "12-06-2568"
   };
-  console.log(leave)
+  // console.log(leave)
 
   const downloadReport = async () => {
     setLoading(true);
     try {
       // เรียก API ด้วยข้อมูล leaveData ที่ส่งมาจาก props
       // ต้องมั่นใจว่า leaveData มีโครงสร้างครบตามที่ backend ต้องการ
-      const response = await axios.post(
-        "https://backend-faculty-of-engineering-leave.onrender.com/api/download-report",
-        leaveData,
+
+      // const response = await axios.post(
+      //   "...https://backend-faculty-of-engineering-leave.onrender.com/api/download-report",
+      //   leaveData,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      //     },
+      //     responseType: "blob", // สำคัญมาก! ให้รับไฟล์เป็น blob
+      //   }
+      // );
+
+      const response = await API.post(
+        apiEndpoints.downloadReport, 
+        leaveData, 
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          responseType: "blob", // สำคัญมาก! ให้รับไฟล์เป็น blob
+          responseType: "blob",
         }
       );
 
@@ -360,7 +347,7 @@ export default function LeaveDetail() {
                   มีกำหนด
                 </label>
                 <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 text-center w-full">
-                  {totalDays}
+                  {thisTimeDays}
                 </p>
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   วัน
@@ -405,7 +392,7 @@ export default function LeaveDetail() {
                   มีกำหนด
                 </label>
                 <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {lastLeave?.totalDays ? lastLeave.totalDays : "-"}
+                  {lastLeave?.thisTimeDays ? lastLeave.thisTimeDays : "-"}
                 </p>
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   วัน
@@ -504,7 +491,7 @@ export default function LeaveDetail() {
           </span>
         </div>
 
-        <div className="mt-6 flex flex-wrap item-center justify-center sm:justify-start gap-3">
+        <div className="mt-6 flex flex-wrap items-center justify-center sm:justify-start gap-3">
           <button
             onClick={() => navigate(-1)}
             className="inline-block px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition font-medium"
