@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { FaFileAlt, FaFilePdf } from "react-icons/fa";
-import { apiEndpoints } from "../../utils/api";
+import { apiEndpoints, API } from "../../utils/api";
 
 export default function LeaveDetail() {
   const { id } = useParams();
@@ -12,26 +12,26 @@ export default function LeaveDetail() {
   const [lastLeave, setLastLeave] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const authHeader = () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      Swal.fire("หมดเวลาการใช้งาน", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => {
-          window.location.href = "/login";
-        }
-      );
-      throw new Error("No token");
-    }
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
+  // const authHeader = () => {
+  //   const token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     Swal.fire("หมดเวลาการใช้งาน", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
+  //       () => {
+  //         window.location.href = "/login";
+  //       }
+  //     );
+  //     throw new Error("No token");
+  //   }
+  //   return { headers: { Authorization: `Bearer ${token}` } };
+  // };
 
   // useEffect ที่ 1: โหลดข้อมูล leave ตาม id (ใบปัจจุบัน)
   useEffect(() => {
     const loadLeave = async () => {
       try {
-        const res = await axios.get(
+        const res = await API.get(
           apiEndpoints.getLeaveById(id),
-          authHeader()
+          // authHeader()
         );
         // ทดสอบ response
         // console.log("Leave Details:", res.data.data);
@@ -57,13 +57,13 @@ export default function LeaveDetail() {
 
     const loadLastLeave = async () => {
       try {
-        const res = await axios.post(
+        const res = await API.post(
           apiEndpoints.getLastLeaveBefore(leave.userId),
           { 
             leaveTypeId: leave.leaveType.id,
             beforeDate: new Date(leave.startDate).toISOString(),
           },
-          authHeader()
+          // authHeader()
         );
         // ทดสอบ response
         // console.log("Last Leave Details:", res.data);
@@ -166,14 +166,23 @@ export default function LeaveDetail() {
     try {
       // เรียก API ด้วยข้อมูล leaveData ที่ส่งมาจาก props
       // ต้องมั่นใจว่า leaveData มีโครงสร้างครบตามที่ backend ต้องการ
-      const response = await axios.post(
-        "https://backend-faculty-of-engineering-leave.onrender.com/api/download-report",
-        leaveData,
+
+      // const response = await axios.post(
+      //   "...https://backend-faculty-of-engineering-leave.onrender.com/api/download-report",
+      //   leaveData,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      //     },
+      //     responseType: "blob", // สำคัญมาก! ให้รับไฟล์เป็น blob
+      //   }
+      // );
+
+      const response = await API.post(
+        apiEndpoints.downloadReport, 
+        leaveData, 
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          responseType: "blob", // สำคัญมาก! ให้รับไฟล์เป็น blob
+          responseType: "blob",
         }
       );
 

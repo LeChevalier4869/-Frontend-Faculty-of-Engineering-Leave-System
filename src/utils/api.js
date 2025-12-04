@@ -46,6 +46,7 @@ export const apiEndpoints = {
   updateDriveLink : `${BASE_URL}/api/drive-link`, //PUT
   exportReport : `${BASE_URL}/api/export-report`, //POST
   uploadUserExcel : `${BASE_URL}/excel/upload-users`, //POST
+  downloadReport: `${BASE_URL}/api/download-report`, //POST
 
   
 
