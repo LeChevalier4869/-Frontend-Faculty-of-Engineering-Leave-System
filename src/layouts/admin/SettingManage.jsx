@@ -6,9 +6,7 @@ import { BASE_URL } from "../../utils/api";
 const PAGE_SIZE = 10;
 
 const Panel = ({ className = "", children }) => (
-  <div
-    className={`rounded-2xl overflow-hidden bg-slate-900/60 border border-sky-500/15 shadow-[0_22px_60px_rgba(8,47,73,0.85)] backdrop-blur-xl ${className}`}
-  >
+  <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
     {children}
   </div>
 );
@@ -27,10 +25,10 @@ export default function SettingManage() {
   const [filterType, setFilterType] = useState("ALL");
 
   const inputClass =
-    "col-span-2 border border-sky-500/30 rounded-xl px-3 py-2 bg-slate-900/70 text-sm text-slate-100 shadow-[0_18px_45px_rgba(8,47,73,0.6)] focus:outline-none focus:ring-2 focus:ring-sky-400/70 placeholder:text-slate-500";
+    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400";
   const dropdownClass =
-    "appearance-none col-span-2 bg-slate-900/70 text-sm text-slate-100 border border-sky-500/30 rounded-xl px-3 py-2 shadow-[0_18px_45px_rgba(8,47,73,0.6)] focus:outline-none focus:ring-2 focus:ring-sky-400/70 w-full";
-  const wrapperClass = "relative col-span-2 w-full";
+    "w-full appearance-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+  const wrapperClass = "relative w-full";
 
   const ArrowIcon = () => (
     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
@@ -70,7 +68,7 @@ export default function SettingManage() {
     setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/admin/setting`, authHeader());
-      setSettings(res.data);
+      setSettings(res.data || []);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -111,6 +109,7 @@ export default function SettingManage() {
 
   const handleEdit = (id) => {
     const setting = settings.find((s) => s.id === id);
+    if (!setting) return;
     setNewKey(setting.key);
     setNewType(setting.type);
     setNewValue(setting.value);
@@ -159,12 +158,11 @@ export default function SettingManage() {
 
   const filteredSettings = useMemo(() => {
     return settings.filter((s) => {
+      const q = searchTerm.toLowerCase();
       const matchesSearch =
-        s.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (s.description || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
+        s.key.toLowerCase().includes(q) ||
+        s.value.toLowerCase().includes(q) ||
+        (s.description || "").toLowerCase().includes(q);
 
       const matchesType =
         filterType === "ALL" ||
@@ -183,66 +181,101 @@ export default function SettingManage() {
   }, [searchTerm, filterType]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] px-4 py-8 md:px-8 font-kanit text-slate-100 rounded-3xl shadow-xl backdrop-blur-sm border border-white/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex flex-col gap-2 mb-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/40 shadow-[0_0_30px_rgba(56,189,248,0.35)] w-fit">
-            <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-100">
-              System Settings
+        <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Admin View
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-50">
-            จัดการการตั้งค่าระบบ
-          </h1>
-          <p className="text-sm text-slate-300">
-            เพิ่ม แก้ไข หรือลบค่า setting ของระบบจากหน้านี้ได้โดยตรง
-          </p>
+          <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between w-full">
+            <div className="flex flex-col items-center gap-1 md:items-start">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                จัดการการตั้งค่าระบบ
+              </h1>
+              <p className="text-sm text-slate-600">
+                เพิ่ม แก้ไข หรือลบค่า setting ของระบบจากหน้านี้ได้โดยตรง
+              </p>
+            </div>
+            <div className="text-xs text-slate-500 mt-1 md:mt-0">
+              พบ{" "}
+              <span className="font-semibold text-sky-600">
+                {filteredSettings.length}
+              </span>{" "}
+              รายการ
+            </div>
+          </div>
         </div>
 
         <Panel className="p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-            <input
-              type="text"
-              placeholder="กรอก Key"
-              value={newKey}
-              onChange={(e) => setNewKey(e.target.value)}
-              className={inputClass}
-            />
-            <input
-              type="text"
-              placeholder="กรอก Value"
-              value={newValue}
-              onChange={(e) => setNewValue(e.target.value)}
-              className={inputClass}
-            />
-            <input
-              type="text"
-              placeholder="คำอธิบาย (ไม่บังคับ)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className={inputClass}
-            />
-            <div className={wrapperClass}>
-              <select
-                value={newType}
-                onChange={(e) => setNewType(e.target.value)}
-                className={dropdownClass}
-              >
-                <option value="">เลือก Type</option>
-                <option value="string">String</option>
-                <option value="number">Number</option>
-                <option value="boolean">Boolean</option>
-                <option value="date">Date</option>
-                <option value="json">JSON</option>
-              </select>
-              <ArrowIcon />
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
+            <div className="sm:col-span-1 flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                Key
+              </label>
+              <input
+                type="text"
+                placeholder="กรอก Key"
+                value={newKey}
+                onChange={(e) => setNewKey(e.target.value)}
+                className={inputClass}
+              />
             </div>
+            <div className="sm:col-span-1 flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                Value
+              </label>
+              <input
+                type="text"
+                placeholder="กรอก Value"
+                value={newValue}
+                onChange={(e) => setNewValue(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="sm:col-span-2 flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                คำอธิบาย
+              </label>
+              <input
+                type="text"
+                placeholder="คำอธิบาย (ไม่บังคับ)"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="sm:col-span-1 flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                Type
+              </label>
+              <div className={wrapperClass}>
+                <select
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value)}
+                  className={dropdownClass}
+                >
+                  <option value="">เลือก Type</option>
+                  <option value="string">String</option>
+                  <option value="number">Number</option>
+                  <option value="boolean">Boolean</option>
+                  <option value="date">Date</option>
+                  <option value="json">JSON</option>
+                </select>
+                <ArrowIcon />
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end">
             <button
               onClick={editId ? handleUpdate : handleAdd}
-              className={`${
-                editId ? "bg-emerald-600 hover:bg-emerald-500" : "bg-sky-600 hover:bg-sky-500"
-              } text-white text-sm px-4 py-2 rounded-xl shadow-[0_12px_32px_rgba(8,47,73,0.85)] transition mt-2 sm:mt-0`}
+              className={`inline-flex items-center justify-center rounded-xl text-sm font-medium text-white shadow-sm px-4 py-2 ${
+                editId
+                  ? "bg-emerald-600 hover:bg-emerald-500"
+                  : "bg-sky-600 hover:bg-sky-500"
+              }`}
             >
               {editId ? "อัปเดต" : "เพิ่ม"}
             </button>
@@ -251,12 +284,8 @@ export default function SettingManage() {
 
         <Panel className="p-5">
           <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:items-center sm:justify-between">
-            <div className="text-sm text-slate-300">
-              พบ{" "}
-              <span className="font-semibold text-sky-300">
-                {filteredSettings.length}
-              </span>{" "}
-              รายการ
+            <div className="text-sm text-slate-600">
+              แสดงผลตามตัวกรองด้านขวา
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <input
@@ -264,43 +293,46 @@ export default function SettingManage() {
                 placeholder="ค้นหา Key / Value / คำอธิบาย"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="border border-sky-500/30 rounded-xl px-3 py-2 bg-slate-900/70 text-sm text-slate-100 shadow-[0_18px_45px_rgba(8,47,73,0.6)] focus:ring-2 focus:ring-sky-400/70 w-full"
+                className="w-full sm:w-64 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400"
               />
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="border border-sky-500/30 rounded-xl px-3 py-2 bg-slate-900/70 text-sm text-slate-100 shadow-[0_18px_45px_rgba(8,47,73,0.6)] focus:ring-2 focus:ring-sky-400/70 w-full sm:w-48"
-              >
-                <option value="ALL">ประเภททั้งหมด</option>
-                <option value="string">String</option>
-                <option value="number">Number</option>
-                <option value="boolean">Boolean</option>
-                <option value="date">Date</option>
-                <option value="json">JSON</option>
-              </select>
+              <div className="relative w-full sm:w-48">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className={dropdownClass}
+                >
+                  <option value="ALL">ประเภททั้งหมด</option>
+                  <option value="string">String</option>
+                  <option value="number">Number</option>
+                  <option value="boolean">Boolean</option>
+                  <option value="date">Date</option>
+                  <option value="json">JSON</option>
+                </select>
+                <ArrowIcon />
+              </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-700/70 bg-slate-950/40">
-            <table className="min-w-full text-sm text-slate-100">
-              <thead>
-                <tr className="bg-slate-900/80 border-b border-slate-700/70">
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-400">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <table className="min-w-full text-sm text-slate-900 border-collapse">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
                     #
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
                     Key
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
                     Value
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
                     คำอธิบาย
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
                     Type
                   </th>
-                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
                     การจัดการ
                   </th>
                 </tr>
@@ -309,8 +341,8 @@ export default function SettingManage() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan="6"
-                      className="text-center py-6 text-slate-400"
+                      colSpan={6}
+                      className="text-center py-6 text-sm text-slate-500"
                     >
                       กำลังโหลด...
                     </td>
@@ -319,44 +351,46 @@ export default function SettingManage() {
                   displayed.map((s, idx) => (
                     <tr
                       key={s.id}
-                      className={`${
-                        idx % 2 === 0 ? "bg-slate-900/40" : "bg-slate-900/20"
-                      } border-b border-slate-800/60 hover:bg-slate-800/60 transition`}
+                      className={`border-t border-slate-100 ${
+                        idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                      } hover:bg-sky-50 transition-colors`}
                     >
-                      <td className="px-4 py-2 text-slate-300">{s.id}</td>
-                      <td className="px-4 py-2 font-medium text-slate-100">
+                      <td className="px-4 py-2 text-slate-600">{s.id}</td>
+                      <td className="px-4 py-2 font-medium text-slate-900">
                         {s.key}
                       </td>
-                      <td className="px-4 py-2 text-slate-200">{s.value}</td>
-                      <td className="px-4 py-2 text-slate-300">
+                      <td className="px-4 py-2 text-slate-800">{s.value}</td>
+                      <td className="px-4 py-2 text-slate-700">
                         {s.description || "ไม่มี"}
                       </td>
                       <td className="px-4 py-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-sky-500/10 border border-sky-400/40 text-sky-200">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
                           {s.type}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(s.id)}
-                          className="bg-slate-700 hover:bg-slate-600 text-slate-50 px-3 py-1.5 rounded-xl text-xs shadow-[0_10px_25px_rgba(15,23,42,0.9)]"
-                        >
-                          แก้ไข
-                        </button>
-                        <button
-                          onClick={() => handleDelete(s.id)}
-                          className="bg-rose-600 hover:bg-rose-500 text-slate-50 px-3 py-1.5 rounded-xl text-xs shadow-[0_10px_25px_rgba(127,29,29,0.9)]"
-                        >
-                          ลบ
-                        </button>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(s.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-slate-600"
+                          >
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => handleDelete(s.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-400"
+                          >
+                            ลบ
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
-                      colSpan="6"
-                      className="text-center py-6 text-slate-300"
+                      colSpan={6}
+                      className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่พบข้อมูล
                     </td>
@@ -371,11 +405,11 @@ export default function SettingManage() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 border border-slate-600 rounded-xl bg-slate-900/70 text-slate-100 text-xs disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800/80"
+                className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
               >
                 ก่อนหน้า
               </button>
-              <span className="px-3 py-1.5 text-xs text-slate-200">
+              <span className="px-3 py-1 text-xs text-slate-700">
                 หน้า {currentPage} / {totalPages}
               </span>
               <button
@@ -383,7 +417,7 @@ export default function SettingManage() {
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }
                 disabled={currentPage === totalPages}
-                className="px-3 py-1.5 border border-slate-600 rounded-xl bg-slate-900/70 text-slate-100 text-xs disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800/80"
+                className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
               >
                 ถัดไป
               </button>

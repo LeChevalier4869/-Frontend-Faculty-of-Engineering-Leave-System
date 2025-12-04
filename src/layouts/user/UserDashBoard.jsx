@@ -319,12 +319,11 @@ export default function UserDashboard() {
                   />
                   <span className="relative">
                     สวัสดีคุณ{" "}
-                    <span className="bg-gradient-to-r from-sky-600 via-cyan-600 to-emerald-600 bg-clip-text text-transparent">
+                    <span className="text-back text-transparent">
                       {user?.firstName || ""} {user?.lastName || ""}
                     </span>
                   </span>
                 </span>
-                <span className="text-2xl md:text-3xl">👋</span>
               </span>
             </h1>
 

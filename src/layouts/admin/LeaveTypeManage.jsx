@@ -4,9 +4,7 @@ import Swal from "sweetalert2";
 import { BASE_URL } from "../../utils/api";
 
 const Panel = ({ className = "", children }) => (
-  <div
-    className={`rounded-2xl overflow-hidden bg-slate-900/60 border border-sky-500/15 shadow-[0_22px_60px_rgba(8,47,73,0.85)] backdrop-blur-xl ${className}`}
-  >
+  <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
     {children}
   </div>
 );
@@ -19,11 +17,11 @@ export default function LeaveTypeManage() {
   const [loading, setLoading] = useState(false);
 
   const inputClass =
-    "border border-sky-500/30 rounded-xl px-3 py-2 bg-slate-900/70 text-sm text-slate-100 shadow-[0_18px_45px_rgba(8,47,73,0.6)] focus:outline-none focus:ring-2 focus:ring-sky-400/70 placeholder:text-slate-500";
+    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400";
   const checkboxClass =
-    "h-4 w-4 rounded border-slate-500 text-sky-400 focus:ring-sky-500 bg-slate-900/80";
+    "h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500";
   const buttonClass =
-    "text-white text-sm px-4 py-2 rounded-xl shadow-[0_12px_32px_rgba(8,47,73,0.85)] transition";
+    "inline-flex items-center justify-center rounded-xl text-sm font-medium text-white shadow-sm transition px-4 py-2";
 
   const authHeader = () => {
     const token = localStorage.getItem("accessToken");
@@ -51,7 +49,7 @@ export default function LeaveTypeManage() {
     setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/leave-types/`, authHeader());
-      setLeaveTypes(res.data.data);
+      setLeaveTypes(res.data.data || []);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -135,27 +133,27 @@ export default function LeaveTypeManage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] px-4 py-8 md:px-8 font-kanit text-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/40 shadow-[0_0_30px_rgba(52,211,153,0.35)] w-fit">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-100">
-              Leave Types
+        <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Admin View
             </span>
           </div>
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-50">
+          <div className="w-full flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col items-center gap-1 md:items-start">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
                 จัดการประเภทการลา
               </h1>
-              <p className="text-sm text-slate-300 mt-1">
+              <p className="text-sm text-slate-600">
                 เพิ่ม แก้ไข หรือลบประเภทการลาที่ใช้ในระบบ
               </p>
             </div>
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-slate-500">
               ทั้งหมด{" "}
-              <span className="font-semibold text-sky-300">
+              <span className="font-semibold text-sky-600">
                 {leaveTypes.length}
               </span>{" "}
               ประเภท
@@ -166,7 +164,7 @@ export default function LeaveTypeManage() {
         <Panel className="p-5">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
             <div className="lg:col-span-2 flex flex-col gap-1">
-              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-400">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
                 ชื่อประเภทการลา
               </label>
               <input
@@ -177,7 +175,6 @@ export default function LeaveTypeManage() {
                 className={inputClass}
               />
             </div>
-
             <div className="flex items-center gap-3 lg:col-span-1">
               <input
                 type="checkbox"
@@ -185,11 +182,10 @@ export default function LeaveTypeManage() {
                 onChange={() => setIsAvailable(!isAvailable)}
                 className={checkboxClass}
               />
-              <span className="text-sm text-slate-100">
+              <span className="text-sm text-slate-800">
                 สามารถลาในระบบได้
               </span>
             </div>
-
             <div className="lg:col-span-1 flex lg:justify-end">
               <button
                 onClick={editId ? handleUpdate : handleAdd}
@@ -206,20 +202,20 @@ export default function LeaveTypeManage() {
         </Panel>
 
         <Panel className="p-5">
-          <div className="overflow-x-auto rounded-2xl border border-slate-700/70 bg-slate-950/40">
-            <table className="min-w-full text-sm text-slate-100">
-              <thead>
-                <tr className="bg-slate-900/80 border-b border-slate-700/70">
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-400">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm text-slate-900 border-collapse bg-white">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
                     #
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
                     ชื่อประเภทการลา
                   </th>
-                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
                     ลาในระบบได้
                   </th>
-                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] text-slate-400">
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
                     การจัดการ
                   </th>
                 </tr>
@@ -229,7 +225,7 @@ export default function LeaveTypeManage() {
                   <tr>
                     <td
                       colSpan={4}
-                      className="text-center py-6 text-slate-400"
+                      className="text-center py-6 text-sm text-slate-500"
                     >
                       กำลังโหลด...
                     </td>
@@ -238,38 +234,40 @@ export default function LeaveTypeManage() {
                   leaveTypes.map((t, idx) => (
                     <tr
                       key={t.id}
-                      className={`${
-                        idx % 2 === 0 ? "bg-slate-900/40" : "bg-slate-900/20"
-                      } border-b border-slate-800/60 hover:bg-slate-800/60 transition`}
+                      className={`border-t border-slate-100 ${
+                        idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                      } hover:bg-sky-50 transition-colors`}
                     >
-                      <td className="px-4 py-2 text-slate-300">{t.id}</td>
-                      <td className="px-4 py-2 font-medium text-slate-100">
+                      <td className="px-4 py-2 text-slate-600">{t.id}</td>
+                      <td className="px-4 py-2 font-medium text-slate-900">
                         {t.name}
                       </td>
                       <td className="px-4 py-2 text-center">
                         <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
                             t.isAvailable
-                              ? "bg-emerald-500/10 border border-emerald-400/40 text-emerald-200"
-                              : "bg-slate-700/40 border border-slate-500/60 text-slate-200"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-700 border border-slate-200"
                           }`}
                         >
                           {t.isAvailable ? "เปิดใช้งาน" : "ปิดใช้งาน"}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(t.id)}
-                          className="bg-slate-700 hover:bg-slate-600 text-slate-50 px-3 py-1.5 rounded-xl text-xs shadow-[0_10px_25px_rgba(15,23,42,0.9)]"
-                        >
-                          แก้ไข
-                        </button>
-                        <button
-                          onClick={() => handleDelete(t.id)}
-                          className="bg-rose-600 hover:bg-rose-500 text-slate-50 px-3 py-1.5 rounded-xl text-xs shadow-[0_10px_25px_rgba(127,29,29,0.9)]"
-                        >
-                          ลบ
-                        </button>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(t.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-slate-600"
+                          >
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => handleDelete(t.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-400"
+                          >
+                            ลบ
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -277,7 +275,7 @@ export default function LeaveTypeManage() {
                   <tr>
                     <td
                       colSpan={4}
-                      className="text-center py-6 text-slate-300"
+                      className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่มีข้อมูลประเภทการลา
                     </td>

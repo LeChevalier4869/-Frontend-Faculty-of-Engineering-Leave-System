@@ -32,10 +32,14 @@ export default function LeaveApprover1() {
   };
 
   const statusColors = {
-    APPROVED: "bg-emerald-500/20 text-emerald-200 border border-emerald-400/50",
-    PENDING: "bg-amber-500/20 text-amber-200 border border-amber-400/50",
-    REJECTED: "bg-rose-500/20 text-rose-200 border border-rose-400/50",
-    CANCELLED: "bg-slate-500/30 text-slate-200 border border-slate-400/50",
+    APPROVED:
+      "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    PENDING:
+      "bg-amber-50 text-amber-700 border border-amber-200",
+    REJECTED:
+      "bg-rose-50 text-rose-700 border border-rose-200",
+    CANCELLED:
+      "bg-slate-100 text-slate-700 border border-slate-200",
   };
 
   const fetchLeaveRequests = async () => {
@@ -157,15 +161,17 @@ export default function LeaveApprover1() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] font-kanit text-slate-100">
-        <div className="w-full max-w-md rounded-3xl bg-slate-950/80 border border-sky-500/30 shadow-[0_22px_60px_rgba(8,47,73,0.9)] backdrop-blur-2xl p-6">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 font-kanit text-slate-800">
+        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400/40 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-300 shadow-[0_0_18px_rgba(56,189,248,0.9)]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
             </div>
-            <span className="font-medium">กำลังโหลดรายการการลาที่รออนุมัติ...</span>
-            <span className="text-xs text-slate-400">
+            <span className="font-medium">
+              กำลังโหลดรายการการลาที่รออนุมัติ...
+            </span>
+            <span className="text-xs text-slate-500">
               กรุณารอสักครู่ ระบบกำลังดึงข้อมูล
             </span>
           </div>
@@ -175,29 +181,29 @@ export default function LeaveApprover1() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] font-kanit text-slate-100 px-4 py-8 md:px-8 rounded-3xl shadow-xl backdrop-blur-sm border border-white/10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900 px-4 py-8 md:px-8 rounded-2xl">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/40 shadow-[0_0_30px_rgba(56,189,248,0.25)] mb-3">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[11px] uppercase tracking-[0.2em] text-sky-100">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm mb-3">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] uppercase tracking-[0.2em] text-sky-700">
                 Pending Approval
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
               รายการการลาที่รออนุมัติ
             </h1>
-            <p className="mt-1 text-sm text-slate-300">
+            <p className="mt-1 text-sm text-slate-600">
               ตรวจสอบและรับรองคำขอลา พร้อมระบุความคิดเห็นเพิ่มเติมได้จากที่นี่
             </p>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-slate-900/60 border border-sky-500/20 shadow-[0_22px_60px_rgba(8,47,73,0.85)] backdrop-blur-xl p-4 md:p-5">
-          <div className="flex flex-wrap items-center gap-4 mb-4">
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5 space-y-4">
+          <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-200">จาก</span>
+              <span className="text-sm text-slate-700">จาก</span>
               <input
                 type="date"
                 value={filterStartDate}
@@ -205,9 +211,9 @@ export default function LeaveApprover1() {
                   setFilterStartDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-slate-900/80 text-sm text-slate-100 px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                className="bg-white text-sm text-slate-900 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300"
               />
-              <span className="text-sm text-slate-200">ถึง</span>
+              <span className="text-sm text-slate-700">ถึง</span>
               <input
                 type="date"
                 value={filterEndDate}
@@ -215,7 +221,7 @@ export default function LeaveApprover1() {
                   setFilterEndDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-slate-900/80 text-sm text-slate-100 px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                className="bg-white text-sm text-slate-900 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300"
               />
             </div>
 
@@ -226,7 +232,7 @@ export default function LeaveApprover1() {
                   setFilterLeaveType(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full bg-slate-900/80 text-sm text-slate-100 px-3 py-2 pr-8 border border-slate-600 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                className="w-full bg-white text-sm text-slate-900 px-3 py-2 pr-8 border border-slate-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-sky-300"
               >
                 <option value="">ประเภทการลาทั้งหมด</option>
                 {Object.entries(leaveTypesMap).map(([id, name]) => (
@@ -247,7 +253,7 @@ export default function LeaveApprover1() {
                   setSortOrder(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full bg-slate-900/80 text-sm text-slate-100 px-3 py-2 pr-8 border border-slate-600 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                className="w-full bg-white text-sm text-slate-900 px-3 py-2 pr-8 border border-slate-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-sky-300"
               >
                 <option value="desc">ล่าสุดก่อน</option>
                 <option value="asc">เก่าสุดก่อน</option>
@@ -266,16 +272,16 @@ export default function LeaveApprover1() {
                 setCurrentPage(1);
                 setSortOrder("desc");
               }}
-              className="px-4 py-2 bg-rose-500/90 hover:bg-rose-500 text-sm text-white rounded-lg shadow-md shadow-rose-500/40 transition"
+              className="px-4 py-2 bg-rose-500 hover:bg-rose-400 text-sm text-white rounded-lg shadow-sm transition"
             >
               ล้างตัวกรอง
             </button>
           </div>
 
-          <div className="rounded-xl border border-white/10 overflow-visible bg-slate-950/40">
-            <table className="w-full table-auto text-sm text-slate-100">
+          <div className="rounded-xl border border-slate-200 overflow-visible bg-white">
+            <table className="w-full table-auto text-sm text-slate-800">
               <thead>
-                <tr className="bg-white/5 border-b border-white/10">
+                <tr className="bg-slate-50 border-b border-slate-200">
                   {[
                     "วันที่ยื่น",
                     "ชื่อผู้ลา",
@@ -288,7 +294,7 @@ export default function LeaveApprover1() {
                   ].map((h, i) => (
                     <th
                       key={i}
-                      className={`px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-300 ${
+                      className={`px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-500 ${
                         h === "ชื่อผู้ลา" ? "w-[220px]" : ""
                       }`}
                     >
@@ -306,8 +312,8 @@ export default function LeaveApprover1() {
                       <tr
                         key={leave.id}
                         className={`${
-                          idx % 2 === 0 ? "bg-slate-900/40" : "bg-slate-900/20"
-                        } border-b border-white/5 hover:bg-slate-800/70 transition cursor-pointer`}
+                          idx % 2 === 0 ? "bg-white" : "bg-slate-50"
+                        } border-b border-slate-100 hover:bg-slate-100 transition cursor-pointer`}
                         onClick={() => navigate(`/leave/${leave.id}`)}
                       >
                         <td className="px-4 py-2 whitespace-nowrap">
@@ -330,7 +336,7 @@ export default function LeaveApprover1() {
                           <span
                             className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                               statusColors[statusKey] ||
-                              "bg-slate-600/40 text-slate-100 border border-slate-400/40"
+                              "bg-slate-100 text-slate-700 border border-slate-200"
                             }`}
                           >
                             {statusLabels[statusKey] || leave.status}
@@ -348,7 +354,7 @@ export default function LeaveApprover1() {
                                   [detailId]: e.target.value,
                                 }))
                               }
-                              className="w-full bg-slate-900/70 text-slate-100 border border-slate-600 rounded-lg px-3 py-2 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                              className="w-full bg-white text-slate-900 border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-inner focus:outline-none focus:ring-2 focus:ring-sky-300"
                               placeholder="ใส่ความคิดเห็นสำหรับผู้อนุมัติถัดไป"
                             />
                             <Pencil
@@ -376,11 +382,11 @@ export default function LeaveApprover1() {
                               }
                             }}
                             disabled={loadingApprovals[detailId]}
-                            className={`px-4 py-1 rounded-lg text-xs font-medium shadow-md shadow-emerald-500/30 ${
+                            className={`px-4 py-1 rounded-lg text-xs font-medium shadow-sm ${
                               loadingApprovals[detailId]
-                                ? "bg-emerald-400/60 cursor-not-allowed"
-                                : "bg-emerald-500 hover:bg-emerald-400"
-                            } text-white`}
+                                ? "bg-emerald-400/70 cursor-not-allowed text-white"
+                                : "bg-emerald-500 hover:bg-emerald-400 text-white"
+                            } transition`}
                           >
                             ตกลง
                           </button>
@@ -391,8 +397,8 @@ export default function LeaveApprover1() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="8"
-                      className="px-4 py-6 text-center text-slate-300"
+                      colSpan={8}
+                      className="px-4 py-6 text-center text-slate-500"
                     >
                       ไม่มีข้อมูลการลา
                     </td>
@@ -407,11 +413,11 @@ export default function LeaveApprover1() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 border border-slate-600 rounded-lg bg-slate-900/80 text-slate-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800/80 transition"
+                className="px-3 py-1 border border-slate-200 rounded-lg bg-white text-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
               >
                 ก่อนหน้า
               </button>
-              <span className="px-3 py-1 text-slate-200 text-sm">
+              <span className="px-3 py-1 text-slate-700 text-sm">
                 หน้า {currentPage} / {totalPages}
               </span>
               <button
@@ -419,7 +425,7 @@ export default function LeaveApprover1() {
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 border border-slate-600 rounded-lg bg-slate-900/80 text-slate-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800/80 transition"
+                className="px-3 py-1 border border-slate-200 rounded-lg bg-white text-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
               >
                 ถัดไป
               </button>

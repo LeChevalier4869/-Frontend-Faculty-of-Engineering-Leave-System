@@ -22,6 +22,14 @@ const initialForm = {
   inActiveRaw: "false",
 };
 
+const Panel = ({ className = "", children }) => (
+  <div
+    className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}
+  >
+    {children}
+  </div>
+);
+
 export default function AddUser() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialForm);
@@ -65,14 +73,16 @@ export default function AddUser() {
 
   const renderDropdown = (label, name, options) => (
     <div className="mb-4">
-      <label className="block text-sm font-medium mb-2">{label}</label>
+      <label className="block text-sm font-medium mb-1 text-slate-800">
+        {label}
+      </label>
       <div className="relative">
         <select
           name={name}
           value={formData[name]}
           onChange={handleChange}
           required
-          className="appearance-none w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-black"
+          className="appearance-none w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-slate-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
         >
           <option value="" disabled>
             -- เลือก{label} --
@@ -84,8 +94,8 @@ export default function AddUser() {
           ))}
         </select>
         <HiOutlineChevronDown
-          size={20}
-          className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-black"
+          size={18}
+          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
         />
       </div>
     </div>
@@ -112,8 +122,8 @@ export default function AddUser() {
         },
       });
 
-      Swal.fire("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว", "success").then(() =>
-        navigate("/admin/manage-user")
+      Swal.fire("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว", "success").then(
+        () => navigate("/admin/manage-user")
       );
     } catch (err) {
       Swal.fire(
@@ -126,161 +136,219 @@ export default function AddUser() {
     }
   };
 
+  const inputClass =
+    "w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400";
+
   return (
-    <div className="min-h-screen bg-white text-black px-4 py-10 font-kanit">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold mb-6 text-center">เพิ่มผู้ใช้งานใหม่</h2>
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Personal Info */}
-          <section>
-            <h3 className="text-lg font-semibold mb-4">ข้อมูลส่วนตัว</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderDropdown("คำนำหน้า", "prefixName", [
-                { value: "นาย", label: "นาย" },
-                { value: "นางสาว", label: "นางสาว" },
-                { value: "นาง", label: "นาง" },
-              ])}
-              <div>
-                <label className="block text-sm font-medium mb-2">ชื่อจริง</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">นามสกุล</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-              {renderDropdown("เพศ", "sex", [
-                { value: "MALE", label: "ชาย" },
-                { value: "FEMALE", label: "หญิง" },
-              ])}
-            </div>
-          </section>
-
-          {/* Account Info */}
-          <section>
-            <h3 className="text-lg font-semibold mb-4">ข้อมูลบัญชีผู้ใช้</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">อีเมล</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">เบอร์โทรศัพท์</label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">รหัสผ่าน</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">ยืนยันรหัสผ่าน</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Professional Info */}
-          <section>
-            <h3 className="text-lg font-semibold mb-4">ข้อมูลการทำงาน</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderDropdown(
-                "ประเภทบุคลากร",
-                "personnelTypeId",
-                personnelTypes.map((pt) => ({ value: pt.id, label: pt.name }))
-              )}
-              {renderDropdown(
-                "แผนก",
-                "departmentId",
-                departments.map((d) => ({ value: d.id, label: d.name }))
-              )}
-              {renderDropdown(
-                "องค์กร",
-                "organizationId",
-                organizations.map((o) => ({ value: o.id, label: o.name }))
-              )}
-              {renderDropdown("ประเภทพนักงาน", "employmentType", employmentTypes)}
-              <div>
-                <label className="block text-sm font-medium mb-2">วันที่เริ่มงาน</label>
-                <input
-                  type="date"
-                  name="hireDate"
-                  value={formData.hireDate}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">รูปโปรไฟล์ (ถ้ามี)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Submit */}
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={() => navigate("/admin/manage-user")}
-              className="px-5 py-2 bg-white border border-black rounded-lg text-black hover:bg-gray-100"
-            >
-              ยกเลิก
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2 bg-black rounded-lg text-white hover:bg-gray-800 disabled:opacity-50"
-            >
-              {loading ? "กำลังบันทึก..." : "บันทึก"}
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 px-4 py-8 md:px-8 font-kanit rounded-2xl">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Admin View
+            </span>
           </div>
-        </form>
+          <div>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
+              เพิ่มผู้ใช้งานใหม่
+            </h2>
+            <p className="text-sm text-slate-600 mt-1">
+              กรอกข้อมูลส่วนตัว ข้อมูลการทำงาน และสร้างบัญชีผู้ใช้ให้บุคลากรใหม่
+            </p>
+          </div>
+        </div>
+
+        <Panel className="p-6 sm:p-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Personal Info */}
+            <section>
+              <h3 className="text-lg font-semibold mb-4 text-slate-900">
+                ข้อมูลส่วนตัว
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {renderDropdown("คำนำหน้า", "prefixName", [
+                  { value: "นาย", label: "นาย" },
+                  { value: "นางสาว", label: "นางสาว" },
+                  { value: "นาง", label: "นาง" },
+                ])}
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    ชื่อจริง
+                  </label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="กรอกชื่อจริง"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    นามสกุล
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="กรอกนามสกุล"
+                  />
+                </div>
+                {renderDropdown("เพศ", "sex", [
+                  { value: "MALE", label: "ชาย" },
+                  { value: "FEMALE", label: "หญิง" },
+                ])}
+              </div>
+            </section>
+
+            {/* Account Info */}
+            <section>
+              <h3 className="text-lg font-semibold mb-4 text-slate-900">
+                ข้อมูลบัญชีผู้ใช้
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    อีเมล
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="example@kku.ac.th"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    เบอร์โทรศัพท์
+                  </label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="เช่น 081-234-5678"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    รหัสผ่าน
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="กำหนดรหัสผ่าน"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    ยืนยันรหัสผ่าน
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="พิมพ์รหัสผ่านอีกครั้ง"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Professional Info */}
+            <section>
+              <h3 className="text-lg font-semibold mb-4 text-slate-900">
+                ข้อมูลการทำงาน
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {renderDropdown(
+                  "ประเภทบุคลากร",
+                  "personnelTypeId",
+                  personnelTypes.map((pt) => ({ value: pt.id, label: pt.name }))
+                )}
+                {renderDropdown(
+                  "แผนก",
+                  "departmentId",
+                  departments.map((d) => ({ value: d.id, label: d.name }))
+                )}
+                {renderDropdown(
+                  "องค์กร",
+                  "organizationId",
+                  organizations.map((o) => ({ value: o.id, label: o.name }))
+                )}
+                {renderDropdown(
+                  "ประเภทพนักงาน",
+                  "employmentType",
+                  employmentTypes
+                )}
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    วันที่เริ่มงาน
+                  </label>
+                  <input
+                    type="date"
+                    name="hireDate"
+                    value={formData.hireDate}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    รูปโปรไฟล์ (ถ้ามี)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 shadow-sm"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Submit */}
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => navigate("/admin/manage-user")}
+                className="px-5 py-2 rounded-xl border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`px-5 py-2 rounded-xl text-sm font-medium text-white shadow-sm transition ${
+                  loading
+                    ? "bg-sky-300 cursor-not-allowed"
+                    : "bg-sky-600 hover:bg-sky-500"
+                }`}
+              >
+                {loading ? "กำลังบันทึก..." : "บันทึกผู้ใช้งาน"}
+              </button>
+            </div>
+          </form>
+        </Panel>
       </div>
     </div>
   );

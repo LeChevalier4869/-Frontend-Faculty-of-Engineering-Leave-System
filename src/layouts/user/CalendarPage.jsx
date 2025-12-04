@@ -7,6 +7,12 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { BASE_URL } from "../../utils/api";
 
+const Panel = ({ className = "", children }) => (
+  <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
 export default function CalendarPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -84,15 +90,15 @@ export default function CalendarPage() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] font-kanit text-slate-100">
-        <div className="w-full max-w-md rounded-3xl bg-slate-950/80 border border-sky-500/30 shadow-[0_22px_60px_rgba(8,47,73,0.9)] backdrop-blur-2xl p-6">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 text-slate-800 font-kanit">
+        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400/40 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-300 shadow-[0_0_18px_rgba(56,189,248,0.9)]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
             </div>
             <span className="font-medium">กำลังโหลดปฏิทิน...</span>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-500">
               กรุณารอสักครู่ ระบบกำลังดึงข้อมูล
             </span>
           </div>
@@ -102,26 +108,24 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#071429] via-[#050f23] to-[#040b1c] font-kanit text-slate-100 px-4 py-8 md:px-8 rounded-3xl shadow-xl backdrop-blur-sm border border-white/10">
-      <div className="max-w-6xl mx-auto space-y-6">
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900 px-4 py-8 md:px-8 rounded-2xl">
+      <div className="max-w-7xl mx-auto space-y-6">
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/40 shadow-[0_0_30px_rgba(56,189,248,0.25)]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] uppercase tracking-[0.2em] text-sky-100">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] uppercase tracking-[0.2em] text-sky-700">
               Calendar
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900">
             ปฏิทินวันหยุด & การลา
           </h1>
-          <p className="text-slate-300 text-sm">
+          <p className="text-slate-600 text-sm md:text-base">
             ตรวจสอบวันหยุดราชการ นักขัตฤกษ์ และช่วงเวลาที่คุณลางาน
           </p>
         </div>
 
-        {/* ปฏิทินสีขาวทั้งหมด */}
-        <div className="rounded-3xl bg-white text-black shadow-2xl border border-gray-200 p-4">
+        <Panel className="p-4 md:p-6">
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
@@ -134,27 +138,26 @@ export default function CalendarPage() {
               right: "",
             }}
           />
-        </div>
+        </Panel>
 
-        <div className="flex flex-wrap justify-center gap-6 p-4 rounded-3xl bg-white/10 border border-sky-500/20 shadow-[0_22px_60px_rgba(8,47,73,0.45)] backdrop-blur-xl">
+        <Panel className="p-4 flex flex-wrap justify-center gap-6">
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded-full bg-green-500 shadow" />
-            <span className="text-slate-100 text-sm">หยุดนักขัตฤกษ์</span>
+            <span className="text-slate-700 text-sm">หยุดนักขัตฤกษ์</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded-full bg-blue-500 shadow" />
-            <span className="text-slate-100 text-sm">หยุดราชการพิเศษ</span>
+            <span className="text-slate-700 text-sm">หยุดราชการพิเศษ</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded-full bg-purple-500 shadow" />
-            <span className="text-slate-100 text-sm">วันสำคัญอื่น ๆ</span>
+            <span className="text-slate-700 text-sm">วันสำคัญอื่น ๆ</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-4 h-4 rounded-full bg-amber-500 shadow" />
-            <span className="text-slate-100 text-sm">วันลาของคุณ</span>
+            <span className="text-slate-700 text-sm">วันลาของคุณ</span>
           </div>
-        </div>
-
+        </Panel>
       </div>
     </div>
   );

@@ -63,16 +63,13 @@ export default function Login() {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen w-screen overflow-hidden font-kanit">
-      {/* 🔹 Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${bg})` }}
       />
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
-      {/* 🔹 Dark Overlay + Blur */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
 
-      {/* 🔹 Content */}
       <div className="relative z-10 px-4 w-full">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 text-white drop-shadow">
           ระบบลา <span className="text-red-600">คณะวิศวกรรมศาสตร์</span>

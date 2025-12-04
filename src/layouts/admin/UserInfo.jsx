@@ -1,11 +1,17 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { useParams, Link,useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { apiEndpoints } from "../../utils/api";
 import { FaUserAlt } from "react-icons/fa";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
+
+const Panel = ({ className = "", children }) => (
+  <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
+    {children}
+  </div>
+);
 
 export default function UserInfo() {
   const { id } = useParams();
@@ -92,50 +98,89 @@ export default function UserInfo() {
     CANCELLED: "ยกเลิก",
   };
   const statusColors = {
-    APPROVED: "bg-green-500 text-white",
-    PENDING: "bg-yellow-500 text-white",
-    REJECTED: "bg-red-500 text-white",
-    CANCELLED: "bg-gray-500 text-white",
+    APPROVED:
+      "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    PENDING:
+      "bg-amber-50 text-amber-700 border border-amber-200",
+    REJECTED:
+      "bg-rose-50 text-rose-700 border border-rose-200",
+    CANCELLED:
+      "bg-slate-100 text-slate-700 border border-slate-300",
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500 font-kanit">
-        กำลังโหลดข้อมูล...
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center font-kanit text-slate-700 px-4">
+        <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-sm p-6 text-center">
+          <div className="flex flex-col items-center gap-3 text-sm">
+            <div className="relative flex h-10 w-10 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500" />
+            </div>
+            <span className="font-medium">กำลังโหลดข้อมูลผู้ใช้งาน...</span>
+            <span className="text-xs text-slate-500">
+              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากเซิร์ฟเวอร์
+            </span>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-500 font-kanit">
-        ไม่พบข้อมูลผู้ใช้งาน
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center font-kanit text-slate-900 px-4">
+        <div className="w-full max-w-md rounded-2xl bg-white border border-rose-200 shadow-sm p-6 text-center">
+          <p className="text-rose-600 font-medium">ไม่พบข้อมูลผู้ใช้งาน</p>
+          <Link
+            to="/admin/manage-user"
+            className="inline-block mt-4 px-4 py-2 rounded-xl bg-slate-800 text-white text-sm hover:bg-slate-700"
+          >
+            ← กลับไปหน้าจัดการผู้ใช้งาน
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white px-4 py-10 font-kanit">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-center mb-10">
-          <FaUserAlt className="text-gray-800 text-4xl mr-3" />
-          <h1 className="text-4xl font-bold text-gray-800 text-center">
-            โปรไฟล์ผู้ใช้งาน
-          </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900">
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Admin View
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-slate-900 flex items-center justify-center text-white shadow-sm">
+              <FaUserAlt className="text-lg" />
+            </div>
+            <div className="text-left">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                โปรไฟล์ผู้ใช้งาน
+              </h1>
+              <p className="text-sm text-slate-600 mt-1">
+                ดูรายละเอียดบัญชีและประวัติการลาของผู้ใช้งาน
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* ข้อมูลผู้ใช้ */}
-        <div className="bg-gray-50 rounded-2xl shadow p-6 sm:p-8 mb-10">
+        {/* User Info */}
+        <Panel className="p-6 sm:p-8">
           <div className="flex justify-center mb-8">
             {user.profilePicturePath ? (
               <img
                 src={user.profilePicturePath}
                 alt="Profile"
-                className="w-40 h-40 rounded-full object-cover border-4 border-gray-300 shadow-lg"
+                className="w-40 h-40 rounded-full object-cover border-4 border-slate-200 shadow-md"
               />
             ) : (
-              <div className="w-40 h-40 rounded-full flex justify-center items-center bg-gray-200 border-4 border-gray-300 shadow-lg">
-                <FaUserAlt className="text-gray-600 w-16 h-16" />
+              <div className="w-40 h-40 rounded-full flex justify-center items-center bg-slate-100 border-4 border-slate-200 shadow-md">
+                <FaUserAlt className="text-slate-500 w-16 h-16" />
               </div>
             )}
           </div>
@@ -144,12 +189,19 @@ export default function UserInfo() {
             {[
               [
                 "ชื่อ-นามสกุล",
-                `${user.prefixName}${user.firstName} ${user.lastName}`,
+                `${user.prefixName ?? ""}${user.firstName ?? ""} ${
+                  user.lastName ?? ""
+                }`,
               ],
               ["อีเมล", user.email],
               ["เพศ", user.sex || "-"],
               ["เบอร์มือถือ", user.phone || "-"],
-              ["คณะ", user.organization?.name || "-"],
+              [
+                "คณะ",
+                user.organization?.name ||
+                  user.department?.organization?.name ||
+                  "-",
+              ],
               ["สาขา", user.department?.name || "-"],
               ["ประเภทบุคลากร", user.personnelType?.name || "-"],
               [
@@ -173,11 +225,11 @@ export default function UserInfo() {
               ["สถานะการใช้งาน", user.isActive ? "ใช้งานอยู่" : "ไม่ใช้งาน"],
             ].map(([label, value], idx) => (
               <div key={idx}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1 uppercase tracking-[0.12em]">
                   {label}
                 </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800">
-                  {value}
+                <p className="bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm text-slate-900">
+                  {value || "-"}
                 </p>
               </div>
             ))}
@@ -186,62 +238,74 @@ export default function UserInfo() {
           <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <Link
               to="/admin/manage-user"
-              className="inline-block px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition font-medium"
+              className="inline-block px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium transition"
             >
               ← กลับไปหน้าจัดการผู้ใช้งาน
             </Link>
             <Link
               to={`/admin/user/${id}`}
-              className="inline-block px-6 py-2 rounded-lg bg-blue-400 hover:bg-blue-500 text-white transition font-medium"
+              className="inline-block px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium transition"
             >
               แก้ไขข้อมูลผู้ใช้
             </Link>
           </div>
-        </div>
+        </Panel>
 
-        {/* ข้อมูลการลา */}
-        <div className="bg-white rounded-2xl shadow border border-gray-200 p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">
+        {/* Leave History */}
+        <Panel className="p-6 sm:p-8">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4 text-slate-900">
             ประวัติการลา
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead className="bg-gray-100 text-gray-700">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <table className="w-full text-sm text-slate-900 border-collapse">
+              <thead className="bg-slate-50 text-slate-700">
                 <tr>
-                  <th className="px-4 py-3">วันที่ยื่น</th>
-                  <th className="px-4 py-3">ประเภทการลา</th>
-                  <th className="px-4 py-3">วันเริ่มต้น</th>
-                  <th className="px-4 py-3">วันสิ้นสุด</th>
-                  <th className="px-4 py-3">สถานะ</th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    วันที่ยื่น
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ประเภทการลา
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    วันเริ่มต้น
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    วันสิ้นสุด
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    สถานะ
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {leaveRequests.length > 0 ? (
-                  leaveRequests.map((leave) => {
+                  leaveRequests.map((leave, idx) => {
                     const statusKey = (leave.status || "").toUpperCase();
                     return (
                       <tr
                         key={leave.id}
-                        className="border-t"
+                        className={`border-t border-slate-100 cursor-pointer hover:bg-sky-50 ${
+                          idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                        }`}
                         onClick={() => navigate(`/leave/${leave.id}`)}
                       >
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           {formatDate(leave.createdAt)}
                         </td>
-                        <td className="px-4 py-2">
+                        <td className="px-4 py-3">
                           {leaveTypesMap[leave.leaveTypeId] || "-"}
                         </td>
-                        <td className="px-4 py-2">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           {formatDate(leave.startDate)}
                         </td>
-                        <td className="px-4 py-2">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           {formatDate(leave.endDate)}
                         </td>
-                        <td className="px-4 py-2">
+                        <td className="px-4 py-3">
                           <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                            className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
                               statusColors[statusKey] ||
-                              "bg-gray-200 text-gray-700"
+                              "bg-slate-100 text-slate-700 border border-slate-300"
                             }`}
                           >
                             {statusLabels[statusKey] || leave.status}
@@ -252,7 +316,10 @@ export default function UserInfo() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center py-4 text-gray-500">
+                    <td
+                      colSpan="5"
+                      className="text-center py-6 text-sm text-slate-500"
+                    >
                       ไม่มีข้อมูลการลา
                     </td>
                   </tr>
@@ -260,7 +327,7 @@ export default function UserInfo() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Panel>
       </div>
     </div>
   );
