@@ -7,7 +7,7 @@ export const API = axios.create({
 
 // Token interceptor (optional)
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access");
+  const token = localStorage.getItem("accessToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -46,6 +46,7 @@ export const apiEndpoints = {
   updateDriveLink : `${BASE_URL}/api/drive-link`, //PUT
   exportReport : `${BASE_URL}/api/export-report`, //POST
   uploadUserExcel : `${BASE_URL}/excel/upload-users`, //POST
+  downloadReport: `${BASE_URL}/api/download-report`, //POST
 
   
 
@@ -70,7 +71,7 @@ export const apiEndpoints = {
   leaveRequestApprovedMe: `${BASE_URL}/leave-requests/my-requests/approved`, // GET
   getLeaveById: (id) => `${BASE_URL}/leave-requests/getLeaveRequest/${id}`,
   getLeaveByUserId: (id) => `${BASE_URL}/leave-requests/user/${id}`,
-  getLastLeaveRequestByUserAndType: (userId) => `${BASE_URL}/leave-requests/last/type/${userId}`,
+  getLastLeaveBefore: (userId) => `${BASE_URL}/leave-requests/last/type/${userId}`,
   leaveRequestForFirstApprover: `${BASE_URL}/leave-requests/for-approver1`, // GET
   leaveRequestForVerifier: `${BASE_URL}/leave-requests/for-verifier`, // GET
   leaveRequestForReceiver: `${BASE_URL}/leave-requests/for-receiver`, // GET

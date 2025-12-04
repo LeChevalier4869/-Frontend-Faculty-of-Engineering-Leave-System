@@ -4,8 +4,11 @@ import {
   Outlet,
   Navigate,
 } from "react-router-dom";
+<<<<<<< HEAD
 import { useState } from "react";
 import clsx from "clsx";
+=======
+>>>>>>> origin/main
 import useAuth from "../hooks/useAuth";
 import Login2 from "../layouts/oauth/Login";
 import Profile2 from "../layouts/oauth/Profile";
@@ -13,8 +16,16 @@ import Callback from "../layouts/oauth/Callback";
 import Register from "../layouts/auth/Register";
 import ForgotPassword from "../layouts/auth/ForgotPassword";
 import ResetPassword from "../layouts/auth/ResetPassword";
+<<<<<<< HEAD
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
+=======
+
+/** Main Layout **/
+import AppLayout from "../layouts/AppLayout";
+
+/** User pages **/
+>>>>>>> origin/main
 import UserHome from "../layouts/user/UserHome";
 import Leave2 from "../layouts/user/Leave2";
 import AddLeave2 from "../layouts/user/AddLeave2";
@@ -51,6 +62,7 @@ import AddOtherRequest from "../layouts/admin/AddOtherRequest";
 import ConfigPage from "../layouts/admin/Config";
 import bg from "../assets/bg.jpg";
 
+<<<<<<< HEAD
 function AppLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMiniSidebar, setMiniSidebar] = useState(false);
@@ -88,6 +100,9 @@ function AppLayout() {
   );
 }
 
+=======
+/** Routes สำหรับผู้ที่ยังไม่ล็อกอิน **/
+>>>>>>> origin/main
 const guestRouter = createBrowserRouter([
   {
     element: <Outlet />,
@@ -106,6 +121,10 @@ const guestRouter = createBrowserRouter([
   },
 ]);
 
+<<<<<<< HEAD
+=======
+/** Routes สำหรับผู้ที่ล็อกอินแล้ว **/
+>>>>>>> origin/main
 const userRouter = createBrowserRouter([
   {
     element: <AppLayout />,
@@ -160,6 +179,10 @@ const userRouter = createBrowserRouter([
   },
 ]);
 
+<<<<<<< HEAD
+=======
+/** AppRouter หลัก **/
+>>>>>>> origin/main
 export default function AppRouter() {
   const { user } = useAuth();
   const finalRouter = user?.id ? userRouter : guestRouter;

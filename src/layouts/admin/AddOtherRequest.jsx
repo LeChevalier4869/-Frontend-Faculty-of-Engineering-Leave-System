@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import axios from "axios";
+// import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { apiEndpoints } from "../../utils/api";
+import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import { Plus, ChevronDown, PlusCircle, X, Clock } from "lucide-react";
@@ -143,11 +143,16 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       if (documentIssuedDate) fd.append("documentIssuedDate", documentIssuedDate);
       if (imageFile) fd.append("images", imageFile);
 
+<<<<<<< HEAD
       const token = localStorage.getItem("accessToken");
       await axios.post(apiEndpoints.adminLeaveRequests, fd, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+=======
+      // const token = localStorage.getItem("accessToken");
+      await API.post(apiEndpoints.adminLeaveRequests, fd, {
+>>>>>>> origin/main
         withCredentials: true,
       });
       onSuccess?.();
@@ -442,7 +447,7 @@ export default function AddOtherRequest() {
 
   const fetchLeaveTypes = async () => {
     try {
-      const res = await axios.get(apiEndpoints.getAllLeaveTypes);
+      const res = await API.get(apiEndpoints.getAllLeaveTypes);
       const map = {};
       (res.data.data || []).forEach((lt) => {
         map[lt.id] = lt.name;
