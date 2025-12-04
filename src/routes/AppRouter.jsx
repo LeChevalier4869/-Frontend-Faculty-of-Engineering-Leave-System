@@ -45,6 +45,7 @@ import LeaveVerifier from "../layouts/approver/LeaveVerifier";
 import Approver1Dashboard from "../layouts/approver/Approver1DashBoard";
 
 /** Admin pages **/
+import AdminDashboard from "../layouts/admin/AdminDashBoard";
 import DashBoard from "../layouts/admin/DashBoard";
 import Approver from "../layouts/admin/Approver";
 import DepartmentManage from "../layouts/admin/DepartmentManage";
@@ -157,7 +158,7 @@ const userRouter = createBrowserRouter([
       {
         path: "admin",
         children: [
-          { path: "dashboard", element: <DashBoard /> },
+          { path: "dashboard", element: <AdminDashboard /> },
           { path: "leave-report", element: <LeaveReport /> },
           { path: "manage-user", element: <UserManage /> },
           { path: "leave-request", element: <LeaveAdmin /> },

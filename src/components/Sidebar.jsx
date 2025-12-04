@@ -70,6 +70,7 @@ const approverNav4 = [
 ];
 
 const adminNav = [
+  { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <FaUsersCog /> },
   { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
   { to: "/admin/leave-request", text: "คำขอการลา", icon: <FaUsersCog /> },
   {
