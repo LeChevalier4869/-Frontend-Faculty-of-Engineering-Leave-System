@@ -36,7 +36,7 @@ export default function LeaveDetail() {
         // ทดสอบ response
         // console.log("Leave Details:", res.data.data);
         const payload = res?.data?.data ?? res?.data ?? null;
-        setLeave(payload);
+        setLeave(payload); //ได้ข้อมูลใบลา
       } catch (err) {
         Swal.fire(
           "ผิดพลาด",
@@ -125,7 +125,7 @@ export default function LeaveDetail() {
     name: `${user?.prefixName}${user?.firstName} ${user?.lastName}`,//
     position: user?.position || "ไม่ระบุ",//
     organizationId: null,
-    personalType: "ข้าราชการ",
+    personalType: user?.personnelType?.name || "ไม่ระบุ",//
     leaveType: "ลาป่วย",
     reason: reason || "ไม่ระบุ",//
     description: "รายละเอียดตัวอย่าง",
@@ -134,10 +134,12 @@ export default function LeaveDetail() {
     startDate: startDate,//
     endDate: endDate,//
     total: totalDays,//
+    thisTime: thisTimeDays,//
     lastLeave: "/",
     lastLeaveStartDate: lastStart,//
     lastLeaveEndDate: lastEnd,//
-    lastLeaveTotal: lastTotal,//
+    lastLeaveTotal: lastTotal,//,
+    lastLeaveThisTime: lastLeave?.thisTimeDays || "ไม่ระบุ",//
     contact: contact || "ไม่ระบุ",//
     phone: user?.phone || "ไม่ระบุ",//
     signature: "ลายเซ็น",
@@ -159,7 +161,7 @@ export default function LeaveDetail() {
     signatureApprover4: "ลายเซ็น4",
     DateApprover4: "12-06-2568"
   };
-  // console.log(leave)
+  console.log(leaveData)
 
   const downloadReport = async () => {
     setLoading(true);
