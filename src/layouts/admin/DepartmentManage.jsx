@@ -24,7 +24,9 @@ export default function DepartmentManage() {
     const token = localStorage.getItem("accessToken");
     if (!token) {
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => { window.location.href = "/login"; }
+        () => {
+          window.location.href = "/login";
+        }
       );
       throw new Error("No token");
     }
@@ -35,7 +37,9 @@ export default function DepartmentManage() {
     if (err.response?.status === 401) {
       localStorage.removeItem("accessToken");
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => { window.location.href = "/login"; }
+        () => {
+          window.location.href = "/login";
+        }
       );
     } else {
       Swal.fire("Error", err.response?.data?.message || err.message, "error");
@@ -49,8 +53,8 @@ export default function DepartmentManage() {
         axios.get(`${BASE_URL}/admin/departmentsList`, authHeader()),
         axios.get(`${BASE_URL}/admin/organizations`, authHeader()),
       ]);
-      setDepartments(deptRes.data.data);
-      setOrganizations(orgRes.data.data);
+      setDepartments(deptRes.data.data || []);
+      setOrganizations(orgRes.data.data || []);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -95,7 +99,11 @@ export default function DepartmentManage() {
     try {
       await axios.post(
         `${BASE_URL}/admin/departments`,
-        { name: newName, organizationId: +newOrgId, headId: newHeadId ? +newHeadId : null },
+        {
+          name: newName,
+          organizationId: +newOrgId,
+          headId: newHeadId ? +newHeadId : null,
+        },
         authHeader()
       );
       Swal.fire("บันทึกสำเร็จ!", "", "success");
@@ -109,6 +117,7 @@ export default function DepartmentManage() {
 
   const handleEdit = (id) => {
     const dept = departments.find((d) => d.id === id);
+    if (!dept) return;
     setNewName(dept.name);
     setEditId(dept.id);
     setEditOrgId(dept.organizationId);
@@ -123,7 +132,11 @@ export default function DepartmentManage() {
     try {
       await axios.put(
         `${BASE_URL}/admin/departments/${editId}`,
-        { name: newName, organizationId: +editOrgId, headId: editHeadId ? +editHeadId : null },
+        {
+          name: newName,
+          organizationId: +editOrgId,
+          headId: editHeadId ? +editHeadId : null,
+        },
         authHeader()
       );
       Swal.fire("อัปเดตสำเร็จ!", "", "success");
@@ -157,177 +170,247 @@ export default function DepartmentManage() {
     }
   };
 
-  // กรองตาม org filter
   const filteredDepartments = selectedOrgFilter
     ? departments.filter((d) => d.organizationId === +selectedOrgFilter)
     : departments;
 
   const totalPages = Math.ceil(filteredDepartments.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const displayed = filteredDepartments.slice(startIndex, startIndex + PAGE_SIZE);
+  const displayed = filteredDepartments.slice(
+    startIndex,
+    startIndex + PAGE_SIZE
+  );
+
+  const inputBase =
+    "w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
 
   return (
-    <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">จัดการแผนก</h1>
-
-        {/* Form */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="กรอกชื่อแผนก"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            className="col-span-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-black focus:outline-none focus:ring-2 focus:ring-gray-400"
-          />
-
-          {/* Organization dropdown */}
-          <div className="relative w-full">
-            <select
-              value={editId ? editOrgId : newOrgId}
-              onChange={(e) => {
-                const id = e.target.value;
-                if (editId) {
-                  setEditOrgId(id);
-                  loadUsersByOrganizationId(id);
-                } else {
-                  setNewOrgId(id);
-                  loadUsersByOrganizationId(id);
-                }
-              }}
-              className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              <option value="">เลือกหน่วยงาน</option>
-              {organizations.map((org) => (
-                <option key={org.id} value={org.id}>{org.name}</option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <ChevronDown className="w-4 h-4 text-black" />
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Admin View
+            </span>
           </div>
-
-          {/* Head dropdown */}
-          <div className="relative w-full">
-            <select
-              value={editId ? editHeadId : newHeadId}
-              onChange={(e) => editId ? setEditHeadId(e.target.value) : setNewHeadId(e.target.value)}
-              className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              <option value="">เลือกหัวหน้าแผนก (ไม่ระบุก็ได้)</option>
-              {filteredUsers.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.fullName || user.email}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <ChevronDown className="w-4 h-4 text-black" />
+          <div className="w-full flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col items-center gap-1 md:items-start">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                จัดการแผนก
+              </h1>
+              <p className="text-sm text-slate-600">
+                เพิ่ม แก้ไข หรือลบข้อมูลแผนก และกำหนดหัวหน้าแผนกตามหน่วยงาน
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="mb-6 flex justify-between items-center flex-col sm:flex-row gap-2">
-          <button
-            onClick={editId ? handleUpdate : handleAdd}
-            className={`col-span-1 ${editId ? "bg-gray-700 hover:bg-gray-800" : "bg-gray-600 hover:bg-gray-700"} text-white px-4 py-2 rounded-lg transition-all`}
-          >
-            {editId ? "อัปเดต" : "เพิ่ม"}
-          </button>
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <input
+              type="text"
+              placeholder="กรอกชื่อแผนก"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className={`${inputBase} col-span-2`}
+            />
 
-          {/* Filter by Organization */}
-          <div className="flex items-center space-x-2">
-            <label className="text-sm text-black whitespace-nowrap">
-              กรองตามหน่วยงาน:
-            </label>
-            <div className="relative w-full sm:w-48">
+            <div className="relative w-full">
               <select
-                value={selectedOrgFilter}
+                value={editId ? editOrgId ?? "" : newOrgId}
                 onChange={(e) => {
-                  setSelectedOrgFilter(e.target.value);
-                  setCurrentPage(1);
+                  const id = e.target.value;
+                  if (editId) {
+                    setEditOrgId(id);
+                    loadUsersByOrganizationId(id);
+                  } else {
+                    setNewOrgId(id);
+                    loadUsersByOrganizationId(id);
+                  }
                 }}
-                className="w-full bg-white text-base px-3 py-2 pr-8 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-gray-400"
+                className={`${inputBase} pr-8 appearance-none`}
               >
-                <option value="">-- แสดงทั้งหมด --</option>
+                <option value="">เลือกหน่วยงาน</option>
                 {organizations.map((org) => (
-                  <option key={org.id} value={org.id}>{org.name}</option>
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
                 ))}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                <ChevronDown className="w-4 h-4 text-black" />
+                <ChevronDown className="w-4 h-4 text-slate-500" />
+              </div>
+            </div>
+
+            <div className="relative w-full">
+              <select
+                value={editId ? editHeadId : newHeadId}
+                onChange={(e) =>
+                  editId
+                    ? setEditHeadId(e.target.value)
+                    : setNewHeadId(e.target.value)
+                }
+                className={`${inputBase} pr-8 appearance-none`}
+              >
+                <option value="">เลือกหัวหน้าแผนก (ไม่ระบุก็ได้)</option>
+                {filteredUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.fullName || user.email}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <ChevronDown className="w-4 h-4 text-slate-500" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              onClick={editId ? handleUpdate : handleAdd}
+              className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition ${
+                editId
+                  ? "bg-slate-700 hover:bg-slate-600"
+                  : "bg-sky-600 hover:bg-sky-500"
+              }`}
+            >
+              {editId ? "อัปเดตแผนก" : "เพิ่มแผนก"}
+            </button>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-600 whitespace-nowrap">
+                กรองตามหน่วยงาน:
+              </span>
+              <div className="relative w-full sm:w-56">
+                <select
+                  value={selectedOrgFilter}
+                  onChange={(e) => {
+                    setSelectedOrgFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className={`${inputBase} pr-8 appearance-none`}
+                >
+                  <option value="">-- แสดงทั้งหมด --</option>
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                  <ChevronDown className="w-4 h-4 text-slate-500" />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto rounded-lg shadow border border-gray-300">
-          <table className="min-w-full bg-white text-sm text-black">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="px-4 py-3">#</th>
-                <th className="px-4 py-3">ชื่อแผนก</th>
-                <th className="px-4 py-3">หน่วยงาน</th>
-                <th className="px-4 py-3">หัวหน้าแผนก</th>
-                <th className="px-4 py-3 text-center">การจัดการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white text-sm text-slate-900 border-collapse">
+              <thead className="bg-slate-50 text-slate-700">
                 <tr>
-                  <td colSpan="5" className="text-center py-6 text-gray-500">
-                    กำลังโหลด...
-                  </td>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[6%]">
+                    #
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ชื่อแผนก
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    หน่วยงาน
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    หัวหน้าแผนก
+                  </th>
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
+                    การจัดการ
+                  </th>
                 </tr>
-              ) : displayed.length > 0 ? (
-                displayed.map((d, idx) => (
-                  <tr key={d.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition`}>
-                    {/* <td className="px-4 py-2">{d.id}</td> */}
-                    <td className="px-4 py-2">{startIndex + idx + 1}</td>
-                    <td className="px-4 py-2">{d.name}</td>
-                    <td className="px-4 py-2">
-                      {organizations.find(org => org.id === d.organizationId)?.name || "-"}
-                    </td>
-                    <td className="px-4 py-2">{d.head ? `${d.head.firstName} ${d.head.lastName}` : "-"}</td>
-                    <td className="px-4 py-2 text-center space-x-2">
-                      <button onClick={() => handleEdit(d.id)} className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm">
-                        แก้ไข
-                      </button>
-                      <button onClick={() => handleDelete(d.id)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm">
-                        ลบ
-                      </button>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="text-center py-6 text-sm text-slate-500"
+                    >
+                      กำลังโหลด...
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="text-center py-6 text-black">
-                    ยังไม่มีข้อมูลแผนก
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : displayed.length > 0 ? (
+                  displayed.map((d, idx) => (
+                    <tr
+                      key={d.id}
+                      className={`border-t border-slate-100 transition-colors ${
+                        idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                      } hover:bg-sky-50`}
+                    >
+                      <td className="px-4 py-2">{startIndex + idx + 1}</td>
+                      <td className="px-4 py-2">{d.name}</td>
+                      <td className="px-4 py-2">
+                        {organizations.find(
+                          (org) => org.id === d.organizationId
+                        )?.name || "-"}
+                      </td>
+                      <td className="px-4 py-2">
+                        {d.head
+                          ? `${d.head.firstName} ${d.head.lastName}`
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(d.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-slate-600"
+                          >
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => handleDelete(d.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-rose-400"
+                          >
+                            ลบ
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="text-center py-6 text-sm text-slate-500"
+                    >
+                      ยังไม่มีข้อมูลแผนก
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-4">
+          <div className="flex justify-center items-center gap-4 mt-4">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              onClick={() =>
+                setCurrentPage((p) => Math.max(1, p - 1))
+              }
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded bg-white border text-black disabled:opacity-50"
+              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               ก่อนหน้า
             </button>
-            <span className="px-3 py-1 text-black">
+            <span className="text-sm text-slate-700">
               หน้า {currentPage} / {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((p) => Math.min(p + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded bg-white border text-black disabled:opacity-50"
+              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               ถัดไป
             </button>

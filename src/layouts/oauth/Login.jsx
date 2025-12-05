@@ -3,11 +3,12 @@ import { FaGoogle } from "react-icons/fa";
 import { useState } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
-import { apiEndpoints } from "../../utils/api";
+import { apiEndpoints, BASE_URL } from "../../utils/api";
+import bg from "../../assets/bg.jpg";
+import engLogo from "../../assets/logo.png";
 
 const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL ??
-  "https://backend-faculty-of-engineering-leave.onrender.com";
+  import.meta.env.VITE_BACKEND_URL ?? BASE_URL;
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,11 +20,9 @@ export default function Login() {
 
   const handleContactClick = async () => {
     try {
-      // const res = await axios.get(`http://localhost:8000/api/contact`);
       const res = await axios.get(`${apiEndpoints.getContact}`);
       const data = res.data;
 
-      // แปลงข้อมูลให้อยู่ในรูปแบบ key:value
       const contactMap = {};
       data.forEach((item) => {
         contactMap[item.key] = item.value;
@@ -32,18 +31,12 @@ export default function Login() {
       Swal.fire({
         title: "ติดต่อเจ้าหน้าที่ระบบ",
         html: `
-        <div style="text-align: left; line-height: 1.8; font-size: 20px;">
-          <p><i class="fas fa-user ml-9 mr-2 text-red-400"></i>${
-            contactMap.AdminName || "-"
-          }</p>
-          <p><i class="fas fa-phone ml-9 mr-2 text-green-400"></i>${
-            contactMap.AdminPhone || "-"
-          }</p>
-          <p><i class="fas fa-envelope ml-9 mr-2 text-blue-400"></i>${
-            contactMap.AdminMail || "-"
-          }</p>
-        </div>
-      `,
+          <div style="text-align: left; line-height: 1.8; font-size: 20px;">
+            <p><i class="fas fa-user ml-9 mr-2 text-red-400"></i>${contactMap.AdminName || "-"}</p>
+            <p><i class="fas fa-phone ml-9 mr-2 text-green-400"></i>${contactMap.AdminPhone || "-"}</p>
+            <p><i class="fas fa-envelope ml-9 mr-2 text-blue-400"></i>${contactMap.AdminMail || "-"}</p>
+          </div>
+        `,
         icon: "info",
         confirmButtonText: "ปิด",
         confirmButtonColor: "#d33",
@@ -68,39 +61,52 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 px-4 font-kanit">
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 text-white drop-shadow">
-        ระบบลา <span className="text-red-500">คณะวิศวกรรมศาสตร์</span>
-      </h1>
+    <div className="relative flex items-center justify-center min-h-screen w-screen overflow-hidden font-kanit">
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${bg})` }}
+      />
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
 
-      <div className="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-700">
-        <div className="flex justify-center mb-4">
-          <FiLogIn className="text-white text-5xl" />
-        </div>
-        <h2 className="text-xl sm:text-2xl font-semibold text-center text-white mb-6">
-          เข้าสู่ระบบ
-        </h2>
+      <div className="relative z-10 px-4 w-full">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 text-white drop-shadow">
+          ระบบลา <span className="text-red-600">คณะวิศวกรรมศาสตร์</span>
+        </h1>
 
-        <button
-          type="button"
-          onClick={handleGoogleLogin}
-          disabled={isLoading}
-          className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition duration-300 font-medium flex justify-center items-center gap-2"
-        >
-          <FaGoogle />
-          {isLoading ? "กำลังนำไปยัง Google..." : "เข้าสู่ระบบด้วย Google"}
-        </button>
+        <div className="mx-auto bg-gray-900/20 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700 backdrop-blur-md">
+          <div className="flex justify-center mb-4">
+            <img
+              src={engLogo}
+              alt="Engineering Faculty Logo"
+              className="w-20 h-20 object-contain drop-shadow-lg"
+            />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-semibold text-center text-white mb-6">
+            เข้าสู่ระบบ
+          </h2>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-400 text-sm">
-            ต้องการความช่วยเหลือ?{" "}
-            <button
-              onClick={handleContactClick}
-              className="text-red-400 hover:underline"
-            >
-              ติดต่อเจ้าหน้าที่ระบบ
-            </button>
-          </p>
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed text-white py-2 rounded-lg transition duration-300 font-medium flex justify-center items-center gap-2"
+          >
+            <FaGoogle />
+            {isLoading ? "กำลังนำไปยัง Google..." : "เข้าสู่ระบบด้วย Google"}
+          </button>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-300 text-sm">
+              ต้องการความช่วยเหลือ?{" "}
+              <button
+                onClick={handleContactClick}
+                className="text-red-400 hover:underline"
+              >
+                ติดต่อเจ้าหน้าที่ระบบ
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

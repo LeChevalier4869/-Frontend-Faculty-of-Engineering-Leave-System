@@ -12,7 +12,7 @@ const DEBOUNCE_MS = 200;
 
 const MySwal = withReactContent(Swal);
 
-export default function UserManage() {
+function UserManage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -20,7 +20,6 @@ export default function UserManage() {
   const [keyword, setKeyword] = useState("");
   const navigate = useNavigate();
 
-  /* ---------- debounce search ---------- */
   useEffect(() => {
     const id = setTimeout(
       () => setKeyword(searchInput.trim().toLowerCase()),
@@ -29,7 +28,6 @@ export default function UserManage() {
     return () => clearTimeout(id);
   }, [searchInput]);
 
-  /* ---------- helpers ---------- */
   const authHeader = () => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
@@ -52,7 +50,6 @@ export default function UserManage() {
     }
   };
 
-  /* ---------- data fetching ---------- */
   const loadUsers = async () => {
     setLoading(true);
     try {
@@ -69,7 +66,6 @@ export default function UserManage() {
     loadUsers();
   }, []);
 
-  /* ---------- CRUD ---------- */
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
       title: "ยืนยันการลบ?",
@@ -91,7 +87,6 @@ export default function UserManage() {
     }
   };
 
-  /* ---------- filter + pagination ---------- */
   const filtered = !keyword
     ? users
     : users.filter((u) =>
@@ -106,36 +101,32 @@ export default function UserManage() {
     currentPage * PAGE_SIZE
   );
 
-  /* ---------- pop up add user ---------- */
   const showPopup = () => {
     MySwal.fire({
       title: "เลือกวิธีเพิ่มผู้ใช้งาน",
       html: (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          {/* เพิ่มผู้ใช้งานคนเดียว */}
+        <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
           <div
-            className="cursor-pointer flex flex-col items-center justify-center border border-gray-300 rounded-xl p-6 hover:shadow-lg transition"
+            className="cursor-pointer flex flex-col items-center justify-center border border-slate-200 rounded-2xl p-6 bg-white hover:bg-slate-50 hover:shadow-lg transition"
             onClick={() => {
               MySwal.close();
               navigate("/admin/add-user");
             }}
           >
-            <FiUser className="text-8xl text-blue-500 mb-2" />
-            <span className="text-lg font-medium text-gray-700">
+            <FiUser className="text-5xl text-sky-600 mb-3" />
+            <span className="text-base font-medium text-slate-800">
               เพิ่มผู้ใช้คนเดียว
             </span>
           </div>
-
-          {/* เพิ่มผู้ใช้งานหลายคน */}
           <div
-            className="cursor-pointer flex flex-col items-center justify-center border border-gray-300 rounded-xl p-6 hover:shadow-lg transition"
+            className="cursor-pointer flex flex-col items-center justify-center border border-slate-200 rounded-2xl p-6 bg-white hover:bg-slate-50 hover:shadow-lg transition"
             onClick={() => {
               MySwal.close();
               navigate("/admin/add-user-excel");
             }}
           >
-            <FiUsers className="text-8xl text-green-500 mb-2" />
-            <span className="text-lg font-medium text-gray-700">
+            <FiUsers className="text-5xl text-emerald-600 mb-3" />
+            <span className="text-base font-medium text-slate-800">
               เพิ่มผู้ใช้หลายคน
             </span>
           </div>
@@ -143,147 +134,173 @@ export default function UserManage() {
       ),
       showConfirmButton: false,
       showCloseButton: true,
-      width: 500,
-      padding: "2rem",
+      width: 520,
+      padding: "1.75rem",
       customClass: {
-        popup: "font-kanit text-black",
-        title: "font-kanit font-bold text-4xl", // ขนาดใหญ่ขึ้น
-        htmlContainer: "font-kanit text-base text-gray-800",
+        popup: "font-kanit text-slate-900 bg-slate-50",
+        title: "font-kanit font-semibold text-2xl text-slate-900",
+        htmlContainer: "font-kanit text-base text-slate-800",
       },
     });
   };
 
-  /* ---------- render ---------- */
   return (
-    <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
-      <div className="max-w-5xl mx-auto">
-        {/* header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <h1 className="text-3xl font-bold text-center md:text-left flex-1">
-            จัดการผู้ใช้งาน
-          </h1>
-
-          {/* 🔍 Search box */}
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder="ค้นหาชื่อ..."
-            className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-64
-                       bg-white text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-
-          {/* <Link
-            to="/admin/add-user"
-            className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition whitespace-nowrap"
-          >
-            + เพิ่มผู้ใช้งาน
-          </Link> */}
-          <button
-            onClick={showPopup}
-            className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-          >
-            + เพิ่มผู้ใช้งาน
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Admin View
+            </span>
+          </div>
+          <div className="w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col items-center gap-1 md:items-start">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                จัดการผู้ใช้งาน
+              </h1>
+              <p className="text-sm text-slate-600">
+                ดูรายการผู้ใช้งาน ค้นหา แก้ไข หรือลบข้อมูลผู้ใช้งานในระบบ
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-end">
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="ค้นหาชื่อ..."
+                className="w-full md:w-64 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+              />
+              <div className="flex items-center gap-3 justify-end">
+                <button
+                  onClick={showPopup}
+                  className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
+                >
+                  + เพิ่มผู้ใช้งาน
+                </button>
+                {loading && (
+                  <span className="text-xs text-slate-500">กำลังโหลด...</span>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* table */}
-        <div className="rounded-lg shadow border border-gray-300 overflow-hidden">
-          <table className="table-fixed w-full bg-white text-sm text-black">
-            <thead>
-              <tr className="bg-gray-100 text-gray-800">
-                <th className="px-4 py-3 text-left w-[18%]">ชื่อ-นามสกุล</th>
-                <th className="px-4 py-3 text-left w-[22%]">อีเมล</th>
-                <th className="px-4 py-3 text-left w-[15%]">แผนก</th>
-                <th className="px-4 py-3 text-left w-[15%]">ประเภทบุคลากร</th>
-                <th className="px-4 py-3 text-left w-[12%]">เบอร์โทร</th>
-                {/* <th className="px-4 py-3 text-left w-[11%]">บทบาท</th> */}
-                <th className="px-4 py-3 text-center w-[15%]">การจัดการ</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {loading ? (
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full table-fixed bg-white text-sm text-slate-900 border-collapse">
+              <thead className="bg-slate-50 text-slate-700">
                 <tr>
-                  <td colSpan="7" className="text-center py-6 text-gray-500">
-                    กำลังโหลด...
-                  </td>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[20%]">
+                    ชื่อ-นามสกุล
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[22%]">
+                    อีเมล
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
+                    แผนก
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
+                    ประเภทบุคลากร
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[12%]">
+                    เบอร์โทร
+                  </th>
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
+                    การจัดการ
+                  </th>
                 </tr>
-              ) : displayedUsers.length ? (
-                displayedUsers.map((user, idx) => (
-                  <tr
-                    key={user.id}
-                    onClick={() => navigate(`/admin/user-info/${user.id}`)}
-                    className={`cursor-pointer ${
-                      idx % 2 ? "bg-gray-50" : "bg-white"
-                    } hover:bg-indigo-50 transition`}
-                  >
-                    <td className="px-4 py-3 truncate">
-                      {user.prefixName} {user.firstName} {user.lastName}
-                    </td>
-                    <td className="px-4 py-3 truncate">{user.email}</td>
-                    {/* <td className="px-4 py-3 truncate">
-                      {Array.isArray(user.roles)
-                      ? user.roles.map((r) => r.name).join(", ")
-                      : user.role || "USER"}
-                      </td> */}
-                    <td className="px-4 py-3 truncate">
-                      {user.department?.name || "-"}
-                    </td>
-                    <td className="px-4 py-3 truncate">
-                      {user.personnelType?.name || "-"}
-                    </td>
-                    <td className="px-4 py-3 truncate">{user.phone}</td>
+              </thead>
+
+              <tbody>
+                {loading ? (
+                  <tr>
                     <td
-                      className="px-4 py-3 text-center space-x-2"
-                      onClick={(e) => e.stopPropagation()} // 👈 ป้องกันเด้งเมื่อกดปุ่มในแถว
+                      colSpan={6}
+                      className="text-center py-6 text-sm text-slate-500"
                     >
-                      <Link
-                        to={`/admin/user/${user.id}`}
-                        className="inline-block bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-lg text-sm"
-                      >
-                        แก้ไข
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="inline-block bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
-                      >
-                        ลบ
-                      </button>
+                      กำลังโหลด...
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="text-center py-6 text-gray-500">
-                    ไม่พบผู้ใช้งาน
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : displayedUsers.length ? (
+                  displayedUsers.map((user, idx) => (
+                    <tr
+                      key={user.id}
+                      onClick={() => navigate(`/admin/user-info/${user.id}`)}
+                      className={`cursor-pointer border-t border-slate-100 transition-colors ${
+                        idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                      } hover:bg-sky-50`}
+                    >
+                      <td className="px-4 py-3 truncate text-sm">
+                        {user.prefixName} {user.firstName} {user.lastName}
+                      </td>
+                      <td className="px-4 py-3 truncate text-sm">
+                        {user.email}
+                      </td>
+                      <td className="px-4 py-3 truncate text-sm">
+                        {user.department?.name || "-"}
+                      </td>
+                      <td className="px-4 py-3 truncate text-sm">
+                        {user.personnelType?.name || "-"}
+                      </td>
+                      <td className="px-4 py-3 truncate text-sm">
+                        {user.phone}
+                      </td>
+                      <td
+                        className="px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex flex-row items-center justify-center gap-2 whitespace-nowrap">
+                          <Link
+                            to={`/admin/user/${user.id}`}
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-slate-600"
+                          >
+                            แก้ไข
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-rose-400"
+                          >
+                            ลบ
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="text-center py-6 text-sm text-slate-500"
+                    >
+                      ไม่พบผู้ใช้งาน
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-4">
+          <div className="flex justify-center items-center gap-4 mt-6">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 border rounded-lg bg-white disabled:opacity-50"
+              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               ก่อนหน้า
             </button>
-            <span className="px-3 py-1">
+            <span className="text-sm text-slate-700">
               หน้า {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded-lg bg-white disabled:opacity-50"
+              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               ถัดไป
             </button>
@@ -293,3 +310,5 @@ export default function UserManage() {
     </div>
   );
 }
+
+export default UserManage;

@@ -9,8 +9,6 @@ import { apiEndpoints } from "../../utils/api";
 
 function UserProfile2() {
   const { user } = useAuth();
-  // console.log("UserProfile2 – user context:", user);
-
   const MySwal = withReactContent(Swal);
 
   const handleSignatureClick = async () => {
@@ -21,26 +19,17 @@ function UserProfile2() {
         },
       });
 
-      console.log("Signature data:", res.data);
       const signatureFile = res.data === null ? null : res.data.file;
-      console.log("Signature file:", signatureFile);
 
-      // ✅ ฟังก์ชันช่วยสำหรับอัปโหลด/อัปเดต
       const handleUpload = async (file, isUpdate = false) => {
         const formData = new FormData();
         formData.append("images", file);
 
         try {
-          console.log(
-            "Uploading to:",
-            isUpdate
-              ? `${apiEndpoints.signatureUpdate(user.id)}`
-              : apiEndpoints.signatureUpload
-          );
           await axios({
-            method: isUpdate ? "put" : "post", // ✅ เปลี่ยนตรงนี้
+            method: isUpdate ? "put" : "post",
             url: isUpdate
-              ? `${apiEndpoints.signatureUpdate(user.id)}`
+              ? apiEndpoints.signatureUpdate(user.id)
               : apiEndpoints.signatureUpload(user.id),
             data: formData,
             headers: {
@@ -60,7 +49,6 @@ function UserProfile2() {
         }
       };
 
-      // ✅ ฟังก์ชันช่วยสำหรับลบ
       const handleDelete = async () => {
         const confirm = await Swal.fire({
           title: "ยืนยันการลบ",
@@ -91,19 +79,18 @@ function UserProfile2() {
         }
       };
 
-      // ✅ แสดง SweetAlert2
       MySwal.fire({
         title: "ลายเซ็นของคุณ",
         html: (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center font-kanit">
             {signatureFile ? (
               <>
                 <img
                   src={signatureFile}
                   alt="ลายเซ็น"
-                  className="max-w-full h-40 border rounded mb-4"
+                  className="max-w-full h-40 border border-slate-200 rounded mb-4"
                 />
-                <label className="cursor-pointer px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded mb-2">
+                <label className="cursor-pointer px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded transition">
                   เปลี่ยนลายเซ็น
                   <input
                     type="file"
@@ -111,22 +98,22 @@ function UserProfile2() {
                     hidden
                     onChange={(e) => {
                       const file = e.target.files[0];
-                      if (file) handleUpload(file, true); // ใช้ signatureUpdate
+                      if (file) handleUpload(file, true);
                     }}
                   />
                 </label>
 
                 <button
                   onClick={handleDelete}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+                  className="mt-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded transition"
                 >
                   ลบลายเซ็น
                 </button>
               </>
             ) : (
               <>
-                <p className="mb-4 text-gray-600">ยังไม่มีลายเซ็น</p>
-                <label className="cursor-pointer px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">
+                <p className="mb-4 text-slate-600">ยังไม่มีลายเซ็น</p>
+                <label className="cursor-pointer px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded transition">
                   อัปโหลดลายเซ็น
                   <input
                     type="file"
@@ -134,7 +121,7 @@ function UserProfile2() {
                     hidden
                     onChange={(e) => {
                       const file = e.target.files[0];
-                      if (file) handleUpload(file, false); // ใช้ signatureUpload
+                      if (file) handleUpload(file, false);
                     }}
                   />
                 </label>
@@ -144,11 +131,11 @@ function UserProfile2() {
         ),
         showConfirmButton: false,
         showCloseButton: true,
-        width: 400,
+        width: 420,
+        background: "#ffffff",
       });
     } catch (err) {
       console.error("Error loading signature:", err);
-      // Swal.fire("เกิดข้อผิดพลาด", "โหลดลายเซ็นไม่สำเร็จ", "error");
     }
   };
 
@@ -156,67 +143,70 @@ function UserProfile2() {
     console.log("UserProfile2 – user context updated:", user);
   }, [user]);
 
-  /* ---- helper: แปลงค่าที่อาจเป็น object → string ---- */
   const positionName =
     typeof user?.position === "object"
       ? user.position?.name ?? "-"
       : user?.position ?? "-";
 
-  /* ---- ชื่อคณะ: มีได้สองแหล่ง ---- */
-  const orgName =
-    user.department?.organization?.name || "-";
-
   return (
-    <div className="min-h-screen bg-white px-4 py-10 font-kanit">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-10 flex items-center justify-center">
-          <FaUserAlt className="mr-3 text-4xl text-gray-800" />
-          <h1 className="text-center text-3xl font-bold text-gray-800 sm:text-4xl md:text-5xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-10 font-kanit text-slate-900 rounded-2xl">
+      <div className="mx-auto max-w-6xl space-y-10">
+
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <FaUserAlt className="text-sky-600 text-xl" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-slate-700">
+              User Profile
+            </span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
             โปรไฟล์ผู้ใช้
           </h1>
+
+          <p className="text-slate-600 text-sm">
+            ข้อมูลบัญชีและสถานะการทำงานของคุณในระบบ
+          </p>
         </div>
 
-        <div className="rounded-2xl bg-gray-50 p-6 shadow sm:p-8">
-          {/* avatar */}
-          <div className="mb-8 flex justify-center">
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 sm:p-8 space-y-10">
+          
+          <div className="flex justify-center">
             {user?.profilePicturePath ? (
               <img
                 src={user.profilePicturePath}
                 alt="Profile"
-                className="h-40 w-40 rounded-full border-4 border-gray-300 object-cover shadow-lg"
+                className="h-40 w-40 rounded-full object-cover border border-slate-200 shadow"
               />
             ) : (
-              <div className="flex h-40 w-40 items-center justify-center rounded-full border-4 border-gray-300 bg-gray-200 shadow-lg">
-                <FaUserAlt className="h-16 w-16 text-gray-600" />
+              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-slate-100 border border-slate-300 shadow">
+                <FaUserAlt className="h-16 w-16 text-slate-500" />
               </div>
             )}
           </div>
 
-          {/* details */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {[
-              [
-                "ชื่อ-นามสกุล",
-                `${user.prefixName}${user.firstName} ${user.lastName}`,
-              ],
-              ["อีเมล", user.email],
-              ["เพศ", user.sex],
-              ["เบอร์มือถือ", user.phone],
-              ["ตำแหน่ง", user.position], // ← ADD
-              ["คณะ", user.department?.organization?.name],
-              ["สาขา", user.department?.name],
-              ["ประเภทบุคลากร", user.personnelType?.name],
+              ["ชื่อ-นามสกุล",
+                `${user?.prefixName ?? ""}${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "-"],
+              ["อีเมล", user?.email],
+              ["เพศ", user?.sex],
+              ["เบอร์มือถือ", user?.phone],
+              ["ตำแหน่ง", positionName],
+              ["คณะ", user?.department?.organization?.name],
+              ["สาขา", user?.department?.name],
+              ["ประเภทบุคลากร", user?.personnelType?.name],
               [
                 "สายงาน",
-                user.employmentType === "SUPPORT"
+                user?.employmentType === "SUPPORT"
                   ? "สายสนับสนุน"
-                  : user.employmentType === "ACADEMIC"
+                  : user?.employmentType === "ACADEMIC"
                   ? "สายวิชาการ"
                   : "ไม่มีข้อมูล",
               ],
               [
                 "วันที่เริ่มงาน",
-                user.hireDate
+                user?.hireDate
                   ? new Date(user.hireDate).toLocaleDateString("th-TH", {
                       year: "numeric",
                       month: "long",
@@ -224,37 +214,29 @@ function UserProfile2() {
                     })
                   : "-",
               ],
-              // ["สถานะการใช้งาน", user.inActive ? "อยู่" : "ไม่อยู่"],
             ].map(([label, value], idx) => (
-              <div key={idx}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div key={idx} className="space-y-1">
+                <div className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
                   {label}
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800">
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-inner">
                   {value || "-"}
-                </p>
+                </div>
               </div>
             ))}
           </div>
 
-          {/* action */}
-          <div className="mt-8 flex flex-col sm:flex-row justify-center sm:justify-end gap-4">
+          <div className="flex justify-end">
             <Link
               to="#"
               onClick={handleSignatureClick}
-              className="inline-block rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition hover:bg-green-600"
+              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-emerald-500 hover:-translate-y-0.5 transition-all"
             >
               ลายเซ็น
             </Link>
-
-            {/* <Link
-              to="/change-password"
-              className="inline-block px-6 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white transition font-medium"
-            >
-              เปลี่ยนรหัสผ่าน
-            </Link> */}
           </div>
         </div>
+
       </div>
     </div>
   );

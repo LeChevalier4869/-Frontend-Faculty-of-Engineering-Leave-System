@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import {
   Users,
   Calendar,
@@ -13,8 +12,7 @@ import getApiUrl from "../../utils/apiUtils";
 import useAuth from "../../hooks/useAuth";
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
-  const { token } = useAuth(); // ✅ ดึง token จาก auth
+  const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -28,8 +26,8 @@ export default function AdminDashboard() {
   const [summary, setSummary] = useState([]);
 
   useEffect(() => {
-    if (!token) return; // ✅ token ยังไม่พร้อม ไม่ fetch
-  
+    if (!token) return;
+
     const fetchStats = async () => {
       setLoading(true);
       try {
@@ -44,11 +42,11 @@ export default function AdminDashboard() {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-  
+
         const users = usersRes.data.data || [];
         const leaves = leavesRes.data.data || [];
-        const summary = summaryRes.data.data || [];
-  
+        const s = summaryRes.data.data || [];
+
         setStats({
           totalUsers: users.length,
           totalRequests: leaves.length,
@@ -57,19 +55,23 @@ export default function AdminDashboard() {
           rejected: leaves.filter((r) => r.status === "REJECTED").length,
           cancelled: leaves.filter((r) => r.status === "CANCELLED").length,
         });
-  
-        setRecent(leaves.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5));
-        setSummary(summary);
+
+        setRecent(
+          leaves
+            .slice()
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5)
+        );
+        setSummary(s);
       } catch (err) {
         console.error("AdminDashboard fetch error:", err.response || err);
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchStats();
   }, [token]);
-  
 
   const formatDate = (iso) =>
     new Date(iso).toLocaleDateString("th-TH", {
@@ -78,97 +80,244 @@ export default function AdminDashboard() {
       year: "numeric",
     });
 
+  const statusPill = (status) => {
+    const base =
+      "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium";
+    switch (status) {
+      case "PENDING":
+        return (
+          <span
+            className={`${base} bg-amber-50 text-amber-700 border border-amber-200`}
+          >
+            รออนุมัติ
+          </span>
+        );
+      case "APPROVED":
+        return (
+          <span
+            className={`${base} bg-emerald-50 text-emerald-700 border border-emerald-200`}
+          >
+            อนุมัติแล้ว
+          </span>
+        );
+      case "REJECTED":
+        return (
+          <span
+            className={`${base} bg-rose-50 text-rose-700 border border-rose-200`}
+          >
+            ถูกปฏิเสธ
+          </span>
+        );
+      case "CANCELLED":
+        return (
+          <span
+            className={`${base} bg-slate-50 text-slate-700 border border-slate-200`}
+          >
+            ยกเลิก
+          </span>
+        );
+      default:
+        return (
+          <span
+            className={`${base} bg-slate-50 text-slate-700 border border-slate-200`}
+          >
+            {status}
+          </span>
+        );
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-black">
-        กำลังโหลดแดชบอร์ด...
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white font-kanit text-slate-700">
+        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-xl p-6">
+          <div className="flex flex-col items-center gap-3 text-sm">
+            <div className="relative flex h-10 w-10 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.9)]" />
+            </div>
+            <span className="font-medium">
+              กำลังโหลดแดชบอร์ดผู้ดูแลระบบ...
+            </span>
+            <span className="text-xs text-slate-500">
+              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลภาพรวม
+            </span>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 font-kanit">
-      <h1 className="text-3xl font-bold mb-6 text-black">แดชบอร์ดผู้ดูแลระบบ</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900 px-4 py-8 md:px-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-700">
+              Admin Dashboard
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-slate-900">
+            แดชบอร์ด{" "}
+            <span className="bg-gradient-to-r from-red-500 via-rose-400 to-amber-400 bg-clip-text text-transparent">
+              ผู้ดูแลระบบ
+            </span>
+          </h1>
+          <p className="text-slate-600 text-sm">
+            ภาพรวมการใช้งานระบบ การยื่นลา และสถานะคำขอทั้งหมดในองค์กร
+          </p>
+        </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card icon={<Users className="text-blue-500" />} label="ผู้ใช้งานทั้งหมด" value={stats.totalUsers} />
-        <Card icon={<List className="text-indigo-500" />} label="คำขอลาทั้งหมด" value={stats.totalRequests} />
-        <Card icon={<Clock className="text-yellow-500" />} label="รออนุมัติ" value={stats.pending} />
-        <Card icon={<CheckCircle className="text-green-500" />} label="อนุมัติแล้ว" value={stats.approved} />
-        <Card icon={<XCircle className="text-red-500" />} label="ถูกปฏิเสธ" value={stats.rejected} />
-        <Card icon={<Calendar className="text-gray-500" />} label="ยกเลิก" value={stats.cancelled} />
+        {/* Stat cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-2">
+          <Card
+            icon={<Users className="w-6 h-6" />}
+            label="ผู้ใช้งานทั้งหมด"
+            value={stats.totalUsers}
+            tone="indigo"
+          />
+          <Card
+            icon={<List className="w-6 h-6" />}
+            label="คำขอลาทั้งหมด"
+            value={stats.totalRequests}
+            tone="violet"
+          />
+          <Card
+            icon={<Clock className="w-6 h-6" />}
+            label="รออนุมัติ"
+            value={stats.pending}
+            tone="amber"
+          />
+          <Card
+            icon={<CheckCircle className="w-6 h-6" />}
+            label="อนุมัติแล้ว"
+            value={stats.approved}
+            tone="emerald"
+          />
+          <Card
+            icon={<XCircle className="w-6 h-6" />}
+            label="ถูกปฏิเสธ"
+            value={stats.rejected}
+            tone="rose"
+          />
+          <Card
+            icon={<Calendar className="w-6 h-6" />}
+            label="ยกเลิก"
+            value={stats.cancelled}
+            tone="slate"
+          />
+        </div>
+
+        {/* Tables */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <Section title="คำขอลาล่าสุด">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-slate-600">
+                  <tr className="border-b border-slate-200">
+                    <Th>วันที่</Th>
+                    <Th>ผู้ขอ</Th>
+                    <Th>ประเภทลา</Th>
+                    <Th>สถานะ</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recent.map((r) => (
+                    <tr
+                      key={r.id}
+                      className="border-b border-slate-100 hover:bg-slate-50/80 transition"
+                    >
+                      <Td>{formatDate(r.createdAt)}</Td>
+                      <Td>
+                        {r.user?.firstName} {r.user?.lastName}
+                      </Td>
+                      <Td>{r.leaveType?.name}</Td>
+                      <Td>{statusPill(r.status)}</Td>
+                    </tr>
+                  ))}
+                  {recent.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="py-6 text-center text-slate-500"
+                      >
+                        ไม่มีคำขอลา
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+
+          <Section title="สรุปวันลาของผู้ใช้งาน (อนุมัติแล้ว)">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-slate-600">
+                  <tr className="border-b border-slate-200">
+                    <Th>ชื่อผู้ใช้</Th>
+                    <Th>จำนวนวันลา</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.map((s) => (
+                    <tr
+                      key={s.userId}
+                      className="border-b border-slate-100 hover:bg-slate-50/80 transition"
+                    >
+                      <Td>{s.name}</Td>
+                      <Td>{s.totalDays}</Td>
+                    </tr>
+                  ))}
+                  {summary.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={2}
+                        className="py-6 text-center text-slate-500"
+                      >
+                        ไม่มีข้อมูล
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        </div>
       </div>
-
-      {/* Recent Requests */}
-      <Section title="คำขอลาล่าสุด">
-        <table className="w-full text-left table-auto">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 font-medium text-black">วันที่</th>
-              <th className="p-3 font-medium text-black">ผู้ขอ</th>
-              <th className="p-3 font-medium text-black">ประเภทลา</th>
-              <th className="p-3 font-medium text-black">สถานะ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recent.map((r) => (
-              <tr
-                key={r.id}
-                className="border-t hover:bg-gray-50 cursor-pointer"
-                onClick={() => navigate(`/admin/leave/${r.id}`)}
-              >
-                <td className="p-3 text-black">{formatDate(r.createdAt)}</td>
-                <td className="p-3 text-black">{r.user.firstName} {r.user.lastName}</td>
-                <td className="p-3 text-black">{r.leaveType.name}</td>
-                <td className="p-3 text-black">{r.status}</td>
-              </tr>
-            ))}
-            {recent.length === 0 && (
-              <tr>
-                <td colSpan="4" className="p-4 text-center text-black">ไม่มีคำขอลา</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </Section>
-
-      {/* Leave Summary */}
-      <Section title="สรุปวันลาของผู้ใช้งาน (อนุมัติแล้ว)">
-        <table className="w-full text-left table-auto">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 font-medium text-black">ชื่อผู้ใช้</th>
-              <th className="p-3 font-medium text-black">จำนวนวันลา</th>
-            </tr>
-          </thead>
-          <tbody>
-            {summary.map((s) => (
-              <tr key={s.userId} className="border-t hover:bg-gray-50">
-                <td className="p-3 text-black">{s.name}</td>
-                <td className="p-3 text-black">{s.totalDays}</td>
-              </tr>
-            ))}
-            {summary.length === 0 && (
-              <tr>
-                <td colSpan="2" className="p-4 text-center text-black">ไม่มีข้อมูล</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </Section>
     </div>
   );
 }
 
-// ✅ Component ย่อยเพื่อความสะอาด
-function Card({ icon, label, value }) {
+function Card({ icon, label, value, tone = "indigo" }) {
+  const tones =
+    {
+      indigo: "from-indigo-100 to-indigo-50 border-indigo-200",
+      violet: "from-violet-100 to-violet-50 border-violet-200",
+      amber: "from-amber-100 to-amber-50 border-amber-200",
+      emerald: "from-emerald-100 to-emerald-50 border-emerald-200",
+      rose: "from-rose-100 to-rose-50 border-rose-200",
+      slate: "from-slate-100 to-slate-50 border-slate-200",
+    }[tone] ||
+    "from-sky-100 to-sky-50 border-sky-200";
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow flex items-center">
-      <div className="w-8 h-8">{icon}</div>
-      <div className="ml-4">
-        <p className="text-2xl font-semibold text-black">{value}</p>
-        <p className="text-black">{label}</p>
+    <div className="relative rounded-2xl p-5 bg-white border shadow-sm overflow-hidden">
+      <div
+        className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${tones} opacity-70 pointer-events-none`}
+      />
+      <div className="relative flex items-center gap-4">
+        <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm">
+          {icon}
+        </div>
+        <div>
+          <p className="text-3xl font-semibold leading-tight text-slate-900 tracking-tight">
+            {value}
+          </p>
+          <p className="text-sm text-slate-600">{label}</p>
+        </div>
       </div>
     </div>
   );
@@ -176,9 +325,23 @@ function Card({ icon, label, value }) {
 
 function Section({ title, children }) {
   return (
-    <div className="bg-white p-6 rounded-lg shadow mt-8">
-      <h2 className="text-xl font-semibold mb-4 text-black">{title}</h2>
-      <div className="overflow-x-auto">{children}</div>
-    </div>
+    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm text-slate-900">
+      <header className="px-6 pt-6 pb-2">
+        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+      </header>
+      <div className="px-6 pb-6">{children}</div>
+    </section>
   );
 }
+
+const Th = ({ children }) => (
+  <th className="py-3 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+    {children}
+  </th>
+);
+
+const Td = ({ children }) => (
+  <td className="py-3 px-3 text-sm text-slate-800 whitespace-nowrap">
+    {children}
+  </td>
+);
