@@ -105,6 +105,7 @@ export default function LeaveDetail() {
     endDate,
     totalDays,
     thisTimeDays,
+    leavedDays,
     contact,
     status,
     documentNumber,
@@ -113,6 +114,7 @@ export default function LeaveDetail() {
     files,
     approvalSteps,
   } = leave;
+  // console.log("Leave Request Details:", leave);
 
   const lastStart = lastLeave?.startDate ?? null;
   const lastEnd = lastLeave?.endDate ?? null;
@@ -124,22 +126,25 @@ export default function LeaveDetail() {
     title: `ขอ${leaveType?.name}`,//
     name: `${user?.prefixName}${user?.firstName} ${user?.lastName}`,//
     position: user?.position || "ไม่ระบุ",//
-    organizationId: null,
+    organizationId: user?.department?.organization?.id || "ไม่ระบุ",//
     personalType: user?.personnelType?.name || "ไม่ระบุ",//
-    leaveType: "ลาป่วย",
+    leaveType: leaveType?.name || "ไม่ระบุ",//
     reason: reason || "ไม่ระบุ",//
     description: "รายละเอียดตัวอย่าง",
     date: "2023-10-15",
-    leaveTypeId: "3",
+    leaveTypeId: leaveType?.id || null,
     startDate: startDate,//
     endDate: endDate,//
+    beforeDate: new Date(leave.startDate).toISOString(),
     total: totalDays,//
     thisTime: thisTimeDays,//
+    leaved: leavedDays,
     lastLeave: "/",
     lastLeaveStartDate: lastStart,//
     lastLeaveEndDate: lastEnd,//
     lastLeaveTotal: lastTotal,//,
     lastLeaveThisTime: lastLeave?.thisTimeDays || "ไม่ระบุ",//
+    lastLeaved: lastLeave?.leavedDays || "-",
     contact: contact || "ไม่ระบุ",//
     phone: user?.phone || "ไม่ระบุ",//
     signature: "ลายเซ็น",
@@ -159,9 +164,9 @@ export default function LeaveDetail() {
     DateVerifier: "12-06-2568",
     commentApprover4: "โปรดพิจารณา4",
     signatureApprover4: "ลายเซ็น4",
-    DateApprover4: "12-06-2568"
+    DateApprover4: "12-06-2568",
   };
-  console.log(leaveData)
+  // console.log("Prepared Leave Data for Report:", leaveData);
 
   const downloadReport = async () => {
     setLoading(true);

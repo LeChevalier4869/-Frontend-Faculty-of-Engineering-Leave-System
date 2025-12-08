@@ -71,10 +71,8 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
 
   const fetchUserLand = useCallback(async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(apiEndpoints.userLanding, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // const token = localStorage.getItem("accessToken");
+      const res = await API.get(apiEndpoints.userLanding);
       const list = normalizeUsers(res?.data);
       setUserLand(list);
     } catch (err) {
@@ -384,7 +382,7 @@ export default function AddOtherRequest() {
   const [accountNameMap, setAccountNameMap] = useState({});
 
   const fetchAccountNames = async (rows) => {
-    const token = localStorage.getItem("accessToken");
+    // const token = localStorage.getItem("accessToken");
     const ids = Array.from(
       new Set(
         rows
@@ -394,11 +392,7 @@ export default function AddOtherRequest() {
     );
     if (ids.length === 0) return;
     const results = await Promise.allSettled(
-      ids.map((id) =>
-        axios.get(apiEndpoints.userInfoById(id), {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-      )
+      ids.map((id) => API.get(apiEndpoints.userInfoById(id)))
     );
     const next = { ...accountNameMap };
     results.forEach((res, idx) => {
@@ -418,10 +412,8 @@ export default function AddOtherRequest() {
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(apiEndpoints.leaveRequest, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // const token = localStorage.getItem("accessToken");
+      const res = await API.get(apiEndpoints.leaveRequest);
       const data = Array.isArray(res.data.data)
         ? res.data.data
         : Array.isArray(res.data.leaveRequest || res.data.leaveRequests)

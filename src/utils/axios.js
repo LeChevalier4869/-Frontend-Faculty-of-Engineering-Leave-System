@@ -2,7 +2,8 @@ import axios from "axios";
 
 // base URL ของ backend
 const API = axios.create({
-  baseURL: "https://backend-faculty-of-engineering-leave.onrender.com",
+  // baseURL: "https://backend-faculty-of-engineering-leave.onrender.com",
+  baseURL: "http://localhost:8000",
   withCredentials: true, // ถ้าใช้ cookie
 });
 
