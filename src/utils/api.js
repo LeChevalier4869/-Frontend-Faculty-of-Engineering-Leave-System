@@ -50,7 +50,7 @@ export const apiEndpoints = {
   uploadUserExcel : `${BASE_URL}/excel/upload-users`, //POST
   downloadReport: `${BASE_URL}/api/download-report`, //POST
 
-  
+  getAllApprover : `${BASE_URL}/api/user/all-approver`, //GET
 
   // admin manage department
   departmentsAdmin: `${BASE_URL}/admin/departments`,

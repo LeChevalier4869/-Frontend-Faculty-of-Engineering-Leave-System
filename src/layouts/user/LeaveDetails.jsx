@@ -11,6 +11,7 @@ export default function LeaveDetail() {
   const [leave, setLeave] = useState(null);
   const [lastLeave, setLastLeave] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [approver, setApprover] = useState([]);
 
   // const authHeader = () => {
   //   const token = localStorage.getItem("accessToken");
@@ -59,7 +60,7 @@ export default function LeaveDetail() {
       try {
         const res = await API.post(
           apiEndpoints.getLastLeaveBefore(leave.userId),
-          { 
+          {
             leaveTypeId: leave.leaveType.id,
             beforeDate: new Date(leave.startDate).toISOString(),
           },
@@ -81,6 +82,26 @@ export default function LeaveDetail() {
     loadLastLeave();
   }, [leave]);
 
+  // useEffect ที่ 3: approver
+  useEffect(() => {
+    const fetchApprover = async () => {
+      try {
+        const res = await API.get(apiEndpoints.getAllApprover);
+        const result = res?.data?.data ?? res?.data ?? null;
+        // console.log("Debug Approver: ", result);
+        setApprover(result);
+      } catch (err) {
+        Swal.fire(
+          "ผิดพลาด",
+          err.response?.data?.message || err.message,
+          "error"
+        );
+      }
+    };
+
+    fetchApprover();
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center text-gray-500 font-kanit">
@@ -96,6 +117,56 @@ export default function LeaveDetail() {
       </div>
     );
   }
+
+  //--------------------------------------------------------
+  //------------------------ Approver ----------------------
+  //--------------------------------------------------------
+
+  // Head of Department Case
+  const approver1 = approver.find((a) =>
+    Array.isArray(a.userRoles) &&
+    a.userRoles.some((ur) => ur.role?.name === "APPROVER_1") &&
+    a.department.id === leave.user.department.id &&
+    a.department.headId === a.id
+  );
+  // console.log("debug approver1: ", approver1);
+  // console.log("dept: ", leave.user.department.id);
+
+  // Verifier Case
+  const verifier = approver.find((a) =>
+    Array.isArray(a.userRoles) &&
+    a.userRoles.some((ur) => ur.role?.name === "VERIFIER") &&
+    a.id === leave.verifierId
+  );
+  // console.log("debug verifier: ", verifier);
+
+  // Approver_2 Case (สารบัญคณะ)
+  const approver2 = approver.find((a) =>
+    Array.isArray(a.userRoles) &&
+    a.userRoles.some((ur) => ur.role?.name === "APPROVER_2") &&
+    a.department.organizationId === leave.headOfDepartment.department.organizationId
+  );
+  // console.log("debig approver2: ", approver2);
+
+  // Approver_3 Case (รองคณบดี)
+  const approver3 = approver.find((a) =>
+    Array.isArray(a.userRoles) &&
+    a.userRoles.some((ur) => ur.role?.name === "APPROVER_3") &&
+    a.department.organizationId === leave.headOfDepartment.department.organizationId
+  );
+  // console.log("debig approver3: ", approver3);
+
+  // Approver_4 Case (คณบดี)
+  const approver4 = approver.find((a) =>
+    Array.isArray(a.userRoles) &&
+    a.userRoles.some((ur) => ur.role?.name === "APPROVER_4") &&
+    a.department.organizationId === leave.headOfDepartment.department.organizationId
+  );
+  // console.log("debig approver4: ", approver4);
+
+  //--------------------------------------------------------
+  //------------------------ leave data ----------------------
+  //--------------------------------------------------------
 
   const {
     user,
@@ -114,22 +185,25 @@ export default function LeaveDetail() {
     files,
     approvalSteps,
   } = leave;
-  // console.log("Leave Request Details:", leave);
+  console.log("Leave Request Details:", leave);
+
+  //Can export when leave approved or rejected
+  const canExport = status === "APPROVED" || status === "REJECTED";
 
   const lastStart = lastLeave?.startDate ?? null;
   const lastEnd = lastLeave?.endDate ?? null;
   const lastTotal = lastLeave?.totalDays ?? null;
 
   const leaveData = {
-    documentNumber: documentNumber || "ไม่ระบุ",//
-    documentDate: documentIssuedDate || "ไม่ระบุ",//
+    documentNumber: documentNumber || "-",//
+    documentDate: documentIssuedDate || "-",//
     title: `ขอ${leaveType?.name}`,//
     name: `${user?.prefixName}${user?.firstName} ${user?.lastName}`,//
-    position: user?.position || "ไม่ระบุ",//
-    organizationId: user?.department?.organization?.id || "ไม่ระบุ",//
-    personalType: user?.personnelType?.name || "ไม่ระบุ",//
-    leaveType: leaveType?.name || "ไม่ระบุ",//
-    reason: reason || "ไม่ระบุ",//
+    position: user?.position || "-",//
+    organizationId: user?.department?.organization?.id || "-",//
+    personalType: user?.personnelType?.name || "-",//
+    leaveType: leaveType?.name || "-",//
+    reason: reason || "-",//
     description: "รายละเอียดตัวอย่าง",
     date: "2023-10-15",
     leaveTypeId: leaveType?.id || null,
@@ -143,30 +217,32 @@ export default function LeaveDetail() {
     lastLeaveStartDate: lastStart,//
     lastLeaveEndDate: lastEnd,//
     lastLeaveTotal: lastTotal,//,
-    lastLeaveThisTime: lastLeave?.thisTimeDays || "ไม่ระบุ",//
+    lastLeaveThisTime: lastLeave?.thisTimeDays || "-",//
     lastLeaved: lastLeave?.leavedDays || "-",
-    contact: contact || "ไม่ระบุ",//
-    phone: user?.phone || "ไม่ระบุ",//
-    signature: "ลายเซ็น",
-    commentApprover1: "โปรดพิจารณา",
-    signatureApprover1: "ลายเซ็น1",
-    positionApprover1: "HR",
-    DateApprover1: "12-06-2568",
-    commentApprover2: "โปรดพิจารณา2",
-    signatureApprover2: "ลายเซ็น2",
-    positionApprover2: "HR2",
-    DateApprover2: "12-06-2568",
-    commentApprover3: "โปรดพิจารณา3",
-    signatureApprover3: "ลายเซ็น3",
-    positionApprover3: "HR3",
-    DateApprover3: "12-06-2568",
-    signatureVerifier: "ลายเซ็นผู้ตรวจสอบ",
-    DateVerifier: "12-06-2568",
-    commentApprover4: "โปรดพิจารณา4",
-    signatureApprover4: "ลายเซ็น4",
-    DateApprover4: "12-06-2568",
+    contact: contact || "-",//
+    phone: user?.phone || "-",//
+    signature: `${user?.firstName} ${user?.lastName}`,
+    commentApprover1: leave?.leaveRequestDetails[0]?.comment || "โปรดพิจารณา",
+    signatureApprover1: " ",
+    positionApprover1: "หัวหน้าสาขา",
+    DateApprover1: leave?.leaveRequestDetails[0]?.reviewedAt || new Date().toISOString(), // ดึงจากวันที่อนุมัติ
+    commentApprover2: leave?.leaveRequestDetails[2]?.comment || "โปรดพิจารณา2",
+    signatureApprover2: " ",
+    positionApprover2: "สารบรรณคณะวิศวกรรมศาสตร์",
+    DateApprover2: leave?.leaveRequestDetails[2]?.reviewedAt || new Date().toISOString(),
+    commentApprover3: leave?.leaveRequestDetails[3]?.comment || "โปรดพิจารณา3",
+    signatureApprover3: " ",
+    positionApprover3: "รองคณบดี",
+    DateApprover3: leave?.leaveRequestDetails[3]?.reviewedAt || new Date().toISOString(),
+    signatureVerifier: " ",
+    DateVerifier: leave?.documentIssuedDate,
+    isApprove: leave?.leaveRequestDetails[1]?.status === "APPROVED" ?? false,
+    commentApprover4: leave?.leaveRequestDetails[4]?.comment || "โปรดพิจารณา4",
+    signatureApprover4: " ",
+    DateApprover4: leave?.leaveRequestDetails[4]?.reviewedAt || new Date().toISOString(),
   };
   // console.log("Prepared Leave Data for Report:", leaveData);
+  // console.log("Debug isApprove: ", leaveData.isApprove);
 
   const downloadReport = async () => {
     setLoading(true);
@@ -186,8 +262,8 @@ export default function LeaveDetail() {
       // );
 
       const response = await API.post(
-        apiEndpoints.downloadReport, 
-        leaveData, 
+        apiEndpoints.downloadReport,
+        leaveData,
         {
           responseType: "blob",
         }
@@ -481,20 +557,19 @@ export default function LeaveDetail() {
 
         <div className="mt-8 text-right">
           <span
-            className={`inline-block px-4 py-2 rounded-lg font-semibold text-white ${
-              status === "APPROVED"
-                ? "bg-green-500"
-                : status === "REJECTED"
+            className={`inline-block px-4 py-2 rounded-lg font-semibold text-white ${status === "APPROVED"
+              ? "bg-green-500"
+              : status === "REJECTED"
                 ? "bg-red-500"
                 : "bg-yellow-400"
-            }`}
+              }`}
           >
             สถานะ:{" "}
             {status === "APPROVED"
               ? "อนุมัติแล้ว"
               : status === "REJECTED"
-              ? "ไม่อนุมัติ"
-              : "รออนุมัติ"}
+                ? "ไม่อนุมัติ"
+                : "รออนุมัติ"}
           </span>
         </div>
 
@@ -506,13 +581,25 @@ export default function LeaveDetail() {
             ← กลับหน้ารายการลา
           </button>
           <button
-            onClick={downloadReport}
+            onClick={canExport ? downloadReport : undefined}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+            className={`px-4 py-2 rounded text-white font-medium transition
+              ${canExport
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-gray-300 cursor-not-allowed"
+              }`}
           >
             {loading ? "กำลังดาวน์โหลด..." : "ส่งออก PDF"}
           </button>
         </div>
+
+        {/* message notice case pending */}
+        {!canExport && (
+          <p className="mt-3 text-sm text-red-500 text-center sm:text-left">
+            หมายเหตุ: กระบวนการอนุมัติใบลายังไม่เสร็จสิ้น จึงไม่สามารถส่งออก PDF ได้
+            กรุณารอให้ใบลาได้รับการอนุมัติหรือถูกปฏิเสธก่อน
+          </p>
+        )}
       </div>
     </div>
   );
