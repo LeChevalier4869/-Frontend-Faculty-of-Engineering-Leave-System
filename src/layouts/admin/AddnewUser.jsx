@@ -4,6 +4,7 @@ import { HiOutlineChevronDown } from "react-icons/hi";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
+import ExcelUploadPanel from "../../components/ExcelUploadPanel";
 
 const initialForm = {
   prefixName: "",
@@ -155,7 +156,9 @@ export default function AddUser() {
               เพิ่มผู้ใช้งานใหม่
             </h2>
             <p className="text-sm text-slate-600 mt-1">
-              กรอกข้อมูลส่วนตัว ข้อมูลการทำงาน และสร้างบัญชีผู้ใช้ให้บุคลากรใหม่
+              สร้างบัญชีผู้ใช้ให้บุคลากรใหม่
+              โดยกรอกข้อมูลส่วนตัวและข้อมูลการทำงาน หรืออัปโหลดไฟล์ Excel
+              (หลายคน)
             </p>
           </div>
         </div>
@@ -167,13 +170,19 @@ export default function AddUser() {
               <h3 className="text-lg font-semibold mb-4 text-slate-900">
                 ข้อมูลส่วนตัว
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {renderDropdown("คำนำหน้า", "prefixName", [
-                  { value: "นาย", label: "นาย" },
-                  { value: "นางสาว", label: "นางสาว" },
-                  { value: "นาง", label: "นาง" },
-                ])}
-                <div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                {/* คำนำหน้า */}
+                <div className="md:col-span-2">
+                  {renderDropdown("คำนำหน้า", "prefixName", [
+                    { value: "นาย", label: "นาย" },
+                    { value: "นางสาว", label: "นางสาว" },
+                    { value: "นาง", label: "นาง" },
+                  ])}
+                </div>
+
+                {/* ชื่อจริง */}
+                <div className="md:col-span-4">
                   <label className="block text-sm font-medium mb-1 text-slate-800">
                     ชื่อจริง
                   </label>
@@ -187,7 +196,9 @@ export default function AddUser() {
                     placeholder="กรอกชื่อจริง"
                   />
                 </div>
-                <div>
+
+                {/* นามสกุล */}
+                <div className="md:col-span-4">
                   <label className="block text-sm font-medium mb-1 text-slate-800">
                     นามสกุล
                   </label>
@@ -201,10 +212,27 @@ export default function AddUser() {
                     placeholder="กรอกนามสกุล"
                   />
                 </div>
-                {renderDropdown("เพศ", "sex", [
-                  { value: "MALE", label: "ชาย" },
-                  { value: "FEMALE", label: "หญิง" },
-                ])}
+
+                {/* เพศ */}
+                <div className="md:col-span-2">
+                  {renderDropdown("เพศ", "sex", [
+                    { value: "MALE", label: "ชาย" },
+                    { value: "FEMALE", label: "หญิง" },
+                  ])}
+                </div>
+
+                {/* รูปโปรไฟล์ */}
+                <div className="md:col-span-12">
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    รูปโปรไฟล์ (ถ้ามี)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 shadow-sm"
+                  />
+                </div>
               </div>
             </section>
 
@@ -225,7 +253,7 @@ export default function AddUser() {
                     onChange={handleChange}
                     required
                     className={inputClass}
-                    placeholder="example@kku.ac.th"
+                    placeholder="example@rmuti.ac.th"
                   />
                 </div>
                 <div>
@@ -312,17 +340,6 @@ export default function AddUser() {
                     className={inputClass}
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1 text-slate-800">
-                    รูปโปรไฟล์ (ถ้ามี)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 shadow-sm"
-                  />
-                </div>
               </div>
             </section>
 
@@ -349,6 +366,17 @@ export default function AddUser() {
             </div>
           </form>
         </Panel>
+        <ExcelUploadPanel
+          title="เพิ่มผู้ใช้จากไฟล์ Excel"
+          description="อัปโหลดไฟล์ Excel เพื่อเพิ่มผู้ใช้หลายคน"
+          uploadUrl={apiEndpoints.uploadUserExcel}
+          templatePath="/Add_Users_Template.xlsx"
+          templateName="Add_Users_Template.xlsx"
+          exampleTemplateName="Add_Users_Template_Example.xlsx"
+          onSuccess={(result) => {
+            console.log("UPLOAD RESULT:", result);
+          }}
+        />
       </div>
     </div>
   );

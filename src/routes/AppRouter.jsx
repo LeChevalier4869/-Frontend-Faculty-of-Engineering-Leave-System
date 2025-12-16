@@ -151,7 +151,6 @@ const userRouter = createBrowserRouter([
           { path: "leave-type-manage", element: <LeaveTypeManage /> },
           { path: "user-info/:id", element: <UserInfo /> },
           { path: "add-user", element: <AddnewUser /> },
-          // { path: "add-user-excel", element: <AddUsersByExcel /> },
           { path: "edit-profile", element: <EditProfile /> },
           { path: "user/:id", element: <EditUser /> },
           { path: "add-other-request", element: <AddOtherRequest /> },
