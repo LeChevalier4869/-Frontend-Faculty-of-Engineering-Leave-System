@@ -32,12 +32,9 @@ import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
 import LeaveReceiver from "../layouts/approver/LeaveReceiver";
 import LeaveVerifier from "../layouts/approver/LeaveVerifier";
 import Approver1Dashboard from "../layouts/approver/Approver1DashBoard";
-<<<<<<< HEAD
 
 /** Admin pages **/
 import AdminDashboard from "../layouts/admin/AdminDashBoard";
-=======
->>>>>>> 97e93ccabec8ea99974a62c8575c0a107ddca183
 import DashBoard from "../layouts/admin/DashBoard";
 import Approver from "../layouts/admin/Approver";
 import DepartmentManage from "../layouts/admin/DepartmentManage";
