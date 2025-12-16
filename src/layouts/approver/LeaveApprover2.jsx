@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { ChevronDown, Pencil } from "lucide-react";
 import Swal from "sweetalert2";
-import { apiEndpoints } from "../../utils/api";
+import { apiEndpoints, API } from "../../utils/api";
 
 dayjs.extend(isBetween);
 
@@ -44,6 +44,7 @@ export default function LeaveApprover2() {
       const res = await axios.get(apiEndpoints.leaveRequestForSecondApprover, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log("Debug leave: ", res?.data ?? res?.data?.data);
       setLeaveRequest(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching leave requests:", err);

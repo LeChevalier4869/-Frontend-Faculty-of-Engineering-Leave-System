@@ -37,6 +37,7 @@ export default function LeaveBalancePage() {
             Authorization: `Bearer ${token}`,
           },
         });
+
         if (Array.isArray(res.data.data)) {
           setEntitlements(res.data.data);
         } else {
@@ -59,68 +60,99 @@ export default function LeaveBalancePage() {
   }, []);
 
   const iconMap = {
-    ลาป่วย: <HeartPulse className="w-12 h-12 md:w-14 md:h-14 text-red-700" />,
-    ลาคลอดบุตร: <Baby className="w-12 h-12 md:w-14 md:h-14 text-pink-700" />,
+    ลาป่วย: (
+      <HeartPulse className="w-10 h-10 md:w-12 md:h-12 text-rose-500 drop-shadow-[0_0_12px_rgba(248,113,113,0.55)]" />
+    ),
+    ลาคลอดบุตร: (
+      <Baby className="w-10 h-10 md:w-12 md:h-12 text-pink-500 drop-shadow-[0_0_12px_rgba(236,72,153,0.55)]" />
+    ),
     ลากิจส่วนตัว: (
-      <Briefcase className="w-12 h-12 md:w-14 md:h-14 text-gray-600" />
+      <Briefcase className="w-10 h-10 md:w-12 md:h-12 text-slate-500 drop-shadow-[0_0_10px_rgba(148,163,184,0.5)]" />
     ),
     ลาพักผ่อน: (
-      <TreePalm className="w-12 h-12 md:w-14 md:h-14 text-amber-700" />
+      <TreePalm className="w-10 h-10 md:w-12 md:h-12 text-amber-500 drop-shadow-[0_0_12px_rgba(245,158,11,0.6)]" />
     ),
     ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: (
-      <Church className="w-12 h-12 md:w-14 md:h-14 text-purple-500" />
+      <Church className="w-10 h-10 md:w-12 md:h-12 text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]" />
     ),
     ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: (
-      <Flag className="w-12 h-12 md:w-14 md:h-14 text-blue-700" />
+      <Flag className="w-10 h-10 md:w-12 md:h-12 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]" />
     ),
     ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: (
-      <GraduationCap className="w-12 h-12 md:w-14 md:h-14 text-indigo-600" />
+      <GraduationCap className="w-10 h-10 md:w-12 md:h-12 text-indigo-500 drop-shadow-[0_0_12px_rgba(79,70,229,0.6)]" />
     ),
     ลาไปช่วยเหลือภริยาที่คลอดบุตร: (
-      <Home className="w-12 h-12 md:w-14 md:h-14 text-orange-700" />
+      <Home className="w-10 h-10 md:w-12 md:h-12 text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.6)]" />
     ),
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: (
-      <Accessibility className="w-12 h-12 md:w-14 md:h-14 text-green-700" />
+      <Accessibility className="w-10 h-10 md:w-12 md:h-12 text-emerald-500 drop-shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
     ),
   };
 
-  const bgColorMap = {
-    ลาป่วย: "bg-red-200",
-    ลาคลอดบุตร: "bg-pink-200",
-    ลากิจส่วนตัว: "bg-gray-300",
-    ลาพักผ่อน: "bg-amber-200",
-    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: "bg-purple-200",
-    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "bg-blue-200",
-    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: "bg-indigo-200",
-    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "bg-orange-200",
-    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "bg-green-200",
+  const ringColorMap = {
+    ลาป่วย: "ring-rose-200 bg-rose-50",
+    ลาคลอดบุตร: "ring-pink-200 bg-pink-50",
+    ลากิจส่วนตัว: "ring-slate-200 bg-slate-50",
+    ลาพักผ่อน: "ring-amber-200 bg-amber-50",
+    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: "ring-purple-200 bg-purple-50",
+    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "ring-sky-200 bg-sky-50",
+    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา:
+      "ring-indigo-200 bg-indigo-50",
+    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "ring-orange-200 bg-orange-50",
+    ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "ring-emerald-200 bg-emerald-50",
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
-        กำลังโหลดข้อมูลสิทธิลาการลา...
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 text-slate-800 font-kanit">
+        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
+          <div className="flex flex-col items-center gap-3 text-sm">
+            <div className="relative flex h-10 w-10 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_16px_rgba(56,189,248,0.7)]" />
+            </div>
+            <span className="text-slate-800 font-medium">
+              กำลังโหลดข้อมูลสิทธิลาการลา...
+            </span>
+            <span className="text-xs text-slate-500">
+              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากเซิร์ฟเวอร์
+            </span>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (entitlements.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-gray-400">
-        ไม่มีข้อมูลสิทธิลาการลา
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900 px-4 py-8 md:px-8 flex items-center justify-center">
+        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6 text-center">
+          <p className="text-sm text-slate-500">ไม่มีข้อมูลสิทธิลาการลา</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 px-4 sm:px-6 md:px-10 font-kanit">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 font-kanit px-4 py-8 md:px-8 rounded-2xl">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold text-black-800 mb-8 sm:mb-10 text-center">
-          ยอดวันลาคงเหลือ
-        </h1>
+        <div className="mb-8 md:mb-10 text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Leave Balance
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-slate-900">
+            ยอดวันลาคงเหลือของคุณ
+          </h1>
+          <p className="text-sm md:text-base text-slate-600">
+            ตรวจสอบสิทธิการลาทั้งหมดของคุณในแต่ละประเภทการลา
+          </p>
+        </div>
 
         <div
-          className="grid gap-4 sm:gap-6 md:gap-8"
+          className="grid gap-5 md:gap-6"
           style={{
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           }}
@@ -131,61 +163,60 @@ export default function LeaveBalancePage() {
             const used = item.usedDays ?? 0;
             const pending = item.pendingDays ?? 0;
             const remaining = item.remainingDays ?? total - used - pending;
-            const icon = iconMap[type] || (
-              <User className="w-12 h-12 md:w-14 md:h-14 text-gray-400" />
-            );
-            const bgColor = bgColorMap[type] || "bg-gray-100";
+            const icon =
+              iconMap[type] || (
+                <User className="w-10 h-10 md:w-12 md:h-12 text-slate-500 drop-shadow-[0_0_10px_rgba(148,163,184,0.6)]" />
+              );
+            const ringBg =
+              ringColorMap[type] || "ring-slate-200 bg-slate-50";
 
             return (
               <div
                 key={item.id ?? index}
-                className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow p-4 md:p-6"
+                className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md"
               >
-                {/* Header */}
-                <div
-                  className={`bg-gray-50 rounded-md px-3 py-2 mb-3 border border-gray-200 ${
-                    type.length <= 40 ? "min-h-[3rem]" : "h-auto"
-                  }`}
-                >
+                <div className="rounded-xl px-3 py-2 mb-3 border border-slate-100 bg-slate-50">
                   <h3
-                    className={`font-semibold text-gray-800 ${
-                      type.length > 35
-                        ? "text-xs sm:text-sm md:text-base" // เกิน 35 ตัว → ลดมาก
+                    className={`font-semibold text-slate-900 ${type.length > 35
+                        ? "text-xs sm:text-sm md:text-base"
                         : type.length > 30
-                        ? "text-sm sm:text-base md:text-lg" // เกิน 30 ตัว → ลดเล็กน้อย
-                        : "text-base sm:text-lg md:text-xl" // ปกติ
-                    }`}
+                          ? "text-sm sm:text-base md:text-lg"
+                          : "text-base sm:text-lg md:text-xl"
+                      }`}
                   >
                     {type}
                   </h3>
                 </div>
 
-                {/* Content */}
-                <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+                <div className="flex items-center gap-4 md:gap-5">
                   <div
-                    className={`${bgColor} p-3 sm:p-4 rounded-full flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 shrink-0`}
+                    className={`${ringBg} p-3 sm:p-4 rounded-2xl flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 shrink-0 ring-1`}
                   >
                     {icon}
                   </div>
 
-                  <div className="text-xs sm:text-sm md:text-base text-gray-700 grid grid-cols-1 gap-1 flex-1">
+                  <div className="grid grid-cols-1 gap-1 text-xs sm:text-sm md:text-base text-slate-700 flex-1">
                     <p>
                       จำนวนวันทั้งหมด:{" "}
-                      <span className="font-semibold">{total}</span>
+                      <span className="font-semibold text-slate-900">
+                        {total}
+                      </span>
                     </p>
                     <p>
                       ใช้ไปแล้ว:{" "}
-                      <span className="text-red-600 font-semibold">{used}</span>
+                      <span className="font-semibold text-rose-600">
+                        {used}
+                      </span>
                     </p>
                     <p>
                       กำลังดำเนินการ:{" "}
-                      <span className="text-yellow-600 font-semibold">
+                      <span className="font-semibold text-amber-600">
                         {pending}
                       </span>
                     </p>
                     <p>
                       เหลือ:{" "}
-                      <span className="text-green-600 font-semibold">
+                      <span className="font-semibold text-emerald-600">
                         {remaining}
                       </span>
                     </p>

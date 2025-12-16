@@ -2,7 +2,8 @@ import axios from "axios";
 // export const BASE_URL = "http://localhost:8000";
 
 export const API = axios.create({
-  baseURL:"https://backend-faculty-of-engineering-leave.onrender.com",
+  // baseURL:"https://backend-faculty-of-engineering-leave.onrender.com",
+  baseURL: "localhost:8000",
 });
 
 // Token interceptor (optional)
@@ -15,7 +16,8 @@ API.interceptors.request.use((config) => {
 });
 
 export const BASE_URL =
-  "https://backend-faculty-of-engineering-leave.onrender.com";
+  // "https://backend-faculty-of-engineering-leave.onrender.com";
+  "http://localhost:8000";
 
 export const apiEndpoints = {
   // auth
@@ -48,7 +50,7 @@ export const apiEndpoints = {
   uploadUserExcel : `${BASE_URL}/excel/upload-users`, //POST
   downloadReport: `${BASE_URL}/api/download-report`, //POST
 
-  
+  getAllApprover : `${BASE_URL}/api/user/all-approver`, //GET
 
   // admin manage department
   departmentsAdmin: `${BASE_URL}/admin/departments`,
