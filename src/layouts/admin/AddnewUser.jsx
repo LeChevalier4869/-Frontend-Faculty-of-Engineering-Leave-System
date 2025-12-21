@@ -19,7 +19,6 @@ const initialForm = {
   departmentId: "",
   employmentType: "",
   hireDate: "",
-  inActiveRaw: "false",
 };
 
 const Panel = ({ className = "", children }) => (

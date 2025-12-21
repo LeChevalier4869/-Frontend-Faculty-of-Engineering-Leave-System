@@ -111,7 +111,7 @@ export default function LeaveApprover4() {
       didOpen: () => Swal.showLoading(),
     });
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       await axios.patch(
         apiEndpoints.RejectleaveRequestsByFouthApprover(detailId),
         {

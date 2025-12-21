@@ -236,7 +236,12 @@ export default function LeaveDetail() {
     approvalSteps,
   } = leave ?? {};
 
-  const canExport = status === "APPROVED" || status === "REJECTED";
+  const EXPORTABLE_LEAVE_TYPE_IDS = [1, 3, 4];
+  const isFinalStatus = status === "APPROVED" || status === "REJECTED";
+  const isExportableType = EXPORTABLE_LEAVE_TYPE_IDS.includes(
+    Number(leaveType?.id)
+  );
+  const canExport = isFinalStatus && isExportableType;
 
   const lastStart = lastLeave?.startDate ?? null;
   const lastEnd = lastLeave?.endDate ?? null;
@@ -244,6 +249,7 @@ export default function LeaveDetail() {
 
   const leaveData = useMemo(() => {
     return {
+      userId: leave?.userId ?? null,
       documentNumber: documentNumber || "-", //
       documentDate: documentIssuedDate || "-", //
       title: `ขอ${leaveType?.name}` || "-", //
@@ -302,6 +308,7 @@ export default function LeaveDetail() {
     contact,
     documentIssuedDate,
     documentNumber,
+    leave?.userId,
     endDate,
     lastEnd,
     lastStart,
@@ -690,7 +697,7 @@ export default function LeaveDetail() {
           </button>
           <button
             onClick={canExport ? downloadReport : undefined}
-            disabled={downloading}
+            disabled={downloading || !canExport}
             className={`px-4 py-2 rounded text-white font-medium transition
               ${canExport
                 ? "bg-blue-600 hover:bg-blue-700"
@@ -702,10 +709,16 @@ export default function LeaveDetail() {
         </div>
 
         {/* message notice case pending */}
-        {!canExport && (
+        {!canExport && !isFinalStatus && (
           <p className="mt-3 text-sm text-red-500 text-center sm:text-left">
             หมายเหตุ: กระบวนการอนุมัติใบลายังไม่เสร็จสิ้น จึงไม่สามารถส่งออก PDF ได้
             กรุณารอให้ใบลาได้รับการอนุมัติหรือถูกปฏิเสธก่อน
+          </p>
+        )}
+
+        {!canExport && isFinalStatus && !isExportableType && (
+          <p className="mt-3 text-sm text-red-500 text-center sm:text-left">
+            หมายเหตุ: ประเภทการลานี้ไม่รองรับการส่งออก PDF
           </p>
         )}
       </div>

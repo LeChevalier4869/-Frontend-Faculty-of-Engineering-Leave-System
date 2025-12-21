@@ -76,7 +76,6 @@ export const apiEndpoints = {
   getLastLeaveBefore: (userId) => `${BASE_URL}/leave-requests/last/type/${userId}`,
   leaveRequestForFirstApprover: `${BASE_URL}/leave-requests/for-approver1`, // GET
   leaveRequestForVerifier: `${BASE_URL}/leave-requests/for-verifier`, // GET
-  leaveRequestForReceiver: `${BASE_URL}/leave-requests/for-receiver`, // GET
   leaveRequestForSecondApprover: `${BASE_URL}/leave-requests/for-approver2`, // GET
   leaveRequestForThirdApprover: `${BASE_URL}/leave-requests/for-approver3`, // GET
   leaveRequestForFouthApprover: `${BASE_URL}/leave-requests/for-approver4`, // GET
@@ -90,9 +89,6 @@ export const apiEndpoints = {
 
   ApproveleaveRequestsByVerifier: (id) =>
     `${BASE_URL}/leave-requests/${id}/approve-by-verifier`,
-
-  ApproveleaveRequestsByReceiver: (id) =>
-    `${BASE_URL}/leave-requests/${id}/approve-by-receiver`,
 
   ApproveleaveRequestsBySecondApprover: (id) =>
     `${BASE_URL}/leave-requests/${id}/approve-by-approver2`,
@@ -109,9 +105,6 @@ export const apiEndpoints = {
 
   RejectleaveRequestsByVerifier: (id) =>
     `${BASE_URL}/leave-requests/${id}/reject-by-verifier`,
-
-  RejectleaveRequestsByReceiver: (id) =>
-    `${BASE_URL}/leave-requests/${id}/reject-by-receiver`,
 
   RejectleaveRequestsBySecondApprover: (id) =>
     `${BASE_URL}/leave-requests/${id}/reject-by-approver2`,
