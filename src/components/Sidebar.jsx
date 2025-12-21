@@ -28,7 +28,6 @@ const approverNav1 = [
 ];
 
 const verifierNav = [{ to: "/approver/leave-request-verifier", text: "ตรวจสอบคำขอการลา", icon: <FaCheckCircle /> }];
-const receiverNav = [{ to: "/approver/leave-request-receiver", text: "รับหนังสือคำขอลา", icon: <FaCheckCircle /> }];
 const approverNav2 = [{ to: "/approver/leave-request-approver2", text: "อนุมัติระดับ 2", icon: <FaCheckCircle /> }];
 const approverNav3 = [{ to: "/approver/leave-request-approver3", text: "อนุมัติระดับ 3", icon: <FaCheckCircle /> }];
 const approverNav4 = [{ to: "/approver/leave-request-approver4", text: "อนุมัติระดับ 4", icon: <FaCheckCircle /> }];
@@ -66,6 +65,9 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
   const Item = ({ to, icon, text }) => (
     <Link
       to={to}
+      onClick={() => {
+        if (isMobile && typeof onClose === "function") onClose();
+      }}
       className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition ${
         isActive(to)
           ? "bg-white/20 text-white ring-1 ring-white/30"
@@ -93,11 +95,16 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
     hasRole("APPROVER_2") ||
     hasRole("APPROVER_3") ||
     hasRole("APPROVER_4") ||
-    hasRole("VERIFIER") ||
-    hasRole("RECEIVER");
+    hasRole("VERIFIER");
 
   return (
     <>
+      {isMobile && isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/60"
+          onClick={onClose}
+        />
+      )}
       <aside
         className={`fixed top-0 left-0 z-40 h-full transform transition-transform duration-300 ease-in-out ${
           isMini ? "w-20" : "w-64"
@@ -121,18 +128,37 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
                   </div>
                 )}
               </div>
-              <button
-                onClick={toggleMiniSidebar}
-                className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {isMini ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
-                  )}
-                </svg>
-              </button>
+              {isMobile ? (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition"
+                  aria-label="Close menu"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={toggleMiniSidebar}
+                  className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition"
+                  aria-label="Toggle mini sidebar"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {isMini ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
+                    )}
+                  </svg>
+                </button>
+              )}
             </div>
 
             {/* Navigation */}
@@ -153,10 +179,6 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
                     ))}
                   {hasRole("VERIFIER") &&
                     verifierNav.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
-                    ))}
-                  {hasRole("RECEIVER") &&
-                    receiverNav.map((m, i) => (
                       <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
                     ))}
                   {hasRole("APPROVER_2") &&

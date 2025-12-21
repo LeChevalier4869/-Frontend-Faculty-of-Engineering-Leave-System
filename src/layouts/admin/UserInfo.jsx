@@ -222,7 +222,6 @@ export default function UserInfo() {
                     })
                   : "-",
               ],
-              ["สถานะการใช้งาน", user.isActive ? "ใช้งานอยู่" : "ไม่ใช้งาน"],
             ].map(([label, value], idx) => (
               <div key={idx}>
                 <label className="block text-xs font-medium text-slate-600 mb-1 uppercase tracking-[0.12em]">

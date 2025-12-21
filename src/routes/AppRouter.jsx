@@ -4,12 +4,13 @@ import {
   Outlet,
   Navigate,
 } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import useAuth from "../hooks/useAuth";
 import Login2 from "../layouts/oauth/Login";
 import Profile2 from "../layouts/oauth/Profile";
 import Callback from "../layouts/oauth/Callback";
+
 import Register from "../layouts/auth/Register";
 import ForgotPassword from "../layouts/auth/ForgotPassword";
 import ResetPassword from "../layouts/auth/ResetPassword";
@@ -29,7 +30,6 @@ import LeaveApprover1 from "../layouts/approver/LeaveApprover1";
 import LeaveApprover2 from "../layouts/approver/LeaveApprover2";
 import LeaveApprover3 from "../layouts/approver/LeaveApprover3";
 import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
-import LeaveReceiver from "../layouts/approver/LeaveReceiver";
 import LeaveVerifier from "../layouts/approver/LeaveVerifier";
 import Approver1Dashboard from "../layouts/approver/Approver1DashBoard";
 
@@ -55,13 +55,37 @@ import ConfigPage from "../layouts/admin/Config";
 import bg from "../assets/bg.jpg";
 
 function AppLayout() {
+  const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMiniSidebar, setMiniSidebar] = useState(false);
 
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () => {
+      const mobile = mq.matches;
+      setIsMobile(mobile);
+      setSidebarOpen(!mobile);
+      setMiniSidebar(false);
+    };
+
+    apply();
+    if (mq.addEventListener) mq.addEventListener("change", apply);
+    else mq.addListener(apply);
+
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", apply);
+      else mq.removeListener(apply);
+    };
+  }, []);
+
   const toggleSidebar = () => setSidebarOpen((v) => !v);
+  const closeSidebar = () => setSidebarOpen(false);
   const toggleMiniSidebar = () => setMiniSidebar((v) => !v);
 
-  const mainShift = clsx("transition-all duration-300", isMiniSidebar ? "ml-16" : "ml-64");
+  const mainShift = clsx(
+    "transition-all duration-300",
+    isMobile ? "ml-0" : isMiniSidebar ? "ml-16" : "ml-64"
+  );
 
   return (
     <div
@@ -79,9 +103,16 @@ function AppLayout() {
           isOpen={isSidebarOpen}
           isMini={isMiniSidebar}
           toggleMiniSidebar={toggleMiniSidebar}
+          onClose={closeSidebar}
+          isMobile={isMobile}
         />
         <div className="flex flex-col flex-1 overflow-hidden">
-          <Header onToggleSidebar={toggleSidebar} />
+          <Header
+            onMenuClick={toggleSidebar}
+            isSidebarOpen={isSidebarOpen}
+            isSidebarMini={isMiniSidebar}
+            isMobile={isMobile}
+          />
           <main className={clsx("flex-1 overflow-auto p-4", mainShift)}>
             <Outlet />
           </main>
@@ -130,7 +161,6 @@ const userRouter = createBrowserRouter([
           { path: "leave-request-approver2", element: <LeaveApprover2 /> },
           { path: "leave-request-approver3", element: <LeaveApprover3 /> },
           { path: "leave-request-approver4", element: <LeaveApprover4 /> },
-          { path: "leave-request-receiver", element: <LeaveReceiver /> },
           { path: "leave-request-verifier", element: <LeaveVerifier /> },
           { path: "dashboard-approver1", element: <Approver1Dashboard /> },
         ],

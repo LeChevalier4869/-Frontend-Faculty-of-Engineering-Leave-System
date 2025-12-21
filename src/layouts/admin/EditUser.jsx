@@ -10,6 +10,16 @@ const Panel = ({ className = "", children }) => (
   </div>
 );
 
+const ROLE_LABEL_TH = {
+  USER: "ผู้ใช้งานทั่วไป",
+  ADMIN: "ผู้ดูแลระบบ",
+  VERIFIER: "ผู้ตรวจสอบ",
+  APPROVER_1: "หัวหน้าสาขา",
+  APPROVER_2: "สรรบรรณคณะ",
+  APPROVER_3: "รองคณบดี",
+  APPROVER_4: "คณบดี",
+};
+
 export default function UserEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,13 +36,15 @@ export default function UserEdit() {
     employmentType: "",
     hireDate: "",
     position: "",
-    inActiveRaw: "false",
   };
 
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(initialForm);
   const [departments, setDepartments] = useState([]);
   const [personnelTypes, setPersonnelTypes] = useState([]);
+  const [allRoles, setAllRoles] = useState([]);
+  const [selectedRoles, setSelectedRoles] = useState(new Set());
+  const [initialRoles, setInitialRoles] = useState(new Set());
   // const [employmentTypes, setEmploymentTypes] = useState([]);
 
   useEffect(() => {
@@ -41,12 +53,18 @@ export default function UserEdit() {
       try {
         const token = localStorage.getItem("accessToken");
         // const [userRes, deptRes, ptRes, empRes] = await Promise.all([
-        const [userRes, deptRes, ptRes] = await Promise.all([
+        const [userRes, deptRes, ptRes, userInfoRes, roleRes] = await Promise.all([
           axios.get(apiEndpoints.getUserByIdAdmin(id), {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(apiEndpoints.lookupDepartments),
           axios.get(apiEndpoints.lookupPersonnelTypes),
+          axios.get(apiEndpoints.userInfoById(id), {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${apiEndpoints.getHoliday}`.replace(/\/admin\/holiday$/, "/admin/role"), {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
           // axios.get(apiEndpoints.lookupEmploymentTypes),
         ]);
 
@@ -64,11 +82,29 @@ export default function UserEdit() {
           employmentType: u.employmentType || "",
           hireDate: u.hireDate?.substring(0, 10) || "",
           position: u.position || "",
-          inActiveRaw: u.inActive ? "true" : "false",
         });
 
         setDepartments(deptRes.data.data);
         setPersonnelTypes(ptRes.data.data);
+
+        const userInfo = userInfoRes?.data?.user ?? userInfoRes?.data?.data ?? {};
+        const roleNames = Array.isArray(userInfo?.userRoles)
+          ? userInfo.userRoles
+              .map((ur) => ur?.role?.name)
+              .filter(Boolean)
+          : [];
+
+        const initSet = new Set(roleNames);
+        setSelectedRoles(initSet);
+        setInitialRoles(initSet);
+
+        const rolesPayload = roleRes?.data?.roleList ?? roleRes?.data?.data ?? roleRes?.data?.roles ?? [];
+        const roles = Array.isArray(rolesPayload) ? rolesPayload : [];
+        setAllRoles(
+          roles
+            .map((r) => ({ id: r.id, name: r.name }))
+            .filter((r) => r.id != null && r.name)
+        );
         // const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
         // setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
       } catch (err) {
@@ -84,6 +120,15 @@ export default function UserEdit() {
     fetchAll();
   }, [id]);
 
+  const toggleRole = (roleName) => {
+    setSelectedRoles((prev) => {
+      const next = new Set(prev);
+      if (next.has(roleName)) next.delete(roleName);
+      else next.add(roleName);
+      return next;
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -97,13 +142,43 @@ export default function UserEdit() {
 
       const payload = {
         ...formData,
-        inActive: formData.inActiveRaw === "true",
       };
-      delete payload.inActiveRaw;
 
       await axios.put(apiEndpoints.updateUserByIdAdmin(id), payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      const initial = initialRoles;
+      const selected = selectedRoles;
+      const toAdd = Array.from(selected).filter((r) => !initial.has(r));
+      const toRemove = Array.from(initial).filter((r) => !selected.has(r));
+
+      const roleOps = [];
+      toAdd.forEach((roleName) => {
+        roleOps.push(
+          axios.post(
+            `${apiEndpoints.updateUserRole}/${id}`,
+            { roleNames: [roleName], action: "ADD" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        );
+      });
+      toRemove.forEach((roleName) => {
+        roleOps.push(
+          axios.post(
+            `${apiEndpoints.updateUserRole}/${id}`,
+            { roleNames: [roleName], action: "REMOVE" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        );
+      });
+
+      if (roleOps.length) {
+        await Promise.all(roleOps);
+        const nextInit = new Set(selected);
+        setInitialRoles(nextInit);
+        setSelectedRoles(nextInit);
+      }
 
       Swal.fire(
         "อัปเดตสำเร็จ",
@@ -183,6 +258,12 @@ export default function UserEdit() {
   const inputClass =
     "w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400";
 
+  const getRoleLabel = (roleName) => {
+    const th = ROLE_LABEL_TH[roleName];
+    if (!th) return roleName;
+    return `${th} (${roleName})`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -261,6 +342,32 @@ export default function UserEdit() {
                 { value: "ACADEMIC", label: "สายวิชาการ" },
                 { value: "SUPPORT", label: "สายสนับสนุน" },
               ])}
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-col gap-1">
+                <div className="text-sm font-medium text-slate-800">บทบาท (Roles)</div>
+                <div className="text-xs text-slate-600">
+                  เลือกบทบาทสำหรับผู้ใช้งาน (ใช้กำหนด Approver/Verifier/Admin)
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {(allRoles.length ? allRoles : [{ name: "USER" }]).map((r) => (
+                  <label
+                    key={r.name}
+                    className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs text-slate-800"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedRoles.has(r.name)}
+                      onChange={() => toggleRole(r.name)}
+                    />
+                    <span className="truncate" title={getRoleLabel(r.name)}>
+                      {getRoleLabel(r.name)}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
