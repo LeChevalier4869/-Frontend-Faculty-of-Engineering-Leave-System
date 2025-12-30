@@ -238,6 +238,13 @@ export default function LeaveDetail() {
   console.log("Debug approvalSteps: ", approvalSteps);
   
 
+  const sortedApprovalSteps = useMemo(() => {
+    const steps = Array.isArray(approvalSteps) ? [...approvalSteps] : [];
+    steps.sort((a, b) => (Number(a?.stepOrder) || 0) - (Number(b?.stepOrder) || 0));
+    return steps;
+  }, [approvalSteps]);
+
+
   const EXPORTABLE_LEAVE_TYPE_IDS = [1, 3, 4];
   const isFinalStatus = status === "APPROVED" || status === "REJECTED";
   const isExportableType = EXPORTABLE_LEAVE_TYPE_IDS.includes(
@@ -416,17 +423,23 @@ export default function LeaveDetail() {
 
   const getApproverPositionName = (step) => {
     // ถ้า backend ส่ง roleName มาด้วย (แนะนำที่สุด)
-    const roleName = step?.approver?.userRoles?.[0]?.role?.name;
+    const roleName = Array.isArray(step?.approver?.userRoles)
+      ? step.approver.userRoles
+          .map((ur) => ur?.role)
+          .filter((r) => r?.id != null && r.id >= 3 && r.id <= 7)
+          .map((r) => r?.name)
+          .filter(Boolean)[0]
+      : null;
 
     switch (roleName) {
       case "APPROVER_1":
-        return "ผู้บังคับบัญชาขั้นต้น";
-      case "APPROVER_2":
-        return "ผู้บังคับบัญชา";
-      case "APPROVER_3":
-        return "ผู้บังคับบัญชา";
+        return "หัวหน้าสาขา";
       case "VERIFIER":
-        return "เจ้าหน้าที่ผู้รับผิดชอบงานบริหารงาน";
+        return "ผู้ตรวจสอบ";
+      case "APPROVER_2":
+        return "สรรบรรณคณะ";
+      case "APPROVER_3":
+        return "รองคณบดี";
       case "APPROVER_4":
         return "คณบดี";
       default:
@@ -653,13 +666,16 @@ export default function LeaveDetail() {
           <h2 className="font-semibold text-lg mb-2">
             ความคิดเห็นผู้บังคับบัญชา
           </h2>
-          {approvalSteps?.length > 0 ? (
-            approvalSteps.map((step, i) => (
-              <div>
+          {sortedApprovalSteps.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {sortedApprovalSteps.map((step, i) => (
                 <div
-                  key={i}
-                  className="bg-white border px-4 py-2 rounded-lg mb-2 w-1/2"
+                  key={step?.id ?? `${step?.stepOrder ?? ""}-${i}`}
+                  className="bg-white border px-4 py-2 rounded-lg"
                 >
+                  <div className="text-[11px] text-gray-400 font-light mb-1">
+                    STEP {i + 1}
+                  </div>
                   <div className="p-2 rounded flex items-center gap-2 bg-gray-100 overflow-hidden">
                     <p className="text-sm">
                       {step.comment ? step.comment : "-"}
@@ -669,7 +685,7 @@ export default function LeaveDetail() {
                     ชื่อผู้บังคับบัญชา: {step.approver?.prefixName}{step.approver?.firstName} {step.approver?.lastName}
                   </p>
                   <p className="text-sm mt-1">
-                    ตำแหน่ง: 
+                    ตำแหน่ง: {getApproverPositionName(step)}
                   </p>
                   <p className="text-sm mt-1">
                     {step.reviewedAt ? formatDate(step.reviewedAt) : "-"}
@@ -683,8 +699,8 @@ export default function LeaveDetail() {
                     </p>
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
             <p className="text-gray-500">ไม่มีความคิดเห็น</p>
           )}
