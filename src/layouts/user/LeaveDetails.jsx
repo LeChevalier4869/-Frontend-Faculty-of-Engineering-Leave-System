@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaFileAlt } from "react-icons/fa";
@@ -235,6 +235,15 @@ export default function LeaveDetail() {
     files,
     approvalSteps,
   } = leave ?? {};
+  console.log("Debug approvalSteps: ", approvalSteps);
+  
+
+  const sortedApprovalSteps = useMemo(() => {
+    const steps = Array.isArray(approvalSteps) ? [...approvalSteps] : [];
+    steps.sort((a, b) => (Number(a?.stepOrder) || 0) - (Number(b?.stepOrder) || 0));
+    return steps;
+  }, [approvalSteps]);
+
 
   const EXPORTABLE_LEAVE_TYPE_IDS = [1, 3, 4];
   const isFinalStatus = status === "APPROVED" || status === "REJECTED";
@@ -411,6 +420,33 @@ export default function LeaveDetail() {
       setDownloading(false);
     }
   };
+
+  const getApproverPositionName = (step) => {
+    // ถ้า backend ส่ง roleName มาด้วย (แนะนำที่สุด)
+    const roleName = Array.isArray(step?.approver?.userRoles)
+      ? step.approver.userRoles
+          .map((ur) => ur?.role)
+          .filter((r) => r?.id != null && r.id >= 3 && r.id <= 7)
+          .map((r) => r?.name)
+          .filter(Boolean)[0]
+      : null;
+
+    switch (roleName) {
+      case "APPROVER_1":
+        return "หัวหน้าสาขา";
+      case "VERIFIER":
+        return "ผู้ตรวจสอบ";
+      case "APPROVER_2":
+        return "สรรบรรณคณะ";
+      case "APPROVER_3":
+        return "รองคณบดี";
+      case "APPROVER_4":
+        return "คณบดี";
+      default:
+        return "-";
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
@@ -626,25 +662,45 @@ export default function LeaveDetail() {
           </div>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 p-2">
           <h2 className="font-semibold text-lg mb-2">
             ความคิดเห็นผู้บังคับบัญชา
           </h2>
-          {approvalSteps?.length > 0 ? (
-            approvalSteps.map((step, i) => (
-              <div
-                key={i}
-                className="bg-white border px-4 py-2 rounded-lg mb-2"
-              >
-                <p className="text-sm text-gray-600 italic">
-                  สถานะ: {step.status}
-                </p>
-                <p className="text-sm">
-                  – {step.approver?.prefixName}
-                  {step.approver?.firstName} {step.approver?.lastName}
-                </p>
-              </div>
-            ))
+          {sortedApprovalSteps.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {sortedApprovalSteps.map((step, i) => (
+                <div
+                  key={step?.id ?? `${step?.stepOrder ?? ""}-${i}`}
+                  className="bg-white border px-4 py-2 rounded-lg"
+                >
+                  <div className="text-[11px] text-gray-400 font-light mb-1">
+                    STEP {i + 1}
+                  </div>
+                  <div className="p-2 rounded flex items-center gap-2 bg-gray-100 overflow-hidden">
+                    <p className="text-sm">
+                      {step.comment ? step.comment : "-"}
+                    </p>
+                  </div>
+                  <p className="text-sm mt-1">
+                    ชื่อผู้บังคับบัญชา: {step.approver?.prefixName}{step.approver?.firstName} {step.approver?.lastName}
+                  </p>
+                  <p className="text-sm mt-1">
+                    ตำแหน่ง: {getApproverPositionName(step)}
+                  </p>
+                  <p className="text-sm mt-1">
+                    {step.reviewedAt ? formatDate(step.reviewedAt) : "-"}
+                  </p>
+                  <div className="flex items-center">
+                    <p className="text-sm mt-1">
+                      หมายเหตุ: {step.remarks ? step.remarks : "-"}
+                    </p>
+                    <p className="text-sm text-gray-600 italic mt-1 ml-auto">
+                      สถานะ: {step.status}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <p className="text-gray-500">ไม่มีความคิดเห็น</p>
           )}
