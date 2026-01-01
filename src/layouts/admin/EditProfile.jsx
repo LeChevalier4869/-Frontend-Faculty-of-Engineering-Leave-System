@@ -56,7 +56,6 @@ export default function EditProfile() {
     personnelTypeId: u?.personnelType?.id?.toString() || "",
     departmentId:    u?.department?.id?.toString()    || "",
     employmentType:  u?.employmentType || "",
-    inActiveRaw:     u?.inActive ? "true" : "false",
   });
 
   /* ---------- state ---------- */
@@ -121,7 +120,6 @@ export default function EditProfile() {
         personnelTypeId: +formData.personnelTypeId,
         departmentId:    +formData.departmentId,
         employmentType:  formData.employmentType,
-        inActive:        formData.inActiveRaw === "true",
       };
 
       /* --- update & รับผลกลับ (user + token) --- */
@@ -225,12 +223,6 @@ export default function EditProfile() {
               options={employment}
             />
 
-            <Checkbox
-              label="อยู่ในสถานะใช้งาน"
-              name="inActiveRaw"
-              checked={formData.inActiveRaw === "true"}
-              onChange={handleChange}
-            />
           </div>
 
           <div className="flex justify-end gap-4">

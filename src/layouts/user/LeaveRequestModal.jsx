@@ -307,6 +307,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
             <div className="text-sm text-gray-600">
               จำนวนวันลา:{" "}
               <span className="font-bold text-black">{workingDays} วัน</span>
+              <span className="ml-2 text-xs text-gray-500">(ไม่นับเสาร์-อาทิตย์ และวันหยุดราชการ)</span>
             </div>
           )}
 

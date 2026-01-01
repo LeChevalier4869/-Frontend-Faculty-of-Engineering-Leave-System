@@ -22,7 +22,6 @@ const userNav = [
 
 const approverNav1 = [{ to: "/approver/leave-request-approver1", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> }];
 const verifierNav = [{ to: "/approver/leave-request-verifier", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> }];
-const receiverNav = [{ to: "/approver/leave-request-receiver", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> }];
 const approverNav2 = [{ to: "/approver/leave-request-approver2", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> }];
 const approverNav3 = [{ to: "/approver/leave-request-approver3", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> }];
 const approverNav4 = [{ to: "/approver/leave-request-approver4", text: "การลาที่รอการอนุมัติ", icon: <FaCheckCircle /> }];
@@ -120,7 +119,6 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
 
         {user?.role.includes("APPROVER_1") && renderDropdown("เมนูหัวหน้าสาขา", approverNav1)}
         {user?.role.includes("VERIFIER") && renderDropdown("เมนูผู้ตรวจสอบ", verifierNav)}
-        {user?.role.includes("RECEIVER") && renderDropdown("เมนูผู้รับหนังสือ", receiverNav)}
         {user?.role.includes("APPROVER_2") && renderDropdown("เมนูผู้อนุมัติ2", approverNav2)}
         {user?.role.includes("APPROVER_3") && renderDropdown("เมนูผู้อนุมัติ3", approverNav3)}
         {user?.role.includes("APPROVER_4") && renderDropdown("เมนูผู้อนุมัติ4", approverNav4)}

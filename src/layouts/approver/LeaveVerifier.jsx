@@ -111,7 +111,7 @@ export default function LeaveVerifier() {
         allowEscapeKey: false,
         didOpen: () => Swal.showLoading(),
       });
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       await axios.patch(
         apiEndpoints.RejectleaveRequestsByVerifier(detailId),
         { remarks: "ปฏิเสธ", comment: "ปฏิเสธ" },

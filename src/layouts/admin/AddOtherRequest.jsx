@@ -2,12 +2,18 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 // import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { th } from "date-fns/locale";
+import Swal from "sweetalert2";
 import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import { Plus, ChevronDown, PlusCircle, X, Clock } from "lucide-react";
 
 dayjs.extend(isBetween);
+dayjs.extend(customParseFormat);
 const PAGE_SIZE = 10;
 
 const statusLabels = {
@@ -39,6 +45,23 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   const [leaveTypeId, setLeaveTypeId] = useState("");
 
+  const [holidays, setHolidays] = useState([]);
+  const [holidayLoaded, setHolidayLoaded] = useState(false);
+  const [holidayLoadError, setHolidayLoadError] = useState(null);
+  const [leaveBalances, setLeaveBalances] = useState([]);
+  const [selectedLeaveBalance, setSelectedLeaveBalance] = useState(null);
+
+  const [useApprovalDetails, setUseApprovalDetails] = useState(true);
+  const [approvalDetailsForm, setApprovalDetailsForm] = useState({
+    1: { reviewedAt: "", comment: "", remarks: "" },
+    2: { reviewedAt: "", comment: "", remarks: "" },
+    4: { reviewedAt: "", comment: "", remarks: "" },
+    5: { reviewedAt: "", comment: "", remarks: "" },
+    6: { reviewedAt: "", comment: "", remarks: "" },
+  });
+
+  const [approverOwners, setApproverOwners] = useState({});
+
   const [userLand, setUserLand] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -59,12 +82,22 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       : Array.isArray(payload)
       ? payload
       : [];
+
+    const splitFullName = (fullName) => {
+      const raw = String(fullName || "").trim().replace(/\s+/g, " ");
+      if (!raw) return { firstName: "", lastName: "" };
+      const parts = raw.split(" ");
+      if (parts.length === 1) return { firstName: parts[0], lastName: "" };
+      return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+    };
+
     return arr
       .map((u) => ({
         id: u.id ?? u.userId ?? null,
         prefixName: u.prefixName ?? u.prefix ?? "",
-        firstName: u.firstName ?? "",
-        lastName: u.lastName ?? "",
+        ...(u.firstName || u.lastName
+          ? { firstName: u.firstName ?? "", lastName: u.lastName ?? "" }
+          : splitFullName(u.fullName ?? u.displayName ?? u.name)),
       }))
       .filter((u) => u.id != null);
   };
@@ -90,6 +123,212 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
   const fullQuery = `${prefixName} ${firstName} ${lastName}`.trim();
 
   useEffect(() => {
+    if (documentIssuedDate) return;
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    setDocumentIssuedDate(`${yyyy}-${mm}-${dd}`);
+  }, [documentIssuedDate]);
+
+  useEffect(() => {
+    if (!documentIssuedDate) return;
+    setApprovalDetailsForm((prev) => {
+      const next = { ...prev };
+      [1, 2, 4, 5, 6].forEach((s) => {
+        if (!next?.[s]?.reviewedAt) {
+          next[s] = { ...(next[s] || {}), reviewedAt: documentIssuedDate };
+        }
+      });
+      return next;
+    });
+  }, [documentIssuedDate]);
+
+  const STEP_LABELS = {
+    1: "หัวหน้าสาขา (Approver 1)",
+    2: "ผู้ตรวจสอบ (Verifier)",
+    4: "สรรบรรณคณะ (Approver 2)",
+    5: "รองคณบดี (Approver 3)",
+    6: "คณบดี (Approver 4)",
+  };
+
+  const formatUserName = (u) => {
+    if (!u) return "";
+    return [u.prefixName, u.firstName, u.lastName].filter(Boolean).join(" ").trim();
+  };
+
+  const renderStepHeader = (stepOrder) => {
+    const base = STEP_LABELS[stepOrder] || `step ${stepOrder}`;
+    const owner = approverOwners?.[stepOrder];
+    const name = formatUserName(owner);
+
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-semibold text-slate-800 ring-1 ring-slate-200">
+          {base}
+        </span>
+        {name ? (
+          <span className="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-[12px] font-medium text-sky-800 ring-1 ring-sky-200">
+            {name}
+          </span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-[12px] font-medium text-slate-500 ring-1 ring-slate-200">
+            ไม่พบผู้ดำรงตำแหน่ง
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  const updateApprovalField = (stepOrder, field, value) => {
+    setApprovalDetailsForm((prev) => ({
+      ...prev,
+      [stepOrder]: {
+        ...(prev?.[stepOrder] || { reviewedAt: "", comment: "", remarks: "" }),
+        [field]: value,
+      },
+    }));
+  };
+
+  useEffect(() => {
+    const userId = selectedUser?.id;
+    if (!userId) {
+      setApproverOwners({});
+      return;
+    }
+
+    const adminBase = String(apiEndpoints.getHoliday || "").replace(/\/admin\/holiday$/, "");
+    const url = `${adminBase}/admin/leave-requests/approvers/${userId}`;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await API.get(url);
+        const steps = res?.data?.data;
+        if (!Array.isArray(steps)) return;
+        const next = {};
+        steps.forEach((s) => {
+          const stepOrder = Number(s?.stepOrder);
+          if (!stepOrder) return;
+          next[stepOrder] = s?.user || null;
+        });
+        if (!cancelled) setApproverOwners(next);
+      } catch (err) {
+        if (!cancelled) setApproverOwners({});
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedUser?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setHolidayLoaded(false);
+        setHolidayLoadError(null);
+        const res = await API.get(apiEndpoints.getHoliday);
+        const dates = Array.isArray(res?.data?.data)
+          ? res.data.data
+              .map((h) => h?.date)
+              .filter(Boolean)
+              .map((d) => (dayjs(d).isValid() ? dayjs(d).format("YYYY-MM-DD") : null))
+              .filter(Boolean)
+          : [];
+        if (!cancelled) setHolidays(dates);
+      } catch {
+        if (!cancelled) {
+          setHolidays([]);
+          setHolidayLoadError("โหลดข้อมูลวันหยุดไม่สำเร็จ");
+        }
+      } finally {
+        if (!cancelled) setHolidayLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const userId = selectedUser?.id;
+    if (!userId) {
+      setLeaveBalances([]);
+      setSelectedLeaveBalance(null);
+      return;
+    }
+
+    const adminBase = String(apiEndpoints.getHoliday || "").replace(/\/admin\/holiday$/, "");
+    const url = `${adminBase}/admin/leave-balances/${userId}`;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await API.get(url);
+        const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+        if (cancelled) return;
+        setLeaveBalances(list);
+      } catch {
+        if (!cancelled) setLeaveBalances([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedUser?.id]);
+
+  useEffect(() => {
+    if (!leaveTypeId) {
+      setSelectedLeaveBalance(null);
+      return;
+    }
+    const selected = leaveBalances.find((b) => String(b.leaveTypeId) === String(leaveTypeId));
+    setSelectedLeaveBalance(selected || null);
+  }, [leaveTypeId, leaveBalances]);
+
+  const parseYmdOrDmy = useCallback((value) => {
+    if (!value) return dayjs.invalid();
+    const s = String(value).trim();
+    const parsed = dayjs(s, ["YYYY-MM-DD", "DD/MM/YYYY", "D/M/YYYY"], true);
+    if (parsed.isValid()) return parsed;
+    return dayjs(s);
+  }, []);
+
+  const calculateWorkingDays = useCallback(
+    (start, end) => {
+      const startD = parseYmdOrDmy(start);
+      const endD = parseYmdOrDmy(end);
+      if (!startD.isValid() || !endD.isValid() || startD.isAfter(endD)) return 0;
+
+      let workingDays = 0;
+      let d = startD.clone();
+      while (d.isSame(endD, "day") || d.isBefore(endD, "day")) {
+        const isWeekend = d.day() === 0 || d.day() === 6;
+        const isHoliday = holidays.includes(d.format("YYYY-MM-DD"));
+        if (!isWeekend && !isHoliday) workingDays++;
+        d = d.add(1, "day");
+      }
+      return workingDays;
+    },
+    [holidays, parseYmdOrDmy]
+  );
+
+  const workingDays = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    return calculateWorkingDays(startDate, endDate);
+  }, [startDate, endDate, calculateWorkingDays]);
+
+  const dayHighlight = (date) => {
+    const day = date.getDay();
+    if (day === 0 || day === 6) {
+      return "!text-red-500";
+    }
+    return "";
+  };
+
+  useEffect(() => {
     if (!fullQuery) {
       setSuggestions([]);
       setSelectedUser(null);
@@ -113,9 +352,20 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       setSuggestions(result);
       if (result.length === 1) setSelectedUser(result[0]);
     }, 250);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+    };
   }, [fullQuery, userLand]);
 
   const pickUser = (u) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
     setPrefixName(u.prefixName || "");
     setFirstName(u.firstName || "");
     setLastName(u.lastName || "");
@@ -123,10 +373,43 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
     setSuggestions([]);
   };
 
+  const clearPickedUser = () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    setPrefixName("");
+    setFirstName("");
+    setLastName("");
+    setSelectedUser(null);
+    setSuggestions([]);
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      if (!selectedUser?.id) {
+        alert("กรุณาเลือกผู้ใช้งานจากรายการค้นหา (Suggestion) ก่อนบันทึก");
+        return;
+      }
+      if (!String(documentNumber || "").trim()) {
+        alert("กรุณาระบุเลขที่เอกสาร");
+        return;
+      }
+
+      const start = dayjs(startDate);
+      const end = dayjs(endDate);
+      if (start.isValid() && end.isValid() && end.isBefore(start, "day")) {
+        await Swal.fire({
+          icon: "warning",
+          title: "วันที่ไม่ถูกต้อง",
+          text: "วันที่สิ้นสุด ต้องมากกว่าวันที่เริ่มลา",
+          confirmButtonText: "ตกลง",
+        });
+        return;
+      }
+
       const fd = new FormData();
       fd.append("userId", String(selectedUser.id));
       fd.append("leaveTypeId", String(leaveTypeId));
@@ -137,9 +420,26 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       fd.append("endDate", endDate);
       fd.append("reason", reason);
       if (contact) fd.append("contact", contact);
-      if (documentNumber) fd.append("documentNumber", documentNumber);
+      fd.append("documentNumber", String(documentNumber).trim());
       if (documentIssuedDate) fd.append("documentIssuedDate", documentIssuedDate);
       if (imageFile) fd.append("images", imageFile);
+
+      if (useApprovalDetails) {
+        const steps = [1, 2, 4, 5, 6];
+        const payload = steps.map((s) => {
+          const row = approvalDetailsForm?.[s] || {};
+          const reviewedAt = String(row.reviewedAt || "").trim();
+          const comment = String(row.comment || "").trim();
+          const remarks = String(row.remarks || "").trim();
+          return {
+            stepOrder: s,
+            reviewedAt: reviewedAt || null,
+            comment: comment || null,
+            remarks: remarks || null,
+          };
+        });
+        fd.append("approvalDetails", JSON.stringify(payload));
+      }
 
       // const token = localStorage.getItem("accessToken");
       await API.post(apiEndpoints.adminLeaveRequests, fd, {
@@ -160,7 +460,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50">
-      <div className="w-[min(92vw,720px)] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl font-kanit flex flex-col">
+      <div className="w-[min(92vw,720px)] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl font-kanit flex flex-col min-h-0">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div className="flex flex-col gap-1">
             <span className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-700">
@@ -178,12 +478,12 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
           </button>
         </div>
 
-        <form onSubmit={submit} className="flex flex-col flex-1">
-          <div className="flex-1 overflow-y-auto px-6 py-4">
+        <form onSubmit={submit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 relative">
               <div>
                 <label className="mb-1 block text-sm text-slate-700">
-                  คำนำหน้า
+                  คำนำหน้า <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -196,7 +496,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
               </div>
               <div>
                 <label className="mb-1 block text-sm text-slate-700">
-                  ชื่อ
+                  ชื่อ <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -209,7 +509,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
               </div>
               <div>
                 <label className="mb-1 block text-sm text-slate-700">
-                  นามสกุล
+                  นามสกุล <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -238,17 +538,25 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
             </div>
 
             {selectedUser && (
-              <div className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-                ผู้ใช้ที่เลือก:{" "}
-                {`${selectedUser.prefixName ?? ""} ${selectedUser.firstName ?? ""} ${selectedUser.lastName ?? ""}`.trim()}{" "}
-                (ID: {selectedUser.id})
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                <div>
+                  ผู้ใช้ที่เลือก:{" "}
+                  {`${selectedUser.prefixName ?? ""} ${selectedUser.firstName ?? ""} ${selectedUser.lastName ?? ""}`.trim()} (ID: {selectedUser.id})
+                </div>
+                <button
+                  type="button"
+                  onClick={clearPickedUser}
+                  className="text-xs text-emerald-700 hover:text-emerald-900 underline underline-offset-2"
+                >
+                  ล้างชื่อ
+                </button>
               </div>
             )}
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-slate-700">
-                  ประเภทการลา
+                  ประเภทการลา <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={leaveTypeId}
@@ -275,30 +583,75 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                   className={inputStyle}
                 />
               </div>
+
+              {(holidayLoadError || selectedLeaveBalance) && (
+                <div className="sm:col-span-2">
+                  {holidayLoadError ? (
+                    <div className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs text-rose-700 border border-rose-200">
+                      {holidayLoadError} (อาจคำนวณจำนวนวันลาเพี้ยน)
+                    </div>
+                  ) : (
+                    <div className="rounded-lg bg-slate-50 px-3 py-1.5 text-sm text-slate-700 border border-slate-200">
+                      คุณมีสิทธิลาประเภทนี้เหลือ:{" "}
+                      <span className="font-semibold text-slate-900">
+                        {selectedLeaveBalance.remainingDays} วัน
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
                 <label className="mb-1 block text-sm text-slate-700">
-                  วันที่เริ่มลา
+                  วันที่เริ่มลา <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className={inputStyle}
+                <DatePicker
+                  selected={startDate ? new Date(startDate) : null}
+                  onChange={(date) => {
+                    const formatted = date ? dayjs(date).format("YYYY-MM-DD") : "";
+                    setStartDate(formatted);
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  locale={th}
+                  placeholderText="เลือกวันที่เริ่มต้น (วัน/เดือน/ปี)"
+                  className={`${inputStyle}`}
+                  wrapperClassName="w-full"
+                  calendarClassName="!rounded-xl !border-2 !border-rose-300 p-2"
+                  dayClassName={dayHighlight}
                   required
                 />
               </div>
               <div>
                 <label className="mb-1 block text-sm text-slate-700">
-                  วันที่สิ้นสุด
+                  วันที่สิ้นสุด <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className={inputStyle}
+                <DatePicker
+                  selected={endDate ? new Date(endDate) : null}
+                  onChange={(date) => {
+                    const formatted = date ? dayjs(date).format("YYYY-MM-DD") : "";
+                    setEndDate(formatted);
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  locale={th}
+                  placeholderText="เลือกวันที่สิ้นสุด (วัน/เดือน/ปี)"
+                  className={`${inputStyle}`}
+                  wrapperClassName="w-full"
+                  calendarClassName="!rounded-xl p-2"
+                  dayClassName={dayHighlight}
                   required
                 />
               </div>
+
+              {startDate && endDate && (
+                <div className="sm:col-span-2">
+                  <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 border border-slate-200">
+                    จำนวนวันลา:{" "}
+                    <span className="font-semibold text-slate-900">{workingDays} วัน</span>
+                    <span className="ml-2 text-xs text-slate-500">
+                      (ไม่นับเสาร์-อาทิตย์ และวันหยุดราชการ)
+                    </span>
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="mb-1 block text-sm text-slate-700">
                   ช่องทางติดต่อ
@@ -312,13 +665,14 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
               </div>
               <div>
                 <label className="mb-1 block text-sm text-slate-700">
-                  เลขที่เอกสาร
+                  เลขที่เอกสาร <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={documentNumber}
                   onChange={(e) => setDocumentNumber(e.target.value)}
                   className={inputStyle}
+                  required
                 />
               </div>
               <div>
@@ -343,6 +697,70 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                   className="text-sm"
                 />
               </div>
+            </div>
+
+            <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <div className="text-sm font-medium text-slate-900">
+                    ข้อมูลการอนุมัติ (Approval Details) <span className="text-rose-500">*</span>
+                  </div>
+                  <div className="text-xs text-slate-600">ระบุข้อมูลแยกตามขั้นตอน (ถ้าไม่ระบุ ระบบจะใช้ค่าเริ่มต้น)</div>
+                </div>
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={useApprovalDetails}
+                    onChange={(e) => setUseApprovalDetails(e.target.checked)}
+                  />
+                  ระบุข้อมูล
+                </label>
+              </div>
+
+              {useApprovalDetails && (
+                <div className="mt-4 space-y-4">
+                  {[1, 2, 4, 5, 6].map((stepOrder) => (
+                    <div key={stepOrder} className="rounded-xl bg-white border border-slate-200 p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-sm text-slate-900">{renderStepHeader(stepOrder)}</div>
+                        <div className="text-xs text-slate-500">stepOrder: {stepOrder}</div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div>
+                          <label className="mb-1 block text-xs text-slate-600">วันที่</label>
+                          <input
+                            type="date"
+                            value={approvalDetailsForm?.[stepOrder]?.reviewedAt || ""}
+                            onChange={(e) => updateApprovalField(stepOrder, "reviewedAt", e.target.value)}
+                            className={inputStyle}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs text-slate-600">Comment</label>
+                          <input
+                            type="text"
+                            value={approvalDetailsForm?.[stepOrder]?.comment || ""}
+                            onChange={(e) => updateApprovalField(stepOrder, "comment", e.target.value)}
+                            className={inputStyle}
+                            placeholder="โปรดพิจารณา"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs text-slate-600">Remarks</label>
+                          <input
+                            type="text"
+                            value={approvalDetailsForm?.[stepOrder]?.remarks || ""}
+                            onChange={(e) => updateApprovalField(stepOrder, "remarks", e.target.value)}
+                            className={inputStyle}
+                            placeholder="อนุมัติ"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -400,7 +818,7 @@ export default function AddOtherRequest() {
         const u = res.value.data?.data ?? res.value.data ?? {};
         const name =
           u.fullName ||
-          [u.firstName, u.lastName].filter(Boolean).join(" ") ||
+          [u.prefixName, u.firstName, u.lastName].filter(Boolean).join(" ") ||
           u.displayName ||
           "";
         if (name) next[ids[idx]] = name;
@@ -497,10 +915,15 @@ export default function AddOtherRequest() {
   const getFullName = (r) =>
     accountNameMap[r?.accountId] ||
     r?.account?.fullName ||
-    [r?.account?.firstName, r?.account?.lastName].filter(Boolean).join(" ") ||
+    [r?.account?.prefixName, r?.account?.firstName, r?.account?.lastName]
+      .filter(Boolean)
+      .join(" ") ||
     r?.fullName ||
     r?.requesterName ||
     r?.user?.fullName ||
+    [r?.user?.prefixName, r?.user?.firstName, r?.user?.lastName]
+      .filter(Boolean)
+      .join(" ") ||
     "-";
 
   const resetFilters = () => {
@@ -713,7 +1136,7 @@ export default function AddOtherRequest() {
                         {formatDateTime(r.createdAt)}
                       </td>
                       <td className="px-4 py-3">
-                        {leaveTypesMap[r.leaveTypeId] || "-"}
+                        {leaveTypesMap[r.leaveTypeId] || r?.leaveType?.name || "-"}
                       </td>
                       <td className="px-4 py-3">{formatDate(r.startDate)}</td>
                       <td className="px-4 py-3">{formatDate(r.endDate)}</td>
