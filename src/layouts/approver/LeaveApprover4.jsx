@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -13,6 +13,7 @@ const PAGE_SIZE = 10;
 
 export default function LeaveApprover4() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [leaveRequest, setLeaveRequest] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
@@ -22,7 +23,35 @@ export default function LeaveApprover4() {
   const [filterLeaveType, setFilterLeaveType] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
   const [loadingApprovals, setLoadingApprovals] = useState({});
+  
+  // เพิ่ม state สำหรับ proxy selection
+  const [selectedProxy, setSelectedProxy] = useState(null);
 
+  // อ่าน proxy parameter จาก URL
+  useEffect(() => {
+    const proxyId = searchParams.get('proxy');
+    if (proxyId) {
+      const proxyIdNum = parseInt(proxyId);
+      setSelectedProxy({ id: proxyIdNum });
+      console.log('🎯 LeaveApprover4 - Proxy selected from URL:', proxyIdNum);
+    } else {
+      setSelectedProxy(null);
+    }
+  }, []);
+
+  // ตรวจสอบ URL parameter เมื่อเปลี่ยน
+  useEffect(() => {
+    const proxyId = searchParams.get('proxy');
+    if (proxyId) {
+      const proxyIdNum = parseInt(proxyId);
+      setSelectedProxy({ id: proxyIdNum });
+      console.log('🔄 LeaveApprover4 - URL parameter changed, updating proxy:', proxyIdNum);
+    } else {
+      setSelectedProxy(null);
+      console.log('🔄 LeaveApprover4 - URL parameter cleared, clearing proxy selection');
+    }
+  }, [searchParams]); // ลบ selectedProxy ออกเพื่อป้องกัน infinite loop
+  
   const statusLabels = {
     APPROVED: "อนุมัติแล้ว",
     PENDING: "รออนุมัติ",
@@ -40,10 +69,31 @@ export default function LeaveApprover4() {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await axios.get(apiEndpoints.leaveRequestForFouthApprover, {
+      
+      // ดึงข้อมูลจาก proxy API แทนที่เดิม
+      const res = await axios.get(apiEndpoints.getApproversForLevel(5, new Date().toISOString().split('T')[0]), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setLeaveRequest(Array.isArray(res.data) ? res.data : []);
+      
+      console.log('🔍 Debug - LeaveApprover4 - Proxy API Response:', res.data);
+      
+      // ตรวจสอบว่า User11 เป็น proxy หรือไม่
+      const approvers = res.data.data || [];
+      const user11Proxy = approvers.find(a => a.id === 11 && a.isProxy);
+      console.log('👤 User11 is proxy for level 5:', user11Proxy);
+      
+      // ใช้ API endpoint สำหรับ approver (ทำงานเหมือนกันทั้ง proxy และปกติ)
+      console.log('🔄 Using approver API endpoint');
+      const apiUrl = apiEndpoints.leaveRequestForFouthApprover;
+      
+      const res2 = await axios.get(apiUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('📋 Leave Requests Response:', res2.data);
+      
+      // ตั้งค่าข้อมูลคำขอลาโดยตรงจาก res2.data (ถ้าเป็น array)
+      const data = Array.isArray(res2.data) ? res2.data : [];
+      setLeaveRequest(data);
     } catch (err) {
       console.error("Error fetching leave requests:", err);
       setLeaveRequest([]);
@@ -68,7 +118,7 @@ export default function LeaveApprover4() {
   useEffect(() => {
     fetchLeaveRequests();
     fetchLeaveTypes();
-  }, []);
+  }, [selectedProxy]); // รันเมื่อ selectedProxy เปลี่ยนเท่านั้น
 
   const handleApprove = async (detailId) => {
     const text = (comments[detailId] || "").trim();

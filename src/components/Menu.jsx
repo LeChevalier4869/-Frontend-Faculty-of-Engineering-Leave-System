@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { HiOutlineChevronDown } from "react-icons/hi";
 import {
@@ -10,6 +10,8 @@ import {
   FaCheckCircle,
   FaUsersCog,
 } from "react-icons/fa";
+import axios from "axios";
+import { apiEndpoints } from "../utils/api";
 import useAuth from "../hooks/useAuth";
 
 const userNav = [
@@ -36,6 +38,74 @@ const adminNav = [
 function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
   const { user } = useAuth();
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [isProxyVerifier, setIsProxyVerifier] = useState(false);
+  const [isProxyApprover1, setIsProxyApprover1] = useState(false);
+  const [isProxyApprover2, setIsProxyApprover2] = useState(false);
+  const [isProxyApprover3, setIsProxyApprover3] = useState(false);
+  const [isProxyApprover4, setIsProxyApprover4] = useState(false);
+
+  // Debug user info
+  console.log('User info:', {
+    id: user?.id,
+    firstName: user?.firstName,
+    lastName: user?.lastName,
+    roles: user?.role
+  });
+
+  useEffect(() => {
+    const checkProxyRoles = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token || !user?.id) {
+          console.log('No token or user found');
+          return;
+        }
+        
+        console.log('Checking proxy roles for user:', user.id);
+        
+        // ตรวจสอบ proxy สำหรับทุก role
+        const levels = [1, 2, 3, 4, 5]; // APPROVER_1, VERIFIER, APPROVER_2, APPROVER_3, APPROVER_4
+        const proxyChecks = await Promise.all(
+          levels.map(level => 
+            axios.get(apiEndpoints.getApproversForLevel(level, new Date().toISOString().split('T')[0]), {
+              headers: { Authorization: `Bearer ${token}` }
+            }).then(res => {
+              const verifiers = res.data.data || [];
+              const isProxy = verifiers.some(v => v.id === user.id && v.isProxy);
+              console.log(`Level ${level}: isProxy = ${isProxy}, total verifiers = ${verifiers.length}`);
+              return { level, isProxy };
+            }).catch(err => {
+              console.log(`Error checking level ${level}:`, err.message);
+              return { level, isProxy: false };
+            })
+          )
+        );
+
+        console.log('Proxy checks result:', proxyChecks);
+
+        // อัปเดต state สำหรับแต่ละ role
+        const proxyStates = {
+          1: proxyChecks.find(c => c.level === 1)?.isProxy || false, // APPROVER_1
+          2: proxyChecks.find(c => c.level === 2)?.isProxy || false, // VERIFIER
+          3: proxyChecks.find(c => c.level === 3)?.isProxy || false, // APPROVER_2
+          4: proxyChecks.find(c => c.level === 4)?.isProxy || false, // APPROVER_3
+          5: proxyChecks.find(c => c.level === 5)?.isProxy || false, // APPROVER_4
+        };
+
+        console.log('Proxy states:', proxyStates);
+
+        setIsProxyVerifier(proxyStates[2]); // สำหรับ VERIFIER
+        setIsProxyApprover1(proxyStates[1]); // สำหรับ APPROVER_1
+        setIsProxyApprover2(proxyStates[3]); // สำหรับ APPROVER_2
+        setIsProxyApprover3(proxyStates[4]); // สำหรับ APPROVER_3
+        setIsProxyApprover4(proxyStates[5]); // สำหรับ APPROVER_4
+      } catch (err) {
+        console.error('Error checking proxy roles:', err);
+      }
+    };
+
+    checkProxyRoles();
+  }, [user?.id]);
 
   const toggleDropdown = (title) => {
     setOpenDropdown(openDropdown === title ? null : title);
@@ -122,6 +192,24 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
         {user?.role.includes("APPROVER_2") && renderDropdown("เมนูผู้อนุมัติ2", approverNav2)}
         {user?.role.includes("APPROVER_3") && renderDropdown("เมนูผู้อนุมัติ3", approverNav3)}
         {user?.role.includes("APPROVER_4") && renderDropdown("เมนูผู้อนุมัติ4", approverNav4)}
+        
+        {/* Proxy Menus */}
+        {(() => {
+          console.log('Rendering proxy menus:', {
+            isProxyApprover1,
+            isProxyVerifier,
+            isProxyApprover2,
+            isProxyApprover3,
+            isProxyApprover4
+          });
+          return null;
+        })()}
+        
+        {isProxyApprover1 && renderDropdown("เมนูหัวหน้าสาขา (Proxy)", approverNav1)}
+        {isProxyVerifier && renderDropdown("เมนูผู้ตรวจสอบ (Proxy)", verifierNav)}
+        {isProxyApprover2 && renderDropdown("เมนูผู้อนุมัติ2 (Proxy)", approverNav2)}
+        {isProxyApprover3 && renderDropdown("เมนูผู้อนุมัติ3 (Proxy)", approverNav3)}
+        {isProxyApprover4 && renderDropdown("เมนูผู้อนุมัติ4 (Proxy)", approverNav4)}
 
         {user?.role.includes("ADMIN") && renderDropdown("เมนูผู้ดูแล", adminNav)}
       </nav>

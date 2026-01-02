@@ -3,7 +3,7 @@ import axios from "axios";
 
 export const API = axios.create({
   // baseURL:"https://backend-faculty-of-engineering-leave.onrender.com",
-  baseURL: "localhost:8000",
+  baseURL: "http://localhost:8000",
 });
 
 // Token interceptor (optional)
@@ -27,6 +27,8 @@ export const apiEndpoints = {
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
   getVerifier: `${BASE_URL}/auth/verifier`, // GET
+  getApproversForLevel: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET
+  getApproversForLevelProxy: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET (alias for proxy checking)
   updateUserRole: `${BASE_URL}/auth/update-role`,
   forgotPassword: `${BASE_URL}/auth/forgot-password`,
   resetPassword: `${BASE_URL}/auth/reset-password`,
@@ -137,4 +139,16 @@ export const apiEndpoints = {
 
   //PDF
   generatePdf: `${BASE_URL}/api/download-report`, // POST
+
+  // Proxy Approval
+  proxyApproval: `${BASE_URL}/proxy-approval`, // CRUD
+  proxyApprovalById: (id) => `${BASE_URL}/proxy-approval/${id}`, // GET/PUT
+  proxyApprovalByOriginal: (userId) => `${BASE_URL}/proxy-approval/original/${userId}`, // GET
+  proxyApprovalByProxy: (userId) => `${BASE_URL}/proxy-approval/proxy/${userId}`, // GET
+  proxyApprovalActive: (userId, level) => `${BASE_URL}/proxy-approval/active/${userId}/${level}`, // GET
+  proxyApprovalCheckPermission: (userId, level) => `${BASE_URL}/proxy-approval/check-permission/${userId}/${level}`, // GET
+  proxyApprovalPotentialApprovers: (level) => `${BASE_URL}/proxy-approval/potential-approvers/${level}`, // GET
+  proxyApprovalCancel: (id) => `${BASE_URL}/proxy-approval/${id}/cancel`, // PATCH
+  proxyApprovalExpire: `${BASE_URL}/proxy-approval/expire`, // PATCH
+  proxyApprovalStats: `${BASE_URL}/proxy-approval/stats`, // GET
 };

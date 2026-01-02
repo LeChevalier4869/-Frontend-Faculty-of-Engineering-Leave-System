@@ -48,7 +48,8 @@ import AddnewUser from "../layouts/admin/AddnewUser";
 import LeaveAdmin from "../layouts/admin/LeaveAdmin";
 import LeaveReport from "../layouts/admin/LeaveReport";
 import AddOtherRequest from "../layouts/admin/AddOtherRequest";
-import ConfigPage from "../layouts/admin/Config";
+import ProxyApprovalManagement from "../layouts/admin/ProxyApprovalManagement";
+import Config from "../layouts/admin/Config";
 import bg from "../assets/bg.jpg";
 
 function AppLayout() {
@@ -182,7 +183,8 @@ const userRouter = createBrowserRouter([
           { path: "edit-profile", element: <EditProfile /> },
           { path: "user/:id", element: <EditUser /> },
           { path: "add-other-request", element: <AddOtherRequest /> },
-          { path: "config", element: <ConfigPage /> },
+          { path: "proxy-approval", element: <ProxyApprovalManagement /> },
+          { path: "config", element: <Config /> },
         ],
       },
       { path: "*", element: <Navigate to="/" replace /> },
@@ -192,6 +194,23 @@ const userRouter = createBrowserRouter([
 
 export default function AppRouter() {
   const { user } = useAuth();
-  const finalRouter = user?.id ? userRouter : guestRouter;
+  
+  // ตรวจสอบว่ามี token และ user หรือไม่
+  const hasToken = localStorage.getItem("accessToken");
+  const finalRouter = (user?.id && hasToken) ? userRouter : guestRouter;
+  
+  // Debug: ดูข้อมูล user และ routes
+  console.log('🔍 Debug - AppRouter:', {
+    user: user ? {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      roles: user.roles
+    } : null,
+    hasToken: !!hasToken,
+    finalRouter: finalRouter === userRouter ? 'userRouter' : 'guestRouter'
+  });
+  
   return <RouterProvider router={finalRouter} />;
 }
