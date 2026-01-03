@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
 import { BASE_URL } from '../utils/api';
+import PropTypes from 'prop-types';
 
 const ProtectedRoute = ({ children, requiredRoles, checkProxy = false }) => {
   const { user, isAuthenticated } = useAuth();
@@ -87,6 +88,12 @@ const ProtectedRoute = ({ children, requiredRoles, checkProxy = false }) => {
 
   // ไม่มีสิทธิ์ - redirect ไปหน้าแรก
   return <Navigate to="/" replace />;
+};
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  requiredRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
+  checkProxy: PropTypes.bool
 };
 
 export default ProtectedRoute;
