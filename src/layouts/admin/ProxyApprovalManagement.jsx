@@ -14,6 +14,7 @@ const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 round
 const ProxyApprovalManagement = () => {
   const [proxyApprovals, setProxyApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userLoading, setUserLoading] = useState(true); // เพิ่ม loading state สำหรับ user
   const [showModal, setShowModal] = useState(false);
   const [editingProxy, setEditingProxy] = useState(null);
   const [userLand, setUserLand] = useState([]);
@@ -63,21 +64,59 @@ const ProxyApprovalManagement = () => {
 
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 when component mounts
-    loadProxyApprovals(1);
-    fetchUserLand();
-    fetchCurrentUser();
+    fetchCurrentUser().then(() => {
+      // โหลดข้อมูลอื่นๆ หลังจากได้ข้อมูลผู้ใช้แล้ว
+      loadProxyApprovals(1);
+      fetchUserLand();
+    });
   }, []);
 
   // ดึงข้อมูลผู้ใช้ปัจจุบัน
   const fetchCurrentUser = async () => {
     try {
+      setUserLoading(true);
       const token = localStorage.getItem("accessToken");
+      console.log('🔍 Debug - Token:', token ? 'exists' : 'missing');
+      
+      if (!token) {
+        console.error('❌ No access token found');
+        // Redirect ไปหน้า login ถ้าไม่มี token
+        window.location.href = '/login';
+        return;
+      }
+      
       const response = await API.get(apiEndpoints.getMe, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCurrentUser(response.data.data);
+      
+      console.log('🔍 Debug - Current user response:', response);
+      console.log('🔍 Debug - Response structure:', {
+        data: response.data,
+        status: response.status,
+        'response.data.data': response.data?.data,
+        'response.data': response.data
+      });
+      
+      // API ส่งข้อมูลมาใน response.data ไม่ใช่ response.data.data
+      if (response.data) {
+        setCurrentUser(response.data);
+        console.log('✅ Current user set successfully');
+      } else {
+        console.error('❌ No user data in response');
+      }
     } catch (error) {
-      console.error('Error fetching current user:', error);
+      console.error('❌ Error fetching current user:', error);
+      console.error('❌ Error response:', error.response);
+      
+      // ถ้าเป็น 401/403 ให้ redirect ไป login
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        console.error('❌ Unauthorized - redirecting to login');
+        localStorage.removeItem('accessToken'); // ลบ token เก่า
+        window.location.href = '/login';
+        return;
+      }
+    } finally {
+      setUserLoading(false);
     }
   };
 
@@ -96,23 +135,29 @@ const ProxyApprovalManagement = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      // กรองเอาเฉพาะคนที่เป็น proxy และไม่ใช่ตัวเอง
+      // กรองเฉพาะคนที่เป็น proxy และไม่ใช่ตัวเอง
       const proxyUsers = response.data.data.filter(user => 
         user.isProxy && currentUser && user.id !== currentUser.id
       );
       
-      setAllUsers(proxyUsers);
+      // ไม่เขียนทับ allUsers แต่เก็บไว้ในตัวแปรอื่นถ้าต้องการ
+      // setAllUsers(proxyUsers); // ❌ ไม่ทำเพราะจะเขียนทับ allUsers ทั้งหมด
       console.log('Available proxies:', proxyUsers); // Debug log
     } catch (error) {
       console.error('Error fetching available proxies:', error);
-      setAllUsers([]);
+      // setAllUsers([]); // ❌ ไม่ทำเพราะจะเขียนทับ allUsers ทั้งหมด
     }
   };
 
   const fetchUserLand = async () => {
     try {
       const res = await API.get(apiEndpoints.userLanding);
+      console.log('🔍 Debug - User landing response:', res);
+      console.log('🔍 Debug - User landing data:', res?.data);
+      
       let list = normalizeUsers(res?.data);
+      console.log('🔍 Debug - Normalized users:', list);
+      console.log('🔍 Debug - Total users:', list.length);
       
       // แยกผู้ใช้ตาม role สำหรับ original approvers (role 3-7)
       const originalApprovers = list.filter(user => {
@@ -120,8 +165,11 @@ const ProxyApprovalManagement = () => {
         return userRoles.some(roleId => roleId >= 3 && roleId <= 7);
       });
       
+      console.log('🔍 Debug - Original approvers:', originalApprovers);
+      
       // สำหรับ proxy approvers ให้เลือกได้ทุกคน (รวม user ทั่วไปด้วย)
       const allUsers = normalizeUsers(res?.data);
+      console.log('🔍 Debug - All users for proxy:', allUsers);
       
       setUserLand(originalApprovers);
       setAllUsers(allUsers); // เก็บผู้ใช้ทั้งหมดสำหรับ proxy selection
@@ -210,7 +258,7 @@ const ProxyApprovalManagement = () => {
 
   useEffect(() => {
     checkRoleConflict();
-  }, [selectedProxyUser, formData.approverLevel, userRoles]);
+  }, [selectedProxyUser, formData.approverLevel]);
 
   const normalizeUsers = (payload) => {
     const arr = Array.isArray(payload?.data)
@@ -223,19 +271,27 @@ const ProxyApprovalManagement = () => {
       ? payload
       : [];
 
+    console.log('🔍 Debug - normalizeUsers input:', payload);
+    console.log('🔍 Debug - normalizeUsers array before map:', arr);
+
     return arr
-      .map((u) => ({
-        id: u.id ?? u.userId ?? null,
-        prefixName: u.prefixName ?? u.prefix ?? "",
-        ...(u.firstName || u.lastName
-          ? { firstName: u.firstName ?? "", lastName: u.lastName ?? "" }
-          : {}),
-        email: u.email ?? "",
-        // ดึง roles จาก UserRole relationship
-        roles: u.userRoles ? u.userRoles.map(ur => ur.roleId) : [],
-        personnelTypeId: u.personnelTypeId ?? u.personnelType?.id ?? null,
-        personnelType: u.personnelType ?? null,
-      }))
+      .map((u) => {
+        const userRoles = u.userRoles ? u.userRoles.map(ur => ur.roleId) : [];
+        console.log(`🔍 Debug - User ${u.id} roles:`, userRoles);
+        
+        return {
+          id: u.id ?? u.userId ?? null,
+          prefixName: u.prefixName ?? u.prefix ?? "",
+          ...(u.firstName || u.lastName
+            ? { firstName: u.firstName ?? "", lastName: u.lastName ?? "" }
+            : {}),
+          email: u.email ?? "",
+          // ดึง roles จาก UserRole relationship
+          roles: userRoles,
+          personnelTypeId: u.personnelTypeId ?? u.personnelType?.id ?? null,
+          personnelType: u.personnelType ?? null,
+        };
+      })
       .filter((u) => u.id != null);
   };
 
@@ -253,11 +309,13 @@ const ProxyApprovalManagement = () => {
   };
 
   const handleOriginalUserSearch = (query) => {
-    setOriginalSearchQuery(query);
     if (!query) {
       setOriginalSuggestions([]);
       return;
     }
+    
+    console.log('Searching original with query:', query);
+    console.log('Available userLand:', userLand);
     
     const q = query.toLowerCase().replace(/\s+/g, " ");
     const result = userLand
@@ -269,6 +327,7 @@ const ProxyApprovalManagement = () => {
       })
       .slice(0, 10);
     
+    console.log('Original search result:', result);
     setOriginalSuggestions(result);
   };
 
@@ -297,6 +356,7 @@ const ProxyApprovalManagement = () => {
   };
 
   const pickOriginalUser = (u) => {
+    console.log('🔍 Debug - pickOriginalUser called with:', u);
     setOriginalPrefixName(u.prefixName || "");
     setOriginalFirstName(u.firstName || "");
     setOriginalLastName(u.lastName || "");
@@ -304,6 +364,7 @@ const ProxyApprovalManagement = () => {
     setOriginalSearchQuery(formatUserName(u));
     setOriginalSuggestions([]);
     setFormData({ ...formData, originalApproverId: u.id });
+    console.log('🔍 Debug - selectedOriginalUser set to:', u);
   };
 
   const pickProxyUser = (u) => {
@@ -478,7 +539,7 @@ const ProxyApprovalManagement = () => {
     );
   };
 
-  if (loading) {
+  if (loading || userLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -489,8 +550,24 @@ const ProxyApprovalManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // ตรวจสอบข้อมูลพื้นฐาน
+    console.log('🔍 Debug - handleSubmit called');
+    console.log('🔍 Debug - Form data:', formData);
+    console.log('🔍 Debug - Selected proxy user:', selectedProxyUser);
+    console.log('🔍 Debug - Selected original user:', selectedOriginalUser);
+    
+    // ตรวจสอบว่าเลือก original approver และ proxy approver ครบถ้วนหรือไม่
+    if (!selectedOriginalUser) {
+      console.log('🔍 Debug - No selected original user');
+      Swal.fire({
+        icon: "error",
+        title: "ข้อมูลไม่ครบถ้วน",
+        text: "กรุณาเลือกผู้มอบอำนาจ (Original Approver)",
+      });
+      return;
+    }
+    
     if (!selectedProxyUser) {
+      console.log('🔍 Debug - No selected proxy user');
       Swal.fire({
         icon: "error",
         title: "ข้อมูลไม่ครบถ้วน",
@@ -498,6 +575,19 @@ const ProxyApprovalManagement = () => {
       });
       return;
     }
+    
+    // ตรวจสอบว่า original approver และ proxy approver เป็นคนเดียวกันหรือไม่
+    if (selectedOriginalUser.id === selectedProxyUser.id) {
+      console.log('🔍 Debug - Same user selected:', selectedOriginalUser.id, selectedProxyUser.id);
+      Swal.fire({
+        icon: "error",
+        title: "ข้อมูลไม่ถูกต้อง",
+        text: "ไม่สามารถมอบอำนาจให้ตนเองได้ กรุณาเลือกผู้อนุมัติแทนที่ต่างจากผู้มอบอำนาจ",
+      });
+      return;
+    }
+
+    console.log('🔍 Debug - Current user in handleSubmit:', currentUser);
 
     // ตรวจสอบวันที่
     if (formData.isDaily) {
@@ -534,7 +624,7 @@ const ProxyApprovalManagement = () => {
       const confirmResult = await Swal.fire({
         icon: "warning",
         title: "ยืนยันการมอบอำนาจ",
-        text: "ผู้อนุมัติแทนมี role เดียวกับระดับที่เลือก จะได้รับอำนาจเพิ่มเติม ต้องการดำเนินการต่อหรือไม่?",
+        text: `คุณ (${currentUser?.firstName} ${currentUser?.lastName}) จะได้รับอำนาจเป็นผู้อนุมัติแทนสำหรับระดับ ${getRoleForLevel(formData.approverLevel)} ต้องการดำเนินการต่อหรือไม่?`,
         showCancelButton: true,
         confirmButtonText: "ยืนยัน",
         cancelButtonText: "ยกเลิก",
@@ -546,73 +636,79 @@ const ProxyApprovalManagement = () => {
     }
 
     try {
-      // ดึงข้อมูล original approvers จาก API ใหม่
+      // ดึงข้อมูล original approvers สำหรับระดับที่เลือก
       const token = localStorage.getItem("accessToken");
       const approversResponse = await API.get(`/auth/approvers-for-level/${formData.approverLevel}?date=${new Date().toISOString().split('T')[0]}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      // หา original approvers ที่ไม่ใช่ proxy
-      const originalApprovers = approversResponse.data.data.filter(user => !user.isProxy);
+      // หา original approvers ที่ไม่ใช่ proxy (เฉพาะคนที่มี role จริง)
+      const originalApprovers = approversResponse.data.data.filter(user => 
+        !user.isProxy && 
+        currentUser && 
+        user.id !== currentUser.id
+      );
       
-      // สร้าง proxy approvals สำหรับทุก original approver ใน level นั้น
-      const promises = originalApprovers.map(originalApprover => {
-        const payload = {
-          originalApproverId: originalApprover.id, // เพิ่ม originalApproverId
-          proxyApproverId: selectedProxyUser.id,
-          approverLevel: formData.approverLevel,
-          reason: formData.reason || '',
-          isDaily: formData.isDaily,
-        };
-        
-        if (formData.isDaily) {
-          payload.dailyDate = formData.dailyDate;
-        } else {
-          payload.startDate = formData.startDate;
-          payload.endDate = formData.endDate;
-        }
-        
-        return API.post(apiEndpoints.proxyApproval, payload);
-      });
+      // ตรวจสอบว่า proxy approver มีอำนาจในระดับนี้อยู่แล้วหรือไม่ (ตรวจสอบวันที่ด้วย)
+      const today = new Date().toISOString().split('T')[0];
+      const existingProxyCheck = proxyApprovals.some(existingProxy => 
+        existingProxy.proxyApproverId === selectedProxyUser.id &&
+        existingProxy.approverLevel === formData.approverLevel &&
+        existingProxy.status === 'ACTIVE' &&
+        (
+          // กรณีรายวัน: ตรวจว่าเป็นวันเดียวกัน
+          (existingProxy.isDaily && existingProxy.dailyDate === today) ||
+          // กรณีช่วงเวลา: ตรวจว่าวันปัจจุบันอยู่ในช่วงเวลา
+          (!existingProxy.isDaily && 
+           existingProxy.startDate <= today && 
+           existingProxy.endDate >= today)
+        )
+      );
       
-      await Promise.all(promises);
-      console.log('Editing proxy:', editingProxy);
-      
-      if (editingProxy) {
-        // แก้ไข proxy ที่มีอยู่
-        const editPayload = {
-          originalApproverId: originalApprovers[0]?.id,
-          proxyApproverId: selectedProxyUser.id,
-          approverLevel: formData.approverLevel,
-          reason: formData.reason || '',
-          isDaily: formData.isDaily,
-        };
-        
-        if (formData.isDaily) {
-          editPayload.dailyDate = formData.dailyDate;
-        } else {
-          editPayload.startDate = formData.startDate;
-          editPayload.endDate = formData.endDate;
-        }
-        
-        console.log('PUT request to:', apiEndpoints.proxyApprovalById(editingProxy.id));
-        const response = await API.put(apiEndpoints.proxyApprovalById(editingProxy.id), editPayload);
-        console.log('PUT response:', response);
+      if (existingProxyCheck) {
         Swal.fire({
-          icon: "success",
-          title: "สำเร็จ",
-          text: "แก้ไขการมอบอำนาจสำเร็จแล้ว",
+          icon: "error",
+          title: "ข้อมูลไม่ถูกต้อง",
+          text: "ผู้อนุมัติแทนนี้มีอำนาจในระดับที่กำหนดอยู่แล้ว ไม่สามารถมอบอำนาจซ้ำได้",
         });
-      } else {
-        console.log('POST requests created:', promises.length);
-        const responses = await Promise.all(promises);
-        console.log('POST responses:', responses);
-        Swal.fire({
-          icon: "success",
-          title: "สำเร็จ",
-          text: "สร้างการมอบอำนาจสำเร็จแล้ว",
-        });
+        return;
       }
+      
+      // ถ้าไม่มี original approvers ให้แสดง error
+      if (originalApprovers.length === 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "ไม่พบข้อมูลผู้อนุมัติต้นฉบับ",
+          text: `ไม่พบผู้อนุมัติระดับ ${getRoleForLevel(formData.approverLevel)} ที่สามารถมอบอำนาจได้`,
+        });
+        return;
+      }
+      
+      // สร้าง proxy approval เฉพาะคนที่ admin เลือก
+      const payload = {
+        originalApproverId: selectedOriginalUser.id, // original approver ที่ admin เลือก
+        proxyApproverId: selectedProxyUser.id, // proxy approver ที่ admin เลือก
+        approverLevel: formData.approverLevel,
+        reason: formData.reason || '',
+        isDaily: formData.isDaily,
+        dailyDate: formData.isDaily ? formData.dailyDate : undefined,
+        startDate: !formData.isDaily ? formData.startDate : undefined,
+        endDate: !formData.isDaily ? formData.endDate : undefined,
+      };
+      
+      console.log('🔍 Debug - Payload for proxy:', payload);
+      console.log('🔍 Debug - Selected original user:', selectedOriginalUser);
+      console.log('🔍 Debug - Selected proxy user:', selectedProxyUser);
+      console.log('🔍 Debug - Are they the same?', selectedOriginalUser.id === selectedProxyUser.id);
+      
+      const response = await API.post(apiEndpoints.proxyApproval, payload);
+      console.log('POST response:', response);
+      
+      Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "สร้างการมอบอำนาจสำเร็จแล้ว",
+      });
 
       loadProxyApprovals();
       setShowModal(false);
@@ -825,15 +921,14 @@ const ProxyApprovalManagement = () => {
                 <X className="h-5 w-5" />
               </button>
             </div>
-
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
               <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 relative">
                   
-                  {/* Original Approver Selection - TEMPORARILY HIDDEN */}
-                  {/* <div className="col-span-2">
+                  {/* Original Approver Selection */}
+                  <div className="col-span-2">
                     <label className="mb-1 block text-sm text-slate-700">
-                      ผู้อนุมัติต้นฉบับ <span className="text-rose-500">*</span>
+                      ผู้มอบอำนาจ (Original Approver) <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -845,36 +940,36 @@ const ProxyApprovalManagement = () => {
                           handleOriginalUserSearch(value);
                         }}
                         className={inputStyle}
-                        placeholder="พิมพ์เพื่อค้นหาผู้อนุมัติต้นฉบับ"
+                        placeholder="พิมพ์เพื่อค้นหาผู้มอบอำนาจ"
                         required
                       />
                       
                       {originalSuggestions.length > 0 && (
                         <div className="absolute left-0 right-0 top-full z-10 mt-2 max-h-64 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-                          {originalSuggestions.map((u) => (
-                            <button
-                              key={u.id}
-                              type="button"
-                              onClick={() => pickOriginalUser(u)}
-                              className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-slate-50 transition-colors"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span>{formatUserName(u)}</span>
-                                <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                                  {getUserRole(u.id)}
-                                </span>
-                              </div>
-                              <span className="text-xs text-slate-500">ID: {u.id}</span>
-                            </button>
-                          ))}
-                        </div>
+                        {originalSuggestions.map((u) => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => pickOriginalUser(u)}
+                            className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>{formatUserName(u)}</span>
+                              <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
+                                {getUserRole(u.id)}
+                              </span>
+                            </div>
+                            <span className="text-xs text-slate-500">ID: {u.id}</span>
+                          </button>
+                        ))}
+                      </div>
                       )}
                     </div>
                     
                     {selectedOriginalUser && (
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
                         <div className="flex items-center gap-2">
-                          <span>ผู้อนุมัติต้นฉบับ: {formatUserName(selectedOriginalUser)} (ID: {selectedOriginalUser.id})</span>
+                          <span>ผู้มอบอำนาจ: {formatUserName(selectedOriginalUser)} (ID: {selectedOriginalUser.id})</span>
                           <span className="px-2 py-1 rounded-full bg-emerald-200 text-emerald-800">
                             {getUserRole(selectedOriginalUser.id)}
                           </span>
@@ -958,9 +1053,7 @@ const ProxyApprovalManagement = () => {
                         <div className="text-sm text-amber-800">
                           <div className="font-medium">ข้อควรพิจารณา:</div>
                           <ul className="mt-1 space-y-1">
-                            {selectedProxyUser && getProxyUserRole(selectedProxyUser.id) === getRoleForLevel(formData.approverLevel) && ['VERIFIER', 'APPROVER_1', 'APPROVER_2', 'APPROVER_3', 'APPROVER_4'].includes(getProxyUserRole(selectedProxyUser.id)) && (
-                              <li>• ผู้อนุมัติแทน ({getProxyUserRole(selectedProxyUser.id)}) มี role เดียวกับระดับที่เลือก ({getRoleForLevel(formData.approverLevel)}) - จะได้รับอำนาจเพิ่มเติม</li>
-                            )}
+                            <li>• ผู้อนุมัติแทน ({getProxyUserRole(selectedProxyUser.id)}) มี role เดียวกับระดับที่เลือก ({getRoleForLevel(formData.approverLevel)}) - จะได้รับอำนาจเพิ่มเติม</li>
                           </ul>
                         </div>
                       </div>
@@ -976,7 +1069,7 @@ const ProxyApprovalManagement = () => {
                       <select
                         value={formData.approverLevel}
                         onChange={(e) => setFormData({ ...formData, approverLevel: parseInt(e.target.value) })}
-                        className={inputStyle}
+                        className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                         required
                       >
                         {Object.entries(approverLevels).map(([key, label]) => (

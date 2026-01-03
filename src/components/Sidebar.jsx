@@ -100,40 +100,83 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
           return;
         }
         
-        // ตรวจสอบ proxy สำหรับทุก role
-        const levels = [1, 2, 3, 4, 5]; // APPROVER_1, VERIFIER, APPROVER_2, APPROVER_3, APPROVER_4
-        const proxyChecks = await Promise.all(
-          levels.map(level => 
-            axios.get(`${BASE_URL}/auth/approvers-for-level/${level}?date=${new Date().toISOString().split('T')[0]}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            }).then(res => res.data)
-              .then(data => {
-                const verifiers = data.data || [];
-                const proxyVerifiers = verifiers.filter(v => v.isProxy);
-                const isProxy = verifiers.some(v => v.id === user.id && v.isProxy);
-                return { level, isProxy, proxyData: proxyVerifiers };
-              })
-              .catch(err => {
-                console.log(`Error checking level ${level}:`, err.message);
-                return { level, isProxy: false };
-              })
-          )
-        );
-
-        // อัปเดต state สำหรับแต่ละ role - เก็บข้อมูล proxy ทั้งหมด
+        console.log('🔍 Starting proxy check for user:', user?.id, user?.firstName, user?.lastName);
+        
+        // ดึงข้อมูล proxy approvals ทั้งหมด (ACTIVE และ EXPIRED)
+        const response = await axios.get(`${BASE_URL}/proxy-approval`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const proxyApprovals = response.data.data || [];
+        console.log('🔍 All proxy approvals from API:', proxyApprovals);
+        
+        // กรองเฉพาะ proxy ที่มีสถานะ ACTIVE
+        const activeProxies = proxyApprovals.filter(proxy => proxy.status === 'ACTIVE');
+        console.log('🔍 Active proxies only:', activeProxies);
+        
+        // กรองเฉพาะที่ user ปัจจุบันเป็น proxy approver
+        const userAsProxyProxies = activeProxies.filter(proxy => proxy.proxyApproverId === user.id);
+        console.log('🔍 Proxies where user is proxy approver:', userAsProxyProxies);
+        console.log('🔍 Current user ID:', user.id);
+        
+        // Debug ทุก proxy ที่ active
+        activeProxies.forEach(proxy => {
+          console.log(`🔍 Proxy: Original=${proxy.originalApproverId}, Proxy=${proxy.proxyApproverId}, Level=${proxy.approverLevel}, User is Proxy=${proxy.proxyApproverId === user.id}, User is Original=${proxy.originalApproverId === user.id}`);
+        });
+        
+        // แสดงรายละเอียด proxy ที่ user เป็น proxy approver
+        if (userAsProxyProxies.length > 0) {
+          console.log('🔍 User is proxy approver for these assignments:');
+          userAsProxyProxies.forEach((proxy, index) => {
+            console.log(`  ${index + 1}. Original: ${proxy.originalApprover?.firstName} ${proxy.originalApprover?.lastName} (ID: ${proxy.originalApproverId}), Level: ${proxy.approverLevel}`);
+          });
+        }
+        
+        // ถ้าไม่มี proxy ที่ user เป็น proxy approver ก็ clear state ทั้งหมด
+        if (userAsProxyProxies.length === 0) {
+          console.log('🔍 No proxy assignments for current user as proxy approver - clearing all proxy states');
+          setProxyVerifiers([]);
+          setProxyApprovers1([]);
+          setProxyApprovers2([]);
+          setProxyApprovers3([]);
+          setProxyApprovers4([]);
+          return;
+        }
+        
+        // จัดกลุ่ม proxy ตามระดับ (ใช้ Set เพื่อกำจัดซ้ำ)
         const proxyData = {
-          1: proxyChecks.find(c => c.level === 1)?.proxyData || [], // APPROVER_1
-          2: proxyChecks.find(c => c.level === 2)?.proxyData || [], // VERIFIER
-          3: proxyChecks.find(c => c.level === 3)?.proxyData || [], // APPROVER_2
-          4: proxyChecks.find(c => c.level === 4)?.proxyData || [], // APPROVER_3
-          5: proxyChecks.find(c => c.level === 5)?.proxyData || [], // APPROVER_4
+          1: new Set(), // APPROVER_1
+          2: new Set(), // VERIFIER  
+          3: new Set(), // APPROVER_2
+          4: new Set(), // APPROVER_3
+          5: new Set(), // APPROVER_4
         };
-
-        setProxyVerifiers(proxyData[2]); // สำหรับ VERIFIER
-        setProxyApprovers1(proxyData[1]); // สำหรับ APPROVER_1
-        setProxyApprovers2(proxyData[3]); // สำหรับ APPROVER_2
-        setProxyApprovers3(proxyData[4]); // สำหรับ APPROVER_3
-        setProxyApprovers4(proxyData[5]); // สำหรับ APPROVER_4
+        
+        userAsProxyProxies.forEach(proxy => {
+          if (proxyData[proxy.approverLevel]) {
+            // User ปัจจุบันเป็น proxy approver -> แสดง original approver (ที่เราจะทำงานแทน)
+            const displayUser = proxy.originalApprover;
+            console.log(`🔍 Adding to level ${proxy.approverLevel}:`, displayUser);
+            proxyData[proxy.approverLevel].add(displayUser);
+          }
+        });
+        
+        // แปลง Set เป็น Array
+        const proxyArrays = {
+          1: Array.from(proxyData[1]), // APPROVER_1
+          2: Array.from(proxyData[2]), // VERIFIER  
+          3: Array.from(proxyData[3]), // APPROVER_2
+          4: Array.from(proxyData[4]), // APPROVER_3
+          5: Array.from(proxyData[5]), // APPROVER_4
+        };
+        
+        console.log('🔍 Final proxy arrays:', proxyArrays);
+        
+        setProxyVerifiers(proxyArrays[2]); // สำหรับ VERIFIER
+        setProxyApprovers1(proxyArrays[1]); // สำหรับ APPROVER_1
+        setProxyApprovers2(proxyArrays[3]); // สำหรับ APPROVER_2
+        setProxyApprovers3(proxyArrays[4]); // สำหรับ APPROVER_3
+        setProxyApprovers4(proxyArrays[5]); // สำหรับ APPROVER_4
       } catch (err) {
         console.error('Error checking proxy roles:', err);
       }
