@@ -14,7 +14,7 @@ function AuthContextProvider(props) {
       try {
         setLoading(true)
         const token = localStorage.getItem('accessToken')
-        // console.log('AuthContext token:', token)
+        console.log('🔍 Debug - AuthContext token:', token ? 'exists' : 'not found')
         if (!token) return
 
         const endpoint = 'auth/me'
@@ -25,7 +25,13 @@ function AuthContextProvider(props) {
 
         // ดึงเฉพาะ object user จริง ๆ จาก response
         const returned = res.data.data ?? res.data.user ?? res.data
-        // console.log('AuthContext fetched user:', returned)
+        console.log('🔍 Debug - AuthContext fetched user:', {
+          id: returned?.id,
+          firstName: returned?.firstName,
+          lastName: returned?.lastName,
+          role: returned?.role,
+          roles: returned?.roles
+        })
         setUser(returned)
       } catch (err) {
         console.error('Auth fetch error:', err)

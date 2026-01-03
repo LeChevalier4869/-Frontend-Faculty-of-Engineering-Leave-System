@@ -41,11 +41,31 @@ export default function LeaveApprover2() {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await axios.get(apiEndpoints.leaveRequestForSecondApprover, {
+      
+      // ดึงข้อมูลจาก proxy API แทนที่เดิด
+      const res = await axios.get(apiEndpoints.getApproversForLevel(3, new Date().toISOString().split('T')[0]), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Debug leave: ", res?.data ?? res?.data?.data);
-      setLeaveRequest(Array.isArray(res.data) ? res.data : []);
+      
+      console.log('🔍 Debug - LeaveApprover2 - Proxy API Response:', res.data);
+      
+      // ตรวจสอบว่า User11 เป็น proxy หรือไม่
+      const approvers = res.data.data || [];
+      const user11Proxy = approvers.find(a => a.id === 11 && a.isProxy);
+      console.log('👤 User11 is proxy for level 3:', user11Proxy);
+      
+      // ใช้ API endpoint สำหรับ approver (ทำงานเหมือนกันทั้ง proxy และปกติ)
+      console.log('🔄 Using approver API endpoint');
+      const apiUrl = apiEndpoints.leaveRequestForSecondApprover;
+      
+      const res2 = await axios.get(apiUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('📋 Leave Requests Response:', res2.data);
+      
+      // ตั้งค่าข้อมูลคำขอลาโดยตรงจาก res2.data (ถ้าเป็น array)
+      const data = Array.isArray(res2.data) ? res2.data : [];
+      setLeaveRequest(data);
     } catch (err) {
       console.error("Error fetching leave requests:", err);
       setLeaveRequest([]);
