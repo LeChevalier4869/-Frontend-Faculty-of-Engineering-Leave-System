@@ -11,6 +11,10 @@ import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import { Plus, ChevronDown, PlusCircle, X, Clock } from "lucide-react";
+import {
+  filterLeaveBalancesLatestYear,
+  filterLeaveTypesMapBySex,
+} from "../../utils/leavePolicy";
 
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
@@ -224,6 +228,33 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
   }, [selectedUser?.id]);
 
   useEffect(() => {
+    const userId = selectedUser?.id;
+    if (!userId) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await API.get(apiEndpoints.userInfoById(userId));
+        const u = res?.data?.data ?? res?.data?.user ?? res?.data ?? null;
+        const sex = u?.sex;
+        if (cancelled) return;
+        if (!sex) return;
+        setSelectedUser((prev) => {
+          if (!prev) return prev;
+          if (prev.sex === sex) return prev;
+          return { ...prev, sex };
+        });
+      } catch {
+        // ignore
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedUser?.id]);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
@@ -268,7 +299,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
         const res = await API.get(url);
         const list = Array.isArray(res?.data?.data) ? res.data.data : [];
         if (cancelled) return;
-        setLeaveBalances(list);
+        setLeaveBalances(filterLeaveBalancesLatestYear(list));
       } catch {
         if (!cancelled) setLeaveBalances([]);
       }
@@ -287,6 +318,10 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
     const selected = leaveBalances.find((b) => String(b.leaveTypeId) === String(leaveTypeId));
     setSelectedLeaveBalance(selected || null);
   }, [leaveTypeId, leaveBalances]);
+
+  const leaveTypesMapByUserSex = useMemo(() => {
+    return filterLeaveTypesMapBySex(leaveTypesMap, selectedUser?.sex);
+  }, [leaveTypesMap, selectedUser?.sex]);
 
   const parseYmdOrDmy = useCallback((value) => {
     if (!value) return dayjs.invalid();
@@ -565,7 +600,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                   required
                 >
                   <option value="">-- เลือกประเภทการลา --</option>
-                  {Object.entries(leaveTypesMap || {}).map(([id, name]) => (
+                  {Object.entries(leaveTypesMapByUserSex || {}).map(([id, name]) => (
                     <option key={id} value={id}>
                       {name}
                     </option>
@@ -937,7 +972,7 @@ export default function AddOtherRequest() {
 
   if (loading && leaveRequest.length === 0) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-50 text-slate-800 font-kanit">
+      <div className="min-h-[60vh] flex items-center justify-center bg-slate-50 text-slate-800 font-kanit rounded-2xl">
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">

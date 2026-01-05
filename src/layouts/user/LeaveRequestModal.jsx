@@ -10,8 +10,14 @@ import { th } from "date-fns/locale";
 import { apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import useAuth from "../../hooks/useAuth";
+import {
+  filterLeaveBalancesLatestYear,
+  filterLeaveTypesBySex,
+} from "../../utils/leavePolicy";
 
 function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
+  const { user } = useAuth();
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [holidays, setHolidays] = useState([]);
 
@@ -19,14 +25,14 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     async function fetchData() {
       try {
         const response = await axios.get(apiEndpoints.availableLeaveType);
-        setLeaveTypes(response.data.data);
+        setLeaveTypes(filterLeaveTypesBySex(response.data.data, user?.sex));
       } catch (error) {
         console.error("Error fetching leave types:", error);
       }
     }
 
     fetchData();
-  }, []);
+  }, [user?.sex]);
 
   const [formData, setFormData] = useState({
     leaveTypeId: "",
@@ -56,7 +62,8 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         // ทดสอบ response
         // console.log("Leave Balances:", res.data.data);
         if (Array.isArray(res.data.data)) {
-          setLeaveBalances(res.data.data);
+          const latestYearOnly = filterLeaveBalancesLatestYear(res.data.data);
+          setLeaveBalances(latestYearOnly);
         }
         resetForm();
       } catch (error) {
