@@ -6,7 +6,7 @@ import { BASE_URL } from '../utils/api';
 import PropTypes from 'prop-types';
 
 const ProtectedRoute = ({ children, requiredRoles, checkProxy = false }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const [proxyPermissions, setProxyPermissions] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -57,8 +57,17 @@ const ProtectedRoute = ({ children, requiredRoles, checkProxy = false }) => {
     checkProxyPermissions();
   }, [user, checkProxy]);
 
+  // รอให้ auth context โหลด user ให้เสร็จก่อน
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   // ตรวจสอบการ authenticate
-  if (!isAuthenticated || !user) {
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -72,9 +81,13 @@ const ProtectedRoute = ({ children, requiredRoles, checkProxy = false }) => {
   }
 
   // ตรวจสอบสิทธิ์ regular roles
-  const userRoles = Array.isArray(user.roles) ? user.roles : 
-                    Array.isArray(user.role) ? user.role : 
-                    Array.isArray(user.roleNames) ? user.roleNames : [];
+  const userRoles = Array.isArray(user.roles)
+    ? user.roles
+    : Array.isArray(user.roleNames)
+    ? user.roleNames
+    : typeof user.role === 'string'
+    ? [user.role]
+    : [];
 
   const hasRegularRole = requiredRoles.some(role => userRoles.includes(role));
   

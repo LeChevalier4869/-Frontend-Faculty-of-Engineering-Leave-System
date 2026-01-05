@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Briefcase,
   HeartPulse,
@@ -14,10 +14,21 @@ import {
 import axios from "axios";
 import Swal from "sweetalert2";
 import { apiEndpoints } from "../../utils/api";
+import useAuth from "../../hooks/useAuth";
+import {
+  filterLeaveBalancesBySex,
+  filterLeaveBalancesLatestYear,
+  formatRemainingDays,
+} from "../../utils/leavePolicy";
 
 export default function LeaveBalancePage() {
+  const { user } = useAuth();
   const [entitlements, setEntitlements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const visibleEntitlements = useMemo(() => {
+    return filterLeaveBalancesBySex(entitlements, user?.sex);
+  }, [entitlements, user?.sex]);
 
   useEffect(() => {
     const fetchLeaveBalance = async () => {
@@ -39,7 +50,9 @@ export default function LeaveBalancePage() {
         });
 
         if (Array.isArray(res.data.data)) {
-          setEntitlements(res.data.data);
+          const latestYearOnly = filterLeaveBalancesLatestYear(res.data.data);
+          setEntitlements(latestYearOnly);
+          console.log("latestYearOnly", latestYearOnly);  
         } else {
           setEntitlements([]);
         }
@@ -123,7 +136,7 @@ export default function LeaveBalancePage() {
     );
   }
 
-  if (entitlements.length === 0) {
+  if (visibleEntitlements.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900 px-4 py-8 md:px-8 flex items-center justify-center">
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6 text-center">
@@ -157,12 +170,13 @@ export default function LeaveBalancePage() {
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           }}
         >
-          {entitlements.map((item, index) => {
+          {visibleEntitlements.map((item, index) => {
             const type = item.leaveType?.name ?? "ไม่ระบุ";
             const total = item.maxDays ?? 0;
             const used = item.usedDays ?? 0;
             const pending = item.pendingDays ?? 0;
             const remaining = item.remainingDays ?? total - used - pending;
+            const remainingDisplay = formatRemainingDays(remaining);
             const icon =
               iconMap[type] || (
                 <User className="w-10 h-10 md:w-12 md:h-12 text-slate-500 drop-shadow-[0_0_10px_rgba(148,163,184,0.6)]" />
@@ -216,8 +230,8 @@ export default function LeaveBalancePage() {
                     </p>
                     <p>
                       เหลือ:{" "}
-                      <span className="font-semibold text-emerald-600">
-                        {remaining}
+                      <span className={`font-semibold ${remainingDisplay.className}`}>
+                        {remainingDisplay.text}
                       </span>
                     </p>
                   </div>

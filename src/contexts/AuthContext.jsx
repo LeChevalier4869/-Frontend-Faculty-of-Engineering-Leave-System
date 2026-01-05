@@ -59,5 +59,14 @@ function AuthContextProvider(props) {
   )
 }
 
+// Custom hook to use the auth context
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthContextProvider')
+  }
+  return context
+}
+
 export { AuthContextProvider }
 export default AuthContext

@@ -143,7 +143,7 @@ function LeaveAdmin() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 text-slate-800 font-kanit">
+      <div className="min-h-[60vh] flex items-center justify-center bg-slate-50 text-slate-800 font-kanit rounded-2xl">
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
