@@ -12,6 +12,9 @@ import { useNavigate } from 'react-router-dom';
 const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
 
 const ProxyApprovalManagement = () => {
+  // Tab navigation state
+  const [activeTab, setActiveTab] = useState('today'); // 'today', 'history'
+  
   const [proxyApprovals, setProxyApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userLoading, setUserLoading] = useState(true); // เพิ่ม loading state สำหรับ user
@@ -19,7 +22,8 @@ const ProxyApprovalManagement = () => {
   const [editingProxy, setEditingProxy] = useState(null);
   const [userLand, setUserLand] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [allUsers, setAllUsers] = useState([]); // สำหรับ proxy approvers ทุกคน
+  const [allUsers, setAllUsers] = useState([]); // สำหรับทุกคนในระบบ
+  const [proxyUsers, setProxyUsers] = useState([]); // สำหรับ proxy users ตามระดับ
   const [selectedOriginalUser, setSelectedOriginalUser] = useState(null);
   const [selectedProxyUser, setSeletedProxyUser] = useState(null);
   const [originalSearchQuery, setOriginalSearchQuery] = useState('');
@@ -36,10 +40,15 @@ const ProxyApprovalManagement = () => {
   const [roleConflict, setRoleConflict] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  // Pagination states - แยกตาม tab
+  const [currentPageToday, setCurrentPageToday] = useState(1);
+  const [totalPagesToday, setTotalPagesToday] = useState(1);
+  const [totalCountToday, setTotalCountToday] = useState(0);
+  
+  const [currentPageHistory, setCurrentPageHistory] = useState(1);
+  const [totalPagesHistory, setTotalPagesHistory] = useState(1);
+  const [totalCountHistory, setTotalCountHistory] = useState(0);
+  
   const itemsPerPage = 10;
   
   const navigate = useNavigate();
@@ -63,7 +72,9 @@ const ProxyApprovalManagement = () => {
   };
 
   useEffect(() => {
-    setCurrentPage(1); // Reset to page 1 when component mounts
+    // Reset pages to 1 when component mounts
+    setCurrentPageToday(1);
+    setCurrentPageHistory(1);
     fetchCurrentUser().then(() => {
       // โหลดข้อมูลอื่นๆ หลังจากได้ข้อมูลผู้ใช้แล้ว
       loadProxyApprovals(1);
@@ -76,10 +87,8 @@ const ProxyApprovalManagement = () => {
     try {
       setUserLoading(true);
       const token = localStorage.getItem("accessToken");
-      console.log('🔍 Debug - Token:', token ? 'exists' : 'missing');
       
       if (!token) {
-        console.error('❌ No access token found');
         // Redirect ไปหน้า login ถ้าไม่มี token
         window.location.href = '/login';
         return;
@@ -89,18 +98,9 @@ const ProxyApprovalManagement = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      console.log('🔍 Debug - Current user response:', response);
-      console.log('🔍 Debug - Response structure:', {
-        data: response.data,
-        status: response.status,
-        'response.data.data': response.data?.data,
-        'response.data': response.data
-      });
-      
       // API ส่งข้อมูลมาใน response.data ไม่ใช่ response.data.data
       if (response.data) {
         setCurrentUser(response.data);
-        console.log('✅ Current user set successfully');
       } else {
         console.error('❌ No user data in response');
       }
@@ -131,8 +131,8 @@ const ProxyApprovalManagement = () => {
       // กรองเฉพาะคนที่ไม่ใช่ proxy (เฉพาะคนที่มี role จริง)
       const originalApprovers = response.data.data.filter(user => 
         !user.isProxy && 
-        currentUser && 
-        user.id !== currentUser.id
+        currentUser
+        // ลบการ filter user.id !== currentUser.id เพราะ backend จัดการให้แล้ว
       );
       
       return originalApprovers;
@@ -151,7 +151,6 @@ const ProxyApprovalManagement = () => {
       const firstApprover = originalApprovers[0];
       pickOriginalUser(firstApprover);
       
-      console.log('🔍 Auto-mapped original approver:', firstApprover);
     } else {
       // ถ้าไม่พบ original approver ให้ล้างค่าที่เลือกไว้
       clearOriginalUser();
@@ -166,37 +165,94 @@ const ProxyApprovalManagement = () => {
     }
   }, [formData.approverLevel, currentUser]);
 
+  // เมื่อเปลี่ยน tab ให้โหลดข้อมูลใหม่
+  useEffect(() => {
+    // Reset page เป็น 1 เมื่อเปลี่ยน tab
+    if (activeTab === 'today') {
+      setCurrentPageToday(1);
+    } else if (activeTab === 'history') {
+      setCurrentPageHistory(1);
+    }
+    loadProxyApprovals();
+  }, [activeTab]);
+
+  // ฟังก์ชันสำหรับโหลดข้อมูลตาม tab
+  const loadProxyApprovals = async (page = 1) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      let url;
+      
+      // กำหนด endpoint ตาม tab
+      if (activeTab === 'today') {
+        // Tab วันนี้: ใช้ endpoint /today
+        url = `${apiEndpoints.proxyApproval}/today`;
+      } else if (activeTab === 'history') {
+        // Tab ประวัติ: ใช้ endpoint /history
+        url = `${apiEndpoints.proxyApproval}/history`;
+      } else {
+        // Fallback: ใช้ endpoint เดิม
+        url = apiEndpoints.proxyApproval;
+      }
+      
+      // กำหนด parameters
+      const params = new URLSearchParams();
+      params.append('page', page);
+      params.append('limit', itemsPerPage);
+      
+      const response = await API.get(`${url}?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      setProxyApprovals(response.data.data || []);
+      
+      // อัปเดต state ตาม tab ที่ active
+      if (activeTab === 'today') {
+        setTotalPagesToday(response.data.pagination?.totalPages || 1);
+        setTotalCountToday(response.data.pagination?.total || 0);
+        setCurrentPageToday(page);
+      } else if (activeTab === 'history') {
+        setTotalPagesHistory(response.data.pagination?.totalPages || 1);
+        setTotalCountHistory(response.data.pagination?.total || 0);
+        setCurrentPageHistory(page);
+      }
+    } catch (error) {
+      console.error('Error loading proxy approvals:', error);
+      Swal.fire('ข้อผิดพลาด', 'โหลดข้อมูลไม่สำเร็จ', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ดึงข้อมูล proxy จาก API ใหม่ที่มี validation อยู่แล้ว
   const fetchAvailableProxies = async (level) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await API.get(apiEndpoints.getApproversForLevel(level, new Date().toISOString().split('T')[0]), {
+      
+      // ใช้ endpoint ที่ถูกต้องและไม่ต้องส่ง date
+      const response = await API.get(apiEndpoints.proxyApprovalPotentialApprovers(level), {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      // กรองเฉพาะคนที่เป็น proxy และไม่ใช่ตัวเอง
-      const proxyUsers = response.data.data.filter(user => 
-        user.isProxy && currentUser && user.id !== currentUser.id
-      );
       
-      // ไม่เขียนทับ allUsers แต่เก็บไว้ในตัวแปรอื่นถ้าต้องการ
-      // setAllUsers(proxyUsers); // ❌ ไม่ทำเพราะจะเขียนทับ allUsers ทั้งหมด
-      console.log('Available proxies:', proxyUsers); // Debug log
+      // Backend จะ filter ให้แล้ว ไม่ต้อง filter ซ้ำ
+      const fetchedProxyUsers = response.data.data;
+      
+      
+      // เซ็ตข้อมูลสำหรับ dropdown ของ proxy users
+      setProxyUsers(fetchedProxyUsers);
+      
     } catch (error) {
       console.error('Error fetching available proxies:', error);
-      // setAllUsers([]); // ❌ ไม่ทำเพราะจะเขียนทับ allUsers ทั้งหมด
+      setProxyUsers([]); // ล้างข้อมูลเมื่อเกิด error
     }
   };
 
   const fetchUserLand = async () => {
     try {
       const res = await API.get(apiEndpoints.userLanding);
-      console.log('🔍 Debug - User landing response:', res);
-      console.log('🔍 Debug - User landing data:', res?.data);
       
       let list = normalizeUsers(res?.data);
-      console.log('🔍 Debug - Normalized users:', list);
-      console.log('🔍 Debug - Total users:', list.length);
       
       // แยกผู้ใช้ตาม role สำหรับ original approvers (role 3-7)
       const originalApprovers = list.filter(user => {
@@ -204,11 +260,9 @@ const ProxyApprovalManagement = () => {
         return userRoles.some(roleId => roleId >= 3 && roleId <= 7);
       });
       
-      console.log('🔍 Debug - Original approvers:', originalApprovers);
       
       // สำหรับ proxy approvers ให้เลือกได้ทุกคน (รวม user ทั่วไปด้วย)
       const allUsers = normalizeUsers(res?.data);
-      console.log('🔍 Debug - All users for proxy:', allUsers);
       
       setUserLand(originalApprovers);
       setAllUsers(allUsers); // เก็บผู้ใช้ทั้งหมดสำหรับ proxy selection
@@ -310,13 +364,10 @@ const ProxyApprovalManagement = () => {
       ? payload
       : [];
 
-    console.log('🔍 Debug - normalizeUsers input:', payload);
-    console.log('🔍 Debug - normalizeUsers array before map:', arr);
 
     return arr
       .map((u) => {
         const userRoles = u.userRoles ? u.userRoles.map(ur => ur.roleId) : [];
-        console.log(`🔍 Debug - User ${u.id} roles:`, userRoles);
         
         return {
           id: u.id ?? u.userId ?? null,
@@ -353,8 +404,6 @@ const ProxyApprovalManagement = () => {
       return;
     }
     
-    console.log('Searching original with query:', query);
-    console.log('Available userLand:', userLand);
     
     const q = query.toLowerCase().replace(/\s+/g, " ");
     const result = userLand
@@ -366,7 +415,6 @@ const ProxyApprovalManagement = () => {
       })
       .slice(0, 10);
     
-    console.log('Original search result:', result);
     setOriginalSuggestions(result);
   };
 
@@ -377,11 +425,11 @@ const ProxyApprovalManagement = () => {
       return;
     }
     
-    console.log('Searching proxy with query:', query);
-    console.log('Available allUsers:', allUsers);
+    // ใช้ proxyUsers ที่มีข้อมูลจาก fetchAvailableProxies
+    const availableUsers = proxyUsers.length > 0 ? proxyUsers : allUsers;
     
     const q = query.toLowerCase().replace(/\s+/g, " ");
-    const result = allUsers
+    const result = availableUsers
       .filter((u) => {
         const name = `${u.prefixName} ${u.firstName} ${u.lastName}`
           .toLowerCase()
@@ -390,7 +438,6 @@ const ProxyApprovalManagement = () => {
       })
       .slice(0, 10);
     
-    console.log('Search result:', result);
     setProxySuggestions(result);
   };
 
@@ -433,25 +480,6 @@ const ProxyApprovalManagement = () => {
     setProxySearchQuery("");
     setProxySuggestions([]);
     setFormData({ ...formData, proxyApproverId: "" });
-  };
-
-  const loadProxyApprovals = async (page = 1) => {
-    try {
-      setLoading(true);
-      const response = await API.get(`${apiEndpoints.proxyApproval}?page=${page}&limit=${itemsPerPage}&sort=createdAt&order=desc`);
-      const data = response.data.data || [];
-      const pagination = response.data.pagination || {};
-      
-      setProxyApprovals(data);
-      setCurrentPage(pagination.currentPage || page);
-      setTotalPages(pagination.totalPages || 1);
-      setTotalCount(pagination.totalCount || data.length);
-    } catch (error) {
-      console.error('Error loading proxy approvals:', error);
-      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลการมอบอำนาจได้', 'error');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleEdit = (proxy) => {
@@ -588,11 +616,6 @@ const ProxyApprovalManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    console.log('🔍 Debug - handleSubmit called');
-    console.log('🔍 Debug - Form data:', formData);
-    console.log('🔍 Debug - Selected proxy user:', selectedProxyUser);
-    console.log('🔍 Debug - Selected original user:', selectedOriginalUser);
-    
     // ตรวจสอบว่าเลือก original approver และ proxy approver ครบถ้วนหรือไม่
     if (!selectedOriginalUser) {
       console.log('🔍 Debug - No selected original user');
@@ -625,7 +648,6 @@ const ProxyApprovalManagement = () => {
       return;
     }
 
-    console.log('🔍 Debug - Current user in handleSubmit:', currentUser);
 
     // ตรวจสอบวันที่
     if (formData.isDaily) {
@@ -714,8 +736,8 @@ const ProxyApprovalManagement = () => {
       // หา original approvers ที่ไม่ใช่ proxy (เฉพาะคนที่มี role จริง)
       const originalApprovers = approversResponse.data.data.filter(user => 
         !user.isProxy && 
-        currentUser && 
-        user.id !== currentUser.id
+        currentUser
+        // ลบการ filter user.id !== currentUser.id เพราะ backend จัดการให้แล้ว
       );
       
       // ตรวจสอบว่า proxy approver มีอำนาจในระดับนี้อยู่แล้วหรือไม่ (ตรวจสอบวันที่ด้วย)
@@ -765,13 +787,8 @@ const ProxyApprovalManagement = () => {
         endDate: !formData.isDaily ? formData.endDate : undefined,
       };
       
-      console.log('🔍 Debug - Payload for proxy:', payload);
-      console.log('🔍 Debug - Selected original user:', selectedOriginalUser);
-      console.log('🔍 Debug - Selected proxy user:', selectedProxyUser);
-      console.log('🔍 Debug - Are they the same?', selectedOriginalUser.id === selectedProxyUser.id);
       
       const response = await API.post(apiEndpoints.proxyApproval, payload);
-      console.log('POST response:', response);
       
       Swal.fire({
         icon: "success",
@@ -819,6 +836,32 @@ const ProxyApprovalManagement = () => {
         </button>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="mt-6 bg-white rounded-xl border border-slate-200 p-1">
+        <div className="flex space-x-1">
+          <button
+            onClick={() => setActiveTab('today')}
+            className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+              activeTab === 'today'
+                ? 'bg-sky-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            วันนี้
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+              activeTab === 'history'
+                ? 'bg-sky-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            ประวัติ
+          </button>
+        </div>
+      </div>
+
       <div className="mt-6 rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
         <table className="min-w-full divide-y divide-slate-200 rounded-t-xl">
           <thead className="bg-slate-50">
@@ -838,9 +881,11 @@ const ProxyApprovalManagement = () => {
               <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">
                 สถานะ
               </th>
-              <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">
-                จัดการ
-              </th>
+              {activeTab !== 'history' && (
+                <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">
+                  จัดการ
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-100">
@@ -873,12 +918,13 @@ const ProxyApprovalManagement = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                   {proxy.isDaily ? (
-                    <div className="flex items-center">
-                      <FaCalendarAlt className="mr-2 text-sky-500" />
-                      {proxy.dailyDate ? new Date(proxy.dailyDate).toLocaleDateString('th-TH') : '-'}
+                    <div className="flex items-center gap-2">
+                      <FaCalendarAlt className="text-sky-500" />
+                      <div>{proxy.dailyDate ? new Date(proxy.dailyDate).toLocaleDateString('th-TH') : '-'}</div>
                     </div>
                   ) : (
-                    <div>
+                    <div className="flex items-center gap-2">
+                      <FaCalendarAlt className="text-sky-500" />
                       <div>{new Date(proxy.startDate).toLocaleDateString('th-TH')}</div>
                       <div className="text-slate-500">ถึง {new Date(proxy.endDate).toLocaleDateString('th-TH')}</div>
                     </div>
@@ -887,86 +933,143 @@ const ProxyApprovalManagement = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   {getStatusBadge(proxy.status)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEdit(proxy)}
-                      className="text-sky-600 hover:text-sky-900 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
-                      disabled={proxy.status !== 'ACTIVE'}
-                      title={proxy.status !== 'ACTIVE' ? 'ไม่สามารถแก้ไขการมอบอำนาจที่ไม่ได้ใช้งานอยู่' : 'แก้ไขการมอบอำนาจ'}
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleCancel(proxy.id)}
-                      className="text-rose-600 hover:text-rose-900 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
-                      disabled={proxy.status !== 'ACTIVE'}
-                      title={proxy.status !== 'ACTIVE' ? 'ไม่สามารถยกเลิกการมอบอำนาจที่ไม่ได้ใช้งานอยู่' : 'ยกเลิกการมอบอำนาจ'}
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </td>
+                {activeTab !== 'history' && (
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(proxy)}
+                        className="text-sky-600 hover:text-sky-900 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+                        disabled={proxy.status !== 'ACTIVE'}
+                        title={proxy.status !== 'ACTIVE' ? 'ไม่สามารถแก้ไขการมอบอำนาจที่ไม่ได้ใช้งานอยู่' : 'แก้ไขการมอบอำนาจ'}
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleCancel(proxy.id)}
+                        className="text-rose-600 hover:text-rose-900 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+                        disabled={proxy.status !== 'ACTIVE'}
+                        title={proxy.status !== 'ACTIVE' ? 'ไม่สามารถยกเลิกการมอบอำนาจที่ไม่ได้ใช้งานอยู่' : 'ยกเลิกการมอบอำนาจ'}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200 rounded-b-xl">
-          <div className="text-sm text-slate-700">
-            แสดง {(currentPage - 1) * itemsPerPage + 1} ถึง {Math.min(currentPage * itemsPerPage, totalCount)} จาก {totalCount} รายการ
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => loadProxyApprovals(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ก่อนหน้า
-            </button>
-            
-            <div className="flex items-center space-x-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => loadProxyApprovals(pageNum)}
-                    className={`px-3 py-1 text-sm rounded-md ${
-                      currentPage === pageNum
-                        ? 'bg-sky-500 text-white'
-                        : 'bg-white border border-slate-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
-            
-            <button
-              onClick={() => loadProxyApprovals(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ถัดไป
-            </button>
-          </div>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    
+    {/* Pagination Controls - Tab วันนี้ */}
+    {activeTab === 'today' && totalPagesToday > 1 && (
+      <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200 rounded-b-xl">
+        <div className="text-sm text-slate-700">
+          แสดง {(currentPageToday - 1) * itemsPerPage + 1} ถึง {Math.min(currentPageToday * itemsPerPage, totalCountToday)} จาก {totalCountToday} รายการ (วันนี้)
         </div>
-      )}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => loadProxyApprovals(currentPageToday - 1)}
+            disabled={currentPageToday === 1}
+            className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ก่อนหน้า
+          </button>
+          
+          <div className="flex items-center space-x-1">
+            {Array.from({ length: Math.min(5, totalPagesToday) }, (_, i) => {
+              let pageNum;
+              if (totalPagesToday <= 5) {
+                pageNum = i + 1;
+              } else if (currentPageToday <= 3) {
+                pageNum = i + 1;
+              } else if (currentPageToday >= totalPagesToday - 2) {
+                pageNum = totalPagesToday - 4 + i;
+              } else {
+                pageNum = currentPageToday - 2 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => loadProxyApprovals(pageNum)}
+                  className={`px-3 py-1 text-sm rounded-md ${
+                    currentPageToday === pageNum
+                      ? 'bg-sky-500 text-white'
+                      : 'bg-white border border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+          
+          <button
+            onClick={() => loadProxyApprovals(currentPageToday + 1)}
+            disabled={currentPageToday === totalPagesToday}
+            className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ถัดไป
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* Pagination Controls - Tab ประวัติ */}
+    {activeTab === 'history' && totalPagesHistory > 1 && (
+      <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200 rounded-b-xl">
+        <div className="text-sm text-slate-700">
+          แสดง {(currentPageHistory - 1) * itemsPerPage + 1} ถึง {Math.min(currentPageHistory * itemsPerPage, totalCountHistory)} จาก {totalCountHistory} รายการ (ประวัติ)
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => loadProxyApprovals(currentPageHistory - 1)}
+            disabled={currentPageHistory === 1}
+            className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ก่อนหน้า
+          </button>
+          
+          <div className="flex items-center space-x-1">
+            {Array.from({ length: Math.min(5, totalPagesHistory) }, (_, i) => {
+              let pageNum;
+              if (totalPagesHistory <= 5) {
+                pageNum = i + 1;
+              } else if (currentPageHistory <= 3) {
+                pageNum = i + 1;
+              } else if (currentPageHistory >= totalPagesHistory - 2) {
+                pageNum = totalPagesHistory - 4 + i;
+              } else {
+                pageNum = currentPageHistory - 2 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => loadProxyApprovals(pageNum)}
+                  className={`px-3 py-1 text-sm rounded-md ${
+                    currentPageHistory === pageNum
+                      ? 'bg-sky-500 text-white'
+                      : 'bg-white border border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+          
+          <button
+            onClick={() => loadProxyApprovals(currentPageHistory + 1)}
+            disabled={currentPageHistory === totalPagesHistory}
+            className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ถัดไป
+          </button>
+        </div>
+      </div>
+    )}
 
       {/* Modal */}
       {showModal && (
