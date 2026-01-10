@@ -46,11 +46,11 @@ const ProxyApprovalManagement = () => {
   
   const [formData, setFormData] = useState({
     proxyApproverId: '',
-    approverLevel: 1,
+    approverLevel: '',
     startDate: '',
     endDate: '',
     reason: '',
-    isDaily: false,
+    isDaily: true,
     dailyDate: '',
   });
 
@@ -117,6 +117,45 @@ const ProxyApprovalManagement = () => {
       }
     } finally {
       setUserLoading(false);
+    }
+  };
+
+  // ฟังก์ชันสำหรับดึง original approver ตามระดับที่เลือก
+  const fetchOriginalApproversForLevel = async (level) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await API.get(`/auth/approvers-for-level/${level}?date=${new Date().toISOString().split('T')[0]}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // กรองเฉพาะคนที่ไม่ใช่ proxy (เฉพาะคนที่มี role จริง)
+      const originalApprovers = response.data.data.filter(user => 
+        !user.isProxy && 
+        currentUser && 
+        user.id !== currentUser.id
+      );
+      
+      return originalApprovers;
+    } catch (error) {
+      console.error('Error fetching original approvers:', error);
+      return [];
+    }
+  };
+
+  // ฟังก์ชันสำหรับ map original approver อัตโนมัติเมื่อเปลี่ยนระดับ
+  const autoMapOriginalApprover = async (level) => {
+    const originalApprovers = await fetchOriginalApproversForLevel(level);
+    
+    if (originalApprovers.length > 0) {
+      // เลือก original approver คนแรกที่พบ
+      const firstApprover = originalApprovers[0];
+      pickOriginalUser(firstApprover);
+      
+      console.log('🔍 Auto-mapped original approver:', firstApprover);
+    } else {
+      // ถ้าไม่พบ original approver ให้ล้างค่าที่เลือกไว้
+      clearOriginalUser();
+      console.log('🔍 No original approvers found for level:', level);
     }
   };
 
@@ -356,15 +395,14 @@ const ProxyApprovalManagement = () => {
   };
 
   const pickOriginalUser = (u) => {
-    console.log('🔍 Debug - pickOriginalUser called with:', u);
     setOriginalPrefixName(u.prefixName || "");
     setOriginalFirstName(u.firstName || "");
     setOriginalLastName(u.lastName || "");
     setSelectedOriginalUser(u);
     setOriginalSearchQuery(formatUserName(u));
     setOriginalSuggestions([]);
-    setFormData({ ...formData, originalApproverId: u.id });
-    console.log('🔍 Debug - selectedOriginalUser set to:', u);
+    // ใช้ functional update เพื่อป้องกัน stale state
+    setFormData(prevFormData => ({ ...prevFormData, originalApproverId: u.id }));
   };
 
   const pickProxyUser = (u) => {
@@ -502,11 +540,11 @@ const ProxyApprovalManagement = () => {
     setFormData({
       originalApproverId: '',
       proxyApproverId: '',
-      approverLevel: 1,
+      approverLevel: '',
       startDate: '',
       endDate: '',
       reason: '',
-      isDaily: false,
+      isDaily: true,
       dailyDate: '',
     });
 
@@ -619,18 +657,49 @@ const ProxyApprovalManagement = () => {
       }
     }
 
+    // แสดง SweetAlert confirmation ก่อน submit
+    const confirmResult = await Swal.fire({
+      title: 'ยืนยันการสร้างการมอบอำนาจ',
+      html: `
+        <div style="text-align: left; font-size: 14px;">
+          <p><strong>ผู้มอบอำนาจ:</strong> ${formatUserName(selectedOriginalUser)} (${getUserRole(selectedOriginalUser.id)})</p>
+          <p><strong>ผู้อนุมัติแทน:</strong> ${formatUserName(selectedProxyUser)} (${getProxyUserRole(selectedProxyUser.id)})</p>
+          <p><strong>ระดับผู้อนุมัติ:</strong> ${approverLevels[formData.approverLevel]}</p>
+          <p><strong>ประเภทการมอบอำนาจ:</strong> ${formData.isDaily ? 'รายวัน' : 'ช่วงเวลา'}</p>
+          ${formData.isDaily 
+            ? `<p><strong>วันที่:</strong> ${new Date(formData.dailyDate).toLocaleDateString('th-TH')}</p>`
+            : `<p><strong>ช่วงวันที่:</strong> ${new Date(formData.startDate).toLocaleDateString('th-TH')} ถึง ${new Date(formData.endDate).toLocaleDateString('th-TH')}</p>`
+          }
+          ${formData.reason ? `<p><strong>เหตุผล:</strong> ${formData.reason}</p>` : ''}
+        </div>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "ยืนยันการสร้าง",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#0ea5e9",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+
     // ไม่ตรวจสอบ role conflict แต่แสดงข้อควรพิจารณาถ้ามี
     if (roleConflict) {
-      const confirmResult = await Swal.fire({
+      const roleConfirmResult = await Swal.fire({
         icon: "warning",
-        title: "ยืนยันการมอบอำนาจ",
-        text: `คุณ (${currentUser?.firstName} ${currentUser?.lastName}) จะได้รับอำนาจเป็นผู้อนุมัติแทนสำหรับระดับ ${getRoleForLevel(formData.approverLevel)} ต้องการดำเนินการต่อหรือไม่?`,
+        title: "ข้อควรพิจารณา",
+        text: `ผู้อนุมัติแทน (${getProxyUserRole(selectedProxyUser.id)}) มี role เดียวกับระดับที่เลือก (${getRoleForLevel(formData.approverLevel)}) - จะได้รับอำนาจเพิ่มเติม ต้องการดำเนินการต่อหรือไม่?`,
         showCancelButton: true,
-        confirmButtonText: "ยืนยัน",
+        confirmButtonText: "ดำเนินการต่อ",
         cancelButtonText: "ยกเลิก",
+        confirmButtonColor: "#0ea5e9",
+        cancelButtonColor: "#64748b",
       });
       
-      if (!confirmResult.isConfirmed) {
+      if (!roleConfirmResult.isConfirmed) {
         return;
       }
     }
@@ -925,62 +994,38 @@ const ProxyApprovalManagement = () => {
               <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 relative">
                   
-                  {/* Original Approver Selection */}
+                  {/* Original Approver Display (Auto-mapped) */}
                   <div className="col-span-2">
                     <label className="mb-1 block text-sm text-slate-700">
-                      ผู้มอบอำนาจ (Original Approver) <span className="text-rose-500">*</span>
+                      ผู้มอบอำนาจ (Original Approver) <span className="text-emerald-600 text-xs">* จะถูกเลือกอัตโนมัติตามระดับผู้อนุมัติ</span>
                     </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={originalSearchQuery}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setOriginalSearchQuery(value);
-                          handleOriginalUserSearch(value);
-                        }}
-                        className={inputStyle}
-                        placeholder="พิมพ์เพื่อค้นหาผู้มอบอำนาจ"
-                        required
-                      />
-                      
-                      {originalSuggestions.length > 0 && (
-                        <div className="absolute left-0 right-0 top-full z-10 mt-2 max-h-64 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-                        {originalSuggestions.map((u) => (
-                          <button
-                            key={u.id}
-                            type="button"
-                            onClick={() => pickOriginalUser(u)}
-                            className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-slate-50 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span>{formatUserName(u)}</span>
-                              <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                                {getUserRole(u.id)}
-                              </span>
-                            </div>
-                            <span className="text-xs text-slate-500">ID: {u.id}</span>
-                          </button>
-                        ))}
-                      </div>
-                      )}
-                    </div>
-                    
-                    {selectedOriginalUser && (
-                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                    {selectedOriginalUser ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 border border-emerald-200">
                         <div className="flex items-center gap-2">
-                          <span>ผู้มอบอำนาจ: {formatUserName(selectedOriginalUser)} (ID: {selectedOriginalUser.id})</span>
-                          <span className="px-2 py-1 rounded-full bg-emerald-200 text-emerald-800">
+                          <span className="font-medium">ผู้มอบอำนาจ: {formatUserName(selectedOriginalUser)} (ID: {selectedOriginalUser.id})</span>
+                          <span className="px-2 py-1 rounded-full bg-emerald-200 text-emerald-800 font-medium">
                             {getUserRole(selectedOriginalUser.id)}
                           </span>
                         </div>
                         <button
                           type="button"
-                          onClick={clearOriginalUser}
+                          onClick={() => {
+                            clearOriginalUser();
+                            // ถ้าต้องการเลือกใหม่ ให้เรียก autoMapOriginalApprover อีกครั้ง
+                            if (formData.approverLevel) {
+                              autoMapOriginalApprover(formData.approverLevel);
+                            }
+                          }}
                           className="text-xs text-emerald-700 hover:text-emerald-900 underline underline-offset-2"
                         >
-                          เปลี่ยน
+                          เปลี่ยนคน
                         </button>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 border border-amber-200">
+                        <div className="flex items-center gap-2">
+                          <span>กรุณาเลือกระดับผู้อนุมัติเพื่อให้ระบบเลือกผู้มอบอำนาจโดยอัตโนมัติ</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1068,10 +1113,29 @@ const ProxyApprovalManagement = () => {
                     <div className="relative">
                       <select
                         value={formData.approverLevel}
-                        onChange={(e) => setFormData({ ...formData, approverLevel: parseInt(e.target.value) })}
+                        onChange={async (e) => {
+                          const selectedValue = e.target.value;
+                          
+                          // ถ้าเลือก placeholder ให้เซ็ตเป็นค่าว่าง
+                          if (selectedValue === '') {
+                            setFormData({ ...formData, approverLevel: '' });
+                            return;
+                          }
+                          
+                          const newLevel = parseInt(selectedValue);
+                          setFormData({ ...formData, approverLevel: newLevel });
+                          
+                          // Auto-map original approver เมื่อเปลี่ยนระดับ
+                          if (newLevel) {
+                            await autoMapOriginalApprover(newLevel);
+                          }
+                        }}
                         className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                         required
                       >
+                        <option value="">
+                          เลือกระดับ...
+                        </option>
                         {Object.entries(approverLevels).map(([key, label]) => (
                           <option key={key} value={parseInt(key)}>
                             {label}
@@ -1173,8 +1237,8 @@ const ProxyApprovalManagement = () => {
 
                   {/* Reason */}
                   <div className="col-span-2">
-                    <label className="mb-1 block text-sm text-slate-700">
-                      เหตุผลการมอบอำนาจ
+                    <label className="mb-1 flex gap-1 text-sm text-slate-700">
+                      เหตุผลการมอบอำนาจ <p className="text-slate-400">(ถ้ามี)</p>
                     </label>
                     <textarea
                       value={formData.reason}
