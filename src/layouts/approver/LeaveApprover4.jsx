@@ -165,8 +165,8 @@ export default function LeaveApprover4() {
       await axios.patch(
         apiEndpoints.RejectleaveRequestsByFouthApprover(detailId),
         {
-          remarks: text || "ไม่อนุมัติเนื่องจากไม่เห็นสมควร",
-          comment: text || "ไม่อนุมัติเนื่องจากไม่เห็นสมควร",
+          remarks: text || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
+          comment: text || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -417,16 +417,7 @@ export default function LeaveApprover4() {
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
-                          const result = await Swal.fire({
-                            title: "รับรองคำขอลา",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "ใช่, รับรอง",
-                            cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#16a34a",
-                            cancelButtonColor: "#d33",
-                          });
-                          if (result.isConfirmed) handleApprove(detailId);
+                          handleApprove(detailId);
                         }}
                         disabled={loadingApprovals[detailId]}
                         className={`px-4 py-1 rounded text-white ${
@@ -440,16 +431,7 @@ export default function LeaveApprover4() {
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
-                          const result = await Swal.fire({
-                            title: "ปฏิเสธคำขอลา",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "ใช่, ไม่รับรอง",
-                            cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#d33",
-                            cancelButtonColor: "#3085d6",
-                          });
-                          if (result.isConfirmed) handleReject(detailId);
+                          handleReject(detailId);
                         }}
                         disabled={loadingApprovals[detailId]}
                         className={`px-4 py-1 rounded text-white ${

@@ -127,6 +127,41 @@ export default function LeaveApprover3() {
     }
   };
 
+  const handleReject = async (detailId) => {
+    const commentFromInput = (comments[detailId] || "").trim();
+    setLoadingApprovals((prev) => ({ ...prev, [detailId]: true }));
+    try {
+      Swal.fire({
+        title: "กำลังดำเนินการ...",
+        text: "กรุณารอสักครู่",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+      const token = localStorage.getItem("accessToken");
+      await axios.patch(
+        apiEndpoints.RejectleaveRequestsByThirdApprover(detailId),
+        {
+          remarks:
+            commentFromInput || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
+          comment:
+            commentFromInput || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.close();
+      Swal.fire("สำเร็จ", "ปฏิเสธเรียบร้อยแล้ว", "success");
+      setLeaveRequest((prev) =>
+        prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
+      );
+    } catch (error) {
+      console.error("❌ Error rejecting request", error);
+      Swal.close();
+      Swal.fire("ผิดพลาด", "ไม่สามารถปฏิเสธได้", "error");
+    } finally {
+      setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
+    }
+  };
+
   const formatDateTime = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm"); // สำหรับ createdAt
   const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY"); // สำหรับ startDate และ endDate
 
@@ -358,31 +393,34 @@ export default function LeaveApprover3() {
                       </div>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const result = await Swal.fire({
-                            title: "รับรองคำขอลา",
-                            text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "ใช่, รับรอง",
-                            cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#16a34a",
-                            cancelButtonColor: "#d33",
-                          });
-                          if (result.isConfirmed) {
+                      <div className="flex flex-col sm:flex-row justify-center gap-2">
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
                             handleApprove(detailId);
-                          }
-                        }}
-                        disabled={loadingApprovals[detailId]}
-                        className={`px-4 py-1 rounded text-white transition ${loadingApprovals[detailId]
-                          ? "bg-green-300 cursor-not-allowed"
-                          : "bg-green-500 hover:bg-green-600"
-                          }`}
-                      >
-                        {loadingApprovals[detailId] ? "กำลังดำเนินการ" : "ตกลง"}
-                      </button>
+                          }}
+                          disabled={loadingApprovals[detailId]}
+                          className={`px-4 py-1 rounded text-white transition ${loadingApprovals[detailId]
+                            ? "bg-green-300 cursor-not-allowed"
+                            : "bg-green-500 hover:bg-green-600"
+                            }`}
+                        >
+                          {loadingApprovals[detailId] ? "กำลังดำเนินการ" : "ตกลง"}
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            handleReject(detailId);
+                          }}
+                          disabled={loadingApprovals[detailId]}
+                          className={`px-4 py-1 rounded text-white transition ${loadingApprovals[detailId]
+                            ? "bg-red-300 cursor-not-allowed"
+                            : "bg-red-500 hover:bg-red-600"
+                            }`}
+                        >
+                          {loadingApprovals[detailId] ? "กำลังดำเนินการ" : "ปฏิเสธ"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
