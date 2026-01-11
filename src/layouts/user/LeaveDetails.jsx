@@ -246,7 +246,7 @@ export default function LeaveDetail() {
 
 
   const EXPORTABLE_LEAVE_TYPE_IDS = [1, 3, 4];
-  const isFinalStatus = status === "APPROVED" || status === "REJECTED";
+  const isFinalStatus = status === "APPROVED" || status === "REJECTED" || status === "CANCELLED";
   const isExportableType = EXPORTABLE_LEAVE_TYPE_IDS.includes(
     Number(leaveType?.id)
   );
@@ -732,7 +732,9 @@ export default function LeaveDetail() {
               ? "bg-green-500"
               : status === "REJECTED"
                 ? "bg-red-500"
-                : "bg-yellow-400"
+                : status === "CANCELLED"
+                  ? "bg-gray-500"
+                  : "bg-yellow-400"
               }`}
           >
             สถานะ:{" "}
@@ -740,7 +742,9 @@ export default function LeaveDetail() {
               ? "อนุมัติแล้ว"
               : status === "REJECTED"
                 ? "ไม่อนุมัติ"
-                : "รออนุมัติ"}
+                : status === "CANCELLED"
+                  ? "ยกเลิกแล้ว"
+                  : "รออนุมัติ"}
           </span>
         </div>
 

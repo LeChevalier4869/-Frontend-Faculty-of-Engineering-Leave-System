@@ -10,11 +10,12 @@ import Swal from "sweetalert2";
 import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
-import { Plus, ChevronDown, PlusCircle, X, Clock } from "lucide-react";
+import { Plus, ChevronDown, PlusCircle, X, Clock, Ban } from "lucide-react";
 import {
   filterLeaveBalancesLatestYear,
   filterLeaveTypesMapBySex,
 } from "../../utils/leavePolicy";
+import LeaveCancellationModal from "../../components/admin/LeaveCancellationModal";
 
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
@@ -826,6 +827,7 @@ export default function AddOtherRequest() {
   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isCancelModalOpen, setCancelModalOpen] = useState(false);
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
@@ -1011,13 +1013,22 @@ export default function AddOtherRequest() {
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            บันทึกคำขอการลาใหม่
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setModalOpen(true)}
+              className="flex items-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              บันทึกคำขอการลาใหม่
+            </button>
+            <button
+              onClick={() => setCancelModalOpen(true)}
+              className="flex items-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-500 whitespace-nowrap"
+            >
+              <Ban className="mr-2 h-4 w-4" />
+              ยกเลิกคำขอลา
+            </button>
+          </div>
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
             <span className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -1238,6 +1249,13 @@ export default function AddOtherRequest() {
         <LeaveRequestModalAdmin
           leaveTypesMap={leaveTypesMap}
           onClose={() => setModalOpen(false)}
+          onSuccess={() => fetchLeaveRequests()}
+        />
+      )}
+
+      {isCancelModalOpen && (
+        <LeaveCancellationModal
+          onClose={() => setCancelModalOpen(false)}
           onSuccess={() => fetchLeaveRequests()}
         />
       )}
