@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
 import { FaRegAddressCard } from "react-icons/fa";
-import { apiEndpoints } from "../../utils/api";
+import AuthService from "../../services/authService";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -62,9 +61,7 @@ export default function Register() {
     try {
       const formData = new FormData();
       Object.entries(input).forEach(([key, val]) => formData.append(key, val));
-      await axios.post(apiEndpoints.register, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await AuthService.register(formData);
       Swal.fire({
         icon: "success",
         title: "สมัครสมาชิกสำเร็จ!",

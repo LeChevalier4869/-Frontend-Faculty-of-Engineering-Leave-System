@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Swal from "sweetalert2";
-import { BASE_URL } from "../../utils/api";
+import LeaveTypeService from "../../services/leaveTypeService";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
@@ -48,8 +47,8 @@ export default function LeaveTypeManage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/leave-types/`, authHeader());
-      setLeaveTypes(res.data.data || []);
+      const res = await LeaveTypeService.getAllLeaveTypes({ limit: 100 });
+      setLeaveTypes(res.leaveTypes || []);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -72,11 +71,7 @@ export default function LeaveTypeManage() {
       return Swal.fire("Error", "กรุณาระบุชื่อประเภทการลา", "error");
     }
     try {
-      await axios.post(
-        `${BASE_URL}/leave-types/`,
-        { name, isAvailable },
-        authHeader()
-      );
+      await LeaveTypeService.createLeaveType({ name, isAvailable });
       Swal.fire("บันทึกสำเร็จ!", "", "success");
       resetForm();
       loadData();
@@ -98,11 +93,7 @@ export default function LeaveTypeManage() {
       return Swal.fire("Error", "กรุณาระบุชื่อประเภทการลา", "error");
     }
     try {
-      await axios.put(
-        `${BASE_URL}/leave-types/${editId}`,
-        { name, isAvailable },
-        authHeader()
-      );
+      await LeaveTypeService.updateLeaveType(editId, { name, isAvailable });
       Swal.fire("อัปเดตสำเร็จ!", "", "success");
       resetForm();
       loadData();
@@ -124,7 +115,7 @@ export default function LeaveTypeManage() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await axios.delete(`${BASE_URL}/leave-types/${id}`, authHeader());
+      await LeaveTypeService.deleteLeaveType(id);
       Swal.fire("ลบสำเร็จ!", "", "success");
       loadData();
     } catch (err) {

@@ -46,6 +46,7 @@ import LeaveAdmin from "../layouts/admin/LeaveAdmin";
 import LeaveReport from "../layouts/admin/LeaveReport";
 import AddOtherRequest from "../layouts/admin/AddOtherRequest";
 import ProxyApprovalManagement from "../layouts/admin/ProxyApprovalManagement";
+import AuditLogManagement from "../layouts/admin/AuditLogManagement";
 import Config from "../layouts/admin/Config";
 import ProtectedRoute from "../components/ProtectedRoute";
 import bg from "../assets/bg.jpg";
@@ -339,6 +340,14 @@ const userRouter = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <ProxyApprovalManagement />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
+            path: "audit-log", 
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <AuditLogManagement />
               </ProtectedRoute>
             ) 
           },
