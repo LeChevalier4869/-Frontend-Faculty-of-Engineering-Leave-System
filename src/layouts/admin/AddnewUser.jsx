@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiOutlineChevronDown } from "react-icons/hi";
 import Swal from "sweetalert2";
@@ -29,6 +29,15 @@ const Panel = ({ className = "", children }) => (
     {children}
   </div>
 );
+
+Panel.propTypes = {
+  className: PropTypes.string,
+  children: PropTypes.node.isRequired,
+};
+
+Panel.defaultProps = {
+  className: "",
+};
 
 export default function AddUser() {
   const navigate = useNavigate();

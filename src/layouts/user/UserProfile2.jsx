@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import { FaUserAlt } from "react-icons/fa";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";

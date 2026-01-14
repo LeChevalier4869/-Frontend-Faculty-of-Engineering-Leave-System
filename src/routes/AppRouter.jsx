@@ -49,6 +49,7 @@ import LeaveAdmin from "../layouts/admin/LeaveAdmin";
 import LeaveReport from "../layouts/admin/LeaveReport";
 import AddOtherRequest from "../layouts/admin/AddOtherRequest";
 import ProxyApprovalManagement from "../layouts/admin/ProxyApprovalManagement";
+import AuditLogManagement from "../layouts/admin/AuditLogManagement";
 import Config from "../layouts/admin/Config";
 import ProtectedRoute from "../components/ProtectedRoute";
 import bg from "../assets/bg.jpg";
@@ -346,6 +347,14 @@ const userRouter = createBrowserRouter([
             ) 
           },
           { 
+            path: "audit-logs", 
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <AuditLogManagement />
+              </ProtectedRoute>
+            ) 
+          },
+          { 
             path: "config", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
@@ -368,17 +377,17 @@ export default function AppRouter() {
   const finalRouter = (user?.id && hasToken) ? userRouter : guestRouter;
   
   // Debug: ดูข้อมูล user และ routes
-  console.log('🔍 Debug - AppRouter:', {
-    user: user ? {
-      id: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      roles: user.roles
-    } : null,
-    hasToken: !!hasToken,
-    finalRouter: finalRouter === userRouter ? 'userRouter' : 'guestRouter'
-  });
+  // console.log('🔍 Debug - AppRouter:', {
+  //   user: user ? {
+  //     id: user.id,
+  //     firstName: user.firstName,
+  //     lastName: user.lastName,
+  //     role: user.role,
+  //     roles: user.roles
+  //   } : null,
+  //   hasToken: !!hasToken,
+  //   finalRouter: finalRouter === userRouter ? 'userRouter' : 'guestRouter'
+  // });
   
   return <RouterProvider router={finalRouter} />;
 }
