@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { ChevronDown, LogOut, Bell, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import PropTypes from "prop-types";
 
-function Header({ onMenuClick, isSidebarOpen, isSidebarMini, isMobile }) {
+function Header({ onMenuClick, isMobile = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -139,5 +140,10 @@ function Header({ onMenuClick, isSidebarOpen, isSidebarMini, isMobile }) {
     </header>
   );
 }
+
+Header.propTypes = {
+  onMenuClick: PropTypes.func.isRequired,
+  isMobile: PropTypes.bool,
+};
 
 export default Header;

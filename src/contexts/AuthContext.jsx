@@ -1,11 +1,12 @@
 // src/context/AuthContext.jsx
 import axios from 'axios'
-import { createContext, useState, useEffect } from 'react'
+import { createContext, useState, useEffect, useContext } from 'react'
 import getApiUrl from '../utils/apiUtils.js'
+import PropTypes from 'prop-types'
 
 const AuthContext = createContext()
 
-function AuthContextProvider(props) {
+function AuthContextProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -14,7 +15,7 @@ function AuthContextProvider(props) {
       try {
         setLoading(true)
         const token = localStorage.getItem('accessToken')
-        console.log('🔍 Debug - AuthContext token:', token ? 'exists' : 'not found')
+        // console.log('🔍 Debug - AuthContext token:', token ? 'exists' : 'not found')
         if (!token) return
 
         const endpoint = 'auth/me'
@@ -25,13 +26,13 @@ function AuthContextProvider(props) {
 
         // ดึงเฉพาะ object user จริง ๆ จาก response
         const returned = res.data.data ?? res.data.user ?? res.data
-        console.log('🔍 Debug - AuthContext fetched user:', {
-          id: returned?.id,
-          firstName: returned?.firstName,
-          lastName: returned?.lastName,
-          role: returned?.role,
-          roles: returned?.roles
-        })
+        // console.log('🔍 Debug - AuthContext fetched user:', {
+        //   id: returned?.id,
+        //   firstName: returned?.firstName,
+        //   lastName: returned?.lastName,
+        //   role: returned?.role,
+        //   roles: returned?.roles
+        // })
         setUser(returned)
       } catch (err) {
         console.error('Auth fetch error:', err)
@@ -54,10 +55,14 @@ function AuthContextProvider(props) {
 
   return (
     <AuthContext.Provider value={{ user, setUser, loading, logout }}>
-      {props.children}
+      {children}
     </AuthContext.Provider>
   )
 }
+
+AuthContextProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 // Custom hook to use the auth context
 export function useAuth() {

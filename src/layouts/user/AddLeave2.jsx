@@ -188,7 +188,7 @@ function AddLeave2() {
 
           {/* เหตุผลการลา */}
           <div>
-            <label for="reason" className="block text-sm font-medium mb-1">
+            <label htmlFor="reason" className="block text-sm font-medium mb-1">
               เหตุผลการลา
             </label>
             <textarea
@@ -204,7 +204,7 @@ function AddLeave2() {
 
           {/* ช่องทางติดต่อ */}
           <div>
-            <label for="contact" className="block text-sm font-medium mb-1">
+            <label htmlFor="contact" className="block text-sm font-medium mb-1">
               ช่องทางติดต่อ
             </label>
             <textarea

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { HiOutlineChevronDown } from "react-icons/hi";
 import {
@@ -13,6 +13,7 @@ import {
 import axios from "axios";
 import { apiEndpoints } from "../utils/api";
 import useAuth from "../hooks/useAuth";
+import PropTypes from "prop-types";
 
 const userNav = [
   { to: "/dashboard", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
@@ -216,5 +217,11 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
     </aside>
   );
 }
+
+Sidebar.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  isMini: PropTypes.bool.isRequired,
+  toggleMiniSidebar: PropTypes.func.isRequired,
+};
 
 export default Sidebar;

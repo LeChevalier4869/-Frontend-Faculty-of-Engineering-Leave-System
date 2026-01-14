@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { saveAs } from "file-saver";
+import PropTypes from "prop-types";
 
 const handleDownloadTemplate = () => {
   saveAs("/Add_Users_Template.xlsx", "Add_Users_Template.xlsx");
@@ -22,6 +23,15 @@ const Panel = ({ className = "", children }) => (
     {children}
   </div>
 );
+
+Panel.propTypes = {
+  className: PropTypes.string,
+  children: PropTypes.node.isRequired,
+};
+
+Panel.defaultProps = {
+  className: "",
+};
 
 export default function AddUsersByExcel() {
   const navigate = useNavigate();

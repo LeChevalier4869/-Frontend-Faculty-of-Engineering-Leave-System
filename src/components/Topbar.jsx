@@ -1,4 +1,6 @@
 // Topbar.jsx
+import PropTypes from "prop-types";
+
 export default function Topbar({ onMenuClick }) {
   return (
     <header className="flex items-center justify-between px-4 py-3 shadow bg-white font-kanit">
@@ -27,3 +29,7 @@ export default function Topbar({ onMenuClick }) {
     </header>
   );
 }
+
+Topbar.propTypes = {
+  onMenuClick: PropTypes.func.isRequired,
+};

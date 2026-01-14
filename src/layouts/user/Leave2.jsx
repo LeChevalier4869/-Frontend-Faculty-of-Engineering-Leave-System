@@ -97,7 +97,9 @@ export default function Leave2() {
     try {
       const res = await axios.get(apiEndpoints.getDriveLink);
       setDriveUrl(res.data.url);
-    } catch (err) {}
+    } catch (err) {
+      console.error("Error fetching Google Drive link:", err);
+    }
   };
 
   const fetchLeaveTypes = async () => {
@@ -108,7 +110,9 @@ export default function Leave2() {
         map[lt.id] = lt.name;
       });
       setLeaveTypesMap(map);
-    } catch (err) {}
+    } catch (err) {
+      console.error("Error fetching leave types:", err);
+    }
   };
 
   useEffect(() => {

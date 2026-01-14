@@ -1,10 +1,11 @@
 import axios from 'axios';
 import {createContext, useState, useEffect} from 'react';
 import getApiUrl from '../utils/apiUtils.js';
+import PropTypes from 'prop-types';
 
 const LeaveRequestContext = createContext();
 
-function LeaveRequestContextProvider(props) {
+function LeaveRequestContextProvider({ children }) {
     const [leaveRequest, setLeaveRequest] = useState([]);
     const endpoint = 'leave-requests/me';
     const url = getApiUrl(endpoint);
@@ -24,7 +25,7 @@ function LeaveRequestContextProvider(props) {
         }
       }
       run()
-    }, [])
+    }, [url])
 
     const addLeave = (leave) => setLeaveRequest([...leaveRequest, leave]);
     const updateLeave = (id, updatedLeave) => {
@@ -35,10 +36,14 @@ function LeaveRequestContextProvider(props) {
 
     return (
       <LeaveRequestContext.Provider value={ {leaveRequest, setLeaveRequest, addLeave, updateLeave} }>
-        {props.children}
+        {children}
       </LeaveRequestContext.Provider>
     )
   }
+
+  LeaveRequestContextProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+  };
   //console.log(AuthContext)
   export { LeaveRequestContextProvider };
   export default LeaveRequestContext;
