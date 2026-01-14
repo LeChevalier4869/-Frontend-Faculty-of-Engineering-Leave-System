@@ -1,6 +1,7 @@
+import axios from "axios";
 import { useState } from "react";
 import useAuth from "../../hooks/useAuth";
-import AuthService from "../../services/authService";
+import { apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import { FaCog } from "react-icons/fa";
 import { FiLogIn } from "react-icons/fi";
@@ -18,12 +19,15 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setIsLoading(true);
-      const res = await AuthService.login(input);
-      const token = res.token;
+      const res = await axios.post(apiEndpoints.login, input);
+      const token = res.data.token;
       localStorage.setItem("token", token);
 
-      const user = await AuthService.getMe();
+      const userRes = await axios.get(apiEndpoints.getMe, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const user = userRes.data;
       setUser(user);
 
       const roles = (user?.roles || []).map((role) => role.roleName);
@@ -45,12 +49,10 @@ export default function Login() {
       Swal.fire({
         icon: "error",
         title: "เข้าสู่ระบบไม่สำเร็จ",
-        text: err.message || "เกิดข้อผิดพลาด",
+        text: err.response?.data?.message || "เกิดข้อผิดพลาด",
         confirmButtonColor: "#ef4444",
         confirmButtonText: "ตกลง",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

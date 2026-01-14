@@ -151,13 +151,4 @@ export const apiEndpoints = {
   proxyApprovalCancel: (id) => `${BASE_URL}/proxy-approval/${id}/cancel`, // PATCH
   proxyApprovalExpire: `${BASE_URL}/proxy-approval/expire`, // PATCH
   proxyApprovalStats: `${BASE_URL}/proxy-approval/stats`, // GET
-
-  // Audit Log
-  auditLogs: `${BASE_URL}/admin/audit-logs`, // GET with query params
-  auditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
-  auditLogsStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
-  auditLogsByUser: (userId) => `${BASE_URL}/admin/audit-logs/user/${userId}`, // GET
-  auditLogsByLeaveRequest: (leaveRequestId) => `${BASE_URL}/admin/audit-logs/leave-request/${leaveRequestId}`, // GET
-  auditLogsCreate: `${BASE_URL}/admin/audit-logs`, // POST
-  auditLogsLogAction: `${BASE_URL}/admin/audit-logs/log-action`, // POST
 };

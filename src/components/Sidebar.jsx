@@ -47,7 +47,6 @@ const adminNav = [
   { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
   { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
   { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
-  { to: "/admin/audit-log", text: "จัดการ Audit Log", icon: <FaClipboardList /> },
   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 

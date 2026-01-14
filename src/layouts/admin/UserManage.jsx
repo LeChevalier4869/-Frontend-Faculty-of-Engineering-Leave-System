@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import UserService from "../../services/userService";
+import axios from "axios";
+import { apiEndpoints } from "../../utils/api";
 import { FiUser, FiUsers } from "react-icons/fi";
 
 const PAGE_SIZE = 10;
@@ -52,8 +53,8 @@ function UserManage() {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const res = await UserService.getAllUsers({ limit: 100 });
-      setUsers(res.users || []);
+      const res = await axios.get(apiEndpoints.userLanding, authHeader());
+      setUsers(res.data.user || []);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -78,7 +79,7 @@ function UserManage() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await UserService.deleteUser(id);
+      await axios.delete(apiEndpoints.deleteUserByAdmin(id), authHeader());
       Swal.fire("ลบสำเร็จ!", "ข้อมูลผู้ใช้งานถูกลบแล้ว", "success");
       loadUsers();
     } catch (err) {

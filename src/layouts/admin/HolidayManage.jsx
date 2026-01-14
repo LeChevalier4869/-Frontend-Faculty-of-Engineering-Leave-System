@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Swal from "sweetalert2";
-import HolidayService from "../../services/holidayService";
+import { BASE_URL } from "../../utils/api";
 
 const PAGE_SIZE = 10;
 
@@ -60,8 +61,8 @@ export default function HolidayManage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await HolidayService.getAllHolidays({ limit: 100 });
-      setHolidays(res.holidays || []);
+      const res = await axios.get(`${BASE_URL}/admin/holiday`, authHeader());
+      setHolidays(res.data.data || []);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -86,12 +87,11 @@ export default function HolidayManage() {
       return Swal.fire("Error", "กรุณาระบุข้อมูลให้ครบถ้วน", "error");
     }
     try {
-      await HolidayService.createHoliday({ 
-        date, 
-        description, 
-        isRecurring, 
-        holidayType 
-      });
+      await axios.post(
+        `${BASE_URL}/admin/holiday`,
+        { date, description, isRecurring, holidayType },
+        authHeader()
+      );
       Swal.fire("เพิ่มวันหยุดสำเร็จ", "", "success");
       resetForm();
       loadData();
@@ -116,12 +116,11 @@ export default function HolidayManage() {
       return Swal.fire("Error", "กรุณาระบุข้อมูลให้ครบถ้วน", "error");
     }
     try {
-      await HolidayService.updateHoliday(editId, { 
-        date, 
-        description, 
-        isRecurring, 
-        holidayType 
-      });
+      await axios.put(
+        `${BASE_URL}/admin/holiday/${editId}`,
+        { date, description, isRecurring, holidayType },
+        authHeader()
+      );
       Swal.fire("อัปเดตสำเร็จ", "", "success");
       resetForm();
       loadData();
@@ -143,7 +142,7 @@ export default function HolidayManage() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await HolidayService.deleteHoliday(id);
+      await axios.delete(`${BASE_URL}/admin/holiday/${id}`, authHeader());
       Swal.fire("ลบสำเร็จ", "", "success");
       const pageCount = Math.ceil(holidays.length / PAGE_SIZE);
       if (currentPage > pageCount) setCurrentPage(pageCount);
