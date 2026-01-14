@@ -3,13 +3,11 @@ import dayjs from 'dayjs';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { th } from 'date-fns/locale';
+import { API, apiEndpoints } from '../../utils/api';
 import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUser, FaCheckCircle } from 'react-icons/fa';
 import { X, ChevronDown, AlertTriangle } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
-import ProxyApprovalService from '../../services/proxyApprovalService';
-import AuthService from '../../services/authService';
-import UserService from '../../services/userService';
 
 const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
 
@@ -96,10 +94,13 @@ const ProxyApprovalManagement = () => {
         return;
       }
       
-      const response = await AuthService.getMe();
+      const response = await API.get(apiEndpoints.getMe, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
-      if (response) {
-        setCurrentUser(response);
+      // API ส่งข้อมูลมาใน response.data ไม่ใช่ response.data.data
+      if (response.data) {
+        setCurrentUser(response.data);
       } else {
         console.error('❌ No user data in response');
       }
@@ -123,7 +124,9 @@ const ProxyApprovalManagement = () => {
   const fetchOriginalApproversForLevel = async (level) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await AuthService.getApproversForLevel(level, new Date().toISOString().split('T')[0]);
+      const response = await API.get(`/auth/approvers-for-level/${level}?date=${new Date().toISOString().split('T')[0]}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
       // กรองเฉพาะคนที่ไม่ใช่ proxy (เฉพาะคนที่มี role จริง)
       const originalApprovers = response.data.data.filter(user => 
@@ -180,22 +183,28 @@ const ProxyApprovalManagement = () => {
       const token = localStorage.getItem("accessToken");
       let url;
       
-      const response = await ProxyApprovalService.getAllProxyApprovals({ 
-        page, 
-        limit: itemsPerPage,
-        status: activeTab === 'today' ? 'ACTIVE' : activeTab === 'history' ? 'EXPIRED,CANCELLED,ACTIVE' : undefined
+      // กำหนด endpoint ตาม tab
+      if (activeTab === 'today') {
+        // Tab วันนี้: ใช้ endpoint /today
+        url = `${apiEndpoints.proxyApproval}/today`;
+      } else if (activeTab === 'history') {
+        // Tab ประวัติ: ใช้ endpoint /history
+        url = `${apiEndpoints.proxyApproval}/history`;
+      } else {
+        // Fallback: ใช้ endpoint เดิม
+        url = apiEndpoints.proxyApproval;
+      }
+      
+      // กำหนด parameters
+      const params = new URLSearchParams();
+      params.append('page', page);
+      params.append('limit', itemsPerPage);
+      
+      const response = await API.get(`${url}?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       
-      // Debug: ตรวจสอบ API call และ response
-      console.log('🔍 Debug - API call with params:', {
-        page, 
-        limit: itemsPerPage,
-        status: activeTab === 'today' ? 'ACTIVE' : activeTab === 'history' ? 'EXPIRED,CANCELLED,ACTIVE' : undefined
-      });
-      console.log('🔍 Debug - activeTab:', activeTab);
-      console.log('🔍 Debug - response:', response);
-      
-      setProxyApprovals(response.data || []);
+      setProxyApprovals(response.data.data || []);
       
       // อัปเดต state ตาม tab ที่ active
       if (activeTab === 'today') {
@@ -220,7 +229,10 @@ const ProxyApprovalManagement = () => {
     try {
       const token = localStorage.getItem("accessToken");
       
-      const response = await ProxyApprovalService.getPotentialApprovers(level);
+      // ใช้ endpoint ที่ถูกต้องและไม่ต้องส่ง date
+      const response = await API.get(apiEndpoints.proxyApprovalPotentialApprovers(level), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
       
       // Backend จะ filter ให้แล้ว ไม่ต้อง filter ซ้ำ
@@ -238,7 +250,7 @@ const ProxyApprovalManagement = () => {
 
   const fetchUserLand = async () => {
     try {
-      const res = await UserService.getAllUsers({ limit: 100 });
+      const res = await API.get(apiEndpoints.userLanding);
       
       let list = normalizeUsers(res?.data);
       
@@ -515,7 +527,7 @@ const ProxyApprovalManagement = () => {
 
     if (result.isConfirmed) {
       try {
-        const response = await ProxyApprovalService.cancelProxyApproval(id);
+        const response = await API.patch(apiEndpoints.proxyApprovalCancel(id));
         
         // ตรวจสอบว่า backend สำเร็จจริงหรือไม่
         if (response.status === 200 || response.status === 201) {
@@ -717,7 +729,9 @@ const ProxyApprovalManagement = () => {
     try {
       // ดึงข้อมูล original approvers สำหรับระดับที่เลือก
       const token = localStorage.getItem("accessToken");
-      const approversResponse = await AuthService.getApproversForLevel(formData.approverLevel, new Date().toISOString().split('T')[0]);
+      const approversResponse = await API.get(`/auth/approvers-for-level/${formData.approverLevel}?date=${new Date().toISOString().split('T')[0]}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
       // หา original approvers ที่ไม่ใช่ proxy (เฉพาะคนที่มี role จริง)
       const originalApprovers = approversResponse.data.data.filter(user => 
@@ -774,7 +788,7 @@ const ProxyApprovalManagement = () => {
       };
       
       
-      const response = await ProxyApprovalService.createProxyApproval(payload);
+      const response = await API.post(apiEndpoints.proxyApproval, payload);
       
       Swal.fire({
         icon: "success",

@@ -129,7 +129,7 @@ export const apiEndpoints = {
   lookupEmploymentTypes: `${BASE_URL}/api/lookups/employment-types`,
 
   // signature
-  signatureUpload: (userId) => `${BASE_URL}/signature/${userId}`, // POST 
+  signatureUpload: (userId) => `${BASE_URL}/signature/${userId}`, // POST
   signatureGetAll: `${BASE_URL}/signature`, // GET
   signatureGetById: (id) => `${BASE_URL}/signature/get/${id}`, // GET
   signatureUpdate: (userId) => `${BASE_URL}/signature/update/${userId}`, // PUT
