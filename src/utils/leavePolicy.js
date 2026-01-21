@@ -99,19 +99,19 @@ export function filterLeaveBalancesLatestYear(balances) {
 
 /**
  * Format remainingDays for UI display.
- * If negative, shows as "ลาเกิน X วัน".
+ * If negative, shows as "เกิน X วัน" (overused X days).
  * Returns { text, className }.
  */
 export function formatRemainingDays(remainingDays) {
   const num = Number(remainingDays) || 0;
   if (num < 0) {
     return {
-      text: `ลาเกิน ${Math.abs(num)} วัน`,
-      className: "text-rose-600",
+      text: `เกิน ${Math.abs(num)} วัน`,
+      className: "text-rose-600 font-bold",
     };
   }
   return {
     text: String(num),
-    className: "text-emerald-600",
+    className: "text-emerald-600 font-bold",
   };
 }

@@ -1,15 +1,37 @@
 import { useState, useEffect } from "react";
 import { API, apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
-import { X, FileText, Search, AlertCircle, CheckCircle } from "lucide-react";
+import { X, FileText, Search, AlertCircle, CheckCircle, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function LeaveCancellationModal({ onClose, onSuccess }) {
+  const navigate = useNavigate();
   const [leaveRequestNumber, setLeaveRequestNumber] = useState("");
   const [searching, setSearching] = useState(false);
   const [foundRequest, setFoundRequest] = useState(null);
   const [paperFiles, setPaperFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // ปิด modal เมื่อปิด tab
+  useEffect(() => {
+    const handleTabClose = () => {
+      onClose();
+    };
+
+    window.addEventListener('beforeunload', handleTabClose);
+    window.addEventListener('popstate', handleTabClose);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleTabClose);
+      window.removeEventListener('popstate', handleTabClose);
+    };
+  }, [onClose]);
+
+  const handleLeaveDetailClick = () => {
+    // เปิด tab ใหม่แล้วนำทางไปยังหน้า leave detail
+    window.open(`/leave/${foundRequest.id}`, '_blank');
+  };
 
   const inputStyle =
     "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
@@ -26,7 +48,7 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
 
     try {
       const response = await API.get(
-        `${apiEndpoints.leaveRequest}/admin/search/${leaveRequestNumber.trim()}`
+        `${apiEndpoints.leaveRequest}/admin/search/${encodeURIComponent(leaveRequestNumber.trim())}`
       );
       
       if (response.data) {
@@ -64,7 +86,33 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
 
   const removeFile = (index) => {
     setPaperFiles((prev) => prev.filter((_, i) => i !== index));
+    // Reset the file input when all files are removed
+    if (paperFiles.length <= 1) {
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    }
   };
+
+  const previewFile = (file) => {
+    const fileURL = URL.createObjectURL(file);
+    window.open(fileURL, '_blank');
+  };
+
+  const validateFileCount = () => {
+  // อนุญาติให้อัพโหลดได้เฉพาะ 1 ไฟล์เท่านั้น
+  if (paperFiles.length !== 1) {
+    Swal.fire({
+      icon: "warning",
+      title: "จำนวนไฟล์",
+      text: "กรุณาแนบไฟล์เพียง 1 ไฟล์เท่านั้น",
+      confirmButtonText: "ตกลง",
+    });
+    return false;
+  }
+  return true;
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,19 +122,21 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
       return;
     }
 
-    if (paperFiles.length === 0) {
-      const result = await Swal.fire({
-        icon: "question",
-        title: "ยืนยันการยกเลิก",
-        text: "คุณไม่ได้แนบไฟล์เอกสาร ต้องการดำเนินการต่อหรือไม่?",
-        showCancelButton: true,
-        confirmButtonText: "ดำเนินการ",
-        cancelButtonText: "ยกเลิก",
-      });
+    if (!validateFileCount()) {
+      return;
+    }
+
+    const result = await Swal.fire({
+      icon: "question",
+      title: "ยืนยันการยกเลิก",
+      text: "คุณไม่ได้แนบไฟล์เอกสาร ต้องการดำเนินการต่อหรือไม่?",
+      showCancelButton: true,
+      confirmButtonText: "ดำเนินการ",
+      cancelButtonText: "ยกเลิก",
+    });
       
-      if (!result.isConfirmed) {
-        return;
-      }
+    if (!result.isConfirmed) {
+      return;
     }
 
     setSubmitting(true);
@@ -262,6 +312,16 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
                         {foundRequest.user?.email || "-"}
                       </div>
                     </div>
+                    <div className="md:col-span-2">
+                      <button
+                        type="button"
+                        onClick={handleLeaveDetailClick}
+                        className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-800 text-sm font-medium transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        ดูรายละเอียดคำขอลา
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -273,47 +333,54 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700">
                     แนบไฟล์เอกสาร (Paper)
-                    <span className="text-xs text-slate-500 ml-2">สูงสุด 3 ไฟล์</span>
+                    <span className="text-xs text-red-500 ml-1">*</span>
                   </label>
-                  <input
-                    type="file"
-                    multiple
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    onChange={handleFileChange}
-                    disabled={submitting}
-                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
-                  />
-                </div>
-
-                {paperFiles.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-slate-700">ไฟล์ที่แนบ:</div>
-                    {paperFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-slate-500" />
-                          <span className="text-sm text-slate-700 truncate max-w-xs">
-                            {file.name}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            ({(file.size / 1024).toFixed(1)} KB)
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          disabled={submitting}
-                          className="text-rose-500 hover:text-rose-700 disabled:opacity-50"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      onChange={handleFileChange}
+                      disabled={submitting}
+                      className="flex-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                    />
                   </div>
-                )}
+                  
+                  {/* Display selected files */}
+                  {paperFiles.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {paperFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                        >
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-slate-500" />
+                            <button
+                              type="button"
+                              onClick={() => previewFile(file)}
+                              className="text-sky-600 hover:text-sky-800 truncate max-w-[200px] text-left underline decoration-dotted"
+                              title={`คลิกเพื่อดู: ${file.name}`}
+                            >
+                              {file.name}
+                            </button>
+                            <span className="text-xs text-slate-500">
+                              ({(file.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            disabled={submitting}
+                            className="text-slate-400 hover:text-rose-600 transition-colors"
+                            title="ลบไฟล์"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

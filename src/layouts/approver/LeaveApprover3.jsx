@@ -405,7 +405,7 @@ export default function LeaveApprover3() {
                             : "bg-green-500 hover:bg-green-600"
                             }`}
                         >
-                          {loadingApprovals[detailId] ? "กำลังดำเนินการ" : "ตกลง"}
+                          {loadingApprovals[detailId] ? "ตกลง" : "ตกลง"}
                         </button>
                         <button
                           onClick={async (e) => {
@@ -418,7 +418,7 @@ export default function LeaveApprover3() {
                             : "bg-red-500 hover:bg-red-600"
                             }`}
                         >
-                          {loadingApprovals[detailId] ? "กำลังดำเนินการ" : "ปฏิเสธ"}
+                          {loadingApprovals[detailId] ? "ปฏิเสธ" : "ปฏิเสธ"}
                         </button>
                       </div>
                     </td>
