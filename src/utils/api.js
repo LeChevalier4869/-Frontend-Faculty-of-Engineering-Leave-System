@@ -151,4 +151,11 @@ export const apiEndpoints = {
   proxyApprovalCancel: (id) => `${BASE_URL}/proxy-approval/${id}/cancel`, // PATCH
   proxyApprovalExpire: `${BASE_URL}/proxy-approval/expire`, // PATCH
   proxyApprovalStats: `${BASE_URL}/proxy-approval/stats`, // GET
+
+  // Leave Balance Reset
+  resetLeaveBalance: `${BASE_URL}/admin/reset-leave-balance`, // POST
+  getAvailableYears: `${BASE_URL}/admin/leave-balance/years`, // GET
+  deleteLeaveBalanceByYear: (year) => `${BASE_URL}/admin/leave-balance/${year}`, // DELETE
+  getFiscalYear: `${BASE_URL}/admin/fiscal-year`, // GET
+  updateFiscalYear: `${BASE_URL}/admin/fiscal-year`, // PUT
 };
