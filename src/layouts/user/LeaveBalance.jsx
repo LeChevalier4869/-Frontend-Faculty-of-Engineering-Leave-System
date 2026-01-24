@@ -27,7 +27,11 @@ export default function LeaveBalancePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const visibleEntitlements = useMemo(() => {
-    return filterLeaveBalancesBySex(entitlements, user?.sex);
+    const filtered = filterLeaveBalancesBySex(entitlements, user?.sex);
+    // ดึงปีปัจจุบันจากข้อมูลที่กรองแล้ว
+    const currentYear = filtered.length > 0 ? filtered[0]?.year : null;
+    console.log("Current year from data:", currentYear);
+    return { data: filtered, year: currentYear };
   }, [entitlements, user?.sex]);
 
   useEffect(() => {
@@ -140,7 +144,7 @@ export default function LeaveBalancePage() {
     );
   }
 
-  if (visibleEntitlements.length === 0) {
+  if (visibleEntitlements.data.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900 px-4 py-8 md:px-8 flex items-center justify-center">
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6 text-center">
@@ -166,6 +170,13 @@ export default function LeaveBalancePage() {
           <p className="text-sm md:text-base text-slate-600">
             ตรวจสอบสิทธิการลาทั้งหมดของคุณในแต่ละประเภทการลา
           </p>
+          {visibleEntitlements.year && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 shadow-sm">
+              <span className="text-xs font-medium text-emerald-700">
+                ปี {visibleEntitlements.year}
+              </span>
+            </div>
+          )}
         </div>
 
         <div
@@ -174,7 +185,7 @@ export default function LeaveBalancePage() {
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           }}
         >
-          {visibleEntitlements.map((item, index) => {
+          {visibleEntitlements.data.map((item, index) => {
             const type = item.leaveType?.name ?? "ไม่ระบุ";
             const total = item.maxDays ?? 0;
             const used = item.usedDays ?? 0;

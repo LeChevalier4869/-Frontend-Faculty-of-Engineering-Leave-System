@@ -718,7 +718,16 @@ export default function LeaveDetail() {
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    เอกสารแนบ {file.type}
+                    {file.name ? (
+                      <>
+                        เอกสารแนบ {file.type}
+                        <span className="text-gray-600 ml-2 text-sm">
+                          ({file.name.length > 50 ? file.name.substring(0, 50) + '...' : file.name})
+                        </span>
+                      </>
+                    ) : (
+                      `เอกสารแนบ ${file.type}`
+                    )}
                   </a>
                 </li>
               ))}
