@@ -10,6 +10,8 @@ import {
   Accessibility,
   Flag,
   TreePalm,
+  Globe,
+  HeartHandshake,
 } from "lucide-react";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -95,17 +97,23 @@ export default function LeaveBalancePage() {
     ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: (
       <Flag className="w-10 h-10 md:w-12 md:h-12 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]" />
     ),
-    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: (
+    "ลาไปศึกษา ฝึกอบรม ปฏิบัติการวิจัย หรือดูงาน": (
       <GraduationCap className="w-10 h-10 md:w-12 md:h-12 text-indigo-500 drop-shadow-[0_0_12px_rgba(79,70,229,0.6)]" />
     ),
-    ลาไปช่วยเหลือภริยาที่คลอดบุตร: (
-      <Home className="w-10 h-10 md:w-12 md:h-12 text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.6)]" />
+    "ลาไปช่วยเหลือภริยาที่คลอดบุตร": (
+      <HeartHandshake className="w-10 h-10 md:w-12 md:h-12 text-rose-400 drop-shadow-[0_0_12px_rgba(251,113,133,0.6)]" />
     ),
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: (
       <Accessibility className="w-10 h-10 md:w-12 md:h-12 text-emerald-500 drop-shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
     ),
     ลาไปประกอบพิธีฮัจย์: (
       <Church className="w-10 h-10 md:w-12 md:h-12 text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]" />
+    ),
+    "ลาไปปฏิบัติงานในองค์การระหว่างประเทศ": (
+      <Globe className="w-10 h-10 md:w-12 md:h-12 text-blue-500 drop-shadow-[0_0_12px_rgba(59,130,246,0.6)]" />
+    ),
+    "ลาติดตามคู่สมรส": (
+      <HeartHandshake className="w-10 h-10 md:w-12 md:h-12 text-rose-400 drop-shadow-[0_0_12px_rgba(251,113,133,0.6)]" />
     ),
   };
 
@@ -116,11 +124,13 @@ export default function LeaveBalancePage() {
     ลาพักผ่อน: "ring-amber-200 bg-amber-50",
     ลาอุปสมบท: "ring-purple-200 bg-purple-50",
     ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "ring-sky-200 bg-sky-50",
-    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา:
+    "ลาไปศึกษา ฝึกอบรม ปฏิบัติการวิจัย หรือดูงาน":
       "ring-indigo-200 bg-indigo-50",
-    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "ring-orange-200 bg-orange-50",
+    "ลาไปช่วยเหลือภริยาที่คลอดบุตร": "ring-rose-200 bg-rose-50",
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "ring-emerald-200 bg-emerald-50",
     ลาไปประกอบพิธีฮัจย์: "ring-purple-200 bg-purple-50",
+    "ลาไปปฏิบัติงานในองค์การระหว่างประเทศ": "ring-blue-200 bg-blue-50",
+    "ลาติดตามคู่สมรส": "ring-rose-200 bg-rose-50",
   };
 
   if (isLoading) {
