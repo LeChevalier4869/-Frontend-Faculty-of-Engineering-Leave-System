@@ -13,6 +13,7 @@ export default function LeaveTypeManage() {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [name, setName] = useState("");
   const [isAvailable, setIsAvailable] = useState(false);
+  const [resetOnFiscalYear, setResetOnFiscalYear] = useState(true);
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -64,6 +65,7 @@ export default function LeaveTypeManage() {
   const resetForm = () => {
     setName("");
     setIsAvailable(false);
+    setResetOnFiscalYear(true);
     setEditId(null);
   };
 
@@ -74,7 +76,7 @@ export default function LeaveTypeManage() {
     try {
       await axios.post(
         `${BASE_URL}/leave-types/`,
-        { name, isAvailable },
+        { name, isAvailable, resetOnFiscalYear },
         authHeader()
       );
       Swal.fire("บันทึกสำเร็จ!", "", "success");
@@ -90,6 +92,7 @@ export default function LeaveTypeManage() {
     if (!lt) return;
     setName(lt.name);
     setIsAvailable(lt.isAvailable);
+    setResetOnFiscalYear(lt.resetOnFiscalYear);
     setEditId(lt.id);
   };
 
@@ -99,8 +102,8 @@ export default function LeaveTypeManage() {
     }
     try {
       await axios.put(
-        `${BASE_URL}/leave-types/${editId}`,
-        { name, isAvailable },
+        `${BASE_URL}/leave-types/update/${editId}`,
+        { name, isAvailable, resetOnFiscalYear },
         authHeader()
       );
       Swal.fire("อัปเดตสำเร็จ!", "", "success");
@@ -175,16 +178,29 @@ export default function LeaveTypeManage() {
                 className={inputClass}
               />
             </div>
-            <div className="flex items-center gap-3 lg:col-span-1">
-              <input
-                type="checkbox"
-                checked={isAvailable}
-                onChange={() => setIsAvailable(!isAvailable)}
-                className={checkboxClass}
-              />
-              <span className="text-sm text-slate-800">
-                สามารถลาในระบบได้
-              </span>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={isAvailable}
+                  onChange={() => setIsAvailable(!isAvailable)}
+                  className={checkboxClass}
+                />
+                <span className="text-sm text-slate-800">
+                  สามารถลาในระบบได้
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={resetOnFiscalYear}
+                  onChange={() => setResetOnFiscalYear(!resetOnFiscalYear)}
+                  className={checkboxClass}
+                />
+                <span className="text-sm text-slate-800">
+                  รีเซ็ตยอดวันลาปีใหม่
+                </span>
+              </div>
             </div>
             <div className="lg:col-span-1 flex lg:justify-end">
               <button
@@ -216,6 +232,9 @@ export default function LeaveTypeManage() {
                     ลาในระบบได้
                   </th>
                   <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    รีเซ็ตปีใหม่
+                  </th>
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
                     การจัดการ
                   </th>
                 </tr>
@@ -224,7 +243,7 @@ export default function LeaveTypeManage() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       กำลังโหลด...
@@ -253,6 +272,17 @@ export default function LeaveTypeManage() {
                           {t.isAvailable ? "เปิดใช้งาน" : "ปิดใช้งาน"}
                         </span>
                       </td>
+                      <td className="px-4 py-2 text-center">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            t.resetOnFiscalYear
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
+                          }`}
+                        >
+                          {t.resetOnFiscalYear ? "รีเซ็ต" : "สะสม"}
+                        </span>
+                      </td>
                       <td className="px-4 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -274,7 +304,7 @@ export default function LeaveTypeManage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่มีข้อมูลประเภทการลา

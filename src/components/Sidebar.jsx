@@ -19,11 +19,11 @@ import useAuth from "../hooks/useAuth";
 import logo from "../assets/logo.png";
 
 const userNav = [
-  { to: "/", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
-  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaChartBar /> },
-  { to: "/leave", text: "การลา", icon: <FaClipboardList /> },
-  { to: "/Calendar", text: "ปฏิทิน", icon: <FaCalendarAlt /> },
-  { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser /> },
+  { to: "/", text: "แดชบอร์ด", icon: <FaTachometerAlt />, title: "แดชบอร์ด" },
+  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaChartBar />, title: "ยอดวันลาคงเหลือ" },
+  { to: "/leave", text: "การลา", icon: <FaClipboardList />, title: "การลา" },
+  { to: "/Calendar", text: "ปฏิทิน", icon: <FaCalendarAlt />, title: "ปฏิทิน" },
+  { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser />, title: "โปรไฟล์ผู้ใช้" },
 ];
 
 const approverNav1 = [
@@ -78,17 +78,8 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
   const hasRole = (r) => roles.includes(r);
   const isActive = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
   
-  // Debug log
-  console.log('🔍 Sidebar Debug:', {
-    user: user?.firstName,
-    roles: roles,
-    hasAdmin: hasRole("ADMIN"),
-    hasVerifier: hasRole("VERIFIER")
-  });
-  
   // Debug admin menu render
   const shouldShowAdminMenu = hasRole("ADMIN");
-  console.log('🔍 Admin Menu Should Show:', shouldShowAdminMenu);
 
   // Check proxy roles
   useEffect(() => {
@@ -99,25 +90,19 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
           console.log('No token found for proxy checking');
           return;
         }
-        
-        console.log('🔍 Starting proxy check for user:', user?.id, user?.firstName, user?.lastName);
-        
+                
         // ดึงข้อมูล proxy approvals ทั้งหมด (ACTIVE และ EXPIRED)
         const response = await axios.get(`${BASE_URL}/proxy-approval`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
         const proxyApprovals = response.data.data || [];
-        console.log('🔍 All proxy approvals from API:', proxyApprovals);
         
         // กรองเฉพาะ proxy ที่มีสถานะ ACTIVE
         const activeProxies = proxyApprovals.filter(proxy => proxy.status === 'ACTIVE');
-        console.log('🔍 Active proxies only:', activeProxies);
         
         // กรองเฉพาะที่ user ปัจจุบันเป็น proxy approver
         const userAsProxyProxies = activeProxies.filter(proxy => proxy.proxyApproverId === user.id);
-        console.log('🔍 Proxies where user is proxy approver:', userAsProxyProxies);
-        console.log('🔍 Current user ID:', user.id);
         
         // Debug ทุก proxy ที่ active
         activeProxies.forEach(proxy => {
@@ -185,7 +170,7 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
     checkProxyRoles();
   }, [user?.id]);
 
-  const Item = ({ to, icon, text, proxyId }) => {
+  const Item = ({ to, icon, text, proxyId, title }) => {
   const location = useLocation();
   const isActive = (to) => {
     const currentPath = location.pathname;
@@ -204,6 +189,7 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
       onClick={() => {
         if (isMobile && typeof onClose === "function") onClose();
       }}
+      title={title || text} // Add tooltip title
       className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition ${
         isActive(to)
           ? "bg-white/20 text-white ring-1 ring-white/30"
@@ -260,13 +246,15 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <img src={logo} alt="Logo" className="w-10 h-10 rounded-md shadow-lg" />
+                {!isMini && (
+                    <img src={logo} alt="Logo" className="w-10 h-10 rounded-md shadow-lg" />
+                )}
                 {!isMini && (
                   <div className="flex flex-col leading-tight">
-                    <span className="font-kanit text-lg font-semibold tracking-wide">
+                    <span className="font-kanit text-lg font-semibold tracking-wide whitespace-nowrap">
                       eLeave System
                     </span>
-                    <span className="text-xs text-slate-300">คณะวิศวกรรมศาสตร์</span>
+                    <span className="text-xs text-slate-300 whitespace-nowrap">คณะวิศวกรรมศาสตร์</span>
                   </div>
                 )}
               </div>
@@ -304,7 +292,7 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto p-3 space-y-4">
+            <nav className="flex-1 overflow-y-auto p-3 space-y-4 whitespace-nowrap">
               {hasRole("USER") && (
                 <Section title="ทั่วไป">
                   {userNav.map((m, i) => (
@@ -451,12 +439,14 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose, is
               )}
             </nav>
 
-            {/* Footer */}
-            <footer className="p-4 text-center text-xs text-slate-300 border-t border-white/10">
-              © คณะวิศวกรรมศาสตร์
-              <br />
-              มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน
-            </footer>
+            {/* Footer - แสดงเฉพาะถ้าเป็น sidebar และไม่ใช่ mini mode */}
+            {!isMini && (
+              <footer className="p-4 text-center text-xs text-slate-300 border-t border-white/10 whitespace-nowrap">
+                © คณะวิศวกรรมศาสตร์
+                <br />
+                มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน
+              </footer>
+            )}
           </div>
         </div>
       </aside>

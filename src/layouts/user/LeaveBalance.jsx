@@ -10,6 +10,8 @@ import {
   Accessibility,
   Flag,
   TreePalm,
+  Globe,
+  HeartHandshake,
 } from "lucide-react";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -27,7 +29,11 @@ export default function LeaveBalancePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const visibleEntitlements = useMemo(() => {
-    return filterLeaveBalancesBySex(entitlements, user?.sex);
+    const filtered = filterLeaveBalancesBySex(entitlements, user?.sex);
+    // ดึงปีปัจจุบันจากข้อมูลที่กรองแล้ว
+    const currentYear = filtered.length > 0 ? filtered[0]?.year : null;
+    console.log("Current year from data:", currentYear);
+    return { data: filtered, year: currentYear };
   }, [entitlements, user?.sex]);
 
   useEffect(() => {
@@ -52,7 +58,7 @@ export default function LeaveBalancePage() {
         if (Array.isArray(res.data.data)) {
           const latestYearOnly = filterLeaveBalancesLatestYear(res.data.data);
           setEntitlements(latestYearOnly);
-          console.log("latestYearOnly", latestYearOnly);  
+          console.log("latestYearOnly", latestYearOnly);
         } else {
           setEntitlements([]);
         }
@@ -85,20 +91,29 @@ export default function LeaveBalancePage() {
     ลาพักผ่อน: (
       <TreePalm className="w-10 h-10 md:w-12 md:h-12 text-amber-500 drop-shadow-[0_0_12px_rgba(245,158,11,0.6)]" />
     ),
-    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: (
+    ลาอุปสมบท: (
       <Church className="w-10 h-10 md:w-12 md:h-12 text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]" />
     ),
     ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: (
       <Flag className="w-10 h-10 md:w-12 md:h-12 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]" />
     ),
-    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา: (
+    "ลาไปศึกษา ฝึกอบรม ปฏิบัติการวิจัย หรือดูงาน": (
       <GraduationCap className="w-10 h-10 md:w-12 md:h-12 text-indigo-500 drop-shadow-[0_0_12px_rgba(79,70,229,0.6)]" />
     ),
-    ลาไปช่วยเหลือภริยาที่คลอดบุตร: (
-      <Home className="w-10 h-10 md:w-12 md:h-12 text-orange-500 drop-shadow-[0_0_12px_rgba(249,115,22,0.6)]" />
+    "ลาไปช่วยเหลือภริยาที่คลอดบุตร": (
+      <HeartHandshake className="w-10 h-10 md:w-12 md:h-12 text-rose-400 drop-shadow-[0_0_12px_rgba(251,113,133,0.6)]" />
     ),
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: (
       <Accessibility className="w-10 h-10 md:w-12 md:h-12 text-emerald-500 drop-shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
+    ),
+    ลาไปประกอบพิธีฮัจย์: (
+      <Church className="w-10 h-10 md:w-12 md:h-12 text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]" />
+    ),
+    "ลาไปปฏิบัติงานในองค์การระหว่างประเทศ": (
+      <Globe className="w-10 h-10 md:w-12 md:h-12 text-blue-500 drop-shadow-[0_0_12px_rgba(59,130,246,0.6)]" />
+    ),
+    "ลาติดตามคู่สมรส": (
+      <HeartHandshake className="w-10 h-10 md:w-12 md:h-12 text-rose-400 drop-shadow-[0_0_12px_rgba(251,113,133,0.6)]" />
     ),
   };
 
@@ -107,12 +122,15 @@ export default function LeaveBalancePage() {
     ลาคลอดบุตร: "ring-pink-200 bg-pink-50",
     ลากิจส่วนตัว: "ring-slate-200 bg-slate-50",
     ลาพักผ่อน: "ring-amber-200 bg-amber-50",
-    ลาอุปสมบทหรือลาไปประกอบพิธีฮัจย์: "ring-purple-200 bg-purple-50",
+    ลาอุปสมบท: "ring-purple-200 bg-purple-50",
     ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "ring-sky-200 bg-sky-50",
-    ลาไปเพื่อประโยชน์ในการพัฒนาพนักงานในสถาบันอุดมศึกษา:
+    "ลาไปศึกษา ฝึกอบรม ปฏิบัติการวิจัย หรือดูงาน":
       "ring-indigo-200 bg-indigo-50",
-    ลาไปช่วยเหลือภริยาที่คลอดบุตร: "ring-orange-200 bg-orange-50",
+    "ลาไปช่วยเหลือภริยาที่คลอดบุตร": "ring-rose-200 bg-rose-50",
     ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ: "ring-emerald-200 bg-emerald-50",
+    ลาไปประกอบพิธีฮัจย์: "ring-purple-200 bg-purple-50",
+    "ลาไปปฏิบัติงานในองค์การระหว่างประเทศ": "ring-blue-200 bg-blue-50",
+    "ลาติดตามคู่สมรส": "ring-rose-200 bg-rose-50",
   };
 
   if (isLoading) {
@@ -136,7 +154,7 @@ export default function LeaveBalancePage() {
     );
   }
 
-  if (visibleEntitlements.length === 0) {
+  if (visibleEntitlements.data.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900 px-4 py-8 md:px-8 flex items-center justify-center">
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6 text-center">
@@ -162,6 +180,13 @@ export default function LeaveBalancePage() {
           <p className="text-sm md:text-base text-slate-600">
             ตรวจสอบสิทธิการลาทั้งหมดของคุณในแต่ละประเภทการลา
           </p>
+          {visibleEntitlements.year && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 shadow-sm">
+              <span className="text-xs font-medium text-emerald-700">
+                ปี {visibleEntitlements.year}
+              </span>
+            </div>
+          )}
         </div>
 
         <div
@@ -170,13 +195,38 @@ export default function LeaveBalancePage() {
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           }}
         >
-          {visibleEntitlements.map((item, index) => {
+          {visibleEntitlements.data.map((item, index) => {
             const type = item.leaveType?.name ?? "ไม่ระบุ";
             const total = item.maxDays ?? 0;
             const used = item.usedDays ?? 0;
             const pending = item.pendingDays ?? 0;
             const remaining = item.remainingDays ?? total - used - pending;
             const remainingDisplay = formatRemainingDays(remaining);
+            
+            // ตรวจสอบว่าเป็นประเภทการลาที่ไม่ต้องหักวันหรือไม่
+            // ตรวจสอบจากค่า 0 ในฐานข้อมูล (maxDays = 0, remainingDays = 0) หรือจาก leaveTypeId ที่กำหนด
+            const nonDeductibleLeaveTypes = [5, 6, 10, 11, 13]; // ลาอุปสมบท, ลาเข้ารับการตรวจเลือก, ลาไปถือศีล, ลาไปปฏิบัติงานในองค์การระหว่างประเทศ, ลาไปประกอบพิธีฮัจย์
+            const isNonDeductible = (item.maxDays === 0 && item.remainingDays === 0) ||
+                                   nonDeductibleLeaveTypes.includes(item.leaveType?.id);
+            
+            // คำนวณข้อมูลสำหรับการแสดงผล
+            const leaveInfo = {
+              total: item.maxDays ?? 0,
+              used: item.usedDays ?? 0,
+              pending: item.pendingDays ?? 0,
+              remaining: item.remainingDays ?? (item.maxDays ?? 0) - (item.usedDays ?? 0) - (item.pendingDays ?? 0),
+              isUnlimited: isNonDeductible,
+              hasOverused: false,
+              overusedDays: 0
+            };
+            
+            // สำหรับประเภทการลาที่ไม่ต้องหักวัน: ไม่ต้องตรวจสอบการลาเกิน
+            // แต่ยังคงแสดงจำนวนวันที่ใช้ไปจริง
+            if (!leaveInfo.isUnlimited && leaveInfo.remaining < 0) {
+              leaveInfo.hasOverused = true;
+              leaveInfo.overusedDays = Math.abs(leaveInfo.remaining);
+            }
+            
             const icon =
               iconMap[type] || (
                 <User className="w-10 h-10 md:w-12 md:h-12 text-slate-500 drop-shadow-[0_0_10px_rgba(148,163,184,0.6)]" />
@@ -192,10 +242,10 @@ export default function LeaveBalancePage() {
                 <div className="rounded-xl px-3 py-2 mb-3 border border-slate-100 bg-slate-50">
                   <h3
                     className={`font-semibold text-slate-900 ${type.length > 35
-                        ? "text-xs sm:text-sm md:text-base"
-                        : type.length > 30
-                          ? "text-sm sm:text-base md:text-lg"
-                          : "text-base sm:text-lg md:text-xl"
+                      ? "text-xs sm:text-sm md:text-base"
+                      : type.length > 30
+                        ? "text-sm sm:text-base md:text-lg"
+                        : "text-base sm:text-lg md:text-xl"
                       }`}
                   >
                     {type}
@@ -210,30 +260,68 @@ export default function LeaveBalancePage() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-1 text-xs sm:text-sm md:text-base text-slate-700 flex-1">
-                    <p>
-                      จำนวนวันทั้งหมด:{" "}
-                      <span className="font-semibold text-slate-900">
-                        {total}
-                      </span>
-                    </p>
-                    <p>
-                      ใช้ไปแล้ว:{" "}
-                      <span className="font-semibold text-rose-600">
-                        {used}
-                      </span>
-                    </p>
-                    <p>
-                      กำลังดำเนินการ:{" "}
-                      <span className="font-semibold text-amber-600">
-                        {pending}
-                      </span>
-                    </p>
-                    <p>
-                      เหลือ:{" "}
-                      <span className={`font-semibold ${remainingDisplay.className}`}>
-                        {remainingDisplay.text}
-                      </span>
-                    </p>
+                    {leaveInfo.isUnlimited ? (
+                      // แสดงสำหรับประเภทการลาที่ไม่ต้องหักวัน
+                      <div className="space-y-1">
+                        <p className="font-semibold text-emerald-600 flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          ไม่จำกัดวันลา
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <span>ใช้ไปแล้ว:</span>
+                          <span className="font-semibold text-slate-900">
+                            {leaveInfo.used} วัน
+                          </span>
+                        </div>
+                        {leaveInfo.pending > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span>กำลังดำเนินการ:</span>
+                            <span className="font-semibold text-amber-600">
+                              {leaveInfo.pending} วัน
+                            </span>
+                          </div>
+                        )}
+                        <p className="text-xs text-slate-500">
+                          ประเภทนี้ไม่ต้องหักวันลา
+                        </p>
+                      </div>
+                    ) : (
+                      // แสดงปกติสำหรับประเภทการลาที่ต้องหักวัน
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span>จำนวนวันทั้งหมด:</span>
+                          <span className="font-semibold text-slate-900">
+                            {leaveInfo.total}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span>ใช้ไปแล้ว:</span>
+                          <span className="font-semibold text-rose-600">
+                            {leaveInfo.used}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span>กำลังดำเนินการ:</span>
+                          <span className="font-semibold text-amber-600">
+                            {leaveInfo.pending}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center border-t pt-1">
+                          <span className="font-medium">คงเหลือ:</span>
+                          <span className={`font-bold ${leaveInfo.hasOverused ? 'text-rose-600' : 'text-emerald-600'}`}>
+                            {leaveInfo.hasOverused 
+                              ? `เกิน ${leaveInfo.overusedDays} วัน`
+                              : formatRemainingDays(leaveInfo.remaining).text
+                            }
+                          </span>
+                        </div>
+                        {leaveInfo.hasOverused && (
+                          <p className="text-xs text-rose-500 italic">
+                            ⚠️ ลาเกินวันที่ได้รับอนุญาต
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

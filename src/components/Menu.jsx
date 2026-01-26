@@ -43,6 +43,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
   const [isProxyApprover2, setIsProxyApprover2] = useState(false);
   const [isProxyApprover3, setIsProxyApprover3] = useState(false);
   const [isProxyApprover4, setIsProxyApprover4] = useState(false);
+  const [proxyLoading, setProxyLoading] = useState(true);
 
   // Debug user info
   console.log('User info:', {
@@ -55,6 +56,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
   useEffect(() => {
     const checkProxyRoles = async () => {
       try {
+        setProxyLoading(true);
         const token = localStorage.getItem("accessToken");
         if (!token || !user?.id) {
           console.log('No token or user found');
@@ -101,6 +103,8 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
         setIsProxyApprover4(proxyStates[5]); // สำหรับ APPROVER_4
       } catch (err) {
         console.error('Error checking proxy roles:', err);
+      } finally {
+        setProxyLoading(false);
       }
     };
 
@@ -108,7 +112,14 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
   }, [user?.id]);
 
   const toggleDropdown = (title) => {
-    setOpenDropdown(openDropdown === title ? null : title);
+    // ป้องกันการคลิกขณะที่กำลังโหลดข้อมูล proxy
+    if (proxyLoading) {
+      console.log('Proxy loading, ignoring click');
+      return;
+    }
+    
+    console.log('Toggling dropdown:', title, 'current:', openDropdown);
+    setOpenDropdown(prev => prev === title ? null : title);
   };
 
   const renderDropdown = (title, menu) => (
@@ -193,23 +204,16 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
         {user?.role.includes("APPROVER_3") && renderDropdown("เมนูผู้อนุมัติ3", approverNav3)}
         {user?.role.includes("APPROVER_4") && renderDropdown("เมนูผู้อนุมัติ4", approverNav4)}
         
-        {/* Proxy Menus */}
-        {(() => {
-          console.log('Rendering proxy menus:', {
-            isProxyApprover1,
-            isProxyVerifier,
-            isProxyApprover2,
-            isProxyApprover3,
-            isProxyApprover4
-          });
-          return null;
-        })()}
-        
-        {isProxyApprover1 && renderDropdown("เมนูหัวหน้าสาขา (Proxy)", approverNav1)}
-        {isProxyVerifier && renderDropdown("เมนูผู้ตรวจสอบ (Proxy)", verifierNav)}
-        {isProxyApprover2 && renderDropdown("เมนูผู้อนุมัติ2 (Proxy)", approverNav2)}
-        {isProxyApprover3 && renderDropdown("เมนูผู้อนุมัติ3 (Proxy)", approverNav3)}
-        {isProxyApprover4 && renderDropdown("เมนูผู้อนุมัติ4 (Proxy)", approverNav4)}
+        {/* Proxy Menus - แสดงเฉพาะเมื่อโหลดเสร็จและมีสิทธิ์ */}
+        {!proxyLoading && (
+          <>
+            {isProxyApprover1 && renderDropdown("เมนูหัวหน้าสาขา (Proxy)", approverNav1)}
+            {isProxyVerifier && renderDropdown("เมนูผู้ตรวจสอบ (Proxy)", verifierNav)}
+            {isProxyApprover2 && renderDropdown("เมนูผู้อนุมัติ2 (Proxy)", approverNav2)}
+            {isProxyApprover3 && renderDropdown("เมนูผู้อนุมัติ3 (Proxy)", approverNav3)}
+            {isProxyApprover4 && renderDropdown("เมนูผู้อนุมัติ4 (Proxy)", approverNav4)}
+          </>
+        )}
 
         {user?.role.includes("ADMIN") && renderDropdown("เมนูผู้ดูแล", adminNav)}
       </nav>

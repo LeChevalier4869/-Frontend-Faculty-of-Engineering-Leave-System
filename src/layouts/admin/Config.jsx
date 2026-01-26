@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { apiEndpoints } from "../../utils/api";
-import { FaCog } from "react-icons/fa";
+import { FaCog, FaSync, FaCalendarAlt, FaExclamationTriangle } from "react-icons/fa";
 
 const Panel = ({ className = "", children }) => (
   <div
@@ -21,6 +21,15 @@ export default function ConfigPage() {
   const [driveLink, setDriveLink] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  // Fiscal Year states
+  const [fiscalYear, setFiscalYear] = useState({ fiscalYear: null, currentYear: null });
+  const [resetLoading, setResetLoading] = useState(false);
+  const [yearInputs, setYearInputs] = useState({ fiscalYear: "", currentYear: "" });
+  const [deleteYearInput, setDeleteYearInput] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [yearsLoading, setYearsLoading] = useState(false);
 
   const authHeader = () => {
     const token = localStorage.getItem("accessToken");
@@ -87,7 +96,21 @@ export default function ConfigPage() {
   useEffect(() => {
     fetchContacts();
     fetchDriveLink();
+    fetchFiscalYear();
+    fetchAvailableYears();
   }, []);
+
+  const fetchAvailableYears = async () => {
+    try {
+      setYearsLoading(true);
+      const res = await axios.get(apiEndpoints.getAvailableYears, authHeader());
+      setAvailableYears(res.data.data || []);
+    } catch (err) {
+      console.error("ไม่สามารถโหลดข้อมูลปีที่มีในระบบ:", err);
+    } finally {
+      setYearsLoading(false);
+    }
+  };
 
   const handleSaveContacts = async () => {
     try {
@@ -151,6 +174,208 @@ export default function ConfigPage() {
       showAlert("error", "เกิดข้อผิดพลาด", "ไม่สามารถบันทึกลิงก์ได้");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Fiscal Year functions
+  const fetchFiscalYear = async () => {
+    try {
+      const res = await axios.get(apiEndpoints.getFiscalYear, authHeader());
+      setFiscalYear(res.data.data);
+      setYearInputs({
+        fiscalYear: res.data.data.fiscalYear?.toString() || "",
+        currentYear: res.data.data.currentYear?.toString() || ""
+      });
+    } catch (err) {
+      console.error("ไม่สามารถโหลดข้อมูลปีงบประมาณ:", err);
+    }
+  };
+
+  const handleResetLeaveBalance = async () => {
+    const result = await Swal.fire({
+      title: "ยืนยันการรีเซ็ตยอดวันลา?",
+      html: `
+        <div class="text-left">
+          <p class="mb-2">การดำเนินการนี้จะ:</p>
+          <ul class="text-sm text-left text-slate-600">
+            <li>• ลบและสร้างยอดวันลาใหม่สำหรับทุกคน</li>
+            <li>• ทบยอดวันลาพักผ่อนที่เหลือจากปีก่อน (ถ้ามี)</li>
+            <li>• กำหนดยอดวันลาตามสิทธิ์ประจำตำแหน่ง</li>
+            <li>• รีเซ็ตข้อมูลสิทธิ์ประจำตำแหน่งทั้งหมด เพื่อจับคู่ใหม่เมื่ออายุงานเพิ่มขึ้น (บางประเภท)</li>
+          </ul>
+          <p class="mt-3 text-amber-600 font-medium">
+            ⚠️ การกระทำนี้ไม่สามารถย้อนกลับได้
+          </p>
+        </div>
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#10b981",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "ยืนยันรีเซ็ต",
+      cancelButtonText: "ยกเลิก",
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setResetLoading(true);
+      const res = await axios.post(apiEndpoints.resetLeaveBalance, {}, authHeader());
+      
+      await Swal.fire({
+        title: "รีเซ็ตสำเร็จ!",
+        html: `
+          <div class="text-left">
+            <p class="mb-2">✅ รีเซ็ตยอดวันลาเรียบร้อยแล้ว</p>
+            <p class="text-sm text-slate-600">เวลาดำเนินการ: ${res.data.timestamp}</p>
+          </div>
+        `,
+        icon: "success",
+        timer: 3000,
+        timerProgressBar: true
+      });
+      
+      // Refresh fiscal year data
+      await fetchFiscalYear();
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถรีเซ็ตยอดวันลาได้ กรุณาลองใหม่",
+        icon: "error"
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleUpdateFiscalYear = async () => {
+    if (!yearInputs.fiscalYear || !yearInputs.currentYear) {
+      showAlert("warning", "กรุณากรอกข้อมูลปีให้ครบถ้วน");
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "ยืนยันการอัปเดตปีงบประมาณ?",
+      html: `
+        <div class="text-left">
+          <p class="mb-3">คุณกำลังจะอัปเดตข้อมูลปีดังนี้:</p>
+          <div class="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-slate-600">ปีงบประมาณ:</span>
+              <span class="font-medium text-slate-900">${yearInputs.fiscalYear}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-600">ปีปฏิทิน:</span>
+              <span class="font-medium text-slate-900">${yearInputs.currentYear}</span>
+            </div>
+          </div>
+          <p class="mt-3 text-amber-600 font-medium text-sm">
+            ⚠️ การเปลี่ยนแปลงอาจส่งผลต่อการคำนวณวันหยุด
+          </p>
+        </div>
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#0ea5e9",
+      cancelButtonColor: "#ef4444",
+      confirmButtonText: "ยืนยันอัปเดต",
+      cancelButtonText: "ยกเลิก",
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSaving(true);
+      await axios.put(apiEndpoints.updateFiscalYear, {
+        fiscalYear: parseInt(yearInputs.fiscalYear),
+        currentYear: parseInt(yearInputs.currentYear)
+      }, authHeader());
+      
+      showAlert("success", "อัปเดตปีงบประมาณสำเร็จ", "", 1500);
+      await fetchFiscalYear();
+    } catch (err) {
+      console.error(err);
+      showAlert("error", "เกิดข้อผิดพลาด", "ไม่สามารถอัปเดตปีงบประมาณได้");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteLeaveBalanceByYear = async () => {
+    if (!deleteYearInput || !deleteYearInput.trim()) {
+      showAlert("warning", "กรุณาระบุปีที่ต้องการลบ");
+      return;
+    }
+
+    const year = parseInt(deleteYearInput);
+    if (isNaN(year) || year < 2000 || year > 2100) {
+      showAlert("warning", "กรุณาระบุปีที่ถูกต้อง (ค.ศ. 2000-2100)");
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "⚠️ ยืนยันการลบข้อมูล?",
+      html: `
+        <div class="text-left">
+          <p class="mb-3">คุณกำลังจะลบข้อมูล LeaveBalance ทั้งหมดสำหรับ:</p>
+          <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+            <p class="font-semibold text-red-800 text-center">ปี ${year}</p>
+          </div>
+          <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <p class="font-medium text-amber-800 mb-2">⚠️ คำเตือน:</p>
+            <ul class="text-sm text-amber-700 space-y-1">
+              <li>• การลบนี้ไม่สามารถย้อนกลับได้</li>
+              <li>• จะลบข้อมูลวันหยุดของพนักงานทั้งหมดในปี ${year}</li>
+              <li>• อาจส่งผลกระทบต่อรายงานและการคำนวณ</li>
+            </ul>
+          </div>
+        </div>
+      `,
+      icon: "error",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "ลบข้อมูลถาวร",
+      cancelButtonText: "ยกเลิก",
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setDeleteLoading(true);
+      const res = await axios.delete(apiEndpoints.deleteLeaveBalanceByYear(year), authHeader());
+      
+      await Swal.fire({
+        title: "ลบข้อมูลสำเร็จ!",
+        html: `
+          <div class="text-left">
+            <p class="mb-2">✅ ลบข้อมูล LeaveBalance ปี ${year} เรียบร้อยแล้ว</p>
+            <p class="text-sm text-slate-600">จำนวนที่ลบ: ${res.data.deletedCount} รายการ</p>
+            <p class="text-xs text-slate-500 mt-2">เวลา: ${res.data.timestamp}</p>
+          </div>
+        `,
+        icon: "success",
+        timer: 3000,
+        timerProgressBar: true
+      });
+      
+      setDeleteYearInput("");
+      // Refresh available years after deletion
+      await fetchAvailableYears();
+    } catch (err) {
+      console.error(err);
+      const message = err.response?.data?.message || "ไม่สามารถลบข้อมูลได้";
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: message,
+        icon: "error"
+      });
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -305,6 +530,213 @@ export default function ConfigPage() {
             ยังไม่มีข้อมูลในส่วนนี้ คุณสามารถเพิ่มฟอร์ม ปุ่ม
             หรือการตั้งค่าอื่น ๆ เพิ่มเติมได้ภายหลัง
           </p>
+        </Panel>
+
+        {/* Leave Balance Reset Section */}
+        <Panel className="p-6 sm:p-8 border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-11 h-11 rounded-2xl bg-amber-100 flex items-center justify-center border border-amber-200">
+              <FaSync className="text-xl text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-semibold text-slate-900">
+                จัดการการรีเซ็ตยอดวันหยุดประจำปี
+              </h2>
+              <p className="text-sm text-slate-600 mt-1">
+                รีเซ็ตยอดวันหยุดเมื่อเริ่มต้นปีงบประมาณใหม่ (1 ตุลาคม)
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* Current Fiscal Year Info */}
+            <div className="bg-white rounded-xl p-4 border border-slate-200">
+              <div className="flex items-center gap-2 mb-3">
+                <FaCalendarAlt className="text-sky-600" />
+                <h3 className="font-medium text-slate-900">ข้อมูลปีปัจจุบัน</h3>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-600">ปีงบประมาณ:</span>
+                  <span className="font-medium text-slate-900">
+                    {fiscalYear.fiscalYear || "-"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">ปีปฏิทิน:</span>
+                  <span className="font-medium text-slate-900">
+                    {fiscalYear.currentYear || "-"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Manual Update Fiscal Year */}
+            <div className="bg-white rounded-xl p-4 border border-slate-200">
+              <div className="flex items-center gap-2 mb-3">
+                <FaCog className="text-sky-600" />
+                <h3 className="font-medium text-slate-900">อัปเดตปีงบประมาณ</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="text-xs text-slate-500 bg-sky-50 rounded-lg p-2">
+                  <p className="font-medium text-sky-700 mb-1">📝 คำอธิบายการใช้งาน:</p>
+                  <ul className="space-y-1 text-sky-600">
+                    <li>• <strong>ปีงบฯ:</strong> ปีงบประมาณสำหรับคำนวณวันหยุด (1 ต.ค. - 30 ก.ย.)</li>
+                    <li>• <strong>ปีปฏิทิน:</strong> ปีปฏิทินปกติสำหรับวันหยุดประจำปี</li>
+                    <li>• <strong>อัตโนมัติ:</strong> ระบบจะอัปเดตอัตโนมัติเมื่อขึ้นปีงบประมาณใหม่ (1 ต.ค.)</li>
+                    <li>• <strong>แก้ไข:</strong> ใช้เมื่อต้องแก้ไขปีที่ตั้งค่าผิดพลาดเท่านั้น</li>
+                  </ul>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    placeholder="ปีงบฯ"
+                    value={yearInputs.fiscalYear}
+                    onChange={(e) => setYearInputs({...yearInputs, fiscalYear: e.target.value})}
+                    className={`${inputBase} text-xs`}
+                  />
+                  <input
+                    type="number"
+                    placeholder="ปีปฏิทิน"
+                    value={yearInputs.currentYear}
+                    onChange={(e) => setYearInputs({...yearInputs, currentYear: e.target.value})}
+                    className={`${inputBase} text-xs`}
+                  />
+                </div>
+                <button
+                  onClick={handleUpdateFiscalYear}
+                  disabled={saving}
+                  className={`w-full px-4 py-2 rounded-lg font-medium text-xs text-white transition-all ${
+                    saving
+                      ? "bg-slate-400 cursor-not-allowed"
+                      : "bg-sky-600 hover:bg-sky-500"
+                  }`}
+                >
+                  {saving ? "กำลังอัปเดต..." : "อัปเดตปี"}
+                </button>
+              </div>
+            </div>
+
+            {/* Delete Leave Balance by Year */}
+            <div className="bg-white rounded-xl p-4 border border-red-200">
+              <div className="flex items-center gap-2 mb-3">
+                <FaExclamationTriangle className="text-red-600" />
+                <h3 className="font-medium text-slate-900">ลบข้อมูลตามปี</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="text-xs text-red-600 bg-red-50 rounded-lg p-2">
+                  <p className="font-medium text-red-700 mb-1">⚠️ คำเตือน:</p>
+                  <ul className="space-y-1 text-red-600">
+                    <li>• ลบข้อมูล LeaveBalance ทั้งหมดตามปี</li>
+                    <li>• ไม่สามารถย้อนกลับได้</li>
+                    <li>• ใช้เมื่อต้องการลบข้อมูลผิดพลาด</li>
+                  </ul>
+                </div>
+                
+                {/* Available Years Display */}
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <p className="text-xs font-medium text-slate-700 mb-2">📅 ปีที่มีในระบบ:</p>
+                  {yearsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-3 w-3 rounded-full border-2 border-slate-400 border-t-transparent animate-spin"></span>
+                      <span className="text-xs text-slate-500">กำลังโหลด...</span>
+                    </div>
+                  ) : availableYears.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {availableYears.map((yearInfo) => (
+                        <span 
+                          key={yearInfo.year}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs text-slate-700"
+                        >
+                          {yearInfo.year}
+                          <span className="text-slate-400">({yearInfo.count})</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 italic">ไม่พบข้อมูลปีในระบบ</p>
+                  )}
+                </div>
+
+                <input
+                  type="number"
+                  placeholder="ปีที่ต้องการลบ"
+                  value={deleteYearInput}
+                  onChange={(e) => setDeleteYearInput(e.target.value)}
+                  className={`${inputBase} text-xs border-red-300 focus:ring-red-400`}
+                  min="2000"
+                  max="2100"
+                />
+                <button
+                  onClick={handleDeleteLeaveBalanceByYear}
+                  disabled={deleteLoading || !deleteYearInput}
+                  className={`w-full px-4 py-2 rounded-lg font-medium text-xs text-white transition-all ${
+                    deleteLoading || !deleteYearInput
+                      ? "bg-red-300 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-500"
+                  }`}
+                >
+                  {deleteLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="inline-flex h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                      กำลังลบ...
+                    </span>
+                  ) : (
+                    "ลบข้อมูลปีนั้น"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Reset Button with Warning */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <FaExclamationTriangle className="text-amber-600 text-xl" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-slate-900 mb-2">
+                  รีเซ็ตยอดวันลาทั้งระบบ
+                </h3>
+                <p className="text-sm text-slate-600 mb-4">
+                  การรีเซ็ตจะดำเนินการต่อไปนี้:
+                </p>
+                <ul className="text-sm text-slate-600 space-y-1 mb-4">
+                  <li>• ลบและสร้างยอดวันลาหม่สำหรับทุกคน</li>
+                  <li>• ทบยอดวันลาพักผ่อนที่เหลือจากปีก่อน (ถ้ามี)</li>
+                  <li>• กำหนดยอดวันลาตามสิทธิ์ประจำตำแหน่ง</li>
+                  <li>• รีเซ็ตข้อมูลสิทธิ์ประจำตำแหน่งทั้งหมด เพื่อจับคู่ใหม่เมื่ออายุงานเพิ่มขึ้น (บางประเภท)</li>
+                </ul>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleResetLeaveBalance}
+                    disabled={resetLoading}
+                    className={`px-6 py-3 rounded-xl font-medium text-sm text-white transition-all shadow-sm ${
+                      resetLoading
+                        ? "bg-amber-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
+                    }`}
+                  >
+                    {resetLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="inline-flex h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                        กำลังรีเซ็ต...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <FaSync />
+                        รีเซ็ตยอดวันหยุดทั้งระบบ
+                      </span>
+                    )}
+                  </button>
+                  <span className="text-xs text-amber-600 font-medium">
+                    ⚠️ ไม่สามารถย้อนกลับได้
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </Panel>
       </div>
     </div>

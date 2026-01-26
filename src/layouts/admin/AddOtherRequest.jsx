@@ -10,11 +10,13 @@ import Swal from "sweetalert2";
 import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
-import { Plus, ChevronDown, PlusCircle, X, Clock } from "lucide-react";
+import { Plus, ChevronDown, PlusCircle, X, Clock, Ban } from "lucide-react";
 import {
   filterLeaveBalancesLatestYear,
   filterLeaveTypesMapBySex,
+  isFemaleOnlyLeaveTypeName,
 } from "../../utils/leavePolicy";
+import LeaveCancellationModal from "../../components/admin/LeaveCancellationModal";
 
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
@@ -355,6 +357,13 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
     return calculateWorkingDays(startDate, endDate);
   }, [startDate, endDate, calculateWorkingDays]);
 
+  const isInvalidDateRange = useMemo(() => {
+    if (!startDate || !endDate) return false;
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+    return start.isValid() && end.isValid() && end.isBefore(start, "day");
+  }, [startDate, endDate]);
+
   const dayHighlight = (date) => {
     const day = date.getDay();
     if (day === 0 || day === 6) {
@@ -480,6 +489,15 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       await API.post(apiEndpoints.adminLeaveRequests, fd, {
         withCredentials: true,
       });
+      
+      // แสดง Swal.fire แจ้งความสำเร็จ
+      await Swal.fire({
+        icon: "success",
+        title: "บันทึกสำเร็จ",
+        text: "บันทึกคำขอการลาสำเร็จแล้ว",
+        confirmButtonColor: "#10b981",
+      });
+      
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -488,6 +506,19 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
         err?.response?.status,
         err?.response?.data || err?.message
       );
+      
+      // แสดง error message แก่ผู้ใช้
+      const errorMessage = err?.response?.data?.message || 
+                          err?.response?.data?.error || 
+                          err?.message || 
+                          "เกิดข้อผิดพลาดในการบันทึกคำขอการลา";
+      
+      await Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: errorMessage,
+        confirmButtonColor: "#ef4444",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -619,6 +650,27 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                 />
               </div>
 
+              {/* ตรวจสอบเงื่อนไขเพศของประเภทการลา */}
+              {selectedUser && leaveTypeId && (() => {
+                const leaveTypeName = leaveTypesMapByUserSex[leaveTypeId] || "";
+                const isFemaleOnly = isFemaleOnlyLeaveTypeName(leaveTypeName);
+                const isMale = selectedUser.prefixName?.includes("นาย") || selectedUser.sex === "MALE";
+                
+                if (isFemaleOnly && isMale) {
+                  return (
+                    <div className="sm:col-span-2">
+                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 border border-amber-200">
+                        <span className="font-medium">⚠️ ประเภทการลานี้สำหรับสตรีเท่านั้น</span>
+                        <span className="ml-2 text-xs text-amber-600">
+                          ({selectedUser.prefixName} {selectedUser.firstName} {selectedUser.lastName} ไม่สามารถเลือกประเภทนี้ได้)
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               {(holidayLoadError || selectedLeaveBalance) && (
                 <div className="sm:col-span-2">
                   {holidayLoadError ? (
@@ -627,10 +679,32 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                     </div>
                   ) : (
                     <div className="rounded-lg bg-slate-50 px-3 py-1.5 text-sm text-slate-700 border border-slate-200">
-                      คุณมีสิทธิลาประเภทนี้เหลือ:{" "}
-                      <span className="font-semibold text-slate-900">
-                        {selectedLeaveBalance.remainingDays} วัน
-                      </span>
+                      {(() => {
+                        // ตรวจสอบว่าเป็นประเภทการลาที่ไม่ต้องหักวันหรือไม่
+                        const nonDeductibleLeaveTypes = [5, 6, 10, 11, 13]; // ลาอุปสมบท, ลาเข้ารับการตรวจเลือก, ลาไปถือศีล, ลาไปปฏิบัติงานในองค์การระหว่างประเทศ, ลาไปประกอบพิธีฮัจย์
+                        const isNonDeductible = (selectedLeaveBalance.maxDays === 0 && selectedLeaveBalance.remainingDays === 0) ||
+                                               nonDeductibleLeaveTypes.includes(selectedLeaveBalance.leaveType?.id);
+                        
+                        if (isNonDeductible) {
+                          return (
+                            <>
+                              <span className="font-medium text-emerald-600">📝 ประเภทการลานี้ไม่ต้องหักวันลา</span>
+                              <span className="ml-2 text-xs text-slate-500">
+                                (เป็นการบันทึกวันที่เท่านั้น)
+                              </span>
+                            </>
+                          );
+                        } else {
+                          return (
+                            <>
+                              คุณมีสิทธิลาประเภทนี้เหลือ:{" "}
+                              <span className="font-semibold text-slate-900">
+                                {selectedLeaveBalance.remainingDays} วัน
+                              </span>
+                            </>
+                          );
+                        }
+                      })()}
                     </div>
                   )}
                 </div>
@@ -678,13 +752,22 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
 
               {startDate && endDate && (
                 <div className="sm:col-span-2">
-                  <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 border border-slate-200">
-                    จำนวนวันลา:{" "}
-                    <span className="font-semibold text-slate-900">{workingDays} วัน</span>
-                    <span className="ml-2 text-xs text-slate-500">
-                      (ไม่นับเสาร์-อาทิตย์ และวันหยุดราชการ)
-                    </span>
-                  </div>
+                  {isInvalidDateRange ? (
+                    <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 border border-rose-200">
+                      <span className="font-medium">⚠️ กรุณาระบุวันที่เริ่มต้นและวันที่สิ้นสุดให้ถูกต้อง</span>
+                      <span className="ml-2 text-xs text-rose-600">
+                        (วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น)
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 border border-slate-200">
+                      จำนวนวันลา:{" "}
+                      <span className="font-semibold text-slate-900">{workingDays} วัน</span>
+                      <span className="ml-2 text-xs text-slate-500">
+                        (ไม่นับเสาร์-อาทิตย์ และวันหยุดราชการ)
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
               <div>
@@ -826,6 +909,7 @@ export default function AddOtherRequest() {
   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isCancelModalOpen, setCancelModalOpen] = useState(false);
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
@@ -1011,13 +1095,22 @@ export default function AddOtherRequest() {
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            บันทึกคำขอการลาใหม่
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setModalOpen(true)}
+              className="flex items-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              บันทึกคำขอการลาใหม่
+            </button>
+            <button
+              onClick={() => setCancelModalOpen(true)}
+              className="flex items-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-500 whitespace-nowrap"
+            >
+              <Ban className="mr-2 h-4 w-4" />
+              ยกเลิกคำขอลา
+            </button>
+          </div>
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
             <span className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -1238,6 +1331,13 @@ export default function AddOtherRequest() {
         <LeaveRequestModalAdmin
           leaveTypesMap={leaveTypesMap}
           onClose={() => setModalOpen(false)}
+          onSuccess={() => fetchLeaveRequests()}
+        />
+      )}
+
+      {isCancelModalOpen && (
+        <LeaveCancellationModal
+          onClose={() => setCancelModalOpen(false)}
           onSuccess={() => fetchLeaveRequests()}
         />
       )}

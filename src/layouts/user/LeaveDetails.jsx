@@ -246,7 +246,7 @@ export default function LeaveDetail() {
 
 
   const EXPORTABLE_LEAVE_TYPE_IDS = [1, 3, 4];
-  const isFinalStatus = status === "APPROVED" || status === "REJECTED";
+  const isFinalStatus = status === "APPROVED" || status === "REJECTED" || status === "CANCELLED";
   const isExportableType = EXPORTABLE_LEAVE_TYPE_IDS.includes(
     Number(leaveType?.id)
   );
@@ -718,7 +718,16 @@ export default function LeaveDetail() {
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    เอกสารแนบ {file.type}
+                    {file.name ? (
+                      <>
+                        เอกสารแนบ {file.type}
+                        <span className="text-gray-600 ml-2 text-sm">
+                          ({file.name.length > 50 ? file.name.substring(0, 50) + '...' : file.name})
+                        </span>
+                      </>
+                    ) : (
+                      `เอกสารแนบ ${file.type}`
+                    )}
                   </a>
                 </li>
               ))}
@@ -732,7 +741,9 @@ export default function LeaveDetail() {
               ? "bg-green-500"
               : status === "REJECTED"
                 ? "bg-red-500"
-                : "bg-yellow-400"
+                : status === "CANCELLED"
+                  ? "bg-gray-500"
+                  : "bg-yellow-400"
               }`}
           >
             สถานะ:{" "}
@@ -740,7 +751,9 @@ export default function LeaveDetail() {
               ? "อนุมัติแล้ว"
               : status === "REJECTED"
                 ? "ไม่อนุมัติ"
-                : "รออนุมัติ"}
+                : status === "CANCELLED"
+                  ? "ยกเลิกแล้ว"
+                  : "รออนุมัติ"}
           </span>
         </div>
 
