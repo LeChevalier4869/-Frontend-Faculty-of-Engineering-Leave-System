@@ -102,7 +102,7 @@ export default function Leave2() {
 
   const fetchLeaveTypes = async () => {
     try {
-      const res = await axios.get(apiEndpoints.availableLeaveType);
+      const res = await axios.get(apiEndpoints.getAllLeaveTypes);
       const map = {};
       (res.data.data || []).forEach((lt) => {
         map[lt.id] = lt.name;

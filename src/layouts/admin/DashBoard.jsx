@@ -129,7 +129,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white font-kanit text-slate-700">
+      <div className="min-h-[60vh] flex items-center justify-center bg-white font-kanit text-slate-700 rounded-2xl">
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-xl p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">

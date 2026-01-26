@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -13,15 +13,42 @@ const PAGE_SIZE = 10;
 
 export default function LeaveVerifier() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [leaveRequest, setLeaveRequest] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [approvers, setApprovers] = useState([]); // เพิ่ม state สำหรับ approvers
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
+  const [loadingApprovals, setLoadingApprovals] = useState({});
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLeaveType, setFilterLeaveType] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
-  const [loadingApprovals, setLoadingApprovals] = useState({});
+  
+  // เพิ่ม state สำหรับ proxy selection
+  const [selectedProxy, setSelectedProxy] = useState(null);
+  
+  // อ่าน proxy parameter จาก URL
+  useEffect(() => {
+    const proxyId = searchParams.get('proxy');
+    if (proxyId) {
+      const proxyIdNum = parseInt(proxyId);
+      setSelectedProxy({ id: proxyIdNum });
+    } else {
+      setSelectedProxy(null);
+    }
+  }, []);
+
+  // ตรวจสอบ URL parameter เมื่อเปลี่ยน
+  useEffect(() => {
+    const proxyId = searchParams.get('proxy');
+    if (proxyId) {
+      const proxyIdNum = parseInt(proxyId);
+      setSelectedProxy({ id: proxyIdNum });
+    } else {
+      setSelectedProxy(null);
+    }
+  }, [searchParams]); // ลบ selectedProxy ออกเพื่อป้องกัน infinite loop
 
   const statusLabels = {
     APPROVED: "อนุมัติแล้ว",
@@ -40,11 +67,40 @@ export default function LeaveVerifier() {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await axios.get(apiEndpoints.leaveRequestForVerifier, {
+      
+      // ดึงข้อมูลจาก proxy API แทนที่เดิม
+      const res = await axios.get(apiEndpoints.getApproversForLevel(2, new Date().toISOString().split('T')[0]), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = Array.isArray(res.data) ? res.data : [];
+      
+      // แยก approvers เป็น regular และ proxy
+      const approvers = res.data.data || [];
+      const regularApprovers = approvers.filter(a => !a.isProxy);
+      const proxyApprovers = approvers.filter(a => a.isProxy);
+      
+      // ถ้ามี selectedProxy จาก URL ให้ตรวจสอบว่ามีอยู่ใน approvers
+      if (selectedProxy) {
+        const foundProxy = approvers.find(a => a.id === selectedProxy.id);
+        if (foundProxy) {
+          // ไม่ต้อง setSelectedProxy ที่นี่เพื่อหลีกเลี่ยง infinite loop
+        } else {
+          // ไม่ต้อง setSelectedProxy ที่นี่เพื่อหลีกเลี่ยง infinite loop
+        }
+      }
+      
+      // ใช้ API endpoint สำหรับ verifier (ทำงานเหมือนกันทั้ง proxy และปกติ)
+      const apiUrl = apiEndpoints.leaveRequestForVerifier;
+      
+      const res2 = await axios.get(apiUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // ตั้งค่าข้อมูลคำขอลาโดยตรงจาก res2.data
+      const data = Array.isArray(res2.data) ? res2.data : [];
       setLeaveRequest(data);
+      
+      // บันทึกข้อมูล approvers สำหรับการแสดงใน UI
+      setApprovers(approvers);
     } catch (err) {
       console.error("Error fetching leave requests:", err);
       setLeaveRequest([]);
@@ -66,10 +122,26 @@ export default function LeaveVerifier() {
     }
   };
 
+  const fetchApprovers = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const today = new Date().toISOString().split('T')[0];
+      const res = await axios.get(apiEndpoints.getApproversForLevel(2, today), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = Array.isArray(res.data.data) ? res.data.data : [];
+      setApprovers(data);
+    } catch (err) {
+      console.error("Error fetching approvers:", err);
+      setApprovers([]);
+    }
+  };
+
   useEffect(() => {
     fetchLeaveRequests();
     fetchLeaveTypes();
-  }, []);
+    fetchApprovers();
+  }, [selectedProxy]); // รันเมื่อ selectedProxy เปลี่ยนเท่านั้น
 
   const handleApprove = async (detailId) => {
     setLoadingApprovals((p) => ({ ...p, [detailId]: true }));
@@ -137,6 +209,11 @@ export default function LeaveVerifier() {
     dayjs(iso).locale("th").format("DD/MM/YYYY");
 
   const filtered = useMemo(() => {
+    // ตรวจสอบว่า leaveRequest เป็น array ก่อน
+    if (!Array.isArray(leaveRequest)) {
+      return [];
+    }
+    
     const sorted = [...leaveRequest].sort((a, b) => {
       const dateA = new Date(a.createdAt),
         dateB = new Date(b.createdAt);
@@ -161,8 +238,8 @@ export default function LeaveVerifier() {
   }, [leaveRequest, filterStartDate, filterEndDate, filterStatus, filterLeaveType, sortOrder]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const displayItems = filtered.slice(
+  const totalPages = Math.ceil((filtered?.length || 0) / PAGE_SIZE);
+  const displayItems = (filtered || []).slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
@@ -205,6 +282,31 @@ export default function LeaveVerifier() {
             className="bg-white px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
+
+        {/* Proxy Selector */}
+        {approvers.filter(a => a.isProxy).length > 0 && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Proxy:</label>
+            <select
+              value={selectedProxy?.id || ""}
+              onChange={(e) => {
+                const proxyId = parseInt(e.target.value);
+                const proxy = approvers.find(a => a.id === proxyId);
+                setSelectedProxy(proxy);
+                setCurrentPage(1);
+                console.log('🔄 Selected proxy:', proxy?.firstName, proxy?.lastName);
+              }}
+              className="bg-white px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="">ทั้งหมด</option>
+              {approvers.filter(a => a.isProxy).map((proxy) => (
+                <option key={proxy.id} value={proxy.id}>
+                  {proxy.firstName} {proxy.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="relative w-48">
           <select
@@ -272,6 +374,7 @@ export default function LeaveVerifier() {
                 "วันสิ้นสุด",
                 "สถานะ",
                 "ดำเนินการ",
+                "Proxy",
               ].map((h, i) => (
                 <th
                   key={i}
@@ -285,16 +388,23 @@ export default function LeaveVerifier() {
             </tr>
           </thead>
           <tbody>
-            {displayItems.length > 0 ? (
-              displayItems.map((leave, idx) => {
+            {(displayItems || []).length > 0 ? (
+              (displayItems || []).map((leave, idx) => {
                 const detailId = leave.leaveRequestDetails?.[0]?.id;
                 const statusKey = (leave.status || "").toUpperCase();
+                
+                // ตรวจสอว่า request นี้มีการกำหนัด proxy หรือไม่
+                const hasProxyDetail = leave.leaveRequestDetails?.some(detail => detail.proxyApprovalId !== null);
+                const proxyDetail = leave.leaveRequestDetails?.find(detail => detail.proxyApprovalId !== null);
+                
                 return (
                   <tr
                     key={leave.id}
                     className={`${
                       idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-gray-100 transition cursor-pointer`}
+                    } hover:bg-gray-100 transition cursor-pointer ${
+                      hasProxyDetail ? "ring-2 ring-blue-200" : ""
+                    }`}
                     onClick={() => navigate(`/leave/${leave.id}`)}
                   >
                     <td className="px-4 py-2 whitespace-nowrap">
@@ -322,61 +432,84 @@ export default function LeaveVerifier() {
                         {statusLabels[statusKey] || leave.status}
                       </span>
                     </td>
-                    <td className="p-3 text-center">
-                      <div className="flex flex-col sm:flex-row justify-center gap-2">
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const result = await Swal.fire({
-                            title: "รับรองคำขอลา",
-                            text: "คุณแน่ใจหรือไม่ว่า ต้องการรับรองคำขอลานี้",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "ใช่, รับรอง",
-                            cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#16a34a",
-                            cancelButtonColor: "#d33",
-                          });
-                          if (result.isConfirmed) {
-                            handleApprove(detailId);
-                          }
-                        }}
-                        disabled={loadingApprovals[detailId]}
-                        className={`px-4 py-1 rounded text-white ${
-                          loadingApprovals[detailId]
-                            ? "bg-green-300 cursor-not-allowed"
-                            : "bg-green-500 hover:bg-green-600"
-                        }`}
-                      >
-                        ผ่าน
-                      </button>
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const result = await Swal.fire({
-                            title: "ปฏิเสธคำขอลา",
-                            text: "คุณแน่ใจหรือไม่ว่า ต้องการปฏิเสธคำขอลานี้",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "ใช่, ปฏิเสธ",
-                            cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#d33",
-                            cancelButtonColor: "#3085d6",
-                          });
-                          if (result.isConfirmed) {
-                            handleReject(detailId);
-                          }
-                        }}
-                        disabled={loadingApprovals[detailId]}
-                        className={`px-4 py-1 rounded text-white ${
-                          loadingApprovals[detailId]
-                            ? "bg-red-300 cursor-not-allowed"
-                            : "bg-red-500 hover:bg-red-600"
-                        }`}
-                      >
-                        ปฏิเสธ
-                      </button>
-                      </div>
+                    <td className="px-4 py-2">
+                      {proxyDetail ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            Proxy: {proxyDetail.proxyApprover?.firstName} {proxyDetail.proxyApprover?.lastName}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row justify-center gap-2">
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const result = await Swal.fire({
+                                title: "รับรองคำขอลา",
+                                text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "ใช่, รับรอง",
+                                cancelButtonText: "ยกเลิก",
+                                confirmButtonColor: "#16a34a",
+                                cancelButtonColor: "#d33",
+                              });
+                              if (result.isConfirmed) {
+                                handleApprove(detailId);
+                              }
+                            }}
+                            disabled={loadingApprovals[detailId]}
+                            className={`px-4 py-1 rounded text-white ${
+                              loadingApprovals[detailId]
+                                ? "bg-green-300 cursor-not-allowed"
+                                : "bg-green-500 hover:bg-green-600"
+                            }`}
+                          >
+                            ผ่าน
+                          </button>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const result = await Swal.fire({
+                                title: "ปฏิเสธคำขอลา",
+                                text: "คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอลานี้",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "ใช่, ปฏิเสธ",
+                                cancelButtonText: "ยกเลิก",
+                                confirmButtonColor: "#d33",
+                                cancelButtonColor: "#3085d6",
+                              });
+                              if (result.isConfirmed) {
+                                handleReject(detailId);
+                              }
+                            }}
+                            disabled={loadingApprovals[detailId]}
+                            className={`px-4 py-1 rounded text-white ${
+                              loadingApprovals[detailId]
+                                ? "bg-red-300 cursor-not-allowed"
+                                : "bg-red-500 hover:bg-red-600"
+                            }`}
+                          >
+                            ปฏิเสธ
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-2">
+                      {proxyDetail ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            Proxy: {proxyDetail.proxyApprover?.firstName} {proxyDetail.proxyApprover?.lastName}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                            Regular
+                          </span>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -384,7 +517,7 @@ export default function LeaveVerifier() {
             ) : (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   className="px-4 py-6 text-center text-gray-500"
                 >
                   ไม่มีข้อมูลการลา

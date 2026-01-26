@@ -5,9 +5,12 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { apiEndpoints } from "../../utils/api";
+import useAuth from "../../hooks/useAuth";
+import { filterLeaveTypesBySex } from "../../utils/leavePolicy";
 
 function AddLeave2() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [leaveTypes, setLeaveTypes] = useState([]);
 
   useEffect(() => {
@@ -16,14 +19,14 @@ function AddLeave2() {
         const response = await axios.get(apiEndpoints.availableLeaveType);
         // ทดสอบ response
         // console.log("Leave Types:", response.data.data);
-        setLeaveTypes(response.data.data);
+        setLeaveTypes(filterLeaveTypesBySex(response.data.data, user?.sex));
       } catch (error) {
         console.error("Error fetching leave types:", error);
       }
     }
 
     fetchData();
-  }, []);
+  }, [user?.sex]);
   const [formData, setFormData] = useState({
     leaveTypeId: "",
     startDate: "",

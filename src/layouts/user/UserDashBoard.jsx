@@ -30,6 +30,11 @@ import useLeaveRequest from "../../hooks/useLeaveRequest";
 import LeaveRequestModal from "./LeaveRequestModal";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
+import {
+  filterLeaveBalancesBySex,
+  filterLeaveBalancesLatestYear,
+  formatRemainingDays,
+} from "../../utils/leavePolicy";
 
 const COLORS = {
   APPROVED: "#22c55e",
@@ -175,11 +180,12 @@ export default function UserDashboard() {
         const pending = leaves.filter((r) => r.status === "PENDING").length;
         const rejected = leaves.filter((r) => r.status === "REJECTED").length;
 
+        const remainingDisplay = formatRemainingDays(summary.remainingDays || 0);
         setStats({
           approved,
           pending,
           rejected,
-          remainingLeave: summary.remainingDays || 0,
+          remainingLeave: remainingDisplay.text,
         });
 
         const sorted = leaves
@@ -211,7 +217,9 @@ export default function UserDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const all = Array.isArray(res.data.data) ? res.data.data : [];
-        const filtered = all.filter((item) =>
+        const latestYearOnly = filterLeaveBalancesLatestYear(all);
+        const bySex = filterLeaveBalancesBySex(latestYearOnly, user?.sex);
+        const filtered = bySex.filter((item) =>
           VISIBLE_LEAVE_TYPES.includes(item.leaveType?.name)
         );
         setEntitlements(filtered);
@@ -262,16 +270,25 @@ export default function UserDashboard() {
     { name: statusLabels.REJECTED, key: "REJECTED", value: stats.rejected },
   ];
 
-  const leaveTypeStats = leaveRequest.reduce((acc, leave) => {
+  const approvedLeaveRequests = leaveRequest.filter(leave => leave.status === 'APPROVED');
+  
+  const leaveTypeStats = approvedLeaveRequests.reduce((acc, leave) => {
     const type = leave.leaveType?.name;
     if (!type) return acc;
     if (!VISIBLE_LEAVE_TYPES.includes(type)) return acc;
-    acc[type] = acc[type] ? acc[type] + 1 : 1;
+    
+    if (!acc[type]) {
+      acc[type] = { count: 0, days: 0 };
+    }
+    acc[type].count += 1;
+    acc[type].days += leave.leavedDays || 0;
     return acc;
   }, {});
+  
   const barData = VISIBLE_LEAVE_TYPES.map((type) => ({
     name: type,
-    value: leaveTypeStats[type] || 0,
+    จำนวนครั้ง: leaveTypeStats[type]?.count || 0,
+    จำนวนวัน: leaveTypeStats[type]?.days || 0,
   }));
 
   const formatDateTime = (iso) =>
@@ -332,7 +349,7 @@ export default function UserDashboard() {
             </p>
             <p className="mt-1 text-xs md:text-sm text-slate-500 flex items-center gap-2">
               <Clock className="w-4 h-4 text-sky-500" />
-              <span>วันนี้วันที่ {todayText}</span>
+              <span>วันนี้ วันที่ {todayText}</span>
             </p>
           </div>
 
@@ -355,14 +372,6 @@ export default function UserDashboard() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-          <StatCard
-            accent="sky"
-            icon={
-              <CalendarDays className="w-6 h-6 text-sky-500" />
-            }
-            label="วันลาคงเหลือทั้งหมด"
-            value={stats.remainingLeave}
-          />
           <StatCard
             accent="emerald"
             icon={
@@ -394,37 +403,44 @@ export default function UserDashboard() {
             eyebrow="Leave Balance"
             title="สิทธิลาการลาแยกตามประเภท"
             description="ดูจำนวนวันลาคงเหลือของคุณในแต่ละประเภทการลา"
+            right={
+              <button
+                onClick={() => navigate("/leave/balance")}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-50 text-sky-700 text-sm font-medium hover:bg-sky-100 transition-colors"
+              >
+                <List className="w-4 h-4" />
+                ดูทั้งหมด
+              </button>
+            }
           />
           {entitlements.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {entitlements.map((item, idx) => (
-                <div
-                  key={item.leaveType?.id ?? `${item.leaveType?.name}-${idx}`}
-                  className="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 flex flex-col gap-1 hover:border-sky-300 hover:bg-sky-50/60 transition-colors"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-sky-50 ring-1 ring-sky-200">
-                        <CalendarDays className="w-4 h-4 text-sky-500" />
+              {entitlements.map((item, index) => {
+                const remainingDisplay = formatRemainingDays(item.remainingDays);
+                return (
+                  <div
+                    key={item.id ?? index}
+                    className="rounded-2xl bg-gradient-to-br from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-4"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-700 truncate">
+                        {item.leaveType?.name}
                       </span>
-                      <span className="text-sm font-medium text-slate-900">
-                        {item.leaveType?.name || "ประเภทการลา"}
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-white text-slate-600 border border-slate-200">
+                        คงเหลือ
                       </span>
                     </div>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-white text-slate-600 border border-slate-200">
-                      คงเหลือ
-                    </span>
+                    <div className="mt-1 flex items-baseline justify-between">
+                      <span className={`text-2xl font-semibold ${remainingDisplay.className}`}>
+                        {remainingDisplay.text}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        วันลาคงเหลือ
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-1 flex items-baseline justify-between">
-                    <span className="text-2xl font-semibold text-sky-700">
-                      {item.remainingDays}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      วันลาคงเหลือ
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="py-6 text-sm text-slate-500 text-center">
@@ -506,10 +522,16 @@ export default function UserDashboard() {
                   />
                   <Legend />
                   <Bar
-                    dataKey="value"
-                    fill={COLORS.APPROVED}
-                    radius={[8, 8, 0, 0]}
-                    maxBarSize={40}
+                    dataKey="จำนวนครั้ง"
+                    fill="#22c55e"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={30}
+                  />
+                  <Bar
+                    dataKey="จำนวนวัน"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={30}
                   />
                 </BarChart>
               </ResponsiveContainer>
