@@ -101,48 +101,6 @@ function UserManage() {
     currentPage * PAGE_SIZE
   );
 
-  const showPopup = () => {
-    MySwal.fire({
-      title: "เลือกวิธีเพิ่มผู้ใช้งาน",
-      html: (
-        <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
-          <div
-            className="cursor-pointer flex flex-col items-center justify-center border border-slate-200 rounded-2xl p-6 bg-white hover:bg-slate-50 hover:shadow-lg transition"
-            onClick={() => {
-              MySwal.close();
-              navigate("/admin/add-user");
-            }}
-          >
-            <FiUser className="text-5xl text-sky-600 mb-3" />
-            <span className="text-base font-medium text-slate-800">
-              เพิ่มผู้ใช้คนเดียว
-            </span>
-          </div>
-          <div
-            className="cursor-pointer flex flex-col items-center justify-center border border-slate-200 rounded-2xl p-6 bg-white hover:bg-slate-50 hover:shadow-lg transition"
-            onClick={() => {
-              MySwal.close();
-              navigate("/admin/add-user-excel");
-            }}
-          >
-            <FiUsers className="text-5xl text-emerald-600 mb-3" />
-            <span className="text-base font-medium text-slate-800">
-              เพิ่มผู้ใช้หลายคน
-            </span>
-          </div>
-        </div>
-      ),
-      showConfirmButton: false,
-      showCloseButton: true,
-      width: 520,
-      padding: "1.75rem",
-      customClass: {
-        popup: "font-kanit text-slate-900 bg-slate-50",
-        title: "font-kanit font-semibold text-2xl text-slate-900",
-        htmlContainer: "font-kanit text-base text-slate-800",
-      },
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
@@ -176,7 +134,7 @@ function UserManage() {
               />
               <div className="flex items-center gap-3 justify-end">
                 <button
-                  onClick={showPopup}
+                  onClick={() => {navigate("/admin/add-user");}}
                   className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
                 >
                   + เพิ่มผู้ใช้งาน

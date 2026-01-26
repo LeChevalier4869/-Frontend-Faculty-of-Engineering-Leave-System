@@ -29,6 +29,9 @@ import LeaveApprover3 from "../layouts/approver/LeaveApprover3";
 import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
 import LeaveVerifier from "../layouts/approver/LeaveVerifier";
 import Approver1Dashboard from "../layouts/approver/Approver1DashBoard";
+
+/** Admin pages **/
+import AdminDashboard from "../layouts/admin/AdminDashBoard";
 import DashBoard from "../layouts/admin/DashBoard";
 import Approver from "../layouts/admin/Approver";
 import DepartmentManage from "../layouts/admin/DepartmentManage";
