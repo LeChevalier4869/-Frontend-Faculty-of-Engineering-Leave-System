@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
-import { BASE_URL } from "../utils/api";
 import { BASE_URL } from "../utils/api";
 import {
   FaUser,
@@ -17,7 +15,6 @@ import {
 import { HiOutlineChevronDown } from "react-icons/hi";
 import useAuth from "../hooks/useAuth";
 import logo from "../assets/logo.png";
-import PropTypes from "prop-types";
 import PropTypes from "prop-types";
 
 const userNav = [
@@ -51,13 +48,12 @@ const adminNav = [
   { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
   { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
   { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
-  { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 
 export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = () => {}, isMobile = false }) {
-export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = () => {}, isMobile = false }) {
   const { user } = useAuth();
+  const location = useLocation();
   const [openAdmin, setOpenAdmin] = useState(false);
 
   // Proxy dropdown state
@@ -80,6 +76,13 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
 
   const hasRole = (r) => roles.includes(r);
   const isActive = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
+
+  // Proxy role flags (menu จะโชว์เมื่อมี proxy อย่างน้อย 1 รายการ)
+  const isProxyVerifier = proxyVerifiers.length > 0;
+  const isProxyApprover1 = proxyApprovers1.length > 0;
+  const isProxyApprover2 = proxyApprovers2.length > 0;
+  const isProxyApprover3 = proxyApprovers3.length > 0;
+  const isProxyApprover4 = proxyApprovers4.length > 0;
 
   // Debug admin menu render
   const shouldShowAdminMenu = hasRole("ADMIN");
@@ -108,22 +111,21 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
         const userAsProxyProxies = activeProxies.filter(proxy => proxy.proxyApproverId === user.id);
 
         // Debug ทุก proxy ที่ active
-        activeProxies.forEach(() => {
-          // console.log(`🔍 Proxy: Original=${proxy.originalApproverId}, Proxy=${proxy.proxyApproverId}, Level=${proxy.approverLevel}, User is Proxy=${proxy.proxyApproverId === user.id}, User is Original=${proxy.originalApproverId === user.id}`);
-        activeProxies.forEach(() => {
-          // console.log(`🔍 Proxy: Original=${proxy.originalApproverId}, Proxy=${proxy.proxyApproverId}, Level=${proxy.approverLevel}, User is Proxy=${proxy.proxyApproverId === user.id}, User is Original=${proxy.originalApproverId === user.id}`);
-        });
+        // activeProxies.forEach((proxy) => {
+        //   console.log(
+        //     `🔍 Proxy: Original=${proxy.originalApproverId}, Proxy=${proxy.proxyApproverId}, Level=${proxy.approverLevel}`
+        //   );
+        // });
 
         // แสดงรายละเอียด proxy ที่ user เป็น proxy approver
-        if (userAsProxyProxies.length > 0) {
-          // console.log('🔍 User is proxy approver for these assignments:');
-          userAsProxyProxies.forEach(() => {
-            // console.log(`  ${index + 1}. Original: ${proxy.originalApprover?.firstName} ${proxy.originalApprover?.lastName} (ID: ${proxy.originalApproverId}), Level: ${proxy.approverLevel}`);
-          // console.log('🔍 User is proxy approver for these assignments:');
-          userAsProxyProxies.forEach(() => {
-            // console.log(`  ${index + 1}. Original: ${proxy.originalApprover?.firstName} ${proxy.originalApprover?.lastName} (ID: ${proxy.originalApproverId}), Level: ${proxy.approverLevel}`);
-          });
-        }
+        // if (userAsProxyProxies.length > 0) {
+        //   console.log('🔍 User is proxy approver for these assignments:');
+        //   userAsProxyProxies.forEach((proxy, index) => {
+        //     console.log(
+        //       `  ${index + 1}. Original: ${proxy.originalApprover?.firstName} ${proxy.originalApprover?.lastName} (ID: ${proxy.originalApproverId}), Level: ${proxy.approverLevel}`
+        //     );
+        //   });
+        // }
 
         // ถ้าไม่มี proxy ที่ user เป็น proxy approver ก็ clear state ทั้งหมด
         if (userAsProxyProxies.length === 0) {
@@ -181,51 +183,41 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
   }, [user?.id]);
 
   const Item = ({ to, icon, text, proxyId, title }) => {
-  const location = useLocation();
-  const isActive = (to) => {
     const currentPath = location.pathname;
-    const currentProxy = new URLSearchParams(location.search).get('proxy');
+    const currentProxy = new URLSearchParams(location.search).get("proxy");
     const itemProxy = proxyId ? proxyId.toString() : null;
 
-    // Check if path matches and proxy matches (or both don't have proxy)
-    return currentPath === to &&
-           ((currentProxy === null && itemProxy === null) ||
-            (currentProxy !== null && itemProxy !== null && currentProxy === itemProxy));
+    const active =
+      currentPath === to &&
+      ((currentProxy === null && itemProxy === null) ||
+        (currentProxy !== null && itemProxy !== null && currentProxy === itemProxy));
+
+    return (
+      <Link
+        to={proxyId ? `${to}?proxy=${proxyId}` : to}
+        onClick={() => {
+          if (isMobile && typeof onClose === "function") onClose();
+        }}
+        title={title || text}
+        className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition ${
+          active
+            ? "bg-white/20 text-white ring-1 ring-white/30"
+            : "text-slate-200 hover:text-white hover:bg-white/10"
+        }`}
+      >
+        <span className="text-base">{icon}</span>
+        {!isMini && <span className="truncate">{text}</span>}
+      </Link>
+    );
   };
 
-
-  return (
-    <Link
-      to={proxyId ? `${to}?proxy=${proxyId}` : to}
-      onClick={() => {
-        if (isMobile && typeof onClose === "function") onClose();
-      }}
-      title={title || text} // Add tooltip title
-      className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition ${
-        isActive(to)
-          ? "bg-white/20 text-white ring-1 ring-white/30"
-          : "text-slate-200 hover:text-white hover:bg-white/10"
-      }`}
-    >
-      <span className="text-base">{icon}</span>
-      {!isMini && <span className="truncate">{text}</span>}
-    </Link>
-  );
-};
-
-Item.propTypes = {
-  to: PropTypes.string.isRequired,
-  icon: PropTypes.node.isRequired,
-  text: PropTypes.string.isRequired,
-  proxyId: PropTypes.number,
-};
-
-Item.propTypes = {
-  to: PropTypes.string.isRequired,
-  icon: PropTypes.node.isRequired,
-  text: PropTypes.string.isRequired,
-  proxyId: PropTypes.number,
-};
+  Item.propTypes = {
+    to: PropTypes.string.isRequired,
+    icon: PropTypes.node.isRequired,
+    text: PropTypes.string.isRequired,
+    proxyId: PropTypes.number,
+    title: PropTypes.string,
+  };
 
   const Section = ({ title, children }) => (
     <div className="space-y-2">
@@ -238,15 +230,10 @@ Item.propTypes = {
     </div>
   );
 
-Section.propTypes = {
-  title: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-};
-
-Section.propTypes = {
-  title: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-};
+  Section.propTypes = {
+    title: PropTypes.string.isRequired,
+    children: PropTypes.node.isRequired,
+  };
 
   const showApproval =
     hasRole("APPROVER_1") ||
@@ -360,15 +347,6 @@ Section.propTypes = {
                     ))}
 
                   {/* Proxy Menu - รวมทั้งหมดเป็น dropdown เดียว */}
-                  {/* {console.log('🔍 Proxy States Debug:', {
-                  {/* {console.log('🔍 Proxy States Debug:', {
-                    proxyApprovers1: proxyApprovers1.length,
-                    proxyVerifiers: proxyVerifiers.length,
-                    proxyApprovers2: proxyApprovers2.length,
-                    proxyApprovers3: proxyApprovers3.length,
-                    proxyApprovers4: proxyApprovers4.length
-                  })} */}
-                  })} */}
                   {(proxyVerifiers.length > 0 || proxyApprovers1.length > 0 || proxyApprovers2.length > 0 || proxyApprovers3.length > 0 || proxyApprovers4.length > 0) && (
                     <Section title="การมอบอำนาจ (Proxy)">
                       <button
@@ -391,11 +369,8 @@ Section.propTypes = {
                         <div className="flex flex-col mt-1 ml-4">
                           {/* Proxy Verifiers */}
                           {proxyVerifiers.map((proxy) => (
-                          {proxyVerifiers.map((proxy) => (
                             <div key={`proxy-verifier-${proxy.id}`} className="mb-2">
                               <div className="text-xs text-slate-400 mb-1">ผู้ตรวจสอบ (Proxy: {proxy.firstName} {proxy.lastName})</div>
-                              {verifierNav.map((m) => (
-                                <Item key={`proxy-verifier-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               {verifierNav.map((m) => (
                                 <Item key={`proxy-verifier-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               ))}
@@ -403,11 +378,8 @@ Section.propTypes = {
                           ))}
                           {/* Proxy Approvers1 */}
                           {proxyApprovers1.map((proxy) => (
-                          {proxyApprovers1.map((proxy) => (
                             <div key={`proxy-approver1-${proxy.id}`} className="mb-2">
                               <div className="text-xs text-slate-400 mb-1">หัวหน้าสาขา (Proxy: {proxy.firstName} {proxy.lastName})</div>
-                              {approverNav1.map((m) => (
-                                <Item key={`proxy-approver1-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               {approverNav1.map((m) => (
                                 <Item key={`proxy-approver1-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               ))}
@@ -415,11 +387,8 @@ Section.propTypes = {
                           ))}
                           {/* Proxy Approvers2 */}
                           {proxyApprovers2.map((proxy) => (
-                          {proxyApprovers2.map((proxy) => (
                             <div key={`proxy-approver2-${proxy.id}`} className="mb-2">
                               <div className="text-xs text-slate-400 mb-1">ผู้อนุมัติ2 (Proxy: {proxy.firstName} {proxy.lastName})</div>
-                              {approverNav2.map((m) => (
-                                <Item key={`proxy-approver2-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               {approverNav2.map((m) => (
                                 <Item key={`proxy-approver2-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               ))}
@@ -427,11 +396,8 @@ Section.propTypes = {
                           ))}
                           {/* Proxy Approvers3 */}
                           {proxyApprovers3.map((proxy) => (
-                          {proxyApprovers3.map((proxy) => (
                             <div key={`proxy-approver3-${proxy.id}`} className="mb-2">
                               <div className="text-xs text-slate-400 mb-1">ผู้อนุมัติ3 (Proxy: {proxy.firstName} {proxy.lastName})</div>
-                              {approverNav3.map((m) => (
-                                <Item key={`proxy-approver3-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               {approverNav3.map((m) => (
                                 <Item key={`proxy-approver3-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               ))}
@@ -439,11 +405,8 @@ Section.propTypes = {
                           ))}
                           {/* Proxy Approvers4 */}
                           {proxyApprovers4.map((proxy) => (
-                          {proxyApprovers4.map((proxy) => (
                             <div key={`proxy-approver4-${proxy.id}`} className="mb-2">
                               <div className="text-xs text-slate-400 mb-1">ผู้อนุมัติ4 (Proxy: {proxy.firstName} {proxy.lastName})</div>
-                              {approverNav4.map((m) => (
-                                <Item key={`proxy-approver4-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               {approverNav4.map((m) => (
                                 <Item key={`proxy-approver4-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
                               ))}
@@ -513,14 +476,6 @@ Section.propTypes = {
     </>
   );
 }
-
-Sidebar.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  isMini: PropTypes.bool.isRequired,
-  toggleMiniSidebar: PropTypes.func.isRequired,
-  onClose: PropTypes.func,
-  isMobile: PropTypes.bool,
-};
 
 Sidebar.propTypes = {
   isOpen: PropTypes.bool.isRequired,

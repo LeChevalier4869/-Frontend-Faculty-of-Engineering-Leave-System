@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiOutlineChevronDown } from "react-icons/hi";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import ExcelUploadPanel from "../../components/ExcelUploadPanel";
+import PropTypes from "prop-types";
 
 const initialForm = {
   prefixName: "",
@@ -30,15 +30,6 @@ const Panel = ({ className = "", children }) => (
     {children}
   </div>
 );
-
-Panel.propTypes = {
-  className: PropTypes.string,
-  children: PropTypes.node.isRequired,
-};
-
-Panel.defaultProps = {
-  className: "",
-};
 
 Panel.propTypes = {
   className: PropTypes.string,

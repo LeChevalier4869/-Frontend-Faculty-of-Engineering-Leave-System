@@ -74,15 +74,11 @@ export default function LeaveTypeManage() {
       return Swal.fire("Error", "กรุณาระบุชื่อประเภทการลา", "error");
     }
     try {
-<<<<<<< HEAD
       await axios.post(
         `${BASE_URL}/leave-types/`,
         { name, isAvailable, resetOnFiscalYear },
         authHeader()
       );
-=======
-      await LeaveTypeService.createLeaveType({ name, isAvailable });
->>>>>>> af5ef8f (change architecture)
       Swal.fire("บันทึกสำเร็จ!", "", "success");
       resetForm();
       loadData();
@@ -105,15 +101,11 @@ export default function LeaveTypeManage() {
       return Swal.fire("Error", "กรุณาระบุชื่อประเภทการลา", "error");
     }
     try {
-<<<<<<< HEAD
       await axios.put(
         `${BASE_URL}/leave-types/update/${editId}`,
         { name, isAvailable, resetOnFiscalYear },
         authHeader()
       );
-=======
-      await LeaveTypeService.updateLeaveType(editId, { name, isAvailable });
->>>>>>> af5ef8f (change architecture)
       Swal.fire("อัปเดตสำเร็จ!", "", "success");
       resetForm();
       loadData();

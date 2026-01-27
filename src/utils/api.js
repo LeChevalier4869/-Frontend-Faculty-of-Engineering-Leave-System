@@ -159,11 +159,19 @@ export const apiEndpoints = {
   getFiscalYear: `${BASE_URL}/admin/fiscal-year`, // GET
   updateFiscalYear: `${BASE_URL}/admin/fiscal-year`, // PUT
   // Audit Log
-  auditLogs: `${BASE_URL}/admin/audit-logs`, // GET with query params
+  auditLogs: `${BASE_URL}/admin/audit-logs`, // GET
   auditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
   auditLogsStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
-  auditLogsByUser: (userId) => `${BASE_URL}/admin/audit-logs/user/${userId}`, // GET
-  auditLogsByLeaveRequest: (leaveRequestId) => `${BASE_URL}/admin/audit-logs/leave-request/${leaveRequestId}`, // GET
+  auditLogsUser: `${BASE_URL}/admin/audit-logs/user/:userId`, // GET
   auditLogsCreate: `${BASE_URL}/admin/audit-logs`, // POST
   auditLogsLogAction: `${BASE_URL}/admin/audit-logs/log-action`, // POST
+  auditLogsEntity: `${BASE_URL}/admin/audit-logs/entity/:entityType/:entityId`, // GET
+  // Legacy endpoints (for backward compatibility)
+  getAllAuditLogs: `${BASE_URL}/admin/audit-logs`, // GET
+  getAllAuditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
+  getActionStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
+  getAuditLogsByUserId: `${BASE_URL}/admin/audit-logs/user/:userId`, // GET
+  createAuditLog: `${BASE_URL}/admin/audit-logs`, // POST
+  logUserAction: `${BASE_URL}/admin/audit-logs/log-action`, // POST
+  getEntityData: `${BASE_URL}/admin/audit-logs/entity/:entityType/:entityId`, // GET
 };

@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { API } from '../../utils/api';
+import { API, apiEndpoints } from '../../utils/api';
 import AuditLogService from '../../services/auditLogService';
 import Swal from 'sweetalert2';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
@@ -23,7 +23,10 @@ const AuditLogManagement = () => {
     userName: '',
     action: '',
     startDate: null,
-    endDate: null
+    endDate: null,
+    entityType: '',
+    entityId: '',
+    ipAddress: ''
   });
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,6 +36,9 @@ const AuditLogManagement = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]); // เพิ่ม state สำหรับเก็บข้อมูลผู้ใช้
+  const [entityData, setEntityData] = useState(null);
+  const [showEntityModal, setShowEntityModal] = useState(false);
+  const [entityLoading, setEntityLoading] = useState(false);
 
   // Action translations
   const actionTranslations = {
@@ -47,6 +53,22 @@ const AuditLogManagement = () => {
     'EXPORT': 'ส่งออกข้อมูล',
     'UPLOAD': 'อัพโหลดไฟล์',
     'DOWNLOAD': 'ดาวน์โหลดไฟล์'
+  };
+
+  // Entity type translations
+  const entityTypeTranslations = {
+    'LeaveRequest': 'คำขอลา',
+    'User': 'ผู้ใช้',
+    'UserAction': 'การกระทำผู้ใช้',
+    'Department': 'แผนก',
+    'Organization': 'องค์กร',
+    'Holiday': 'วันหยุด',
+    'LeaveType': 'ประเภทการลา',
+    'Rank': 'ตำแหน่ง',
+    'PersonnelType': 'ประเภทบุคคล',
+    'ProxyApproval': 'การมอบอำนาจ',
+    'AuditLog': 'บันทึกการทำงาน',
+    'Setting': 'การตั้งค่า'
   };
 
   // ดึงข้อมูลสถิติ
@@ -101,7 +123,7 @@ const AuditLogManagement = () => {
         limit: pagination.limit,
         ...filters
       };
-      
+
       const response = await AuditLogService.getAllAuditLogs(options);
       setAuditLogs(response.data);
       setPagination(prev => ({
@@ -138,7 +160,10 @@ const AuditLogManagement = () => {
       userName: '',
       action: '',
       startDate: null,
-      endDate: null
+      endDate: null,
+      entityType: '',
+      entityId: '',
+      ipAddress: ''
     });
     setSearchTerm('');
     setPagination(prev => ({ ...prev, currentPage: 1 }));
@@ -146,10 +171,10 @@ const AuditLogManagement = () => {
 
   const handleSearch = (value) => {
     setSearchTerm(value);
-    
+
     // Filter users based on search term
     if (value.trim()) {
-      const filtered = users.filter(user => 
+      const filtered = users.filter(user =>
         `${user.prefixName} ${user.firstName} ${user.lastName}`.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredUsers(filtered);
@@ -158,7 +183,7 @@ const AuditLogManagement = () => {
       setFilteredUsers([]);
       setShowUserSuggestions(false);
     }
-    
+
     // Update filter
     handleFilterChange('userName', value);
   };
@@ -180,19 +205,52 @@ const AuditLogManagement = () => {
     setShowDetailModal(true);
   };
 
+  const viewEntityData = async (log) => {
+    if (!log.entityId || !log.entityType) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'ไม่สามารถดูข้อมูลได้',
+        text: 'ไม่มีข้อมูล entity ที่สามารถดูได้',
+        confirmButtonText: 'ตกลง'
+      });
+      return;
+    }
+
+    setEntityLoading(true);
+    try {
+      const response = await API.get(`${apiEndpoints.auditLogsEntity.replace(':entityType', log.entityType).replace(':entityId', log.entityId)}`);
+      setEntityData(response.data);
+      setShowEntityModal(true);
+    } catch (error) {
+      console.error('Failed to fetch entity data:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: 'ไม่สามารถดึงข้อมูล entity ได้',
+        confirmButtonText: 'ตกลง'
+      });
+    } finally {
+      setEntityLoading(false);
+    }
+  };
+
   const exportLogs = async () => {
     try {
       const options = { ...filters };
       const response = await AuditLogService.getAllAuditLogsAll(options);
-      
+
       // สร้าง CSV content
       const csvContent = [
-        ['ID', 'User ID', 'User Name', 'Action', 'Details', 'Leave Request ID', 'Created At'],
+        ['ID', 'User ID', 'User Name', 'Action', 'Entity Type', 'Entity ID', 'IP Address', 'User Agent', 'Details', 'Leave Request ID', 'Created At'],
         ...response.data.map(log => [
           log.id,
           log.userId,
           `${log.user?.prefixName || ''} ${log.user?.firstName || ''} ${log.user?.lastName || ''}`,
           log.action,
+          log.entityType || '',
+          log.entityId || '',
+          log.ipAddress || '',
+          log.userAgent || '',
           log.details || '',
           log.leaveRequestId || '',
           format(new Date(log.createdAt), 'yyyy-MM-dd HH:mm:ss')
@@ -253,7 +311,7 @@ const AuditLogManagement = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -266,7 +324,7 @@ const AuditLogManagement = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -279,7 +337,7 @@ const AuditLogManagement = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -311,7 +369,7 @@ const AuditLogManagement = () => {
             <p className="mt-1 text-sm text-slate-500">เลือกช่วงวันที่ ผู้ใช้ และการกระทำเพื่อค้นหาบันทึกที่ต้องการ</p>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-4">
           {/* ค้นหาผู้ใช้ */}
           <div className="relative user-search-container">
@@ -338,7 +396,7 @@ const AuditLogManagement = () => {
                 </button>
               )}
             </div>
-            
+
             {/* User Suggestions Dropdown */}
             {showUserSuggestions && filteredUsers.length > 0 && searchTerm.trim() && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -355,6 +413,45 @@ const AuditLogManagement = () => {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Entity Type Filter */}
+          <div className="relative w-48">
+            <select
+              value={filters.entityType}
+              onChange={(e) => handleFilterChange('entityType', e.target.value)}
+              className="w-full bg-white text-slate-800 text-sm px-3 py-2 pr-8 rounded-lg border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+            >
+              <option value="">ประเภททั้งหมด</option>
+              {Object.entries(entityTypeTranslations).map(([key, value]) => (
+                <option key={key} value={key}>{value}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </div>
+          </div>
+
+          {/* Entity ID Filter */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Entity ID"
+              value={filters.entityId}
+              onChange={(e) => handleFilterChange('entityId', e.target.value)}
+              className="bg-white text-slate-800 text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-400/70 w-32"
+            />
+          </div>
+
+          {/* IP Address Filter */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="IP Address"
+              value={filters.ipAddress}
+              onChange={(e) => handleFilterChange('ipAddress', e.target.value)}
+              className="bg-white text-slate-800 text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-400/70 w-40"
+            />
           </div>
 
           {/* Action Filter */}
@@ -413,7 +510,7 @@ const AuditLogManagement = () => {
         </div>
 
         {/* Active Filters Display */}
-        {(filters.userName || filters.action || filters.startDate || filters.endDate) && (
+        {(filters.userName || filters.action || filters.startDate || filters.endDate || filters.entityType || filters.entityId || filters.ipAddress) && (
           <div className="mt-4 pt-4 border-t border-slate-200">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium text-slate-700">ตัวกรองที่ใช้งาน:</span>
@@ -423,6 +520,39 @@ const AuditLogManagement = () => {
                   <button
                     onClick={() => handleFilterChange('userName', '')}
                     className="ml-1 hover:text-blue-600"
+                  >
+                    <FaTimes className="text-xs" />
+                  </button>
+                </span>
+              )}
+              {filters.entityType && (
+                <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm flex items-center gap-1">
+                  ประเภท: {entityTypeTranslations[filters.entityType] || filters.entityType}
+                  <button
+                    onClick={() => handleFilterChange('entityType', '')}
+                    className="ml-1 hover:text-purple-600"
+                  >
+                    <FaTimes className="text-xs" />
+                  </button>
+                </span>
+              )}
+              {filters.entityId && (
+                <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm flex items-center gap-1">
+                  Entity ID: {filters.entityId}
+                  <button
+                    onClick={() => handleFilterChange('entityId', '')}
+                    className="ml-1 hover:text-indigo-600"
+                  >
+                    <FaTimes className="text-xs" />
+                  </button>
+                </span>
+              )}
+              {filters.ipAddress && (
+                <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm flex items-center gap-1">
+                  IP: {filters.ipAddress}
+                  <button
+                    onClick={() => handleFilterChange('ipAddress', '')}
+                    className="ml-1 hover:text-orange-600"
                   >
                     <FaTimes className="text-xs" />
                   </button>
@@ -475,16 +605,19 @@ const AuditLogManagement = () => {
                 <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ID</th>
                 <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ผู้ใช้</th>
                 <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">การกระทำ</th>
+                <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ประเภท</th>
+                <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">Entity ID</th>
+                <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">IP Address</th>
                 <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">รายละเอียด</th>
-                <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">Leave Request</th>
                 <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">วันที่</th>
                 <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">จัดการ</th>
+                <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ข้อมูล</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-20 text-center">
+                  <td colSpan="10" className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
                       <p className="mt-2 text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
@@ -493,7 +626,7 @@ const AuditLogManagement = () => {
                 </tr>
               ) : auditLogs.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-20 text-center text-slate-500">
+                  <td colSpan="10" className="px-6 py-20 text-center text-slate-500">
                     <div className="flex flex-col items-center">
                       <FaFileAlt className="text-4xl text-slate-300 mb-3" />
                       <p className="text-lg font-medium text-slate-600">ไม่พบข้อมูล Audit Log</p>
@@ -518,31 +651,65 @@ const AuditLogManagement = () => {
                         {actionTranslations[log.action] || log.action}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-900">
-                      <div className="max-w-xs truncate" title={log.details}>
-                        {log.details || '-'}
-                      </div>
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                      {log.leaveRequestId ? (
-                        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                          #{log.leaveRequestId}
+                      {log.entityType ? (
+                        <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                          {entityTypeTranslations[log.entityType] || log.entityType}
                         </span>
                       ) : (
                         '-'
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                      {log.entityId ? (
+                        <span className="px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">
+                          #{log.entityId}
+                        </span>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                      {log.ipAddress ? (
+                        <span className="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800">
+                          {log.ipAddress}
+                        </span>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-900">
+                      <div className="max-w-xs truncate" title={log.details}>
+                        {log.details || '-'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                       {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm', { locale: th })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                      <button
-                        onClick={() => viewLogDetail(log)}
-                        className="text-sky-600 hover:text-sky-900"
-                        title="ดูรายละเอียด"
-                      >
-                        <FaEye />
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => viewLogDetail(log)}
+                          className="text-sky-600 hover:text-sky-900"
+                          title="ดูรายละเอียด"
+                        >
+                          <FaEye />
+                        </button>
+                        {log.entityId && log.entityType && (
+                          <button
+                            onClick={() => viewEntityData(log)}
+                            className="text-emerald-600 hover:text-emerald-900"
+                            title="ดูข้อมูล Entity"
+                            disabled={entityLoading}
+                          >
+                            {entityLoading ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
+                            ) : (
+                              <FaFileAlt />
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -593,11 +760,11 @@ const AuditLogManagement = () => {
                     const page = index + 1;
                     const isCurrentPage = page === pagination.currentPage;
                     const isNearCurrentPage = Math.abs(page - pagination.currentPage) <= 2 || page === 1 || page === pagination.totalPages;
-                    
+
                     if (!isNearCurrentPage && page !== 1 && page !== pagination.totalPages) {
                       return null;
                     }
-                    
+
                     if (page === 1 && pagination.currentPage > 4) {
                       return (
                         <span key="start-ellipsis" className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">
@@ -605,7 +772,7 @@ const AuditLogManagement = () => {
                         </span>
                       );
                     }
-                    
+
                     if (page === pagination.totalPages && pagination.currentPage < pagination.totalPages - 3) {
                       return (
                         <span key="end-ellipsis" className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">
@@ -613,7 +780,7 @@ const AuditLogManagement = () => {
                         </span>
                       );
                     }
-                    
+
                     return (
                       <button
                         key={page}
@@ -657,7 +824,7 @@ const AuditLogManagement = () => {
                 </svg>
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -669,7 +836,7 @@ const AuditLogManagement = () => {
                   <p className="mt-1 text-sm text-slate-900">{selectedLog.userId}</p>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700">ผู้ใช้</label>
                 <p className="mt-1 text-sm text-slate-900">
@@ -677,21 +844,51 @@ const AuditLogManagement = () => {
                 </p>
                 <p className="text-xs text-slate-500">{selectedLog.user?.email}</p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700">การกระทำ</label>
                 <p className="mt-1 text-sm text-slate-900">
                   {actionTranslations[selectedLog.action] || selectedLog.action}
                 </p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700">รายละเอียด</label>
                 <p className="mt-1 text-sm text-slate-900 whitespace-pre-wrap">
                   {selectedLog.details || '-'}
                 </p>
               </div>
-              
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Entity Type</label>
+                  <p className="mt-1 text-sm text-slate-900">
+                    {selectedLog.entityType ? entityTypeTranslations[selectedLog.entityType] || selectedLog.entityType : '-'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Entity ID</label>
+                  <p className="mt-1 text-sm text-slate-900">
+                    {selectedLog.entityId ? `#${selectedLog.entityId}` : '-'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">IP Address</label>
+                  <p className="mt-1 text-sm text-slate-900">
+                    {selectedLog.ipAddress || '-'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">User Agent</label>
+                  <p className="mt-1 text-sm text-slate-900 truncate" title={selectedLog.userAgent}>
+                    {selectedLog.userAgent || '-'}
+                  </p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700">Leave Request ID</label>
@@ -707,11 +904,93 @@ const AuditLogManagement = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowDetailModal(false)}
                 className="px-4 py-2 bg-slate-300 text-slate-700 rounded-lg hover:bg-slate-400 transition-colors"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Entity Data Modal */}
+      {showEntityModal && entityData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-3xl w-full mx-4 max-h-screen overflow-y-auto border border-slate-200">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">ข้อมูล Entity</h3>
+                <p className="text-sm text-slate-500">
+                  {entityData.isDeleted ? (
+                    <span className="text-red-600 font-medium">● ถูกลบไปแล้ว (แสดงข้อมูลจาก Audit Log)</span>
+                  ) : (
+                    <span className="text-green-600 font-medium">● ยังอยู่ในระบบ</span>
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowEntityModal(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Entity Type Header */}
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <FaFileAlt className="text-blue-600 text-xl" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">
+                      {entityTypeTranslations[entityData.data?.entityType] || entityData.data?.entityType}
+                    </h4>
+                    <p className="text-sm text-slate-500">ID: {entityData.data?.entityId || 'ไม่ระบุ'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Entity Details */}
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
+                <h5 className="font-medium text-slate-900 mb-3">รายละเอียดข้อมูล:</h5>
+                <pre className="bg-slate-50 p-4 rounded-lg text-xs text-slate-700 overflow-x-auto">
+                  {JSON.stringify(entityData.data || {}, null, 2)}
+                </pre>
+              </div>
+
+              {/* Timestamp */}
+              <div className="text-sm text-slate-500 text-center">
+                <p>ข้อมูลจาก Audit Log เมื่อ: {format(new Date(entityData.timestamp || new Date()), 'dd/MM/yyyy HH:mm:ss', { locale: th })}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(JSON.stringify(entityData.data || {}, null, 2));
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'คัดลอกแล้ว',
+                    text: 'ข้อมูลถูกคัดลอกไปยัง clipboard',
+                    timer: 1500,
+                    showConfirmButton: false
+                  });
+                }}
+                className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
+              >
+                คัดลอก JSON
+              </button>
+              <button
+                onClick={() => setShowEntityModal(false)}
+                className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
               >
                 ปิด
               </button>
