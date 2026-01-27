@@ -152,10 +152,21 @@ export const apiEndpoints = {
   proxyApprovalExpire: `${BASE_URL}/proxy-approval/expire`, // PATCH
   proxyApprovalStats: `${BASE_URL}/proxy-approval/stats`, // GET
 
+<<<<<<< HEAD
   // Leave Balance Reset
   resetLeaveBalance: `${BASE_URL}/admin/reset-leave-balance`, // POST
   getAvailableYears: `${BASE_URL}/admin/leave-balance/years`, // GET
   deleteLeaveBalanceByYear: (year) => `${BASE_URL}/admin/leave-balance/${year}`, // DELETE
   getFiscalYear: `${BASE_URL}/admin/fiscal-year`, // GET
   updateFiscalYear: `${BASE_URL}/admin/fiscal-year`, // PUT
+=======
+  // Audit Log
+  auditLogs: `${BASE_URL}/admin/audit-logs`, // GET with query params
+  auditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
+  auditLogsStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
+  auditLogsByUser: (userId) => `${BASE_URL}/admin/audit-logs/user/${userId}`, // GET
+  auditLogsByLeaveRequest: (leaveRequestId) => `${BASE_URL}/admin/audit-logs/leave-request/${leaveRequestId}`, // GET
+  auditLogsCreate: `${BASE_URL}/admin/audit-logs`, // POST
+  auditLogsLogAction: `${BASE_URL}/admin/audit-logs/log-action`, // POST
+>>>>>>> af5ef8f (change architecture)
 };

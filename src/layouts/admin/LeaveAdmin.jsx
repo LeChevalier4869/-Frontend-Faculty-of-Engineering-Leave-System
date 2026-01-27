@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import getApiUrl from "../../utils/apiUtils";
 import { useNavigate } from "react-router-dom";
-import { apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
 import { Clock } from "lucide-react";
+import LeaveRequestService from "../../services/leaveRequestService";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
@@ -75,7 +73,7 @@ function LeaveAdmin() {
 
     if (value) {
       try {
-        await axios.post(apiEndpoints.ApproveleaveRequests(id), value);
+        await LeaveRequestService.updateLeaveRequestStatus(id, 'APPROVED', value);
         Swal.fire("สำเร็จ", "อนุมัติคำขอเรียบร้อยแล้ว", "success");
         fetchLeaveRequests();
       } catch (error) {
@@ -103,7 +101,7 @@ function LeaveAdmin() {
 
     if (value) {
       try {
-        await axios.post(apiEndpoints.RejectleaveRequests(id), value);
+        await LeaveRequestService.updateLeaveRequestStatus(id, 'REJECTED', value);
         Swal.fire("สำเร็จ", "ปฏิเสธคำขอเรียบร้อยแล้ว", "success");
         fetchLeaveRequests();
       } catch (error) {
@@ -115,11 +113,8 @@ function LeaveAdmin() {
   const fetchLeaveRequests = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(getApiUrl("leave-requests"), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setLeaveRequests(res.data.data || []);
+      const res = await LeaveRequestService.getAllLeaveRequests({ limit: 100 });
+      setLeaveRequests(res.leaveRequests || []);
     } finally {
       setLoading(false);
     }
