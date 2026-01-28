@@ -612,14 +612,14 @@ const AuditLogManagement = () => {
             <table className="w-full max-w-full divide-y divide-slate-200 rounded-t-xl table-fixed">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="w-[8%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ID</th>
-                  <th className="w-[14%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ผู้ใช้</th>
-                  <th className="w-[20%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">การกระทำ</th>
-                  <th className="w-[14%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ประเภท</th>
+                  <th className="w-[6%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ID</th>
+                  <th className="w-[18%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ผู้ใช้</th>
+                  <th className="w-[22%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">การกระทำ</th>
+                  <th className="w-[12%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ประเภท</th>
                   <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">Entity ID</th>
-                  <th className="w-[18%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">รายละเอียด</th>
-                  <th className="w-[12%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">วันที่</th>
-                  <th className="w-[14%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ข้อมูล</th>
+                  <th className="w-[22%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">รายละเอียด</th>
+                  <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">วันที่</th>
+                  <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ข้อมูล</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
@@ -677,18 +677,18 @@ const AuditLogManagement = () => {
                           <span className="text-slate-400">-</span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-center">
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900">
                         <div className="min-w-0">
-                          <div className="truncate text-center" title={log.details}>
+                          <div className="truncate" title={log.details}>
                             {log.details || '-'}
                           </div>
                         </div>
                       </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono text-center">
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono">
                         {format(new Date(log.createdAt), 'dd/MM HH:mm', { locale: th })}
                       </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-center">
-                        <div className="flex items-center justify-center gap-1 lg:gap-2">
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900">
+                        <div className="flex items-center gap-1 lg:gap-2">
                           <button
                             onClick={() => viewLogDetail(log)}
                             className="text-sky-600 hover:text-sky-900 p-1 hover:bg-sky-50 rounded transition-colors"
