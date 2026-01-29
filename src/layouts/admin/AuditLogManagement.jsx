@@ -1179,7 +1179,7 @@ const AuditLogManagement = () => {
                     <h4 className="font-semibold text-slate-900">
                       {entityTypeTranslations[entityData.data?.entityType] || entityData.data?.entityType}
                     </h4>
-                    <p className="text-sm text-slate-500">ID: {entityData.data?.entityId || 'ไม่ระบุ'}</p>
+                    <p className="text-sm text-slate-500">ID: {entityData.data?.id || entityData.data?.entityId || 'ไม่ระบุ'}</p>
                   </div>
                 </div>
               </div>
