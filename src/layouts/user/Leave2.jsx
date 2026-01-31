@@ -64,6 +64,7 @@ export default function Leave2() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
+  const [leaveAvailabilityMap, setLeaveAvailabilityMap] = useState({});
   const [driveUrl, setDriveUrl] = useState(null);
 
   const [filterStartDate, setFilterStartDate] = useState("");
@@ -104,12 +105,22 @@ export default function Leave2() {
 
   const fetchLeaveTypes = async () => {
     try {
-      const res = await axios.get(apiEndpoints.getAllLeaveTypes);
+      console.log("Fetching all leave types from:", apiEndpoints.getAllLeaveTypes);
+      const token = localStorage.getItem("accessToken");
+      const res = await axios.get(apiEndpoints.getAllLeaveTypes, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("All leave types response:", res.data);
       const map = {};
+      const availabilityMap = {};
       (res.data.data || []).forEach((lt) => {
         map[lt.id] = lt.name;
+        availabilityMap[lt.id] = lt.isAvailable;
       });
+      console.log("Leave types map:", map);
+      console.log("Availability map:", availabilityMap);
       setLeaveTypesMap(map);
+      setLeaveAvailabilityMap(availabilityMap);
     } catch (err) {
       console.error("Error fetching leave types:", err);
     }
@@ -336,7 +347,7 @@ export default function Leave2() {
             <table className="min-w-full w-full text-sm text-slate-800">
               <thead>
                 <tr className="bg-slate-50 border-y border-slate-200">
-                  {["วันที่ยื่น", "ประเภทการลา", "วันเริ่มต้น", "วันสิ้นสุด", "สถานะ"].map(
+                  {["วันที่ยื่น", "ประเภทการลา", "ประเภท", "วันเริ่มต้น", "วันสิ้นสุด", "สถานะ"].map(
                     (h, i) => (
                       <th
                         key={i}
@@ -366,6 +377,17 @@ export default function Leave2() {
                         <td className="px-4 py-3">
                           {leaveTypesMap[leave.leaveTypeId] || "-"}
                         </td>
+                        <td className="px-4 py-3">
+                          {leaveAvailabilityMap[leave.leaveTypeId] ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              ยื่นเอง
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                              แอดมิน
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {formatDate(leave.startDate)}
                         </td>
@@ -388,7 +410,7 @@ export default function Leave2() {
                 ) : (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       className="px-4 py-8 text-center text-slate-500 text-sm"
                     >
                       ไม่มีข้อมูลการลา
@@ -400,24 +422,57 @@ export default function Leave2() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-3 py-4 bg-slate-50 border-t border-slate-200">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition"
-              >
-                ก่อนหน้า
-              </button>
-              <span className="text-xs text-slate-600">
-                หน้า {currentPage} / {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition"
-              >
-                ถัดไป
-              </button>
+            <div className="flex items-center justify-between py-3 px-4 bg-slate-50 border-t border-slate-200">
+              <div className="text-sm text-slate-700">
+                แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ
+              </div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ก่อนหน้า
+                </button>
+                {(() => {
+                  const pages = [];
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(1);
+                    if (currentPage <= 4) {
+                      pages.push(2, 3, 4, 5, '...', totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    } else {
+                      pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                    }
+                  }
+                  return pages.map((page, idx) => {
+                    if (page === '...') {
+                      return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                    }
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  });
+                })()}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
+              </nav>
             </div>
           )}
         </Panel>

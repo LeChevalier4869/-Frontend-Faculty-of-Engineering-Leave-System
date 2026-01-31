@@ -209,11 +209,11 @@ const ProxyApprovalManagement = () => {
       // อัปเดต state ตาม tab ที่ active
       if (activeTab === 'today') {
         setTotalPagesToday(response.data.pagination?.totalPages || 1);
-        setTotalCountToday(response.data.pagination?.total || 0);
+        setTotalCountToday(response.data.pagination?.totalCount || response.data.pagination?.total || 0);
         setCurrentPageToday(page);
       } else if (activeTab === 'history') {
         setTotalPagesHistory(response.data.pagination?.totalPages || 1);
-        setTotalCountHistory(response.data.pagination?.total || 0);
+        setTotalCountHistory(response.data.pagination?.totalCount || response.data.pagination?.total || 0);
         setCurrentPageHistory(page);
       }
     } catch (error) {
@@ -862,8 +862,9 @@ const ProxyApprovalManagement = () => {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-        <table className="min-w-full divide-y divide-slate-200 rounded-t-xl">
+      <div className="mt-6 rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-grow" style={{ minHeight: `${44 + (itemsPerPage * 65)}px` }}>
+          <table className="min-w-full divide-y divide-slate-200 rounded-t-xl">
           <thead className="bg-slate-50">
             <tr>
               <th className="px-6 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">
@@ -957,119 +958,134 @@ const ProxyApprovalManagement = () => {
                 )}
               </tr>
           ))}
-        </tbody>
-      </table>
-    </div>
-    
-    {/* Pagination Controls - Tab วันนี้ */}
-    {activeTab === 'today' && totalPagesToday > 1 && (
-      <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200 rounded-b-xl">
-        <div className="text-sm text-slate-700">
-          แสดง {(currentPageToday - 1) * itemsPerPage + 1} ถึง {Math.min(currentPageToday * itemsPerPage, totalCountToday)} จาก {totalCountToday} รายการ (วันนี้)
-        </div>
-        <div className="flex items-center space-x-2">
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Pagination Controls - Tab วันนี้ */}
+      {activeTab === 'today' && totalCountToday > 0 && (
+        <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200 mt-auto">
+          <div className="text-sm text-slate-700">
+            แสดง {Math.min((currentPageToday - 1) * itemsPerPage + 1, totalCountToday)} ถึง {Math.min(currentPageToday * itemsPerPage, totalCountToday)} จาก {totalCountToday} รายการ
+          </div>
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
           <button
             onClick={() => loadProxyApprovals(currentPageToday - 1)}
             disabled={currentPageToday === 1}
-            className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ก่อนหน้า
           </button>
-          
-          <div className="flex items-center space-x-1">
-            {Array.from({ length: Math.min(5, totalPagesToday) }, (_, i) => {
-              let pageNum;
-              if (totalPagesToday <= 5) {
-                pageNum = i + 1;
-              } else if (currentPageToday <= 3) {
-                pageNum = i + 1;
-              } else if (currentPageToday >= totalPagesToday - 2) {
-                pageNum = totalPagesToday - 4 + i;
+          {(() => {
+            const totalPages = totalPagesToday;
+            const currentPage = currentPageToday;
+            const pages = [];
+            
+            if (totalPages <= 7) {
+              for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+              pages.push(1);
+              if (currentPage <= 4) {
+                pages.push(2, 3, 4, 5, '...', totalPages);
+              } else if (currentPage >= totalPages - 3) {
+                pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
               } else {
-                pageNum = currentPageToday - 2 + i;
+                pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
               }
-              
+            }
+            
+            return pages.map((page, idx) => {
+              if (page === '...') {
+                return (
+                  <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>
+                );
+              }
               return (
                 <button
-                  key={pageNum}
-                  onClick={() => loadProxyApprovals(pageNum)}
-                  className={`px-3 py-1 text-sm rounded-md ${
-                    currentPageToday === pageNum
-                      ? 'bg-sky-500 text-white'
-                      : 'bg-white border border-slate-300 hover:bg-slate-50'
+                  key={page}
+                  onClick={() => loadProxyApprovals(page)}
+                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                    currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                   }`}
                 >
-                  {pageNum}
+                  {page}
                 </button>
               );
-            })}
-          </div>
-          
+            });
+          })()}
           <button
             onClick={() => loadProxyApprovals(currentPageToday + 1)}
             disabled={currentPageToday === totalPagesToday}
-            className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ถัดไป
           </button>
+        </nav>
         </div>
-      </div>
-    )}
+      )}
 
-    {/* Pagination Controls - Tab ประวัติ */}
-    {activeTab === 'history' && totalPagesHistory > 1 && (
-      <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200 rounded-b-xl">
-        <div className="text-sm text-slate-700">
-          แสดง {(currentPageHistory - 1) * itemsPerPage + 1} ถึง {Math.min(currentPageHistory * itemsPerPage, totalCountHistory)} จาก {totalCountHistory} รายการ (ประวัติ)
-        </div>
-        <div className="flex items-center space-x-2">
+      {/* Pagination Controls - Tab ประวัติ */}
+      {activeTab === 'history' && totalCountHistory > 0 && (
+        <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200 mt-auto">
+          <div className="text-sm text-slate-700">
+            แสดง {Math.min((currentPageHistory - 1) * itemsPerPage + 1, totalCountHistory)} ถึง {Math.min(currentPageHistory * itemsPerPage, totalCountHistory)} จาก {totalCountHistory} รายการ
+          </div>
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
           <button
             onClick={() => loadProxyApprovals(currentPageHistory - 1)}
             disabled={currentPageHistory === 1}
-            className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ก่อนหน้า
           </button>
-          
-          <div className="flex items-center space-x-1">
-            {Array.from({ length: Math.min(5, totalPagesHistory) }, (_, i) => {
-              let pageNum;
-              if (totalPagesHistory <= 5) {
-                pageNum = i + 1;
-              } else if (currentPageHistory <= 3) {
-                pageNum = i + 1;
-              } else if (currentPageHistory >= totalPagesHistory - 2) {
-                pageNum = totalPagesHistory - 4 + i;
+          {(() => {
+            const totalPages = totalPagesHistory;
+            const currentPage = currentPageHistory;
+            const pages = [];
+            
+            if (totalPages <= 7) {
+              for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+              pages.push(1);
+              if (currentPage <= 4) {
+                pages.push(2, 3, 4, 5, '...', totalPages);
+              } else if (currentPage >= totalPages - 3) {
+                pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
               } else {
-                pageNum = currentPageHistory - 2 + i;
+                pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
               }
-              
+            }
+            
+            return pages.map((page, idx) => {
+              if (page === '...') {
+                return (
+                  <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>
+                );
+              }
               return (
                 <button
-                  key={pageNum}
-                  onClick={() => loadProxyApprovals(pageNum)}
-                  className={`px-3 py-1 text-sm rounded-md ${
-                    currentPageHistory === pageNum
-                      ? 'bg-sky-500 text-white'
-                      : 'bg-white border border-slate-300 hover:bg-slate-50'
+                  key={page}
+                  onClick={() => loadProxyApprovals(page)}
+                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                    currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                   }`}
                 >
-                  {pageNum}
+                  {page}
                 </button>
               );
-            })}
-          </div>
-          
+            });
+          })()}
           <button
             onClick={() => loadProxyApprovals(currentPageHistory + 1)}
             disabled={currentPageHistory === totalPagesHistory}
-            className="px-3 py-1 text-sm bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ถัดไป
           </button>
+        </nav>
         </div>
-      </div>
-    )}
+      )}
+    </div>
 
       {/* Modal */}
       {showModal && (

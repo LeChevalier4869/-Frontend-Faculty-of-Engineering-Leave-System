@@ -7,10 +7,14 @@ const AuditLogService = {
       const { 
         page = 1, 
         limit = 50, 
-        userId, 
+        userId,
+        userName,
         action, 
         startDate, 
-        endDate 
+        endDate,
+        entityType,
+        entityId,
+        ipAddress
       } = options;
       
       const params = new URLSearchParams();
@@ -18,9 +22,13 @@ const AuditLogService = {
       params.append('limit', limit);
       
       if (userId) params.append('userId', userId);
+      if (userName) params.append('userName', userName);
       if (action) params.append('action', action);
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
+      if (startDate) params.append('startDate', startDate instanceof Date ? startDate.toISOString() : startDate);
+      if (endDate) params.append('endDate', endDate instanceof Date ? endDate.toISOString() : endDate);
+      if (entityType) params.append('entityType', entityType);
+      if (entityId) params.append('entityId', entityId);
+      if (ipAddress) params.append('ipAddress', ipAddress);
       
       const response = await API.get(`${apiEndpoints.auditLogs}?${params.toString()}`);
       return response.data;

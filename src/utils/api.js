@@ -81,7 +81,6 @@ export const apiEndpoints = {
   leaveRequestForSecondApprover: `${BASE_URL}/leave-requests/for-approver2`, // GET
   leaveRequestForThirdApprover: `${BASE_URL}/leave-requests/for-approver3`, // GET
   leaveRequestForFouthApprover: `${BASE_URL}/leave-requests/for-approver4`, // GET
-  leaveRequestLanding: `${BASE_URL}/leave-requests/landing`,
   leaveBalance: `${BASE_URL}/leave-balances`,
 
   //----------------- Approve Leave Requests ------------------//
