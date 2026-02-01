@@ -162,15 +162,11 @@ export const apiEndpoints = {
   auditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
   auditLogsStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
   auditLogsUser: `${BASE_URL}/admin/audit-logs/user/:userId`, // GET
-  auditLogsCreate: `${BASE_URL}/admin/audit-logs`, // POST
-  auditLogsLogAction: `${BASE_URL}/admin/audit-logs/log-action`, // POST
   auditLogsEntity: `${BASE_URL}/admin/audit-logs/entity/:entityType/:entityId`, // GET
   // Legacy endpoints (for backward compatibility)
   getAllAuditLogs: `${BASE_URL}/admin/audit-logs`, // GET
   getAllAuditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
   getActionStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
   getAuditLogsByUserId: `${BASE_URL}/admin/audit-logs/user/:userId`, // GET
-  createAuditLog: `${BASE_URL}/admin/audit-logs`, // POST
-  logUserAction: `${BASE_URL}/admin/audit-logs/log-action`, // POST
   getEntityData: `${BASE_URL}/admin/audit-logs/entity/:entityType/:entityId`, // GET
 };

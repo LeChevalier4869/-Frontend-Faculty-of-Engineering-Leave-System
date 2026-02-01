@@ -44,42 +44,44 @@ const AuditLogManagement = () => {
     'CREATE': 'สร้าง',
     'UPDATE': 'อัพเดท',
     'DELETE': 'ลบ',
-    'LOGIN': 'เข้าสู่ระบบ',
-    'LOGOUT': 'ออกจากระบบ',
     'APPROVE': 'อนุมัติ',
     'REJECT': 'ปฏิเสธ',
-    'VIEW': 'ดูข้อมูล',
-    'EXPORT': 'ส่งออกข้อมูล',
-    'UPLOAD': 'อัพโหลดไฟล์',
-    'DOWNLOAD': 'ดาวน์โหลดไฟล์',
-    'READ': 'อ่านข้อมูล',
-    'WRITE': 'เขียนข้อมูล',
-    'EDIT': 'แก้ไข',
-    'MODIFY': 'แก้ไข',
-    'CANCEL': 'ยกเลิก',
-    'SUBMIT': 'ส่ง',
-    'VERIFY': 'ตรวจสอบ',
-    'SEARCH': 'ค้นหา',
-    'FILTER': 'กรอง',
-    'RESET': 'รีเซ็ต',
-    'ACCESS': 'เข้าถึง',
     // Leave Request Actions
     'Create Request': 'สร้างคำขอ',
-    'Update Status': 'อัพเดทสถานะ',
     'ADMIN_CANCEL_LEAVE_REQUEST': 'แอดมินยกเลิกคำขอลา',
-    'ADMIN_CANCEL': 'แอดมินยกเลิก',
     'AdminCreateLeave': 'แอดมินสร้างการลา',
     // Proxy Approval Actions
     'Create Proxy Approval': 'สร้างการมอบอำนาจ',
     'Create Daily Proxy Approval': 'สร้างการมอบอำนาจรายวัน',
-    'Update Proxy Approval': 'อัพเดทการมอบอำนาจ',
-    'Cancel Proxy Approval': 'ยกเลิกการมอบอำนาจ',
+    'Update Proxy Approval': 'อัปเดตการมอบอำนาจ',
+    'Delete Proxy Approval': 'ลบการมอบอำนาจ',
     // Status Actions
     'ACTIVE': 'ใช้งาน',
     'CANCELLED': 'ยกเลิก',
     'EXPIRED': 'หมดอายุ',
-    // Other Actions
-    'Update Status': 'อัพเดทสถานะ'
+    // Additional common actions
+    'LOGIN': 'เข้าสู่ระบบ',
+    'LOGOUT': 'ออกจากระบบ',
+    'VIEW': 'ดูข้อมูล',
+    'EDIT': 'แก้ไข',
+    'CREATE_USER': 'สร้างผู้ใช้',
+    'UPDATE_USER': 'อัปเดตผู้ใช้',
+    'DELETE_USER': 'ลบผู้ใช้',
+    'CREATE_DEPARTMENT': 'สร้างแผนก',
+    'UPDATE_DEPARTMENT': 'อัปเดตแผนก',
+    'DELETE_DEPARTMENT': 'ลบแผนก',
+    'CREATE_ORGANIZATION': 'สร้างองค์กร',
+    'UPDATE_ORGANIZATION': 'อัปเดตองค์กร',
+    'DELETE_ORGANIZATION': 'ลบองค์กร',
+    'CREATE_HOLIDAY': 'สร้างวันหยุด',
+    'UPDATE_HOLIDAY': 'อัปเดตวันหยุด',
+    'DELETE_HOLIDAY': 'ลบวันหยุด',
+    'CREATE_LEAVE_TYPE': 'สร้างประเภทการลา',
+    'UPDATE_LEAVE_TYPE': 'อัปเดตประเภทการลา',
+    'DELETE_LEAVE_TYPE': 'ลบประเภทการลา',
+    'CREATE_PERSONNEL_TYPE': 'สร้างประเภทบุคคล',
+    'UPDATE_PERSONNEL_TYPE': 'อัปเดตประเภทบุคคล',
+    'DELETE_PERSONNEL_TYPE': 'ลบประเภทบุคคล'
   };
 
   // Entity type translations
@@ -275,30 +277,37 @@ const AuditLogManagement = () => {
       const options = { ...filters };
       const response = await AuditLogService.getAllAuditLogsAll(options);
 
-      // สร้าง CSV content
+      // สร้าง CSV content พร้อมสนับสนุนภาษาไทย
       const csvContent = [
-        ['ID', 'User ID', 'User Name', 'Action', 'Entity Type', 'Entity ID', 'IP Address', 'User Agent', 'Details', 'Leave Request ID', 'Created At'],
-        ...response.data.map(log => [
-          log.id,
-          log.userId,
-          `${log.user?.prefixName || ''} ${log.user?.firstName || ''} ${log.user?.lastName || ''}`,
-          log.action,
-          log.entityType || '',
-          log.entityId || '',
-          log.ipAddress || '',
-          log.userAgent || '',
-          log.details || '',
-          log.leaveRequestId || '',
-          format(new Date(log.createdAt), 'yyyy-MM-dd HH:mm:ss')
-        ])
+        ['ID', 'รหัสผู้ใช้', 'ชื่อผู้ใช้', 'การกระทำ', 'ประเภท', 'รหัสเอนทิตี', 'ที่อยู่ IP', 'รายละเอียด', 'รหัสคำขอลา', 'วันที่สร้าง'],
+        ...response.data.map(log => {
+          const translatedAction = actionTranslations[log.action] || log.action || '-';
+          const translatedEntityType = entityTypeTranslations[log.entityType] || log.entityType || '-';
+          
+          return [
+            log.id || '',
+            log.userId || '',
+            `${log.user?.prefixName || ''} ${log.user?.firstName || ''} ${log.user?.lastName || ''}`.trim() || '-',
+            translatedAction,
+            translatedEntityType,
+            log.entityId || '',
+            log.ipAddress || '',
+            log.details || '',
+            log.leaveRequestId || '',
+            format(new Date(log.createdAt), 'yyyy-MM-dd HH:mm:ss')
+          ];
+        })
       ].map(row => row.join(',')).join('\n');
 
+      // เพิ่ม UTF-8 BOM เพื่อให้อ่านภาษาไทยใน Excel ได้ถูกต้อง
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      
       // ดาวน์โหลดไฟล์
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `audit_logs_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      link.setAttribute('download', `บันทึกการทำงาน_${format(new Date(), 'yyyy-MM-dd')}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -489,12 +498,12 @@ const AuditLogManagement = () => {
                 <tr>
                   <th className="w-[6%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ID</th>
                   <th className="w-[18%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ผู้ใช้</th>
-                  <th className="w-[16%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">การกระทำ</th>
-                  <th className="w-[12%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ประเภท</th>
+                  <th className="w-[14%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">การกระทำ</th>
+                  <th className="w-[12%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ประเภท</th>
                   <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">Entity ID</th>
                   <th className="w-[26%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">รายละเอียด</th>
-                  <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">วันที่</th>
-                  <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ข้อมูล</th>
+                  <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">วันที่</th>
+                  <th className="w-[12%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">รายละเอียด/ข้อมูล</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
@@ -520,8 +529,8 @@ const AuditLogManagement = () => {
                 ) : (
                   auditLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono text-center">{log.id}</td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900">
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono text-left">{log.id}</td>
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
                         <div className="min-w-0">
                           <div className="font-medium text-xs lg:text-sm truncate" title={`${log.user?.prefixName} ${log.user?.firstName} ${log.user?.lastName}`}>
                             {log.user?.prefixName} {log.user?.firstName} {log.user?.lastName}
@@ -529,7 +538,7 @@ const AuditLogManagement = () => {
                           <div className="text-slate-500 text-xs truncate">ID: {log.userId}</div>
                         </div>
                       </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900">
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
                         <span className="inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full bg-blue-100 text-blue-800 truncate max-w-full">
                           {actionTranslations[log.action] || log.action}
                           {!actionTranslations[log.action] && (
@@ -537,7 +546,7 @@ const AuditLogManagement = () => {
                           )}
                         </span>
                       </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900">
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
                         {log.entityType ? (
                           <span className="inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full bg-purple-100 text-purple-800 truncate max-w-full">
                             {entityTypeTranslations[log.entityType] || log.entityType}
@@ -555,18 +564,18 @@ const AuditLogManagement = () => {
                           <span className="text-slate-400">-</span>
                         )}
                       </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900">
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
                         <div className="min-w-0">
                           <div className="truncate" title={log.details}>
                             {log.details || '-'}
                           </div>
                         </div>
                       </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono">
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono text-left">
                         {format(new Date(log.createdAt), 'dd/MM HH:mm', { locale: th })}
                       </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900">
-                        <div className="flex items-center gap-1 lg:gap-2">
+                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-center">
+                        <div className="flex items-center justify-center gap-1 lg:gap-2">
                           <button
                             onClick={() => viewLogDetail(log)}
                             className="text-sky-600 hover:text-sky-900 p-1 hover:bg-sky-50 rounded transition-colors"

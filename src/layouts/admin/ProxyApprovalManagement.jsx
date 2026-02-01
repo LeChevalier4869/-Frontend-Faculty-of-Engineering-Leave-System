@@ -788,12 +788,19 @@ const ProxyApprovalManagement = () => {
       };
       
       
-      const response = await API.post(apiEndpoints.proxyApproval, payload);
+      let response;
+      if (editingProxy) {
+        // Update existing proxy approval
+        response = await API.put(apiEndpoints.proxyApprovalById(editingProxy.id), payload);
+      } else {
+        // Create new proxy approval
+        response = await API.post(apiEndpoints.proxyApproval, payload);
+      }
       
       Swal.fire({
         icon: "success",
         title: "สำเร็จ",
-        text: "สร้างการมอบอำนาจสำเร็จแล้ว",
+        text: editingProxy ? "แก้ไขการมอบอำนาจสำเร็จแล้ว" : "สร้างการมอบอำนาจสำเร็จแล้ว",
       });
 
       loadProxyApprovals();

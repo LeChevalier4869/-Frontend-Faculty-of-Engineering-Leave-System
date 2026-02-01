@@ -117,29 +117,6 @@ const AuditLogService = {
     }
   },
 
-  // สร้าง Audit Log ใหม่ (สำหรับการทดสอบ)
-  createAuditLog: async (logData) => {
-    try {
-      const response = await API.post(apiEndpoints.auditLogsCreate, logData);
-      return response.data;
-    } catch (error) {
-      console.error('Create audit log error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'ไม่สามารถสร้าง Audit Log ได้';
-      throw new Error(errorMessage);
-    }
-  },
-
-  // บันทึกการกระทำของผู้ใช้
-  logUserAction: async (actionData) => {
-    try {
-      const response = await API.post(apiEndpoints.auditLogsLogAction, actionData);
-      return response.data;
-    } catch (error) {
-      console.error('Log user action error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'ไม่สามารถบันทึกการกระทำได้';
-      throw new Error(errorMessage);
-    }
-  },
-};
+  };
 
 export default AuditLogService;

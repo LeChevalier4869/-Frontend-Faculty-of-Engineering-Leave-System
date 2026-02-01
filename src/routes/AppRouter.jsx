@@ -234,14 +234,6 @@ const userRouter = createBrowserRouter([
             ) 
           },
           { 
-            path: "leave-request", 
-            element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
-                <LeaveAdmin />
-              </ProtectedRoute>
-            ) 
-          },
-          { 
             path: "organization", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
