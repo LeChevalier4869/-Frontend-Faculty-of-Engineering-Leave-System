@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { FaSearch, FaFilter, FaCalendarAlt, FaUser, FaFileAlt, FaEye, FaDownload, FaTimes, FaSync } from 'react-icons/fa';
-import { ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import DatePicker from 'react-datepicker';
@@ -8,7 +7,6 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { API, apiEndpoints } from '../../utils/api';
 import AuditLogService from '../../services/auditLogService';
 import Swal from 'sweetalert2';
-import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 
 const AuditLogManagement = () => {
   const [auditLogs, setAuditLogs] = useState([]);
