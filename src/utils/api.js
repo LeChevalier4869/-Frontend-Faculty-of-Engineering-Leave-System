@@ -81,7 +81,6 @@ export const apiEndpoints = {
   leaveRequestForSecondApprover: `${BASE_URL}/leave-requests/for-approver2`, // GET
   leaveRequestForThirdApprover: `${BASE_URL}/leave-requests/for-approver3`, // GET
   leaveRequestForFouthApprover: `${BASE_URL}/leave-requests/for-approver4`, // GET
-  leaveRequestLanding: `${BASE_URL}/leave-requests/landing`,
   leaveBalance: `${BASE_URL}/leave-balances`,
 
   //----------------- Approve Leave Requests ------------------//
@@ -129,7 +128,7 @@ export const apiEndpoints = {
   lookupEmploymentTypes: `${BASE_URL}/api/lookups/employment-types`,
 
   // signature
-  signatureUpload: (userId) => `${BASE_URL}/signature/${userId}`, // POST 
+  signatureUpload: (userId) => `${BASE_URL}/signature/${userId}`, // POST
   signatureGetAll: `${BASE_URL}/signature`, // GET
   signatureGetById: (id) => `${BASE_URL}/signature/get/${id}`, // GET
   signatureUpdate: (userId) => `${BASE_URL}/signature/update/${userId}`, // PUT
@@ -158,4 +157,16 @@ export const apiEndpoints = {
   deleteLeaveBalanceByYear: (year) => `${BASE_URL}/admin/leave-balance/${year}`, // DELETE
   getFiscalYear: `${BASE_URL}/admin/fiscal-year`, // GET
   updateFiscalYear: `${BASE_URL}/admin/fiscal-year`, // PUT
+  // Audit Log
+  auditLogs: `${BASE_URL}/admin/audit-logs`, // GET
+  auditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
+  auditLogsStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
+  auditLogsUser: `${BASE_URL}/admin/audit-logs/user/:userId`, // GET
+  auditLogsEntity: `${BASE_URL}/admin/audit-logs/entity/:entityType/:entityId`, // GET
+  // Legacy endpoints (for backward compatibility)
+  getAllAuditLogs: `${BASE_URL}/admin/audit-logs`, // GET
+  getAllAuditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
+  getActionStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
+  getAuditLogsByUserId: `${BASE_URL}/admin/audit-logs/user/:userId`, // GET
+  getEntityData: `${BASE_URL}/admin/audit-logs/entity/:entityType/:entityId`, // GET
 };

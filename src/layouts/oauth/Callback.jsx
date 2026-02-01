@@ -18,7 +18,7 @@ export default function Callback() {
     // ถ้ามี error จาก backend ให้แสดง Swal.fire ทันที
     if (error) {
       const errorMessage = decodeURIComponent(error);
-      
+
       Swal.fire({
         icon: "warning",
         title: "เกิดข้อผิดพลาดในการเข้าสู่ระบบ",
@@ -47,13 +47,15 @@ export default function Callback() {
           });
           const returned = res.data.data ?? res.data.user ?? res.data;
           setUser(returned);
+
+          
           navigate("/dashboard");
         } catch (err) {
           console.error("fetch user error:", err);
-          
+
           // ตรวจสอบว่าเป็น error จากการไม่พบบัญชีหรือไม่
           const errorMessage = err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
-          
+
           if (errorMessage.includes("ไม่พบข้อมูลบัญชีของคุณในระบบ")) {
             await Swal.fire({
               icon: "warning",

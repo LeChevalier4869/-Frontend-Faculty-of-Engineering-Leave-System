@@ -30,7 +30,6 @@ import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
 import LeaveVerifier from "../layouts/approver/LeaveVerifier";
 import Approver1Dashboard from "../layouts/approver/Approver1DashBoard";
 import DashBoard from "../layouts/admin/DashBoard";
-import Approver from "../layouts/admin/Approver";
 import DepartmentManage from "../layouts/admin/DepartmentManage";
 import OrganizationManage from "../layouts/admin/OrganizationManage";
 import PersonnelTypeManage from "../layouts/admin/PersonelTypeManage";
@@ -235,22 +234,6 @@ const userRouter = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <LeaveAdmin />
-              </ProtectedRoute>
-            ) 
-          },
-          { 
-            path: "approve", 
-            element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
-                <Approver />
-              </ProtectedRoute>
-            ) 
-          },
-          { 
-            path: "department-manage", 
-            element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
-                <DepartmentManage />
               </ProtectedRoute>
             ) 
           },
