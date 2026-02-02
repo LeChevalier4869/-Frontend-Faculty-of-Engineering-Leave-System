@@ -3,6 +3,7 @@ import {
   RouterProvider,
   Outlet,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
@@ -57,6 +58,7 @@ function AppLayout() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMiniSidebar, setMiniSidebar] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -76,6 +78,14 @@ function AppLayout() {
       else mq.removeListener(apply);
     };
   }, []);
+
+  // Scroll to top when route changes
+  useEffect(() => {
+    const mainElement = document.querySelector('main');
+    if (mainElement) {
+      mainElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [location.pathname]);
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);

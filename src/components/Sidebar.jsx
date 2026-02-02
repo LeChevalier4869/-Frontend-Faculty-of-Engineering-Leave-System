@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../utils/api";
 import {
@@ -40,20 +40,30 @@ const adminNav = [
   { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
   { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaUsersCog /> },
   { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
-  { to: "/admin/organization-manage", text: "จัดการองค์กร", icon: <FaUsersCog /> },
   { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
-  { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaUsersCog /> },
   { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
-  { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
   { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
   { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
+];
+
+const highLevelAdminNav = [
+  { to: "/admin/organization-manage", text: "จัดการองค์กร", icon: <FaUsersCog /> },
+  { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaUsersCog /> },
+  { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 
 export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = () => {}, isMobile = false }) {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [openAdmin, setOpenAdmin] = useState(false);
+
+  // Auto-close dropdown when route changes (commented out to keep dropdowns open)
+  // useEffect(() => {
+  //   setOpenAdmin(false);
+  //   setOpenProxy(false);
+  // }, [location.pathname]);
 
   // Proxy dropdown state
   const [openProxy, setOpenProxy] = useState(false);
@@ -65,6 +75,113 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
   const [proxyApprovers3, setProxyApprovers3] = useState([]);
   const [proxyApprovers4, setProxyApprovers4] = useState([]);
 
+  // Define Item component before using it in useMemo
+  const Item = ({ to, icon, text, proxyId, title }) => {
+    const currentPath = location.pathname;
+    const currentProxy = new URLSearchParams(location.search).get("proxy");
+    const itemProxy = proxyId ? proxyId.toString() : null;
+
+    const active =
+      currentPath === to &&
+      ((currentProxy === null && itemProxy === null) ||
+        (currentProxy !== null && itemProxy !== null && currentProxy === itemProxy));
+
+    const handleClick = () => {
+      // Scroll sidebar to top with multiple attempts for reliability
+      const scrollToTop = () => {
+        const sidebarElement = document.querySelector('aside');
+        if (sidebarElement) {
+          sidebarElement.scrollTo({ top: 0, behavior: 'smooth' });
+          // Fallback: try instant scroll if smooth doesn't work
+          setTimeout(() => {
+            if (sidebarElement.scrollTop > 0) {
+              sidebarElement.scrollTo({ top: 0, behavior: 'auto' });
+            }
+          }, 100);
+        }
+      };
+      
+      // Try scrolling immediately and also after a short delay
+      scrollToTop();
+      setTimeout(scrollToTop, 50);
+      
+      // Close mobile menu if needed
+      if (isMobile && typeof onClose === "function") {
+        onClose();
+      }
+    };
+
+    return (
+      <Link
+        to={proxyId ? `${to}?proxy=${proxyId}` : to}
+        onClick={handleClick}
+        title={title || text}
+        className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition ${
+          active
+            ? "bg-white/20 text-white ring-1 ring-white/30"
+            : "text-slate-200 hover:text-white hover:bg-white/10"
+        }`}
+      >
+        <span className="text-base">{icon}</span>
+        {!isMini && <span className="truncate">{text}</span>}
+      </Link>
+    );
+  };
+
+  // Special Item for high-level admin that handles navigation properly
+  const HighLevelAdminItem = ({ to, icon, text, title }) => {
+    const currentPath = location.pathname;
+    const active = currentPath === to || currentPath.startsWith(`${to}/`);
+
+    const handleClick = () => {
+      // Close mobile menu if needed
+      if (isMobile && typeof onClose === "function") {
+        onClose();
+      }
+    };
+
+    return (
+      <Link
+        to={to}
+        onClick={handleClick}
+        title={title || text}
+        className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition w-full text-left ${
+          active
+            ? "bg-white/20 text-white ring-1 ring-white/30"
+            : "text-slate-200 hover:text-white hover:bg-white/10"
+        }`}
+      >
+        <span className="text-base">{icon}</span>
+        {!isMini && <span className="truncate">{text}</span>}
+      </Link>
+    );
+  };
+  const Section = ({ title, children }) => (
+    <div className="space-y-2">
+      {!isMini && (
+        <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider px-4 mt-2 mb-1">
+          {title}
+        </div>
+      )}
+      <div className="flex flex-col gap-1">{children}</div>
+    </div>
+  );
+
+  // PropTypes for components
+  Item.propTypes = {
+    to: PropTypes.string.isRequired,
+    icon: PropTypes.node.isRequired,
+    text: PropTypes.string.isRequired,
+    proxyId: PropTypes.number,
+    title: PropTypes.string,
+  };
+
+  Section.propTypes = {
+    title: PropTypes.string.isRequired,
+    children: PropTypes.node.isRequired,
+  };
+
+  // Calculate roles
   const roles = Array.isArray(user.roles)
     ? user.roles
     : Array.isArray(user.role)
@@ -180,59 +297,6 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
 
     checkProxyRoles();
   }, [user?.id]);
-
-  const Item = ({ to, icon, text, proxyId, title }) => {
-    const currentPath = location.pathname;
-    const currentProxy = new URLSearchParams(location.search).get("proxy");
-    const itemProxy = proxyId ? proxyId.toString() : null;
-
-    const active =
-      currentPath === to &&
-      ((currentProxy === null && itemProxy === null) ||
-        (currentProxy !== null && itemProxy !== null && currentProxy === itemProxy));
-
-    return (
-      <Link
-        to={proxyId ? `${to}?proxy=${proxyId}` : to}
-        onClick={() => {
-          if (isMobile && typeof onClose === "function") onClose();
-        }}
-        title={title || text}
-        className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition ${
-          active
-            ? "bg-white/20 text-white ring-1 ring-white/30"
-            : "text-slate-200 hover:text-white hover:bg-white/10"
-        }`}
-      >
-        <span className="text-base">{icon}</span>
-        {!isMini && <span className="truncate">{text}</span>}
-      </Link>
-    );
-  };
-
-  Item.propTypes = {
-    to: PropTypes.string.isRequired,
-    icon: PropTypes.node.isRequired,
-    text: PropTypes.string.isRequired,
-    proxyId: PropTypes.number,
-    title: PropTypes.string,
-  };
-
-  const Section = ({ title, children }) => (
-    <div className="space-y-2">
-      {!isMini && (
-        <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider px-4 mt-2 mb-1">
-          {title}
-        </div>
-      )}
-      <div className="flex flex-col gap-1">{children}</div>
-    </div>
-  );
-
-  Section.propTypes = {
-    title: PropTypes.string.isRequired,
-    children: PropTypes.node.isRequired,
-  };
 
   const showApproval =
     hasRole("APPROVER_1") ||
@@ -419,41 +483,46 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
               )}
 
               {hasRole("ADMIN") && (
-                <Section title="ผู้ดูแลระบบ">
-                  {/* {console.log('🔍 Admin Menu Rendering - INSIDE ADMIN CONDITION')} */}
-                  {/* {console.log('🔍 Admin Menu Rendering - INSIDE ADMIN CONDITION')} */}
-                  <button
-                    onClick={() => {
-                      // console.log('🔍 Admin Menu Clicked');
-                      // console.log('🔍 Admin Menu Clicked');
-                      setOpenAdmin((prev) => !prev);
-                    }}
-                    className="flex items-center justify-between px-4 py-2 text-sm text-slate-200 hover:text-white hover:bg-white/10 rounded-xl w-full"
-                  >
-                    <span className="flex items-center gap-3">
-                      <FaUsersCog className="text-base" />
-                      {!isMini && <span>เมนูผู้ดูแล</span>}
-                    </span>
-                    {!isMini && (
-                      <HiOutlineChevronDown
-                        className={`w-5 h-5 ml-2 transition-transform ${
-                          openAdmin ? "rotate-180" : "rotate-0"
-                        }`}
-                      />
+                <>
+                  <Section title="ผู้ดูแลระบบ">
+                    <button
+                      onClick={() => {
+                        setOpenAdmin((prev) => !prev);
+                      }}
+                      className="flex items-center justify-between px-4 py-2 text-sm text-slate-200 hover:text-white hover:bg-white/10 rounded-xl w-full"
+                    >
+                      <span className="flex items-center gap-3">
+                        <FaUsersCog className="text-base" />
+                        {!isMini && <span>เมนูผู้ดูแล</span>}
+                      </span>
+                      {!isMini && (
+                        <HiOutlineChevronDown
+                          className={`w-5 h-5 ml-2 transition-transform ${
+                            openAdmin ? "rotate-180" : "rotate-0"
+                          }`}
+                        />
+                      )}
+                    </button>
+                    {openAdmin && (
+                      <div className="flex flex-col mt-1 ml-4">
+                        {adminNav.map((m, i) => {
+                          return <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                        })}
+                      </div>
                     )}
-                  </button>
-                  {openAdmin && (
-                    <div className="flex flex-col mt-1 ml-4">
-                      {/* {console.log('🔍 Admin Menu OPEN - Rendering adminNav:', adminNav.length)} */}
-                      {/* {console.log('🔍 Admin Menu OPEN - Rendering adminNav:', adminNav.length)} */}
-                      {adminNav.map((m, i) => {
-                        // console.log(`🔍 Rendering menu item: ${m.text} -> ${m.to}`);
-                        // console.log(`🔍 Rendering menu item: ${m.text} -> ${m.to}`);
-                        return <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
-                      })}
+                  </Section>
+
+                  <Section title="ผู้ดูแลระดับสูง">
+                    <div className="mb-2">
+                      <div className="text-xs text-amber-300 px-4 py-1">
+                        ⚠️ ฟีเจอร์สำคัญ - โปรดระมัดระวัง
+                      </div>
                     </div>
-                  )}
-                </Section>
+                    {highLevelAdminNav.map((m, i) => {
+                      return <HighLevelAdminItem key={`high-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                    })}
+                  </Section>
+                </>
               )}
             </nav>
 

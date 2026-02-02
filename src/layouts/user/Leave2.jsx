@@ -5,7 +5,7 @@ import axios from "axios";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import isBetween from "dayjs/plugin/isBetween";
-import { Plus, ChevronDown, Download, Clock } from "lucide-react";
+import { Plus, ChevronDown, Download, Clock, Info, ExternalLink } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
 
@@ -66,6 +66,7 @@ export default function Leave2() {
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
   const [leaveAvailabilityMap, setLeaveAvailabilityMap] = useState({});
   const [driveUrl, setDriveUrl] = useState(null);
+  const [leaveInformationUrl, setLeaveInformationUrl] = useState(null);
 
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
@@ -103,6 +104,17 @@ export default function Leave2() {
     }
   };
 
+  const fetchLeaveInformationUrl = async () => {
+    try {
+      const res = await axios.get(apiEndpoints.getSettingByKey('leave_information'));
+      setLeaveInformationUrl(res.data.data.value);
+    } catch (err) {
+      console.error("Error fetching leave information URL:", err);
+      // Fallback to hardcoded URL if setting not found
+      setLeaveInformationUrl('https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2');
+    }
+  };
+
   const fetchLeaveTypes = async () => {
     try {
       console.log("Fetching all leave types from:", apiEndpoints.getAllLeaveTypes);
@@ -130,6 +142,7 @@ export default function Leave2() {
     fetchLeaveRequests();
     fetchLeaveTypes();
     fetchGoogleDriveLink();
+    fetchLeaveInformationUrl();
   }, []);
 
   const formatDateTime = (iso) =>
@@ -224,6 +237,33 @@ export default function Leave2() {
             </button>
           </div>
         </div>
+
+        <Panel className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
+                <Info className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                ข้อมูลสิทธิประโยชน์และเงื่อนไขการลา
+              </h3>
+              <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+                ตรวจสอบข้อมูลละเอียดเกี่ยวกับสิทธิประโยชน์การลาต่างๆ เงื่อนไขการพิจารณา และวิธีการดำเนินการตามประเภทการลาที่สามารถลาได้
+              </p>
+              <a
+                href={leaveInformationUrl || 'https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-sm hover:shadow-md"
+              >
+                <ExternalLink className="w-4 h-4" />
+                ดูข้อมูลการลาฉบับสมบูรณ์
+              </a>
+            </div>
+          </div>
+        </Panel>
 
         <Panel className="p-5 space-y-4">
           <SectionHeader

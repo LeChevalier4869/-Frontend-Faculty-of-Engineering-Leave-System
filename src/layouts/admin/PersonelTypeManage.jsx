@@ -151,30 +151,41 @@ export default function PersonnelTypeManage() {
                 จัดการประเภทบุคลากร
               </h1>
               <p className="text-sm text-slate-600">
-                เพิ่ม แก้ไข หรือลบประเภทบุคลากรที่ใช้กำหนดสิทธิ์และข้อมูลในระบบ
+                ดูข้อมูลประเภทบุคลากรที่ใช้กำหนดสิทธิ์และข้อมูลในระบบ (ปิดกั้นการแก้ไขชั่วคราว)
               </p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+              <span className="text-amber-600 text-xs font-bold">!</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
+              <p className="text-xs text-amber-700">
+                ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
+                การเปลี่ยนแปลงข้อมูลอาจทำให้ระบบทำงานผิดพลาดได้จาก hardcoded logic และ dependencies ที่ซับซ้อน
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5 space-y-4 opacity-75">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 opacity-50">
             <input
               type="text"
               placeholder="กรอกชื่อประเภทบุคลากร"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className={`${inputBase} col-span-2`}
+              disabled
+              className={`${inputBase} col-span-2 bg-slate-100 cursor-not-allowed`}
             />
             <button
-              onClick={editId ? handleUpdate : handleAdd}
-              className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition ${
-                editId
-                  ? "bg-slate-700 hover:bg-slate-600"
-                  : "bg-sky-600 hover:bg-sky-500"
-              }`}
+              disabled
+              className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-slate-300 cursor-not-allowed opacity-50"
             >
-              {editId ? "อัปเดตประเภทบุคลากร" : "เพิ่มประเภทบุคลากร"}
+              ปิดกั้นการแก้ไข
             </button>
           </div>
         </div>
@@ -218,16 +229,16 @@ export default function PersonnelTypeManage() {
                       <td className="px-4 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => handleEdit(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-slate-600"
+                            disabled
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
                           >
-                            แก้ไข
+                            แก้ไข (ปิดกั้น)
                           </button>
                           <button
-                            onClick={() => handleDelete(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-rose-400"
+                            disabled
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
                           >
-                            ลบ
+                            ลบ (ปิดกั้น)
                           </button>
                         </div>
                       </td>

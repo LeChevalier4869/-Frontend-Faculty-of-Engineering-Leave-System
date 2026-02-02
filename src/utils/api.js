@@ -169,4 +169,8 @@ export const apiEndpoints = {
   getActionStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
   getAuditLogsByUserId: `${BASE_URL}/admin/audit-logs/user/:userId`, // GET
   getEntityData: `${BASE_URL}/admin/audit-logs/entity/:entityType/:entityId`, // GET
+  // Settings
+  getSettingByKey: (key) => `${BASE_URL}/setting/by/${key}`, // GET
+  updateSettingByKey: (key) => `${BASE_URL}/setting/by/${key}`, // PUT
+  getAllSettings: `${BASE_URL}/setting`, // GET
 };
