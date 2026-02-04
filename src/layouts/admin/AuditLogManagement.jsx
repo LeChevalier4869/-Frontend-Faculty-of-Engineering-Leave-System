@@ -77,6 +77,8 @@ const AuditLogManagement = () => {
     'CREATE_LEAVE_TYPE': 'สร้างประเภทการลา',
     'UPDATE_LEAVE_TYPE': 'อัปเดตประเภทการลา',
     'DELETE_LEAVE_TYPE': 'ลบประเภทการลา',
+    // Position Number Actions
+    'UPDATE_POSITION_NUMBER': 'อัปเดตเลขที่ตำแหน่ง',
     'CREATE_PERSONNEL_TYPE': 'สร้างประเภทบุคคล',
     'UPDATE_PERSONNEL_TYPE': 'อัปเดตประเภทบุคคล',
     'DELETE_PERSONNEL_TYPE': 'ลบประเภทบุคคล'
@@ -281,7 +283,7 @@ const AuditLogManagement = () => {
         ...response.data.map(log => {
           const translatedAction = actionTranslations[log.action] || log.action || '-';
           const translatedEntityType = entityTypeTranslations[log.entityType] || log.entityType || '-';
-          
+
           return [
             log.id || '',
             log.userId || '',
@@ -300,7 +302,7 @@ const AuditLogManagement = () => {
       // เพิ่ม UTF-8 BOM เพื่อให้อ่านภาษาไทยใน Excel ได้ถูกต้อง
       const BOM = '\uFEFF';
       const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-      
+
       // ดาวน์โหลดไฟล์
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -321,38 +323,49 @@ const AuditLogManagement = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex flex-col gap-1">
-          <span className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Admin Action
-          </span>
-          <h1 className="text-2xl font-bold text-white">บันทึกการทำงาน (Audit Log)</h1>
-          <p className="text-sm text-slate-200">ตรวจสอบประวัติการทำงานทั้งหมดในระบบ</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Admin View
+            </span>
+          </div>
+          <div className="w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col items-center gap-1 md:items-start">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                บันทึกการทำงาน (Audit Log)
+              </h1>
+              <p className="text-sm text-slate-600">
+                ตรวจสอบประวัติการทำงานทั้งหมดในระบบ
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-end">
+              <button
+                onClick={exportLogs}
+                className="px-6 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaDownload /> ส่งออกข้อมูล
+              </button>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={exportLogs}
-          className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 flex items-center gap-2 transition-colors"
-        >
-          <FaDownload /> ส่งออกข้อมูล
-        </button>
-      </div>
 
-      {/* Compact Filter Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* User Search */}
-          <div className="relative user-search-container flex-1 min-w-[180px] max-w-[250px]">
-            <input
-              type="text"
-              placeholder="ชื่อผู้ใช้..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              onFocus={() => searchTerm.trim() && setShowUserSuggestions(true)}
-              className="w-full text-sm px-3 py-1.5 pl-8 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400"
-            />
-            <FaSearch className="absolute left-2.5 top-2 text-slate-400 text-xs" />
+        {/* Compact Filter Bar */}
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* User Search */}
+            <div className="relative user-search-container flex-1 min-w-[180px] max-w-[250px]">
+              <input
+                type="text"
+                placeholder="ชื่อผู้ใช้..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                onFocus={() => searchTerm.trim() && setShowUserSuggestions(true)}
+                className="w-full text-sm px-3 py-1.5 pl-8 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              />
+              <FaSearch className="absolute left-2.5 top-2 text-slate-400 text-xs" />
             {searchTerm && (
               <button onClick={() => handleSearch('')} className="absolute right-2 top-2 text-slate-400 hover:text-slate-600">
                 <FaTimes className="text-xs" />
@@ -489,258 +502,251 @@ const AuditLogManagement = () => {
       {/* Audit Logs Table */}
       <div className="mt-6 rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
         {/* Desktop Table View */}
-        <div className="hidden lg:block min-h-full">
+        <div className="hidden lg:block">
           <div className="overflow-x-auto max-w-full">
-            <table className="w-full max-w-full divide-y divide-slate-200 rounded-t-xl table-fixed">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="w-[6%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ID</th>
-                  <th className="w-[18%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ผู้ใช้</th>
-                  <th className="w-[14%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">การกระทำ</th>
-                  <th className="w-[12%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ประเภท</th>
-                  <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">Entity ID</th>
-                  <th className="w-[26%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">รายละเอียด</th>
-                  <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">วันที่</th>
-                  <th className="w-[12%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">รายละเอียด/ข้อมูล</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
-                {loading ? (
+            <div className="min-h-[600px]">
+              <table className="w-full max-w-full divide-y divide-slate-200 rounded-t-xl table-fixed">
+                <thead className="bg-slate-50 sticky top-0 z-10">
                   <tr>
-                    <td colSpan="8" className="px-2 sm:px-3 lg:px-4 py-16 lg:py-20 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 lg:h-8 lg:w-8 border-b-2 border-sky-600"></div>
-                        <p className="mt-2 text-xs lg:text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
-                      </div>
-                    </td>
+                    <th className="w-[6%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ID</th>
+                    <th className="w-[18%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ผู้ใช้</th>
+                    <th className="w-[14%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">การกระทำ</th>
+                    <th className="w-[12%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">ประเภท</th>
+                    <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">Entity ID</th>
+                    <th className="w-[26%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">รายละเอียด</th>
+                    <th className="w-[10%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-left text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">วันที่</th>
+                    <th className="w-[12%] px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-[10px] lg:text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-700">รายละเอียด/ข้อมูล</th>
                   </tr>
-                ) : auditLogs.length === 0 ? (
-                  <tr>
-                    <td colSpan="8" className="px-2 sm:px-3 lg:px-4 py-16 lg:py-20 text-center text-slate-500">
-                      <div className="flex flex-col items-center">
-                        <FaFileAlt className="text-3xl lg:text-4xl text-slate-300 mb-3" />
-                        <p className="text-base lg:text-lg font-medium text-slate-600">ไม่พบข้อมูล Audit Log</p>
-                        <p className="text-xs lg:text-sm text-slate-400 mt-1">ลองปรับเปลี่ยนตัวกรองเพื่อค้นหาข้อมูลที่ต้องการ</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  auditLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono text-left">{log.id}</td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
-                        <div className="min-w-0">
-                          <div className="font-medium text-xs lg:text-sm truncate" title={`${log.user?.prefixName} ${log.user?.firstName} ${log.user?.lastName}`}>
-                            {log.user?.prefixName} {log.user?.firstName} {log.user?.lastName}
-                          </div>
-                          <div className="text-slate-500 text-xs truncate">ID: {log.userId}</div>
-                        </div>
-                      </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
-                        <span className="inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full bg-blue-100 text-blue-800 truncate max-w-full">
-                          {actionTranslations[log.action] || log.action}
-                          {!actionTranslations[log.action] && (
-                            <span className="ml-1 text-xs text-red-500">[?]</span>
-                          )}
-                        </span>
-                      </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
-                        {log.entityType ? (
-                          <span className="inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full bg-purple-100 text-purple-800 truncate max-w-full">
-                            {entityTypeTranslations[log.entityType] || log.entityType}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-center">
-                        {log.entityId ? (
-                          <span className="inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full bg-indigo-100 text-indigo-800 font-mono">
-                            #{log.entityId}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
-                        <div className="min-w-0">
-                          <div className="truncate" title={log.details}>
-                            {log.details || '-'}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono text-left">
-                        {format(new Date(log.createdAt), 'dd/MM HH:mm', { locale: th })}
-                      </td>
-                      <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-center">
-                        <div className="flex items-center justify-center gap-1 lg:gap-2">
-                          <button
-                            onClick={() => viewLogDetail(log)}
-                            className="text-sky-600 hover:text-sky-900 p-1 hover:bg-sky-50 rounded transition-colors"
-                            title="ดูรายละเอียด"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                          {log.entityId && log.entityType && (
-                            <button
-                              onClick={() => viewEntityData(log)}
-                              className="text-emerald-600 hover:text-emerald-900 p-1 hover:bg-emerald-50 rounded transition-colors"
-                              title="ดูข้อมูล Entity"
-                              disabled={entityLoading}
-                            >
-                              {entityLoading ? (
-                                <div className="animate-spin rounded-full h-3 w-3 lg:h-4 lg:w-4 border-b-2 border-emerald-600"></div>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                              )}
-                            </button>
-                          )}
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-100">
+                  {loading ? (
+                    <tr>
+                      <td colSpan="8" className="px-2 sm:px-3 lg:px-4 py-16 lg:py-20 text-center">
+                        <div className="flex flex-col items-center justify-center">
+                          <div className="animate-spin rounded-full h-6 w-6 lg:h-8 lg:w-8 border-b-2 border-sky-600"></div>
+                          <p className="mt-2 text-xs lg:text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : auditLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" className="px-2 sm:px-3 lg:px-4 py-16 lg:py-20 text-center text-slate-500">
+                        <div className="flex flex-col items-center">
+                          <FaFileAlt className="text-3xl lg:text-4xl text-slate-300 mb-3" />
+                          <p className="text-base lg:text-lg font-medium text-slate-600">ไม่พบข้อมูล Audit Log</p>
+                          <p className="text-xs lg:text-sm text-slate-400 mt-1">ลองปรับเปลี่ยนตัวกรองเพื่อค้นหาข้อมูลที่ต้องการ</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <>
+                      {auditLogs.map((log, idx) => (
+                        <tr key={log.id} className={`border-t border-slate-100 transition-colors ${
+                          idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                        } hover:bg-sky-50`}>
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono text-left">{log.id}</td>
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
+                            <div className="min-w-0">
+                              <div className="font-medium text-xs lg:text-sm truncate" title={`${log.user?.prefixName} ${log.user?.firstName} ${log.user?.lastName}`}>
+                                {log.user?.prefixName} {log.user?.firstName} {log.user?.lastName}
+                              </div>
+                              <div className="text-slate-500 text-xs truncate">ID: {log.userId}</div>
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
+                            <span className="inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full bg-blue-100 text-blue-800 truncate max-w-full">
+                              {actionTranslations[log.action] || log.action}
+                              {!actionTranslations[log.action] && (
+                                <span className="ml-1 text-xs text-red-500">[?]</span>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
+                            {log.entityType ? (
+                              <span className="inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full bg-purple-100 text-purple-800 truncate max-w-full">
+                                {entityTypeTranslations[log.entityType] || log.entityType}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-center">
+                            {log.entityId ? (
+                              <span className="inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full bg-indigo-100 text-indigo-800 font-mono">
+                                #{log.entityId}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
+                            <div className="min-w-0">
+                              <div className="truncate" title={log.details}>
+                                {log.details || '-'}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono text-left">
+                            {format(new Date(log.createdAt), 'dd/MM HH:mm', { locale: th })}
+                          </td>
+                          <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-center">
+                            <div className="flex items-center justify-center gap-1 lg:gap-2">
+                              <button
+                                onClick={() => viewLogDetail(log)}
+                                className="text-sky-600 hover:text-sky-900 p-1 hover:bg-sky-50 rounded transition-colors"
+                                title="ดูรายละเอียด"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                              {log.entityId && log.entityType && (
+                                <button
+                                  onClick={() => viewEntityData(log)}
+                                  className="text-emerald-600 hover:text-emerald-900 p-1 hover:bg-emerald-50 rounded transition-colors"
+                                  title="ดูข้อมูล Entity"
+                                  disabled={entityLoading}
+                                >
+                                  {entityLoading ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 lg:h-4 lg:w-4 border-b-2 border-emerald-600"></div>
+                                  ) : (
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {/* Fill empty rows to maintain consistent table height */}
+                      {Array.from({ length: Math.max(0, pagination.limit - auditLogs.length) }).map((_, idx) => (
+                        <tr key={`empty-${idx}`} className={auditLogs.length % 2 === 0 ? "bg-slate-50/70" : "bg-white"}>
+                          <td colSpan="8" className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 text-center text-slate-300">
+                            <div className="h-6"></div>
+                          </td>
+                        </tr>
+                      ))}
+                    </>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
         {/* Mobile Card View */}
         <div className="lg:hidden">
-          {loading ? (
-            <div className="px-4 py-20 text-center">
-              <div className="flex flex-col items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
-                <p className="mt-2 text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
-              </div>
-            </div>
-          ) : auditLogs.length === 0 ? (
-            <div className="px-4 py-20 text-center text-slate-500">
-              <div className="flex flex-col items-center">
-                <FaFileAlt className="text-4xl text-slate-300 mb-3" />
-                <p className="text-lg font-medium text-slate-600">ไม่พบข้อมูล Audit Log</p>
-                <p className="text-sm text-slate-400 mt-1">ลองปรับเปลี่ยนตัวกรองเพื่อค้นหาข้อมูลที่ต้องการ</p>
-              </div>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-200">
-              {auditLogs.map((log) => (
-                <div key={log.id} className="p-3 sm:p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
-                  {/* Header with ID, Action, and Actions */}
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className="text-sm font-medium text-slate-900 truncate">#{log.id}</span>
-                        <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 flex-shrink-0">
-                          {actionTranslations[log.action] || log.action}
-                          {!actionTranslations[log.action] && (
-                            <span className="ml-1 text-xs text-red-500">[?]</span>
-                          )}
-                        </span>
-                      </div>
-                      <div className="text-sm text-slate-900">
-                        <div className="font-medium truncate">
-                          {log.user?.prefixName} {log.user?.firstName} {log.user?.lastName}
-                        </div>
-                        <div className="text-slate-500 text-xs">ID: {log.userId}</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-1 ml-2 flex-shrink-0">
-                      <button
-                        onClick={() => viewLogDetail(log)}
-                        className="text-sky-600 hover:text-sky-900 p-2 active:bg-sky-50 rounded-lg transition-colors"
-                        title="ดูรายละเอียด"
-                      >
-                        <FaEye className="text-sm" />
-                      </button>
-                      {log.entityId && log.entityType && (
-                        <button
-                          onClick={() => viewEntityData(log)}
-                          className="text-emerald-600 hover:text-emerald-900 p-2 active:bg-emerald-50 rounded-lg transition-colors"
-                          title="ดูข้อมูล Entity"
-                          disabled={entityLoading}
-                        >
-                          {entityLoading ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
-                          ) : (
-                            <FaFileAlt className="text-sm" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Metadata Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
-                    {log.entityType && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-500 flex-shrink-0">ประเภท:</span>
-                        <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 truncate min-w-0">
-                          {entityTypeTranslations[log.entityType] || log.entityType}
-                        </span>
-                      </div>
-                    )}
-                    {log.entityId && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-500 flex-shrink-0">ID:</span>
-                        <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 truncate min-w-0">
-                          #{log.entityId}
-                        </span>
-                      </div>
-                    )}
-                    {log.ipAddress && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-500 flex-shrink-0">IP:</span>
-                        <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 truncate min-w-0">
-                          {log.ipAddress}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-500 flex-shrink-0">วันที่:</span>
-                      <span className="text-slate-900 truncate min-w-0">
-                        {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm', { locale: th })}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Details Section */}
-                  {log.details && (
-                    <div className="text-xs border-t border-slate-100 pt-2">
-                      <div className="flex items-start gap-1">
-                        <span className="text-slate-500 flex-shrink-0 mt-0.5">รายละเอียด:</span>
-                        <p className="text-slate-900 line-clamp-2 flex-1 min-w-0">{log.details}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Quick Actions Bar */}
-                  <div className="mt-3 pt-2 border-t border-slate-100 flex justify-end gap-2">
-                    <button
-                      onClick={() => viewLogDetail(log)}
-                      className="text-xs px-3 py-1.5 bg-sky-50 text-sky-700 rounded-lg hover:bg-sky-100 transition-colors font-medium"
-                    >
-                      ดูรายละเอียด
-                    </button>
-                    {log.entityId && log.entityType && (
-                      <button
-                        onClick={() => viewEntityData(log)}
-                        className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-medium"
-                        disabled={entityLoading}
-                      >
-                        {entityLoading ? 'กำลังโหลด...' : 'ดูข้อมูล'}
-                      </button>
-                    )}
-                  </div>
+          <div className="min-h-[600px]">
+            {loading ? (
+              <div className="px-4 py-20 text-center">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
+                  <p className="mt-2 text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ) : auditLogs.length === 0 ? (
+              <div className="px-4 py-20 text-center text-slate-500">
+                <div className="flex flex-col items-center">
+                  <FaFileAlt className="text-4xl text-slate-300 mb-3" />
+                  <p className="text-lg font-medium text-slate-600">ไม่พบข้อมูล Audit Log</p>
+                  <p className="text-sm text-slate-400 mt-1">ลองปรับเปลี่ยนตัวกรองเพื่อค้นหาข้อมูลที่ต้องการ</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="divide-y divide-slate-200">
+                  {auditLogs.map((log) => (
+                    <div key={log.id} className="p-3 sm:p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
+                      {/* Header with ID, Action, and Actions */}
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className="text-sm font-medium text-slate-900 truncate">#{log.id}</span>
+                            <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 flex-shrink-0">
+                              {actionTranslations[log.action] || log.action}
+                              {!actionTranslations[log.action] && (
+                                <span className="ml-1 text-xs text-red-500">[?]</span>
+                              )}
+                            </span>
+                          </div>
+                          <div className="text-sm text-slate-900">
+                            <div className="font-medium truncate">
+                              {log.user?.prefixName} {log.user?.firstName} {log.user?.lastName}
+                            </div>
+                            <div className="text-slate-500 text-xs">ID: {log.userId}</div>
+                          </div>
+                        </div>
+                        <div className="flex gap-1 ml-2 flex-shrink-0">
+                          <button
+                            onClick={() => viewLogDetail(log)}
+                            className="text-sky-600 hover:text-sky-900 p-2 active:bg-sky-50 rounded-lg transition-colors"
+                            title="ดูรายละเอียด"
+                          >
+                            <FaEye className="text-sm" />
+                          </button>
+                          {log.entityId && log.entityType && (
+                            <button
+                              onClick={() => viewEntityData(log)}
+                              className="text-emerald-600 hover:text-emerald-900 p-2 active:bg-emerald-50 rounded-lg transition-colors"
+                              title="ดูข้อมูล Entity"
+                              disabled={entityLoading}
+                            >
+                              {entityLoading ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
+                              ) : (
+                                <FaFileAlt className="text-sm" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Details Section */}
+                      <div className="space-y-2 text-sm">
+                        {log.entityType && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">ประเภท:</span>
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800">
+                              {entityTypeTranslations[log.entityType] || log.entityType}
+                            </span>
+                          </div>
+                        )}
+                        {log.entityId && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">Entity ID:</span>
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-100 text-indigo-800 font-mono">
+                              #{log.entityId}
+                            </span>
+                          </div>
+                        )}
+                        {log.details && (
+                          <div className="flex items-start gap-2">
+                            <span className="text-slate-500">รายละเอียด:</span>
+                            <span className="text-slate-900 text-xs flex-1 truncate">{log.details}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">วันที่:</span>
+                          <span className="text-slate-900 text-xs font-mono">
+                            {format(new Date(log.createdAt), 'dd/MM HH:mm', { locale: th })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Fill empty space to maintain consistent height */}
+                {Array.from({ length: Math.max(0, pagination.limit - auditLogs.length) }).map((_, idx) => (
+                  <div key={`empty-mobile-${idx}`} className="p-3 sm:p-4 border-t border-slate-100">
+                    <div className="h-20"></div>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Pagination */}
@@ -776,7 +782,7 @@ const AuditLogManagement = () => {
                   {[...Array(Math.min(pagination.totalPages, 5))].map((_, index) => {
                     const page = index + 1;
                     const isCurrentPage = page === pagination.currentPage;
-                    
+
                     return (
                       <button
                         key={page}
@@ -824,36 +830,19 @@ const AuditLogManagement = () => {
                     const totalPages = pagination.totalPages;
                     const currentPage = pagination.currentPage;
                     const pages = [];
-                    
+
                     if (totalPages <= 7) {
-                      // Show all pages if 7 or less
-                      for (let i = 1; i <= totalPages; i++) {
-                        pages.push(i);
-                      }
+                      for (let i = 1; i <= totalPages; i++) pages.push(i);
                     } else {
-                      // Always show first page
                       pages.push(1);
-                      
                       if (currentPage <= 4) {
-                        // Near start: 1, 2, 3, 4, 5, ..., last
-                        pages.push(2, 3, 4, 5);
-                        pages.push('...');
-                        pages.push(totalPages);
+                        pages.push(2, 3, 4, 5, '...', totalPages);
                       } else if (currentPage >= totalPages - 3) {
-                        // Near end: 1, ..., last-4, last-3, last-2, last-1, last
-                        pages.push('...');
-                        for (let i = totalPages - 4; i <= totalPages; i++) {
-                          pages.push(i);
-                        }
+                        pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
                       } else {
-                        // Middle: 1, ..., current-1, current, current+1, ..., last
-                        pages.push('...');
-                        pages.push(currentPage - 1, currentPage, currentPage + 1);
-                        pages.push('...');
-                        pages.push(totalPages);
+                        pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
                       }
                     }
-                    
                     return pages.map((page, idx) => {
                       if (page === '...') {
                         return (
@@ -862,16 +851,12 @@ const AuditLogManagement = () => {
                           </span>
                         );
                       }
-                      
-                      const isCurrentPage = page === currentPage;
                       return (
                         <button
                           key={page}
                           onClick={() => handlePageChange(page)}
                           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            isCurrentPage
-                              ? 'z-10 bg-sky-50 border-sky-500 text-sky-600'
-                              : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                            currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                           }`}
                         >
                           {page}
@@ -1069,7 +1054,7 @@ const AuditLogManagement = () => {
                   </pre>
                 </div>
                 )}
-                
+
                 {/* Show Diff if available */}
                 {entityData.data?.diff && entityData.data.diff.length > 0 && (
                   <div className="mt-4">
@@ -1098,7 +1083,7 @@ const AuditLogManagement = () => {
                               <div>
                                 <span className="text-red-600 font-medium">เก่า:</span>
                                 <div className="bg-red-50 p-2 rounded border border-red-200 mt-1 break-words">
-                                  {typeof change.oldValue === 'object' 
+                                  {typeof change.oldValue === 'object'
                                     ? JSON.stringify(change.oldValue, null, 2)
                                     : String(change.oldValue) || '-'
                                   }
@@ -1109,7 +1094,7 @@ const AuditLogManagement = () => {
                               <div>
                                 <span className="text-green-600 font-medium">ใหม่:</span>
                                 <div className="bg-green-50 p-2 rounded border border-green-200 mt-1 break-words">
-                                  {typeof change.newValue === 'object' 
+                                  {typeof change.newValue === 'object'
                                     ? JSON.stringify(change.newValue, null, 2)
                                     : String(change.newValue) || '-'
                                   }
@@ -1156,6 +1141,7 @@ const AuditLogManagement = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

@@ -51,6 +51,7 @@ import AddOtherRequest from "../layouts/admin/AddOtherRequest";
 import ProxyApprovalManagement from "../layouts/admin/ProxyApprovalManagement";
 import AuditLogManagement from "../layouts/admin/AuditLogManagement";
 import Config from "../layouts/admin/Config";
+import PositionNumberManagement from "../layouts/admin/PositionNumberManagement";
 import ProtectedRoute from "../components/ProtectedRoute";
 import bg from "../assets/bg.jpg";
 
@@ -166,202 +167,210 @@ const userRouter = createBrowserRouter([
       {
         path: "approver",
         children: [
-          { 
-            path: "leave-request-approver1", 
+          {
+            path: "leave-request-approver1",
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_1']} checkProxy={true}>
                 <LeaveApprover1 />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "leave-request-approver2", 
+          {
+            path: "leave-request-approver2",
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_2']} checkProxy={true}>
                 <LeaveApprover2 />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "leave-request-approver3", 
+          {
+            path: "leave-request-approver3",
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_3']} checkProxy={true}>
                 <LeaveApprover3 />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "leave-request-approver4", 
+          {
+            path: "leave-request-approver4",
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_4']} checkProxy={true}>
                 <LeaveApprover4 />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "leave-request-verifier", 
+          {
+            path: "leave-request-verifier",
             element: (
               <ProtectedRoute requiredRoles={['VERIFIER']} checkProxy={true}>
                 <LeaveVerifier />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "dashboard-approver1", 
+          {
+            path: "dashboard-approver1",
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_1']} checkProxy={true}>
                 <Approver1Dashboard />
               </ProtectedRoute>
-            ) 
+            )
           },
         ],
       },
       {
         path: "admin",
         children: [
-          { 
-            path: "dashboard", 
+          {
+            path: "dashboard",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <DashBoard />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "leave-report", 
+          {
+            path: "leave-report",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <LeaveReport />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "manage-user", 
+          {
+            path: "manage-user",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <UserManage />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "organization", 
+          {
+            path: "position-numbers",
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <PositionNumberManagement />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: "organization",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <OrganizationManage />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "organization-manage", 
+          {
+            path: "organization-manage",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <OrganizationManage />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "department-manage", 
+          {
+            path: "department-manage",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <DepartmentManage />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "personel-manage", 
+          {
+            path: "personel-manage",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <PersonnelTypeManage />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "holiday-manage", 
+          {
+            path: "holiday-manage",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <HolidayManage />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "setting-manage", 
+          {
+            path: "setting-manage",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <SettingManage />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "leave-type-manage", 
+          {
+            path: "leave-type-manage",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <LeaveTypeManage />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "user-info/:id", 
+          {
+            path: "user-info/:id",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <UserInfo />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "add-user", 
+          {
+            path: "add-user",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <AddnewUser />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "edit-profile", 
+          {
+            path: "edit-profile",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <EditProfile />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "user/:id", 
+          {
+            path: "user/:id",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <EditUser />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "add-other-request", 
+          {
+            path: "add-other-request",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <AddOtherRequest />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "proxy-approval", 
+          {
+            path: "proxy-approval",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <ProxyApprovalManagement />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "audit-logs", 
+          {
+            path: "audit-logs",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <AuditLogManagement />
               </ProtectedRoute>
-            ) 
+            )
           },
-          { 
-            path: "config", 
+          {
+            path: "config",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <Config />
               </ProtectedRoute>
-            ) 
+            )
           },
         ],
       },
@@ -372,11 +381,11 @@ const userRouter = createBrowserRouter([
 
 export default function AppRouter() {
   const { user } = useAuth();
-  
+
   // ตรวจสอบว่ามี token และ user หรือไม่
   const hasToken = localStorage.getItem("accessToken");
   const finalRouter = (user?.id && hasToken) ? userRouter : guestRouter;
-  
+
   // Debug: ดูข้อมูล user และ routes
   // console.log('🔍 Debug - AppRouter:', {
   //   user: user ? {
@@ -389,6 +398,6 @@ export default function AppRouter() {
   //   hasToken: !!hasToken,
   //   finalRouter: finalRouter === userRouter ? 'userRouter' : 'guestRouter'
   // });
-  
+
   return <RouterProvider router={finalRouter} />;
 }

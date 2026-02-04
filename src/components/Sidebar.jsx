@@ -11,6 +11,7 @@ import {
   FaChartBar,
   FaClipboardList,
   FaCheckCircle,
+  FaIdBadge,
 } from "react-icons/fa";
 import { HiOutlineChevronDown } from "react-icons/hi";
 import useAuth from "../hooks/useAuth";
@@ -40,6 +41,7 @@ const adminNav = [
   { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
   { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaUsersCog /> },
   { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
+  { to: "/admin/position-numbers", text: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
   { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
   { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
   { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
@@ -100,11 +102,11 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
           }, 100);
         }
       };
-      
+
       // Try scrolling immediately and also after a short delay
       scrollToTop();
       setTimeout(scrollToTop, 50);
-      
+
       // Close mobile menu if needed
       if (isMobile && typeof onClose === "function") {
         onClose();

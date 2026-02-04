@@ -43,6 +43,12 @@ export const apiEndpoints = {
   getHoliday : `${BASE_URL}/admin/holiday`, // GET
   adminLeaveRequests : `${BASE_URL}/admin/leave-requests`, //POST
 
+  // Position Number Management
+  updatePositionNumber: (userId) => `${BASE_URL}/admin/users/${userId}/position-number`, // PUT
+  getUserPositionHistory: (userId) => `${BASE_URL}/admin/users/${userId}/position-number/history`, // GET
+  getCurrentPositionNumber: (userId) => `${BASE_URL}/admin/users/${userId}/position-number/current`, // GET
+  getPositionNumberByNumber: (positionNumber) => `${BASE_URL}/admin/position-numbers/${positionNumber}`, // GET
+
   //API
   getContact : `${BASE_URL}/api/contact`, // GET
   updateAdminContact: (key) => `${BASE_URL}/api/contact/${key}`, //PUT
