@@ -356,10 +356,30 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
                   </span>
                 </div>
               ) : (
-                <div className="text-gray-600">
+                <div className={workingDays > selectedLeaveBalance?.remainingDays ? "text-red-600" : "text-gray-600"}>
                   จำนวนวันลา: {" "}
-                  <span className="font-bold text-black">{workingDays} วัน</span>
+                  <span className={`font-bold ${workingDays > selectedLeaveBalance?.remainingDays ? "text-red-600" : "text-black"}`}>
+                    {workingDays} วัน
+                  </span>
                   <span className="ml-2 text-xs text-gray-500">(ไม่นับเสาร์-อาทิตย์ และวันหยุดราชการ)</span>
+                </div>
+              )}
+              {/* แจ้งเตือนเมื่อจำนวนวันลาเกินสิทธิที่เหลืออยู่ */}
+              {selectedLeaveBalance && workingDays > selectedLeaveBalance.remainingDays && (
+                <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 border border-red-200">
+                  <span className="font-medium">⚠️ ลาเกินสิทธิ</span>
+                  <span className="ml-2 text-xs text-red-600">
+                    (จำนวนวันที่ขอลา {workingDays} วัน เกินสิทธิที่เหลือ {selectedLeaveBalance.remainingDays} วัน)
+                  </span>
+                </div>
+              )}
+              {/* แจ้งเตือนเมื่อจำนวนวันลาเกินกำหนด */}
+              {workingDays > 3 && (
+                <div className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700 border border-amber-200">
+                  <span className="font-medium">⚠️ คำเตือน: จำนวนวันลาเกินกำหนด</span>
+                  <span className="ml-2 text-xs text-amber-600">
+                    (การลาเกิน 3 วันขึ้นไป อาจส่งผลต่อการจ่ายเงินเดือน)
+                  </span>
                 </div>
               )}
             </div>
