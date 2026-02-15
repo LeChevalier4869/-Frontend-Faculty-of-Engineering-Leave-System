@@ -5,7 +5,7 @@ import axios from "axios";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import isBetween from "dayjs/plugin/isBetween";
-import { Plus, ChevronDown, Download, Clock } from "lucide-react";
+import { Plus, ChevronDown, Download, Clock, Info, ExternalLink } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
 
@@ -64,7 +64,9 @@ export default function Leave2() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
+  const [leaveAvailabilityMap, setLeaveAvailabilityMap] = useState({});
   const [driveUrl, setDriveUrl] = useState(null);
+  const [leaveInformationUrl, setLeaveInformationUrl] = useState(null);
 
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
@@ -97,24 +99,50 @@ export default function Leave2() {
     try {
       const res = await axios.get(apiEndpoints.getDriveLink);
       setDriveUrl(res.data.url);
-    } catch (err) {}
+    } catch (err) {
+      console.error("Error fetching Google Drive link:", err);
+    }
+  };
+
+  const fetchLeaveInformationUrl = async () => {
+    try {
+      const res = await axios.get(apiEndpoints.getSettingByKey('leave_information'));
+      setLeaveInformationUrl(res.data.data.value);
+    } catch (err) {
+      console.error("Error fetching leave information URL:", err);
+      // Fallback to hardcoded URL if setting not found
+      setLeaveInformationUrl('https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2');
+    }
   };
 
   const fetchLeaveTypes = async () => {
     try {
-      const res = await axios.get(apiEndpoints.getAllLeaveTypes);
+      console.log("Fetching all leave types from:", apiEndpoints.getAllLeaveTypes);
+      const token = localStorage.getItem("accessToken");
+      const res = await axios.get(apiEndpoints.getAllLeaveTypes, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("All leave types response:", res.data);
       const map = {};
+      const availabilityMap = {};
       (res.data.data || []).forEach((lt) => {
         map[lt.id] = lt.name;
+        availabilityMap[lt.id] = lt.isAvailable;
       });
+      console.log("Leave types map:", map);
+      console.log("Availability map:", availabilityMap);
       setLeaveTypesMap(map);
-    } catch (err) {}
+      setLeaveAvailabilityMap(availabilityMap);
+    } catch (err) {
+      console.error("Error fetching leave types:", err);
+    }
   };
 
   useEffect(() => {
     fetchLeaveRequests();
     fetchLeaveTypes();
     fetchGoogleDriveLink();
+    fetchLeaveInformationUrl();
   }, []);
 
   const formatDateTime = (iso) =>
@@ -209,6 +237,33 @@ export default function Leave2() {
             </button>
           </div>
         </div>
+
+        <Panel className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
+                <Info className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                ข้อมูลสิทธิประโยชน์และเงื่อนไขการลา
+              </h3>
+              <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+                ตรวจสอบข้อมูลละเอียดเกี่ยวกับสิทธิประโยชน์การลาต่างๆ เงื่อนไขการพิจารณา และวิธีการดำเนินการตามประเภทการลาที่สามารถลาได้
+              </p>
+              <a
+                href={leaveInformationUrl || 'https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-sm hover:shadow-md"
+              >
+                <ExternalLink className="w-4 h-4" />
+                ดูข้อมูลการลาฉบับสมบูรณ์
+              </a>
+            </div>
+          </div>
+        </Panel>
 
         <Panel className="p-5 space-y-4">
           <SectionHeader
@@ -332,7 +387,7 @@ export default function Leave2() {
             <table className="min-w-full w-full text-sm text-slate-800">
               <thead>
                 <tr className="bg-slate-50 border-y border-slate-200">
-                  {["วันที่ยื่น", "ประเภทการลา", "วันเริ่มต้น", "วันสิ้นสุด", "สถานะ"].map(
+                  {["วันที่ยื่น", "ประเภทการลา", "ประเภท", "วันเริ่มต้น", "วันสิ้นสุด", "สถานะ"].map(
                     (h, i) => (
                       <th
                         key={i}
@@ -362,6 +417,17 @@ export default function Leave2() {
                         <td className="px-4 py-3">
                           {leaveTypesMap[leave.leaveTypeId] || "-"}
                         </td>
+                        <td className="px-4 py-3">
+                          {leaveAvailabilityMap[leave.leaveTypeId] ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              ยื่นเอง
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                              แอดมิน
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {formatDate(leave.startDate)}
                         </td>
@@ -384,7 +450,7 @@ export default function Leave2() {
                 ) : (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       className="px-4 py-8 text-center text-slate-500 text-sm"
                     >
                       ไม่มีข้อมูลการลา
@@ -396,24 +462,57 @@ export default function Leave2() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-3 py-4 bg-slate-50 border-t border-slate-200">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition"
-              >
-                ก่อนหน้า
-              </button>
-              <span className="text-xs text-slate-600">
-                หน้า {currentPage} / {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition"
-              >
-                ถัดไป
-              </button>
+            <div className="flex items-center justify-between py-3 px-4 bg-slate-50 border-t border-slate-200">
+              <div className="text-sm text-slate-700">
+                แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ
+              </div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ก่อนหน้า
+                </button>
+                {(() => {
+                  const pages = [];
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(1);
+                    if (currentPage <= 4) {
+                      pages.push(2, 3, 4, 5, '...', totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    } else {
+                      pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                    }
+                  }
+                  return pages.map((page, idx) => {
+                    if (page === '...') {
+                      return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                    }
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  });
+                })()}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
+              </nav>
             </div>
           )}
         </Panel>

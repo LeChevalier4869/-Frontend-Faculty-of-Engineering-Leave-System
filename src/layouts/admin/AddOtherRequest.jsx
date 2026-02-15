@@ -10,7 +10,7 @@ import Swal from "sweetalert2";
 import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
-import { Plus, ChevronDown, PlusCircle, X, Clock, Ban } from "lucide-react";
+import { Plus, ChevronDown, PlusCircle, X, Clock, Ban, Info, ExternalLink } from "lucide-react";
 import {
   filterLeaveBalancesLatestYear,
   filterLeaveTypesMapBySex,
@@ -917,6 +917,7 @@ export default function AddOtherRequest() {
   const [filterLeaveType, setFilterLeaveType] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
   const [accountNameMap, setAccountNameMap] = useState({});
+  const [leaveInformationUrl, setLeaveInformationUrl] = useState(null);
 
   const fetchAccountNames = async (rows) => {
     // const token = localStorage.getItem("accessToken");
@@ -979,9 +980,21 @@ export default function AddOtherRequest() {
     }
   };
 
+  const fetchLeaveInformationUrl = async () => {
+    try {
+      const res = await API.get(apiEndpoints.getSettingByKey('leave_information'));
+      if (res.data?.data?.value) setLeaveInformationUrl(res.data.data.value);
+    } catch (err) {
+      console.error("ไม่สามารถโหลดลิงก์ข้อมูลการลา:", err);
+      // Fallback to hardcoded URL if setting not found
+      setLeaveInformationUrl('https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2');
+    }
+  };
+
   useEffect(() => {
     fetchLeaveRequests();
     fetchLeaveTypes();
+    fetchLeaveInformationUrl();
   }, []);
 
   const formatDateTime = (iso) =>
@@ -1092,6 +1105,34 @@ export default function AddOtherRequest() {
           <p className="text-sm text-slate-600">
             สำหรับบันทึกคำขอการลาที่ส่งนอกระบบออนไลน์ หรือคำขออื่น ๆ แทนผู้ใช้
           </p>
+        </div>
+
+        {/* Leave Information Panel */}
+        <div className="rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
+                <Info className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                ข้อมูลสิทธิประโยชน์และเงื่อนไขการลา
+              </h3>
+              <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+                ตรวจสอบข้อมูลละเอียดเกี่ยวกับสิทธิประโยชน์การลาต่างๆ เงื่อนไขการพิจารณา และวิธีการดำเนินการตามประเภทการลาที่สามารถลาได้
+              </p>
+              <a
+                href={leaveInformationUrl || 'https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-sm hover:shadow-md"
+              >
+                <ExternalLink className="w-4 h-4" />
+                ดูข้อมูลการลาฉบับสมบูรณ์
+              </a>
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1295,26 +1336,57 @@ export default function AddOtherRequest() {
           </div>
 
           {!loading && totalPages > 1 && (
-            <div className="mt-6 flex justify-center items-center gap-4">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-              >
-                ก่อนหน้า
-              </button>
-              <span className="text-sm text-slate-700">
-                หน้า {currentPage} / {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-              >
-                ถัดไป
-              </button>
+            <div className="flex items-center justify-between mt-6 bg-white rounded-lg px-4 py-3 border border-slate-200">
+              <div className="text-sm text-slate-700">
+                แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ
+              </div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ก่อนหน้า
+                </button>
+                {(() => {
+                  const pages = [];
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(1);
+                    if (currentPage <= 4) {
+                      pages.push(2, 3, 4, 5, '...', totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    } else {
+                      pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                    }
+                  }
+                  return pages.map((page, idx) => {
+                    if (page === '...') {
+                      return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                    }
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  });
+                })()}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
+              </nav>
             </div>
           )}
         </div>

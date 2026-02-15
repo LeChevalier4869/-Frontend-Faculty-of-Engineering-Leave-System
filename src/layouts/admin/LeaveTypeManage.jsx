@@ -151,7 +151,7 @@ export default function LeaveTypeManage() {
                 จัดการประเภทการลา
               </h1>
               <p className="text-sm text-slate-600">
-                เพิ่ม แก้ไข หรือลบประเภทการลาที่ใช้ในระบบ
+                ดูข้อมูลประเภทการลาที่ใช้ในระบบ (ปิดกั้นการแก้ไขชั่วคราว)
               </p>
             </div>
             <div className="text-xs text-slate-500">
@@ -164,8 +164,23 @@ export default function LeaveTypeManage() {
           </div>
         </div>
 
-        <Panel className="p-5">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+        <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+              <span className="text-amber-600 text-xs font-bold">!</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
+              <p className="text-xs text-amber-700">
+                ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
+                การเปลี่ยนแปลงข้อมูลอาจทำให้ระบบทำงานผิดพลาดได้จาก hardcoded logic และ dependencies ที่ซับซ้อน
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Panel className="p-5 opacity-75">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end opacity-50">
             <div className="lg:col-span-2 flex flex-col gap-1">
               <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
                 ชื่อประเภทการลา
@@ -174,8 +189,8 @@ export default function LeaveTypeManage() {
                 type="text"
                 placeholder="เช่น ลาป่วย, ลากิจ"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={inputClass}
+                disabled
+                className={`${inputClass} bg-slate-100 cursor-not-allowed`}
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -183,8 +198,8 @@ export default function LeaveTypeManage() {
                 <input
                   type="checkbox"
                   checked={isAvailable}
-                  onChange={() => setIsAvailable(!isAvailable)}
-                  className={checkboxClass}
+                  disabled
+                  className={`${checkboxClass} opacity-50 cursor-not-allowed`}
                 />
                 <span className="text-sm text-slate-800">
                   สามารถลาในระบบได้
@@ -194,8 +209,8 @@ export default function LeaveTypeManage() {
                 <input
                   type="checkbox"
                   checked={resetOnFiscalYear}
-                  onChange={() => setResetOnFiscalYear(!resetOnFiscalYear)}
-                  className={checkboxClass}
+                  disabled
+                  className={`${checkboxClass} opacity-50 cursor-not-allowed`}
                 />
                 <span className="text-sm text-slate-800">
                   รีเซ็ตยอดวันลาปีใหม่
@@ -204,14 +219,10 @@ export default function LeaveTypeManage() {
             </div>
             <div className="lg:col-span-1 flex lg:justify-end">
               <button
-                onClick={editId ? handleUpdate : handleAdd}
-                className={`${buttonClass} ${
-                  editId
-                    ? "bg-emerald-600 hover:bg-emerald-500"
-                    : "bg-sky-600 hover:bg-sky-500"
-                } w-full lg:w-auto`}
+                disabled
+                className={`${buttonClass} bg-slate-300 cursor-not-allowed opacity-50 w-full lg:w-auto`}
               >
-                {editId ? "อัปเดต" : "เพิ่ม"}
+                ปิดกั้นการแก้ไข
               </button>
             </div>
           </div>
@@ -286,16 +297,16 @@ export default function LeaveTypeManage() {
                       <td className="px-4 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => handleEdit(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-slate-600"
+                            disabled
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
                           >
-                            แก้ไข
+                            แก้ไข (ปิดกั้น)
                           </button>
                           <button
-                            onClick={() => handleDelete(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-rose-400"
+                            disabled
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
                           >
-                            ลบ
+                            ลบ (ปิดกั้น)
                           </button>
                         </div>
                       </td>

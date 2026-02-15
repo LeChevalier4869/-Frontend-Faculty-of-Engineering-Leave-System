@@ -13,12 +13,19 @@ const Panel = ({ className = "", children }) => (
 );
 
 export default function ConfigPage() {
+  // Role checking for superadmin access
+  const isSuperAdmin = () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user.roles?.includes('SUPER_ADMIN') || false;
+  };
+
   const [contacts, setContacts] = useState({
     AdminName: "",
     AdminPhone: "",
     AdminMail: "",
   });
   const [driveLink, setDriveLink] = useState("");
+  const [leaveInformationUrl, setLeaveInformationUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -93,9 +100,19 @@ export default function ConfigPage() {
     }
   };
 
+  const fetchLeaveInformationUrl = async () => {
+    try {
+      const res = await axios.get(apiEndpoints.getSettingByKey('leave_information'));
+      if (res.data?.data?.value) setLeaveInformationUrl(res.data.data.value);
+    } catch (err) {
+      console.error("ไม่สามารถโหลดลิงก์ข้อมูลการลา:", err);
+    }
+  };
+
   useEffect(() => {
     fetchContacts();
     fetchDriveLink();
+    fetchLeaveInformationUrl();
     fetchFiscalYear();
     fetchAvailableYears();
   }, []);
@@ -172,6 +189,32 @@ export default function ConfigPage() {
     } catch (err) {
       console.error(err);
       showAlert("error", "เกิดข้อผิดพลาด", "ไม่สามารถบันทึกลิงก์ได้");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveLeaveInformationUrl = async () => {
+    if (!leaveInformationUrl?.trim()) {
+      showAlert("warning", "กรุณากรอกลิงก์ข้อมูลการลาก่อน");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await axios.put(
+        apiEndpoints.updateSettingByKey('leave_information'),
+        { 
+          value: leaveInformationUrl,
+          type: 'url',
+          description: 'สิทธิประโยชน์ว่าด้วยการลา'
+        },
+        authHeader()
+      );
+      showAlert("success", "บันทึกลิงก์ข้อมูลการลาสำเร็จ", "", 1500);
+    } catch (err) {
+      console.error(err);
+      showAlert("error", "เกิดข้อผิดพลาด", "ไม่สามารถบันทึกลิงก์ข้อมูลการลาได้");
     } finally {
       setSaving(false);
     }
@@ -483,18 +526,36 @@ export default function ConfigPage() {
         </Panel>
 
         {/* Drive Link */}
-        <Panel className="p-6 sm:p-8">
+        <Panel className={`p-6 sm:p-8 ${!isSuperAdmin() ? 'opacity-75' : ''}`}>
           <h2 className="text-xl md:text-2xl font-semibold text-slate-900 mb-6">
             ลิงก์ดาวน์โหลดใบลา (Google Drive)
           </h2>
+
+          {!isSuperAdmin() && (
+            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                  <span className="text-amber-600 text-xs font-bold">!</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
+                  <p className="text-xs text-amber-700">
+                    ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
+                    การเปลี่ยนแปลงลิงก์อาจทำให้ผู้ใช้ไม่สามารถดาวน์โหลดเอกสารได้
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col md:flex-row md:items-center md:gap-4">
             <input
               type="text"
               value={driveLink}
-              onChange={(e) => setDriveLink(e.target.value)}
+              onChange={(e) => isSuperAdmin() && setDriveLink(e.target.value)}
               placeholder="วางลิงก์ Google Drive ที่นี่"
-              className={`${inputBase} flex-1`}
+              disabled={!isSuperAdmin()}
+              className={`${inputBase} flex-1 ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
             />
 
             <button
@@ -509,14 +570,81 @@ export default function ConfigPage() {
           <div className="flex justify-end mt-8">
             <button
               onClick={handleSaveDriveLink}
-              disabled={saving}
+              disabled={!isSuperAdmin() || saving}
               className={`px-6 py-2 rounded-xl font-medium text-sm text-white transition-all duration-150 shadow-sm ${
-                saving
+                !isSuperAdmin()
+                  ? "bg-slate-300 cursor-not-allowed opacity-50"
+                  : saving
                   ? "bg-slate-400 cursor-not-allowed"
                   : "bg-emerald-600 hover:bg-emerald-500"
               }`}
             >
-              {saving ? "กำลังบันทึก..." : "บันทึกลิงก์"}
+              {!isSuperAdmin() ? "แก้ไข (ปิดกั้น)" : (saving ? "กำลังบันทึก..." : "บันทึกลิงก์")}
+            </button>
+          </div>
+        </Panel>
+
+        {/* Leave Information Link */}
+        <Panel className={`p-6 sm:p-8 ${!isSuperAdmin() ? 'opacity-75' : ''}`}>
+          <h2 className="text-xl md:text-2xl font-semibold text-slate-900 mb-6">
+            ลิงก์ข้อมูลสิทธิประโยชน์การลา
+          </h2>
+
+          {!isSuperAdmin() && (
+            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                  <span className="text-amber-600 text-xs font-bold">!</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
+                  <p className="text-xs text-amber-700">
+                    ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
+                    การเปลี่ยนแปลงลิงก์อาจทำให้ผู้ใช้ไม่สามารถตรวจสอบข้อมูลสิทธิประโยชน์ได้
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="mb-4">
+            <p className="text-sm text-slate-600">
+              ลิงก์นี้จะแสดงในหน้า Leave2 สำหรับให้ผู้ใช้ตรวจสอบข้อมูลสิทธิประโยชน์และเงื่อนไขการลาต่างๆ
+            </p>
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-center md:gap-4">
+            <input
+              type="text"
+              value={leaveInformationUrl}
+              onChange={(e) => isSuperAdmin() && setLeaveInformationUrl(e.target.value)}
+              placeholder="วางลิงก์ข้อมูลสิทธิประโยชน์การลาที่นี่"
+              disabled={!isSuperAdmin()}
+              className={`${inputBase} flex-1 ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
+            />
+
+            <button
+              type="button"
+              onClick={() => leaveInformationUrl && window.open(leaveInformationUrl, "_blank")}
+              className="mt-3 md:mt-0 px-6 py-2 rounded-xl font-medium text-sm text-white bg-blue-600 hover:bg-blue-500 transition-all duration-150 shadow-sm"
+            >
+              เปิดลิงก์
+            </button>
+          </div>
+
+          <div className="flex justify-end mt-8">
+            <button
+              onClick={handleSaveLeaveInformationUrl}
+              disabled={!isSuperAdmin() || saving}
+              className={`px-6 py-2 rounded-xl font-medium text-sm text-white transition-all duration-150 shadow-sm ${
+                !isSuperAdmin()
+                  ? "bg-slate-300 cursor-not-allowed opacity-50"
+                  : saving
+                  ? "bg-slate-400 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-500"
+              }`}
+            >
+              {!isSuperAdmin() ? "แก้ไข (ปิดกั้น)" : (saving ? "กำลังบันทึก..." : "บันทึกลิงก์ข้อมูลการลา")}
             </button>
           </div>
         </Panel>
@@ -533,7 +661,7 @@ export default function ConfigPage() {
         </Panel>
 
         {/* Leave Balance Reset Section */}
-        <Panel className="p-6 sm:p-8 border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+        <Panel className={`p-6 sm:p-8 border-amber-200 bg-gradient-to-br from-amber-50 to-white ${!isSuperAdmin() ? 'opacity-75' : ''}`}>
           <div className="flex items-center gap-3 mb-6">
             <div className="w-11 h-11 rounded-2xl bg-amber-100 flex items-center justify-center border border-amber-200">
               <FaSync className="text-xl text-amber-600" />
@@ -547,6 +675,23 @@ export default function ConfigPage() {
               </p>
             </div>
           </div>
+
+          {!isSuperAdmin() && (
+            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                  <span className="text-amber-600 text-xs font-bold">!</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
+                  <p className="text-xs text-amber-700">
+                    ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
+                    การรีเซ็ตยอดวันลาอาจทำให้ข้อมูลสิทธิ์การลาของผู้ใช้ทั้งระบบเสียหายได้
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Current Fiscal Year Info */}
@@ -592,27 +737,31 @@ export default function ConfigPage() {
                     type="number"
                     placeholder="ปีงบฯ"
                     value={yearInputs.fiscalYear}
-                    onChange={(e) => setYearInputs({...yearInputs, fiscalYear: e.target.value})}
-                    className={`${inputBase} text-xs`}
+                    onChange={(e) => isSuperAdmin() && setYearInputs({...yearInputs, fiscalYear: e.target.value})}
+                    disabled={!isSuperAdmin()}
+                    className={`${inputBase} text-xs ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
                   />
                   <input
                     type="number"
                     placeholder="ปีปฏิทิน"
                     value={yearInputs.currentYear}
-                    onChange={(e) => setYearInputs({...yearInputs, currentYear: e.target.value})}
-                    className={`${inputBase} text-xs`}
+                    onChange={(e) => isSuperAdmin() && setYearInputs({...yearInputs, currentYear: e.target.value})}
+                    disabled={!isSuperAdmin()}
+                    className={`${inputBase} text-xs ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
                   />
                 </div>
                 <button
                   onClick={handleUpdateFiscalYear}
-                  disabled={saving}
+                  disabled={!isSuperAdmin() || saving}
                   className={`w-full px-4 py-2 rounded-lg font-medium text-xs text-white transition-all ${
-                    saving
+                    !isSuperAdmin()
+                      ? "bg-slate-300 cursor-not-allowed opacity-50"
+                      : saving
                       ? "bg-slate-400 cursor-not-allowed"
                       : "bg-sky-600 hover:bg-sky-500"
                   }`}
                 >
-                  {saving ? "กำลังอัปเดต..." : "อัปเดตปี"}
+                  {!isSuperAdmin() ? "อัปเดต (ปิดกั้น)" : (saving ? "กำลังอัปเดต..." : "อัปเดตปี")}
                 </button>
               </div>
             </div>
@@ -662,28 +811,31 @@ export default function ConfigPage() {
                   type="number"
                   placeholder="ปีที่ต้องการลบ"
                   value={deleteYearInput}
-                  onChange={(e) => setDeleteYearInput(e.target.value)}
-                  className={`${inputBase} text-xs border-red-300 focus:ring-red-400`}
+                  onChange={(e) => isSuperAdmin() && setDeleteYearInput(e.target.value)}
+                  disabled={!isSuperAdmin()}
+                  className={`${inputBase} text-xs border-red-300 focus:ring-red-400 ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
                   min="2000"
                   max="2100"
                 />
                 <button
                   onClick={handleDeleteLeaveBalanceByYear}
-                  disabled={deleteLoading || !deleteYearInput}
+                  disabled={!isSuperAdmin() || deleteLoading || !deleteYearInput}
                   className={`w-full px-4 py-2 rounded-lg font-medium text-xs text-white transition-all ${
-                    deleteLoading || !deleteYearInput
+                    !isSuperAdmin()
+                      ? "bg-slate-300 cursor-not-allowed opacity-50"
+                      : deleteLoading || !deleteYearInput
                       ? "bg-red-300 cursor-not-allowed"
                       : "bg-red-600 hover:bg-red-500"
                   }`}
                 >
-                  {deleteLoading ? (
+                  {!isSuperAdmin() ? "ลบ (ปิดกั้น)" : (deleteLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="inline-flex h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
                       กำลังลบ...
                     </span>
                   ) : (
                     "ลบข้อมูลปีนั้น"
-                  )}
+                  ))}
                 </button>
               </div>
             </div>
@@ -711,14 +863,21 @@ export default function ConfigPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleResetLeaveBalance}
-                    disabled={resetLoading}
+                    disabled={!isSuperAdmin() || resetLoading}
                     className={`px-6 py-3 rounded-xl font-medium text-sm text-white transition-all shadow-sm ${
-                      resetLoading
+                      !isSuperAdmin()
+                        ? "bg-slate-300 cursor-not-allowed opacity-50"
+                        : resetLoading
                         ? "bg-amber-400 cursor-not-allowed"
                         : "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
                     }`}
                   >
-                    {resetLoading ? (
+                    {!isSuperAdmin() ? (
+                      <span className="flex items-center gap-2">
+                        <FaSync />
+                        รีเซ็ต (ปิดกั้น)
+                      </span>
+                    ) : resetLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="inline-flex h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
                         กำลังรีเซ็ต...

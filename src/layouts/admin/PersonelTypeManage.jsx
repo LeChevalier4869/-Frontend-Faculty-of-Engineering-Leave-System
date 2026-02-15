@@ -151,30 +151,41 @@ export default function PersonnelTypeManage() {
                 จัดการประเภทบุคลากร
               </h1>
               <p className="text-sm text-slate-600">
-                เพิ่ม แก้ไข หรือลบประเภทบุคลากรที่ใช้กำหนดสิทธิ์และข้อมูลในระบบ
+                ดูข้อมูลประเภทบุคลากรที่ใช้กำหนดสิทธิ์และข้อมูลในระบบ (ปิดกั้นการแก้ไขชั่วคราว)
               </p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+              <span className="text-amber-600 text-xs font-bold">!</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
+              <p className="text-xs text-amber-700">
+                ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
+                การเปลี่ยนแปลงข้อมูลอาจทำให้ระบบทำงานผิดพลาดได้จาก hardcoded logic และ dependencies ที่ซับซ้อน
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5 space-y-4 opacity-75">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 opacity-50">
             <input
               type="text"
               placeholder="กรอกชื่อประเภทบุคลากร"
               value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className={`${inputBase} col-span-2`}
+              disabled
+              className={`${inputBase} col-span-2 bg-slate-100 cursor-not-allowed`}
             />
             <button
-              onClick={editId ? handleUpdate : handleAdd}
-              className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition ${
-                editId
-                  ? "bg-slate-700 hover:bg-slate-600"
-                  : "bg-sky-600 hover:bg-sky-500"
-              }`}
+              disabled
+              className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-slate-300 cursor-not-allowed opacity-50"
             >
-              {editId ? "อัปเดตประเภทบุคลากร" : "เพิ่มประเภทบุคลากร"}
+              ปิดกั้นการแก้ไข
             </button>
           </div>
         </div>
@@ -218,16 +229,16 @@ export default function PersonnelTypeManage() {
                       <td className="px-4 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => handleEdit(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-slate-600"
+                            disabled
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
                           >
-                            แก้ไข
+                            แก้ไข (ปิดกั้น)
                           </button>
                           <button
-                            onClick={() => handleDelete(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-rose-400"
+                            disabled
+                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
                           >
-                            ลบ
+                            ลบ (ปิดกั้น)
                           </button>
                         </div>
                       </td>
@@ -249,24 +260,57 @@ export default function PersonnelTypeManage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-4">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-            >
-              ก่อนหน้า
-            </button>
-            <span className="text-sm text-slate-700">
-              หน้า {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-            >
-              ถัดไป
-            </button>
+          <div className="flex items-center justify-between mt-4 bg-white rounded-lg px-4 py-3 border border-slate-200">
+            <div className="text-sm text-slate-700">
+              แสดง {startIndex + 1} ถึง {Math.min(startIndex + PAGE_SIZE, types.length)} จาก {types.length} รายการ
+            </div>
+            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ก่อนหน้า
+              </button>
+              {(() => {
+                const pages = [];
+                if (totalPages <= 7) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (currentPage <= 4) {
+                    pages.push(2, 3, 4, 5, '...', totalPages);
+                  } else if (currentPage >= totalPages - 3) {
+                    pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                  } else {
+                    pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                  }
+                }
+                return pages.map((page, idx) => {
+                  if (page === '...') {
+                    return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                });
+              })()}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ถัดไป
+              </button>
+            </nav>
           </div>
         )}
       </div>
