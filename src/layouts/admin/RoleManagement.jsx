@@ -1,42 +1,33 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { BASE_URL } from "../../utils/api";
+import { API, apiEndpoints } from "../../utils/api";
 
+/* eslint-disable react/prop-types */
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
     {children}
   </div>
 );
 
-export default function LeaveTypeManage() {
-  const navigate = useNavigate();
-  const [leaveTypes, setLeaveTypes] = useState([]);
+const SYSTEM_ROLES = [
+  "USER", "ADMIN", "SUPER_ADMIN",
+  "VERIFIER", "APPROVER_1", "APPROVER_2", "APPROVER_3", "APPROVER_4"
+];
+
+const RoleManagement = () => {
+  const [roles, setRoles] = useState([]);
   const [name, setName] = useState("");
-  const [isAvailable, setIsAvailable] = useState(false);
-  const [resetOnFiscalYear, setResetOnFiscalYear] = useState(true);
+  const [description, setDescription] = useState("");
   const [editId, setEditId] = useState(null);
+  const [editIsSystem, setEditIsSystem] = useState(false);
   const [initialEditData, setInitialEditData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const inputClass =
     "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400";
-  const checkboxClass =
-    "h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500";
   const buttonClass =
     "inline-flex items-center justify-center rounded-xl text-sm font-medium text-white shadow-sm transition px-4 py-2";
 
-  const authHeader = () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => (window.location.href = "/login")
-      );
-      throw new Error("No token");
-    }
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
 
   const handleApiError = (err) => {
     if (err.response?.status === 401) {
@@ -52,8 +43,8 @@ export default function LeaveTypeManage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/leave-types/`, authHeader());
-      setLeaveTypes(res.data.data || []);
+      const res = await API.get(apiEndpoints.getRoles);
+      setRoles(res.data.roleList || res.data.data || []);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -63,37 +54,27 @@ export default function LeaveTypeManage() {
 
   useEffect(() => {
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const resetForm = () => {
     setName("");
-    setIsAvailable(false);
-    setResetOnFiscalYear(true);
+    setDescription("");
     setEditId(null);
+    setEditIsSystem(false);
     setInitialEditData(null);
   };
 
   const handleAdd = async () => {
     if (!name.trim()) {
-      return Swal.fire("Error", "กรุณาระบุชื่อประเภทการลา", "error");
+      return Swal.fire("Error", "กรุณาระบุชื่อ Role", "error");
     }
     try {
-      const res = await axios.post(
-        `${BASE_URL}/leave-types/`,
-        { name, isAvailable, resetOnFiscalYear },
-        authHeader()
-      );
-      if (res.data.warning) {
-        await Swal.fire({
-          title: "สร้างสำเร็จ!",
-          html: `<p class="text-sm text-green-700 mb-2">เพิ่มประเภทการลาเรียบร้อยแล้ว</p>` +
-                `<p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">⚠️ ${res.data.warning}</p>`,
-          icon: "warning",
-          confirmButtonText: "รับทราบ",
-        });
-      } else {
-        Swal.fire("บันทึกสำเร็จ!", "", "success");
-      }
+      await API.post(apiEndpoints.createRole, {
+        name: name.trim(),
+        description: description.trim() || null,
+      });
+      Swal.fire("บันทึกสำเร็จ!", "", "success");
       resetForm();
       loadData();
     } catch (err) {
@@ -102,25 +83,24 @@ export default function LeaveTypeManage() {
   };
 
   const handleEdit = (id) => {
-    const lt = leaveTypes.find((t) => t.id === id);
-    if (!lt) return;
-    setName(lt.name);
-    setIsAvailable(lt.isAvailable);
-    setResetOnFiscalYear(lt.resetOnFiscalYear);
-    setEditId(lt.id);
-    setInitialEditData({ name: lt.name, isAvailable: lt.isAvailable, resetOnFiscalYear: lt.resetOnFiscalYear });
+    const r = roles.find((t) => t.id === id);
+    if (!r) return;
+    setName(r.name);
+    setDescription(r.description || "");
+    setEditId(r.id);
+    setEditIsSystem(SYSTEM_ROLES.includes(r.name));
+    setInitialEditData({ name: r.name, description: r.description || "" });
   };
 
   const handleUpdate = async () => {
     if (!name.trim()) {
-      return Swal.fire("Error", "กรุณาระบุชื่อประเภทการลา", "error");
+      return Swal.fire("Error", "กรุณาระบุชื่อ Role", "error");
     }
     try {
-      await axios.put(
-        `${BASE_URL}/leave-types/update/${editId}`,
-        { name, isAvailable, resetOnFiscalYear },
-        authHeader()
-      );
+      await API.put(apiEndpoints.updateRole(editId), {
+        name: name.trim(),
+        description: description.trim() || null,
+      });
       Swal.fire("อัปเดตสำเร็จ!", "", "success");
       resetForm();
       loadData();
@@ -142,7 +122,7 @@ export default function LeaveTypeManage() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await axios.delete(`${BASE_URL}/leave-types/${id}`, authHeader());
+      await API.delete(apiEndpoints.deleteRole(id));
       Swal.fire("ลบสำเร็จ!", "", "success");
       loadData();
     } catch (err) {
@@ -163,18 +143,18 @@ export default function LeaveTypeManage() {
           <div className="w-full flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col items-center gap-1 md:items-start">
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
-                จัดการประเภทการลา
+                จัดการบทบาท (Role)
               </h1>
               <p className="text-sm text-slate-600">
-                จัดการข้อมูลประเภทการลาที่ใช้ในระบบ
+                จัดการสิทธิ์การเข้าถึงและบทบาทในระบบ
               </p>
             </div>
             <div className="text-xs text-slate-500">
               ทั้งหมด{" "}
               <span className="font-semibold text-sky-600">
-                {leaveTypes.length}
+                {roles.length}
               </span>{" "}
-              ประเภท
+              บทบาท
             </div>
           </div>
         </div>
@@ -187,7 +167,7 @@ export default function LeaveTypeManage() {
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-amber-800 mb-1">โปรดระมัดระวังในการแก้ไข</h3>
               <p className="text-xs text-amber-700">
-                ข้อมูลประเภทการลามีผลต่อการคำนวณสิทธิ์การลาและ dependencies ที่ซับซ้อน
+                การเปลี่ยนแปลง Role อาจส่งผลกระทบต่อสิทธิ์การเข้าถึงของผู้ใช้ทั้งระบบ
                 กรุณาตรวจสอบให้แน่ใจก่อนทำการเปลี่ยนแปลง
               </p>
             </div>
@@ -196,50 +176,44 @@ export default function LeaveTypeManage() {
 
         <Panel className="p-5">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
-            <div className="lg:col-span-2 flex flex-col gap-1">
+            <div className="lg:col-span-1 flex flex-col gap-1 relative">
               <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
-                ชื่อประเภทการลา
+                ชื่อ Role
               </label>
               <input
                 type="text"
-                placeholder="เช่น ลาป่วย, ลากิจ"
+                placeholder="เช่น MANAGER, HR"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={editIsSystem}
+                className={`${inputClass} ${editIsSystem ? 'bg-slate-100 cursor-not-allowed opacity-60' : ''}`}
+              />
+              {editIsSystem && (
+                <p className="absolute -bottom-4 left-0 text-[10px] text-amber-600 whitespace-nowrap">
+                  System Role — ไม่สามารถเปลี่ยนชื่อได้
+                </p>
+              )}
+            </div>
+            <div className="lg:col-span-2 flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                คำอธิบาย
+              </label>
+              <input
+                type="text"
+                placeholder="อธิบายบทบาทของ Role นี้"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className={inputClass}
               />
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={isAvailable}
-                  onChange={(e) => setIsAvailable(e.target.checked)}
-                  className={checkboxClass}
-                />
-                <span className="text-sm text-slate-800">
-                  สามารถลาในระบบได้
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={resetOnFiscalYear}
-                  onChange={(e) => setResetOnFiscalYear(e.target.checked)}
-                  className={checkboxClass}
-                />
-                <span className="text-sm text-slate-800">
-                  รีเซ็ตยอดวันลาปีใหม่
-                </span>
-              </div>
             </div>
             <div className="lg:col-span-1 flex gap-2 lg:justify-end">
               {editId ? (
                 <>
                   <button
                     onClick={handleUpdate}
-                    disabled={initialEditData && name === initialEditData.name && isAvailable === initialEditData.isAvailable && resetOnFiscalYear === initialEditData.resetOnFiscalYear}
+                    disabled={initialEditData && name === initialEditData.name && description === initialEditData.description}
                     className={`${buttonClass} ${
-                      initialEditData && name === initialEditData.name && isAvailable === initialEditData.isAvailable && resetOnFiscalYear === initialEditData.resetOnFiscalYear
+                      initialEditData && name === initialEditData.name && description === initialEditData.description
                         ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                         : "bg-amber-500 hover:bg-amber-400"
                     }`}
@@ -256,9 +230,9 @@ export default function LeaveTypeManage() {
               ) : (
                 <button
                   onClick={handleAdd}
-                  className={`${buttonClass} bg-sky-600 hover:bg-sky-500 w-full lg:w-auto`}
+                  className={`${buttonClass} w-full lg:w-auto bg-sky-600 hover:bg-sky-500`}
                 >
-                  เพิ่มประเภทการลา
+                  เพิ่ม Role
                 </button>
               )}
             </div>
@@ -274,13 +248,13 @@ export default function LeaveTypeManage() {
                     #
                   </th>
                   <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
-                    ชื่อประเภทการลา
+                    ชื่อ Role
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    คำอธิบาย
                   </th>
                   <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
-                    ลาในระบบได้
-                  </th>
-                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
-                    รีเซ็ตปีใหม่
+                    สร้างเมื่อ
                   </th>
                   <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
                     การจัดการ
@@ -297,60 +271,55 @@ export default function LeaveTypeManage() {
                       กำลังโหลด...
                     </td>
                   </tr>
-                ) : leaveTypes.length > 0 ? (
-                  leaveTypes.map((t, idx) => (
+                ) : roles.length > 0 ? (
+                  roles.map((r, idx) => (
                     <tr
-                      key={t.id}
+                      key={r.id}
                       className={`border-t border-slate-100 ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
                       } hover:bg-sky-50 transition-colors`}
                     >
-                      <td className="px-4 py-2 text-slate-600">{t.id}</td>
+                      <td className="px-4 py-2 text-slate-600">{r.id}</td>
                       <td className="px-4 py-2 font-medium text-slate-900">
-                        {t.name}
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                            {r.name}
+                          </span>
+                          {SYSTEM_ROLES.includes(r.name) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-600 border border-amber-200">
+                              System
+                            </span>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-4 py-2 text-center">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            t.isAvailable
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-slate-100 text-slate-700 border border-slate-200"
-                          }`}
-                        >
-                          {t.isAvailable ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-                        </span>
+                      <td className="px-4 py-2 text-slate-600">
+                        {r.description || <span className="text-slate-400">-</span>}
                       </td>
-                      <td className="px-4 py-2 text-center">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            t.resetOnFiscalYear
-                              ? "bg-blue-50 text-blue-700 border border-blue-200"
-                              : "bg-amber-50 text-amber-700 border border-amber-200"
-                          }`}
-                        >
-                          {t.resetOnFiscalYear ? "รีเซ็ต" : "สะสม"}
-                        </span>
+                      <td className="px-4 py-2 text-center text-slate-500">
+                        {r.createdAt
+                          ? new Date(r.createdAt).toLocaleDateString("th-TH", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "-"}
                       </td>
                       <td className="px-4 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => navigate(`/admin/rank-manage?leaveTypeId=${t.id}`)}
-                            className="inline-flex items-center justify-center rounded-lg bg-sky-600 hover:bg-sky-500 px-3 py-1.5 text-xs font-medium text-white"
+                            onClick={() => handleEdit(r.id)}
+                            className="overflow-hidden whitespace-nowrap inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium bg-amber-500 hover:bg-amber-400 text-white"
                           >
-                            เงื่อนไขวันลา
+                            {SYSTEM_ROLES.includes(r.name) ? "แก้คำอธิบาย" : "แก้ไข"}
                           </button>
-                          <button
-                            onClick={() => handleEdit(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 px-3 py-1.5 text-xs font-medium text-white"
-                          >
-                            แก้ไข
-                          </button>
-                          <button
-                            onClick={() => handleDelete(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 hover:bg-rose-400 px-3 py-1.5 text-xs font-medium text-white"
-                          >
-                            ลบ
-                          </button>
+                          {!SYSTEM_ROLES.includes(r.name) && (
+                            <button
+                              onClick={() => handleDelete(r.id)}
+                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium bg-rose-500 hover:bg-rose-400 text-white"
+                            >
+                              ลบ
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -361,7 +330,7 @@ export default function LeaveTypeManage() {
                       colSpan={5}
                       className="text-center py-6 text-sm text-slate-500"
                     >
-                      ไม่มีข้อมูลประเภทการลา
+                      ไม่มีข้อมูลบทบาท
                     </td>
                   </tr>
                 )}
@@ -373,3 +342,5 @@ export default function LeaveTypeManage() {
     </div>
   );
 }
+
+export default RoleManagement;

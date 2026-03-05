@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
@@ -13,6 +14,7 @@ const Panel = ({ className = "", children }) => (
 const ROLE_LABEL_TH = {
   USER: "ผู้ใช้งานทั่วไป",
   ADMIN: "ผู้ดูแลระบบ",
+  SUPER_ADMIN: "ผู้ดูแลระบบสูงสุด",
   VERIFIER: "ผู้ตรวจสอบ",
   APPROVER_1: "หัวหน้าสาขา",
   APPROVER_2: "สรรบรรณคณะ",
@@ -23,6 +25,9 @@ const ROLE_LABEL_TH = {
 export default function UserEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+
+  const currentUserIsSuperAdmin = (currentUser?.roles || currentUser?.role || []).includes("SUPER_ADMIN");
 
   const initialForm = {
     prefixName: "",
@@ -40,11 +45,13 @@ export default function UserEdit() {
 
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(initialForm);
+  const [initialFormData, setInitialFormData] = useState(initialForm);
   const [departments, setDepartments] = useState([]);
   const [personnelTypes, setPersonnelTypes] = useState([]);
   const [allRoles, setAllRoles] = useState([]);
   const [selectedRoles, setSelectedRoles] = useState(new Set());
   const [initialRoles, setInitialRoles] = useState(new Set());
+  const [targetIsSuperAdmin, setTargetIsSuperAdmin] = useState(false);
   // const [employmentTypes, setEmploymentTypes] = useState([]);
 
   useEffect(() => {
@@ -70,7 +77,7 @@ export default function UserEdit() {
 
         const u = userRes.data.data;
 
-        setFormData({
+        const loadedForm = {
           prefixName: u.prefixName || "",
           firstName: u.firstName || "",
           lastName: u.lastName || "",
@@ -82,7 +89,9 @@ export default function UserEdit() {
           employmentType: u.employmentType || "",
           hireDate: u.hireDate?.substring(0, 10) || "",
           position: u.position || "",
-        });
+        };
+        setFormData(loadedForm);
+        setInitialFormData(loadedForm);
 
         setDepartments(deptRes.data.data);
         setPersonnelTypes(ptRes.data.data);
@@ -97,6 +106,7 @@ export default function UserEdit() {
         const initSet = new Set(roleNames);
         setSelectedRoles(initSet);
         setInitialRoles(initSet);
+        setTargetIsSuperAdmin(roleNames.includes("SUPER_ADMIN"));
 
         const rolesPayload = roleRes?.data?.roleList ?? roleRes?.data?.data ?? roleRes?.data?.roles ?? [];
         const roles = Array.isArray(rolesPayload) ? rolesPayload : [];
@@ -264,6 +274,15 @@ export default function UserEdit() {
     return `${th} (${roleName})`;
   };
 
+  // ตรวจสอบว่ามีการเปลี่ยนแปลงข้อมูลหรือไม่
+  const formChanged = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  const rolesChanged = currentUserIsSuperAdmin &&
+    (selectedRoles.size !== initialRoles.size || [...selectedRoles].some((r) => !initialRoles.has(r)));
+  const hasChanges = formChanged || rolesChanged;
+
+  // ADMIN ไม่สามารถแก้ไขข้อมูล user ที่เป็น SUPER_ADMIN ได้
+  const isReadOnly = targetIsSuperAdmin && !currentUserIsSuperAdmin;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -285,9 +304,26 @@ export default function UserEdit() {
           </div>
         </div>
 
+        {/* Warning: ADMIN cannot edit SUPER_ADMIN */}
+        {isReadOnly && (
+          <div className="rounded-2xl bg-rose-50 border border-rose-200 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-rose-100 flex items-center justify-center">
+                <span className="text-rose-600 text-xs font-bold">!</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-rose-800 mb-1">ไม่สามารถแก้ไขได้</h3>
+                <p className="text-xs text-rose-700">
+                  ผู้ใช้งานนี้มีสิทธิ์ SUPER_ADMIN ต้องใช้สิทธิ์ SUPER_ADMIN เท่านั้นจึงจะแก้ไขข้อมูลได้
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Form Card */}
         <Panel className="p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className={`space-y-6 ${isReadOnly ? "opacity-60 pointer-events-none" : ""}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 ["prefixName", "คำนำหน้า"],
@@ -344,31 +380,52 @@ export default function UserEdit() {
               ])}
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="flex flex-col gap-1">
-                <div className="text-sm font-medium text-slate-800">บทบาท (Roles)</div>
-                <div className="text-xs text-slate-600">
-                  เลือกบทบาทสำหรับผู้ใช้งาน (ใช้กำหนด Approver/Verifier/Admin)
+            {currentUserIsSuperAdmin ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-col gap-1">
+                  <div className="text-sm font-medium text-slate-800">บทบาท (Roles)</div>
+                  <div className="text-xs text-slate-600">
+                    เลือกบทบาทสำหรับผู้ใช้งาน (ใช้กำหนด Approver/Verifier/Admin)
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {(allRoles.length ? allRoles : [{ name: "USER" }]).map((r) => {
+                    const isUserRole = r.name === "USER";
+                    const isDisabled = isUserRole;
+                    return (
+                      <label
+                        key={r.name}
+                        className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
+                          isDisabled
+                            ? "bg-slate-100 border-slate-300 text-slate-500 cursor-not-allowed"
+                            : "bg-white border-slate-200 text-slate-800 cursor-pointer"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isUserRole ? true : selectedRoles.has(r.name)}
+                          onChange={() => !isDisabled && toggleRole(r.name)}
+                          disabled={isDisabled}
+                          className={isDisabled ? "cursor-not-allowed opacity-50" : ""}
+                        />
+                        <span className="truncate" title={getRoleLabel(r.name)}>
+                          {getRoleLabel(r.name)}
+                        </span>
+                        {isUserRole && (
+                          <span className="ml-auto text-[10px] text-slate-400">ค่าเริ่มต้น</span>
+                        )}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {(allRoles.length ? allRoles : [{ name: "USER" }]).map((r) => (
-                  <label
-                    key={r.name}
-                    className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs text-slate-800"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedRoles.has(r.name)}
-                      onChange={() => toggleRole(r.name)}
-                    />
-                    <span className="truncate" title={getRoleLabel(r.name)}>
-                      {getRoleLabel(r.name)}
-                    </span>
-                  </label>
-                ))}
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-sm text-slate-500">
+                  การจัดการบทบาทต้องใช้สิทธิ์ SUPER_ADMIN
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <button
@@ -380,7 +437,12 @@ export default function UserEdit() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-sm font-medium text-white shadow-sm transition"
+                disabled={!hasChanges}
+                className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition ${
+                  hasChanges
+                    ? "bg-sky-600 hover:bg-sky-500 text-white"
+                    : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                }`}
               >
                 บันทึกการเปลี่ยนแปลง
               </button>

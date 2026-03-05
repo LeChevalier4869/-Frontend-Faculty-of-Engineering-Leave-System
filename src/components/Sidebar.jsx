@@ -48,10 +48,15 @@ const adminNav = [
   { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
 ];
 
-const highLevelAdminNav = [
+const superAdminOnlyNav = [
   { to: "/admin/organization-manage", text: "จัดการองค์กร", icon: <FaUsersCog /> },
   { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaUsersCog /> },
   { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
+  { to: "/admin/rank-manage", text: "เงื่อนไขวันลา (Rank)", icon: <FaUsersCog /> },
+  { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUsersCog /> },
+];
+
+const adminConfigNav = [
   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 
@@ -192,7 +197,8 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
     ? user.roleNames
     : [];
 
-  const hasRole = (r) => roles.includes(r);
+  // SUPER_ADMIN สามารถเข้าถึงทุกเมนูที่ ADMIN เข้าได้
+  const hasRole = (r) => roles.includes(r) || (r === "ADMIN" && roles.includes("SUPER_ADMIN"));
   const isActive = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
 
   // Proxy role flags (menu จะโชว์เมื่อมี proxy อย่างน้อย 1 รายการ)
@@ -514,16 +520,26 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                     )}
                   </Section>
 
-                  <Section title="ผู้ดูแลระดับสูง">
-                    <div className="mb-2">
-                      <div className="text-xs text-amber-300 px-4 py-1">
-                        ⚠️ ฟีเจอร์สำคัญ - โปรดระมัดระวัง
-                      </div>
-                    </div>
-                    {highLevelAdminNav.map((m, i) => {
-                      return <HighLevelAdminItem key={`high-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                  <Section title="การตั้งค่า">
+                    {adminConfigNav.map((m, i) => {
+                      return <HighLevelAdminItem key={`cfg-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
                     })}
                   </Section>
+
+                  {hasRole("SUPER_ADMIN") && (
+                    <Section title="ผู้ดูแลระดับสูง">
+                      {!isMini && (
+                        <div className="mb-1">
+                          <div className="text-xs text-amber-300 px-4 py-1">
+                            ⚠️ การตั้งค่าที่สำคัญ - โปรดระมัดระวัง
+                          </div>
+                        </div>
+                      )}
+                      {superAdminOnlyNav.map((m, i) => {
+                        return <HighLevelAdminItem key={`high-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                      })}
+                    </Section>
+                  )}
                 </>
               )}
             </nav>
