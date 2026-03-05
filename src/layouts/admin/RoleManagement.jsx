@@ -20,6 +20,7 @@ const RoleManagement = () => {
   const [description, setDescription] = useState("");
   const [editId, setEditId] = useState(null);
   const [editIsSystem, setEditIsSystem] = useState(false);
+  const [initialEditData, setInitialEditData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const inputClass =
@@ -61,6 +62,7 @@ const RoleManagement = () => {
     setDescription("");
     setEditId(null);
     setEditIsSystem(false);
+    setInitialEditData(null);
   };
 
   const handleAdd = async () => {
@@ -87,6 +89,7 @@ const RoleManagement = () => {
     setDescription(r.description || "");
     setEditId(r.id);
     setEditIsSystem(SYSTEM_ROLES.includes(r.name));
+    setInitialEditData({ name: r.name, description: r.description || "" });
   };
 
   const handleUpdate = async () => {
@@ -208,7 +211,12 @@ const RoleManagement = () => {
                 <>
                   <button
                     onClick={handleUpdate}
-                    className={`${buttonClass} bg-amber-500 hover:bg-amber-400`}
+                    disabled={initialEditData && name === initialEditData.name && description === initialEditData.description}
+                    className={`${buttonClass} ${
+                      initialEditData && name === initialEditData.name && description === initialEditData.description
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        : "bg-amber-500 hover:bg-amber-400"
+                    }`}
                   >
                     อัปเดต
                   </button>

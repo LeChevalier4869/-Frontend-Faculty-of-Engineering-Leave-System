@@ -24,8 +24,15 @@ export default function ConfigPage() {
     AdminPhone: "",
     AdminMail: "",
   });
+  const [initialContacts, setInitialContacts] = useState({
+    AdminName: "",
+    AdminPhone: "",
+    AdminMail: "",
+  });
   const [driveLink, setDriveLink] = useState("");
+  const [initialDriveLink, setInitialDriveLink] = useState("");
   const [leaveInformationUrl, setLeaveInformationUrl] = useState("");
+  const [initialLeaveInformationUrl, setInitialLeaveInformationUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -74,11 +81,13 @@ export default function ConfigPage() {
       data.forEach((item) => {
         map[item.key] = item.value;
       });
-      setContacts({
+      const loaded = {
         AdminName: map.AdminName || "",
         AdminPhone: map.AdminPhone || "",
         AdminMail: map.AdminMail || "",
-      });
+      };
+      setContacts(loaded);
+      setInitialContacts(loaded);
     } catch (err) {
       console.error(err);
       showAlert(
@@ -94,7 +103,10 @@ export default function ConfigPage() {
   const fetchDriveLink = async () => {
     try {
       const res = await axios.get(apiEndpoints.getDriveLink, authHeader());
-      if (res.data?.url) setDriveLink(res.data.url);
+      if (res.data?.url) {
+        setDriveLink(res.data.url);
+        setInitialDriveLink(res.data.url);
+      }
     } catch (err) {
       console.error("ไม่สามารถโหลดลิงก์ Google Drive:", err);
     }
@@ -103,7 +115,10 @@ export default function ConfigPage() {
   const fetchLeaveInformationUrl = async () => {
     try {
       const res = await axios.get(apiEndpoints.getSettingByKey('leave_information'));
-      if (res.data?.data?.value) setLeaveInformationUrl(res.data.data.value);
+      if (res.data?.data?.value) {
+        setLeaveInformationUrl(res.data.data.value);
+        setInitialLeaveInformationUrl(res.data.data.value);
+      }
     } catch (err) {
       console.error("ไม่สามารถโหลดลิงก์ข้อมูลการลา:", err);
     }
@@ -149,6 +164,7 @@ export default function ConfigPage() {
         );
       }
 
+      setInitialContacts({ ...contacts });
       showAlert(
         "success",
         "บันทึกสำเร็จ",
@@ -185,6 +201,7 @@ export default function ConfigPage() {
         { value: driveLink },
         authHeader()
       );
+      setInitialDriveLink(driveLink);
       showAlert("success", "บันทึกลิงก์สำเร็จ", "", 1500);
     } catch (err) {
       console.error(err);
@@ -211,6 +228,7 @@ export default function ConfigPage() {
         },
         authHeader()
       );
+      setInitialLeaveInformationUrl(leaveInformationUrl);
       showAlert("success", "บันทึกลิงก์ข้อมูลการลาสำเร็จ", "", 1500);
     } catch (err) {
       console.error(err);
@@ -513,11 +531,11 @@ export default function ConfigPage() {
           <div className="flex justify-end mt-8">
             <button
               onClick={handleSaveContacts}
-              disabled={saving}
-              className={`px-6 py-2 rounded-xl font-medium text-sm text-white transition-all duration-150 shadow-sm ${
-                saving
-                  ? "bg-slate-400 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-500"
+              disabled={saving || JSON.stringify(contacts) === JSON.stringify(initialContacts)}
+              className={`px-6 py-2 rounded-xl font-medium text-sm transition-all duration-150 shadow-sm ${
+                saving || JSON.stringify(contacts) === JSON.stringify(initialContacts)
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white"
               }`}
             >
               {saving ? "กำลังบันทึก..." : "บันทึกข้อมูลเจ้าหน้าที่"}
@@ -552,11 +570,11 @@ export default function ConfigPage() {
           <div className="flex justify-end mt-8">
             <button
               onClick={handleSaveDriveLink}
-              disabled={saving}
-              className={`px-6 py-2 rounded-xl font-medium text-sm text-white transition-all duration-150 shadow-sm ${
-                saving
-                  ? "bg-slate-400 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-500"
+              disabled={saving || driveLink === initialDriveLink}
+              className={`px-6 py-2 rounded-xl font-medium text-sm transition-all duration-150 shadow-sm ${
+                saving || driveLink === initialDriveLink
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white"
               }`}
             >
               {saving ? "กำลังบันทึก..." : "บันทึกลิงก์"}
@@ -597,11 +615,11 @@ export default function ConfigPage() {
           <div className="flex justify-end mt-8">
             <button
               onClick={handleSaveLeaveInformationUrl}
-              disabled={saving}
-              className={`px-6 py-2 rounded-xl font-medium text-sm text-white transition-all duration-150 shadow-sm ${
-                saving
-                  ? "bg-slate-400 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-500"
+              disabled={saving || leaveInformationUrl === initialLeaveInformationUrl}
+              className={`px-6 py-2 rounded-xl font-medium text-sm transition-all duration-150 shadow-sm ${
+                saving || leaveInformationUrl === initialLeaveInformationUrl
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white"
               }`}
             >
               {saving ? "กำลังบันทึก..." : "บันทึกลิงก์ข้อมูลการลา"}

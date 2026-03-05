@@ -20,6 +20,7 @@ export default function DepartmentManage() {
   const [editId, setEditId] = useState(null);
   const [editOrgId, setEditOrgId] = useState(null);
   const [editHeadId, setEditHeadId] = useState("");
+  const [initialEditData, setInitialEditData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrgFilter, setSelectedOrgFilter] = useState(initialOrgId);
@@ -97,6 +98,7 @@ export default function DepartmentManage() {
     setEditOrgId(null);
     setEditHeadId("");
     setFilteredUsers([]);
+    setInitialEditData(null);
   };
 
   const handleAdd = async () => {
@@ -129,6 +131,7 @@ export default function DepartmentManage() {
     setEditId(dept.id);
     setEditOrgId(dept.organizationId);
     setEditHeadId(dept.headId || "");
+    setInitialEditData({ name: dept.name, organizationId: dept.organizationId, headId: dept.headId || "" });
     loadUsersByOrganizationId(dept.organizationId);
   };
 
@@ -276,10 +279,13 @@ export default function DepartmentManage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
               onClick={editId ? handleUpdate : handleAdd}
-              className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition ${
-                editId
-                  ? "bg-slate-700 hover:bg-slate-600"
-                  : "bg-sky-600 hover:bg-sky-500"
+              disabled={editId && initialEditData && newName === initialEditData.name && String(editOrgId) === String(initialEditData.organizationId) && String(editHeadId) === String(initialEditData.headId)}
+              className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium shadow-sm transition ${
+                editId && initialEditData && newName === initialEditData.name && String(editOrgId) === String(initialEditData.organizationId) && String(editHeadId) === String(initialEditData.headId)
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : editId
+                    ? "bg-slate-700 hover:bg-slate-600 text-white"
+                    : "bg-sky-600 hover:bg-sky-500 text-white"
               }`}
             >
               {editId ? "อัปเดตแผนก" : "เพิ่มแผนก"}

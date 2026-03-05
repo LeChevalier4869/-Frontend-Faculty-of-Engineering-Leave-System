@@ -24,6 +24,7 @@ export default function RankManage() {
 
   // Form
   const [editId, setEditId] = useState(null);
+  const [initialEditData, setInitialEditData] = useState(null);
   const [form, setForm] = useState({
     rank: "",
     minHireMonths: "",
@@ -91,6 +92,7 @@ export default function RankManage() {
       personnelTypeId: initialPersonnelTypeId,
     });
     setEditId(null);
+    setInitialEditData(null);
   };
 
   const handleAdd = async () => {
@@ -111,7 +113,7 @@ export default function RankManage() {
   const handleEdit = (id) => {
     const r = ranks.find((x) => x.id === id);
     if (!r) return;
-    setForm({
+    const editForm = {
       rank: r.rank || "",
       minHireMonths: r.minHireMonths ?? "",
       maxHireMonths: r.maxHireMonths ?? "",
@@ -120,7 +122,9 @@ export default function RankManage() {
       isBalance: r.isBalance ?? false,
       leaveTypeId: String(r.leaveTypeId),
       personnelTypeId: String(r.personnelTypeId),
-    });
+    };
+    setForm(editForm);
+    setInitialEditData(editForm);
     setEditId(id);
   };
 
@@ -323,7 +327,12 @@ export default function RankManage() {
                 <>
                   <button
                     onClick={handleUpdate}
-                    className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-amber-500 hover:bg-amber-400"
+                    disabled={initialEditData && JSON.stringify(form) === JSON.stringify(initialEditData)}
+                    className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium shadow-sm transition ${
+                      initialEditData && JSON.stringify(form) === JSON.stringify(initialEditData)
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        : "bg-amber-500 hover:bg-amber-400 text-white"
+                    }`}
                   >
                     อัปเดต
                   </button>

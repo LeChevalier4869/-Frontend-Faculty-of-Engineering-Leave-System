@@ -17,6 +17,7 @@ export default function LeaveTypeManage() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [resetOnFiscalYear, setResetOnFiscalYear] = useState(true);
   const [editId, setEditId] = useState(null);
+  const [initialEditData, setInitialEditData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const inputClass =
@@ -69,6 +70,7 @@ export default function LeaveTypeManage() {
     setIsAvailable(false);
     setResetOnFiscalYear(true);
     setEditId(null);
+    setInitialEditData(null);
   };
 
   const handleAdd = async () => {
@@ -106,6 +108,7 @@ export default function LeaveTypeManage() {
     setIsAvailable(lt.isAvailable);
     setResetOnFiscalYear(lt.resetOnFiscalYear);
     setEditId(lt.id);
+    setInitialEditData({ name: lt.name, isAvailable: lt.isAvailable, resetOnFiscalYear: lt.resetOnFiscalYear });
   };
 
   const handleUpdate = async () => {
@@ -234,7 +237,12 @@ export default function LeaveTypeManage() {
                 <>
                   <button
                     onClick={handleUpdate}
-                    className={`${buttonClass} bg-amber-500 hover:bg-amber-400`}
+                    disabled={initialEditData && name === initialEditData.name && isAvailable === initialEditData.isAvailable && resetOnFiscalYear === initialEditData.resetOnFiscalYear}
+                    className={`${buttonClass} ${
+                      initialEditData && name === initialEditData.name && isAvailable === initialEditData.isAvailable && resetOnFiscalYear === initialEditData.resetOnFiscalYear
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        : "bg-amber-500 hover:bg-amber-400"
+                    }`}
                   >
                     อัปเดต
                   </button>
