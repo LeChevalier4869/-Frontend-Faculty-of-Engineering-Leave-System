@@ -1,367 +1,338 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { API, apiEndpoints } from "../../utils/api";
-import { FaUsersCog, FaPlus, FaEdit, FaTrash, FaSearch } from "react-icons/fa";
 
+/* eslint-disable react/prop-types */
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
     {children}
   </div>
 );
 
-export default function RoleManagement() {
-  const [roles, setRoles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingRole, setEditingRole] = useState(null);
-  const [formData, setFormData] = useState({ name: "" });
+const SYSTEM_ROLES = [
+  "USER", "ADMIN", "SUPER_ADMIN",
+  "VERIFIER", "APPROVER_1", "APPROVER_2", "APPROVER_3", "APPROVER_4"
+];
 
-  // Fetch all roles
-  const fetchRoles = async () => {
+const RoleManagement = () => {
+  const [roles, setRoles] = useState([]);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [editId, setEditId] = useState(null);
+  const [editIsSystem, setEditIsSystem] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const inputClass =
+    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400";
+  const buttonClass =
+    "inline-flex items-center justify-center rounded-xl text-sm font-medium text-white shadow-sm transition px-4 py-2";
+
+
+  const handleApiError = (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("accessToken");
+      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
+        () => (window.location.href = "/login")
+      );
+    } else {
+      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+    }
+  };
+
+  const loadData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await API.get(apiEndpoints.getRoles);
-      setRoles(response.data.data || response.data || []);
-    } catch (error) {
-      console.error("Error fetching roles:", error);
-      Swal.fire({
-        icon: "error",
-        title: "เกิดข้อผิดพลาด",
-        text: "ไม่สามารถดึงข้อมูล Role ได้",
-      });
+      const res = await API.get(apiEndpoints.getRoles);
+      setRoles(res.data.roleList || res.data.data || []);
+    } catch (err) {
+      handleApiError(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRoles();
+    loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Filter roles based on search
-  const filteredRoles = roles.filter((role) =>
-    role.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const resetForm = () => {
+    setName("");
+    setDescription("");
+    setEditId(null);
+    setEditIsSystem(false);
+  };
 
-  // Handle create role
-  const handleCreateRole = async (e) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "กรุณากรอกข้อมูล",
-        text: "กรุณากรอกชื่อ Role",
-      });
-      return;
+  const handleAdd = async () => {
+    if (!name.trim()) {
+      return Swal.fire("Error", "กรุณาระบุชื่อ Role", "error");
     }
-
     try {
-      const response = await API.post(apiEndpoints.createRole, {
-        name: formData.name.trim()
+      await API.post(apiEndpoints.createRole, {
+        name: name.trim(),
+        description: description.trim() || null,
       });
-
-      Swal.fire({
-        icon: "success",
-        title: "สำเร็จ",
-        text: "สร้าง Role ใหม่เรียบร้อยแล้ว",
-      });
-
-      setShowAddModal(false);
-      setFormData({ name: "" });
-      fetchRoles();
-    } catch (error) {
-      console.error("Error creating role:", error);
-      Swal.fire({
-        icon: "error",
-        title: "เกิดข้อผิดพลาด",
-        text: error.response?.data?.message || "ไม่สามารถสร้าง Role ได้",
-      });
+      Swal.fire("บันทึกสำเร็จ!", "", "success");
+      resetForm();
+      loadData();
+    } catch (err) {
+      handleApiError(err);
     }
   };
 
-  // Handle update role
-  const handleUpdateRole = async (e) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "กรุณากรอกข้อมูล",
-        text: "กรุณากรอกชื่อ Role",
-      });
-      return;
+  const handleEdit = (id) => {
+    const r = roles.find((t) => t.id === id);
+    if (!r) return;
+    setName(r.name);
+    setDescription(r.description || "");
+    setEditId(r.id);
+    setEditIsSystem(SYSTEM_ROLES.includes(r.name));
+  };
+
+  const handleUpdate = async () => {
+    if (!name.trim()) {
+      return Swal.fire("Error", "กรุณาระบุชื่อ Role", "error");
     }
-
     try {
-      const response = await API.put(apiEndpoints.updateRole(editingRole.id), {
-        name: formData.name.trim()
+      await API.put(apiEndpoints.updateRole(editId), {
+        name: name.trim(),
+        description: description.trim() || null,
       });
-
-      Swal.fire({
-        icon: "success",
-        title: "สำเร็จ",
-        text: "อัพเดต Role เรียบร้อยแล้ว",
-      });
-
-      setShowEditModal(false);
-      setEditingRole(null);
-      setFormData({ name: "" });
-      fetchRoles();
-    } catch (error) {
-      console.error("Error updating role:", error);
-      Swal.fire({
-        icon: "error",
-        title: "เกิดข้อผิดพลาด",
-        text: error.response?.data?.message || "ไม่สามารถอัพเดต Role ได้",
-      });
+      Swal.fire("อัปเดตสำเร็จ!", "", "success");
+      resetForm();
+      loadData();
+    } catch (err) {
+      handleApiError(err);
     }
   };
 
-  // Handle delete role
-  const handleDeleteRole = async (role) => {
-    const result = await Swal.fire({
-      title: "ยืนยันการลบ",
-      text: `คุณต้องการลบ Role "${role.name}" ใช่หรือไม่?`,
+  const handleDelete = async (id) => {
+    const confirm = await Swal.fire({
+      title: "ยืนยันการลบ?",
+      text: "การลบนี้ไม่สามารถย้อนกลับได้!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
       confirmButtonText: "ลบ",
       cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#dc2626",
     });
-
-    if (!result.isConfirmed) return;
+    if (!confirm.isConfirmed) return;
 
     try {
-      await API.delete(apiEndpoints.deleteRole(role.id));
-
-      Swal.fire({
-        icon: "success",
-        title: "สำเร็จ",
-        text: "ลบ Role เรียบร้อยแล้ว",
-      });
-
-      fetchRoles();
-    } catch (error) {
-      console.error("Error deleting role:", error);
-      Swal.fire({
-        icon: "error",
-        title: "เกิดข้อผิดพลาด",
-        text: error.response?.data?.message || "ไม่สามารถลบ Role ได้",
-      });
+      await API.delete(apiEndpoints.deleteRole(id));
+      Swal.fire("ลบสำเร็จ!", "", "success");
+      loadData();
+    } catch (err) {
+      handleApiError(err);
     }
-  };
-
-  // Open edit modal
-  const openEditModal = (role) => {
-    setEditingRole(role);
-    setFormData({ name: role.name });
-    setShowEditModal(true);
-  };
-
-  // Close modals
-  const closeModals = () => {
-    setShowAddModal(false);
-    setShowEditModal(false);
-    setEditingRole(null);
-    setFormData({ name: "" });
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <FaUsersCog className="text-blue-600" />
-            จัดการ Role
-          </h1>
-          <p className="text-gray-600 mt-1">จัดการสิทธิ์การเข้าถึงและบทบาทในระบบ</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Admin View
+            </span>
+          </div>
+          <div className="w-full flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col items-center gap-1 md:items-start">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                จัดการบทบาท (Role)
+              </h1>
+              <p className="text-sm text-slate-600">
+                จัดการสิทธิ์การเข้าถึงและบทบาทในระบบ
+              </p>
+            </div>
+            <div className="text-xs text-slate-500">
+              ทั้งหมด{" "}
+              <span className="font-semibold text-sky-600">
+                {roles.length}
+              </span>{" "}
+              บทบาท
+            </div>
+          </div>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <FaPlus />
-          เพิ่ม Role ใหม่
-        </button>
-      </div>
 
-      {/* Search Bar */}
-      <Panel className="p-4">
-        <div className="relative">
-          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="ค้นหา Role..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+              <span className="text-amber-600 text-xs font-bold">!</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-amber-800 mb-1">โปรดระมัดระวังในการแก้ไข</h3>
+              <p className="text-xs text-amber-700">
+                การเปลี่ยนแปลง Role อาจส่งผลกระทบต่อสิทธิ์การเข้าถึงของผู้ใช้ทั้งระบบ
+                กรุณาตรวจสอบให้แน่ใจก่อนทำการเปลี่ยนแปลง
+              </p>
+            </div>
+          </div>
         </div>
-      </Panel>
 
-      {/* Roles Table */}
-      <Panel className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ชื่อ Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  สร้างเมื่อ
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  จัดการ
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center">
-                    <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredRoles.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
-                    {searchTerm ? "ไม่พบ Role ที่ค้นหา" : "ไม่มีข้อมูล Role"}
-                  </td>
-                </tr>
-              ) : (
-                filteredRoles.map((role) => (
-                  <tr key={role.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {role.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {role.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {role.createdAt
-                        ? new Date(role.createdAt).toLocaleDateString("th-TH", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })
-                        : "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => openEditModal(role)}
-                          className="text-blue-600 hover:text-blue-900 transition-colors"
-                          title="แก้ไข"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteRole(role)}
-                          className="text-red-600 hover:text-red-900 transition-colors"
-                          title="ลบ"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+        <Panel className="p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+            <div className="lg:col-span-1 flex flex-col gap-1 relative">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                ชื่อ Role
+              </label>
+              <input
+                type="text"
+                placeholder="เช่น MANAGER, HR"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={editIsSystem}
+                className={`${inputClass} ${editIsSystem ? 'bg-slate-100 cursor-not-allowed opacity-60' : ''}`}
+              />
+              {editIsSystem && (
+                <p className="absolute -bottom-4 left-0 text-[10px] text-amber-600 whitespace-nowrap">
+                  System Role — ไม่สามารถเปลี่ยนชื่อได้
+                </p>
               )}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-
-      {/* Add Role Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">เพิ่ม Role ใหม่</h2>
-            <form onSubmit={handleCreateRole}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ชื่อ Role
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="เช่น MANAGER, HR, SUPER_ADMIN"
-                  required
-                />
-              </div>
-              <div className="flex gap-3 justify-end">
+            </div>
+            <div className="lg:col-span-2 flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                คำอธิบาย
+              </label>
+              <input
+                type="text"
+                placeholder="อธิบายบทบาทของ Role นี้"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="lg:col-span-1 flex gap-2 lg:justify-end">
+              {editId ? (
+                <>
+                  <button
+                    onClick={handleUpdate}
+                    className={`${buttonClass} bg-amber-500 hover:bg-amber-400`}
+                  >
+                    อัปเดต
+                  </button>
+                  <button
+                    onClick={resetForm}
+                    className={`${buttonClass} bg-slate-400 hover:bg-slate-300`}
+                  >
+                    ยกเลิก
+                  </button>
+                </>
+              ) : (
                 <button
-                  type="button"
-                  onClick={closeModals}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  onClick={handleAdd}
+                  className={`${buttonClass} w-full lg:w-auto bg-sky-600 hover:bg-sky-500`}
                 >
                   เพิ่ม Role
                 </button>
-              </div>
-            </form>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        </Panel>
 
-      {/* Edit Role Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">แก้ไข Role</h2>
-            <form onSubmit={handleUpdateRole}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ชื่อ Role
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="เช่น MANAGER, HR, SUPER_ADMIN"
-                  required
-                />
-              </div>
-              <div className="flex gap-3 justify-end">
-                <button
-                  type="button"
-                  onClick={closeModals}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  อัพเดต Role
-                </button>
-              </div>
-            </form>
+        <Panel className="p-5">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-full text-sm text-slate-900 border-collapse bg-white">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    #
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ชื่อ Role
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    คำอธิบาย
+                  </th>
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    สร้างเมื่อ
+                  </th>
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    การจัดการ
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="text-center py-6 text-sm text-slate-500"
+                    >
+                      กำลังโหลด...
+                    </td>
+                  </tr>
+                ) : roles.length > 0 ? (
+                  roles.map((r, idx) => (
+                    <tr
+                      key={r.id}
+                      className={`border-t border-slate-100 ${
+                        idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                      } hover:bg-sky-50 transition-colors`}
+                    >
+                      <td className="px-4 py-2 text-slate-600">{r.id}</td>
+                      <td className="px-4 py-2 font-medium text-slate-900">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                            {r.name}
+                          </span>
+                          {SYSTEM_ROLES.includes(r.name) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-600 border border-amber-200">
+                              System
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 text-slate-600">
+                        {r.description || <span className="text-slate-400">-</span>}
+                      </td>
+                      <td className="px-4 py-2 text-center text-slate-500">
+                        {r.createdAt
+                          ? new Date(r.createdAt).toLocaleDateString("th-TH", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(r.id)}
+                            className="overflow-hidden whitespace-nowrap inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium bg-amber-500 hover:bg-amber-400 text-white"
+                          >
+                            {SYSTEM_ROLES.includes(r.name) ? "แก้คำอธิบาย" : "แก้ไข"}
+                          </button>
+                          {!SYSTEM_ROLES.includes(r.name) && (
+                            <button
+                              onClick={() => handleDelete(r.id)}
+                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium bg-rose-500 hover:bg-rose-400 text-white"
+                            >
+                              ลบ
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="text-center py-6 text-sm text-slate-500"
+                    >
+                      ไม่มีข้อมูลบทบาท
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
+        </Panel>
+      </div>
     </div>
   );
 }
+
+export default RoleManagement;

@@ -1,9 +1,9 @@
 import axios from "axios";
+import { BASE_URL } from "./api";
 
 // base URL ของ backend
 const API = axios.create({
-  // baseURL: "https://backend-faculty-of-engineering-leave.onrender.com",
-  baseURL: "http://localhost:8000",
+  baseURL: BASE_URL,
   withCredentials: true, // ถ้าใช้ cookie
 });
 
@@ -39,7 +39,7 @@ API.interceptors.response.use(
 
       try {
         // ขอ token ใหม่จาก refresh
-        const res = await axios.post("https://backend-faculty-of-engineering-leave.onrender.com/auth/refresh", {
+        const res = await axios.post(`${BASE_URL}/auth/refresh`, {
           refreshToken,
         });
 

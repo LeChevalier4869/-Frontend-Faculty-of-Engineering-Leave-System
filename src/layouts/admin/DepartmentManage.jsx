@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { BASE_URL } from "../../utils/api";
@@ -7,18 +8,21 @@ import { ChevronDown } from "lucide-react";
 const PAGE_SIZE = 10;
 
 export default function DepartmentManage() {
+  const [searchParams] = useSearchParams();
+  const initialOrgId = searchParams.get("orgId") || "";
+
   const [departments, setDepartments] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [newName, setNewName] = useState("");
-  const [newOrgId, setNewOrgId] = useState("");
+  const [newOrgId, setNewOrgId] = useState(initialOrgId);
   const [newHeadId, setNewHeadId] = useState("");
   const [editId, setEditId] = useState(null);
   const [editOrgId, setEditOrgId] = useState(null);
   const [editHeadId, setEditHeadId] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedOrgFilter, setSelectedOrgFilter] = useState("");
+  const [selectedOrgFilter, setSelectedOrgFilter] = useState(initialOrgId);
 
   const authHeader = () => {
     const token = localStorage.getItem("accessToken");
@@ -80,6 +84,9 @@ export default function DepartmentManage() {
 
   useEffect(() => {
     loadData();
+    if (initialOrgId) {
+      loadUsersByOrganizationId(initialOrgId);
+    }
   }, []);
 
   const resetForm = () => {
