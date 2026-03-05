@@ -53,6 +53,7 @@ import AuditLogManagement from "../layouts/admin/AuditLogManagement";
 import Config from "../layouts/admin/Config";
 import PositionNumberManagement from "../layouts/admin/PositionNumberManagement";
 import RoleManagement from "../layouts/admin/RoleManagement";
+import RankManage from "../layouts/admin/RankManage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import bg from "../assets/bg.jpg";
 
@@ -141,9 +142,6 @@ const guestRouter = createBrowserRouter([
       { path: "/login", element: <Login2 /> },
       { path: "/callback", element: <Callback /> },
       { path: "/dashboard", element: <UserDashBoard /> },
-      { path: "/register", element: <Register /> },
-      { path: "/forgot-password", element: <ForgotPassword /> },
-      { path: "/reset-password", element: <ResetPassword /> },
       { path: "/add-other-request-dev", element: <AddOtherRequest /> },
       { path: "/leave-dev", element: <Leave2 /> },
       { path: "*", element: <Navigate to="/" replace /> },
@@ -256,7 +254,7 @@ const userRouter = createBrowserRouter([
           {
             path: "organization",
             element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
+              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
                 <OrganizationManage />
               </ProtectedRoute>
             )
@@ -264,7 +262,7 @@ const userRouter = createBrowserRouter([
           {
             path: "organization-manage",
             element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
+              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
                 <OrganizationManage />
               </ProtectedRoute>
             )
@@ -280,8 +278,16 @@ const userRouter = createBrowserRouter([
           {
             path: "personel-manage",
             element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
+              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
                 <PersonnelTypeManage />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: "rank-manage",
+            element: (
+              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
+                <RankManage />
               </ProtectedRoute>
             )
           },
@@ -304,7 +310,7 @@ const userRouter = createBrowserRouter([
           {
             path: "leave-type-manage",
             element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
+              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
                 <LeaveTypeManage />
               </ProtectedRoute>
             )
@@ -376,7 +382,7 @@ const userRouter = createBrowserRouter([
           {
             path: "role-management",
             element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
+              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
                 <RoleManagement />
               </ProtectedRoute>
             )
@@ -394,19 +400,6 @@ export default function AppRouter() {
   // ตรวจสอบว่ามี token และ user หรือไม่
   const hasToken = localStorage.getItem("accessToken");
   const finalRouter = (user?.id && hasToken) ? userRouter : guestRouter;
-
-  // Debug: ดูข้อมูล user และ routes
-  // console.log('🔍 Debug - AppRouter:', {
-  //   user: user ? {
-  //     id: user.id,
-  //     firstName: user.firstName,
-  //     lastName: user.lastName,
-  //     role: user.role,
-  //     roles: user.roles
-  //   } : null,
-  //   hasToken: !!hasToken,
-  //   finalRouter: finalRouter === userRouter ? 'userRouter' : 'guestRouter'
-  // });
 
   return <RouterProvider router={finalRouter} />;
 }

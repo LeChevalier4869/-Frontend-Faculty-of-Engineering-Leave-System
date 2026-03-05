@@ -31,8 +31,8 @@ const ProtectedRoute = ({ children, requiredRoles, checkProxy = false }) => {
         });
 
         const proxyApprovals = response.data.data || [];
-        const activeProxies = proxyApprovals.filter(proxy => 
-          proxy.status === 'ACTIVE' && 
+        const activeProxies = proxyApprovals.filter(proxy =>
+          proxy.status === 'ACTIVE' &&
           proxy.proxyApproverId === user.id
         );
 
@@ -89,8 +89,11 @@ const ProtectedRoute = ({ children, requiredRoles, checkProxy = false }) => {
     ? [user.role]
     : [];
 
-  const hasRegularRole = requiredRoles.some(role => userRoles.includes(role));
-  
+  // SUPER_ADMIN สามารถเข้าถึงทุกหน้าที่ ADMIN เข้าได้
+  const isSuperAdmin = userRoles.includes('SUPER_ADMIN');
+  const hasRegularRole = requiredRoles.some(role => userRoles.includes(role))
+    || (isSuperAdmin && requiredRoles.includes('ADMIN'));
+
   // ตรวจสอบสิทธิ์ proxy roles (ถ้าเปิดใช้)
   const hasProxyRole = checkProxy && requiredRoles.some(role => proxyPermissions.includes(role));
 

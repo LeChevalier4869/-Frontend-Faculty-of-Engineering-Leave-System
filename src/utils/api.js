@@ -1,8 +1,11 @@
 import axios from "axios";
-// export const BASE_URL = "http://localhost:8000";
+export const BASE_URL = window.location.hostname === "localhost"
+    ? "http://localhost:8000"
+    : import.meta.env.VITE_BACKEND_URL;
 
 export const API = axios.create({
-  baseURL: "https://backend-faculty-of-engineering-leave.onrender.com",
+  // baseURL: "https://backend-faculty-of-engineering-leave.onrender.com",
+  baseURL: BASE_URL,
 });
 
 // Token interceptor (optional)
@@ -13,8 +16,6 @@ API.interceptors.request.use((config) => {
   }
   return config;
 });
-
-export const BASE_URL = "https://backend-faculty-of-engineering-leave.onrender.com";
 
 export const apiEndpoints = {
   // auth

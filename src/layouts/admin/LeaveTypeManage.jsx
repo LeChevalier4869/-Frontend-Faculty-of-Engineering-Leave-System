@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { BASE_URL } from "../../utils/api";
@@ -10,6 +11,7 @@ const Panel = ({ className = "", children }) => (
 );
 
 export default function LeaveTypeManage() {
+  const navigate = useNavigate();
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [name, setName] = useState("");
   const [isAvailable, setIsAvailable] = useState(false);
@@ -74,12 +76,22 @@ export default function LeaveTypeManage() {
       return Swal.fire("Error", "กรุณาระบุชื่อประเภทการลา", "error");
     }
     try {
-      await axios.post(
+      const res = await axios.post(
         `${BASE_URL}/leave-types/`,
         { name, isAvailable, resetOnFiscalYear },
         authHeader()
       );
-      Swal.fire("บันทึกสำเร็จ!", "", "success");
+      if (res.data.warning) {
+        await Swal.fire({
+          title: "สร้างสำเร็จ!",
+          html: `<p class="text-sm text-green-700 mb-2">เพิ่มประเภทการลาเรียบร้อยแล้ว</p>` +
+                `<p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">⚠️ ${res.data.warning}</p>`,
+          icon: "warning",
+          confirmButtonText: "รับทราบ",
+        });
+      } else {
+        Swal.fire("บันทึกสำเร็จ!", "", "success");
+      }
       resetForm();
       loadData();
     } catch (err) {
@@ -151,7 +163,7 @@ export default function LeaveTypeManage() {
                 จัดการประเภทการลา
               </h1>
               <p className="text-sm text-slate-600">
-                ดูข้อมูลประเภทการลาที่ใช้ในระบบ (ปิดกั้นการแก้ไขชั่วคราว)
+                จัดการข้อมูลประเภทการลาที่ใช้ในระบบ
               </p>
             </div>
             <div className="text-xs text-slate-500">
@@ -170,17 +182,17 @@ export default function LeaveTypeManage() {
               <span className="text-amber-600 text-xs font-bold">!</span>
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
+              <h3 className="text-sm font-semibold text-amber-800 mb-1">โปรดระมัดระวังในการแก้ไข</h3>
               <p className="text-xs text-amber-700">
-                ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
-                การเปลี่ยนแปลงข้อมูลอาจทำให้ระบบทำงานผิดพลาดได้จาก hardcoded logic และ dependencies ที่ซับซ้อน
+                ข้อมูลประเภทการลามีผลต่อการคำนวณสิทธิ์การลาและ dependencies ที่ซับซ้อน
+                กรุณาตรวจสอบให้แน่ใจก่อนทำการเปลี่ยนแปลง
               </p>
             </div>
           </div>
         </div>
 
-        <Panel className="p-5 opacity-75">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end opacity-50">
+        <Panel className="p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
             <div className="lg:col-span-2 flex flex-col gap-1">
               <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
                 ชื่อประเภทการลา
@@ -189,8 +201,8 @@ export default function LeaveTypeManage() {
                 type="text"
                 placeholder="เช่น ลาป่วย, ลากิจ"
                 value={name}
-                disabled
-                className={`${inputClass} bg-slate-100 cursor-not-allowed`}
+                onChange={(e) => setName(e.target.value)}
+                className={inputClass}
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -198,8 +210,8 @@ export default function LeaveTypeManage() {
                 <input
                   type="checkbox"
                   checked={isAvailable}
-                  disabled
-                  className={`${checkboxClass} opacity-50 cursor-not-allowed`}
+                  onChange={(e) => setIsAvailable(e.target.checked)}
+                  className={checkboxClass}
                 />
                 <span className="text-sm text-slate-800">
                   สามารถลาในระบบได้
@@ -209,21 +221,38 @@ export default function LeaveTypeManage() {
                 <input
                   type="checkbox"
                   checked={resetOnFiscalYear}
-                  disabled
-                  className={`${checkboxClass} opacity-50 cursor-not-allowed`}
+                  onChange={(e) => setResetOnFiscalYear(e.target.checked)}
+                  className={checkboxClass}
                 />
                 <span className="text-sm text-slate-800">
                   รีเซ็ตยอดวันลาปีใหม่
                 </span>
               </div>
             </div>
-            <div className="lg:col-span-1 flex lg:justify-end">
-              <button
-                disabled
-                className={`${buttonClass} bg-slate-300 cursor-not-allowed opacity-50 w-full lg:w-auto`}
-              >
-                ปิดกั้นการแก้ไข
-              </button>
+            <div className="lg:col-span-1 flex gap-2 lg:justify-end">
+              {editId ? (
+                <>
+                  <button
+                    onClick={handleUpdate}
+                    className={`${buttonClass} bg-amber-500 hover:bg-amber-400`}
+                  >
+                    อัปเดต
+                  </button>
+                  <button
+                    onClick={resetForm}
+                    className={`${buttonClass} bg-slate-400 hover:bg-slate-300`}
+                  >
+                    ยกเลิก
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleAdd}
+                  className={`${buttonClass} bg-sky-600 hover:bg-sky-500 w-full lg:w-auto`}
+                >
+                  เพิ่มประเภทการลา
+                </button>
+              )}
             </div>
           </div>
         </Panel>
@@ -297,16 +326,22 @@ export default function LeaveTypeManage() {
                       <td className="px-4 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            disabled
-                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
+                            onClick={() => navigate(`/admin/rank-manage?leaveTypeId=${t.id}`)}
+                            className="inline-flex items-center justify-center rounded-lg bg-sky-600 hover:bg-sky-500 px-3 py-1.5 text-xs font-medium text-white"
                           >
-                            แก้ไข (ปิดกั้น)
+                            เงื่อนไขวันลา
                           </button>
                           <button
-                            disabled
-                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
+                            onClick={() => handleEdit(t.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 px-3 py-1.5 text-xs font-medium text-white"
                           >
-                            ลบ (ปิดกั้น)
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => handleDelete(t.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 hover:bg-rose-400 px-3 py-1.5 text-xs font-medium text-white"
+                          >
+                            ลบ
                           </button>
                         </div>
                       </td>

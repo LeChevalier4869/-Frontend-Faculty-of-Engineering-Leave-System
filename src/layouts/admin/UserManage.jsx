@@ -1,5 +1,6 @@
 // src/pages/admin/UserManage.jsx
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -11,6 +12,104 @@ const PAGE_SIZE = 10;
 const DEBOUNCE_MS = 200;
 
 const MySwal = withReactContent(Swal);
+
+const ROLE_PRIORITY = [
+  "SUPER_ADMIN", "ADMIN", "APPROVER_4", "APPROVER_3",
+  "APPROVER_2", "APPROVER_1", "VERIFIER", "USER",
+];
+const ROLE_COLOR = {
+  SUPER_ADMIN: "bg-rose-50 text-rose-700 border-rose-200",
+  ADMIN: "bg-amber-50 text-amber-700 border-amber-200",
+  APPROVER_4: "bg-violet-50 text-violet-700 border-violet-200",
+  APPROVER_3: "bg-violet-50 text-violet-700 border-violet-200",
+  APPROVER_2: "bg-violet-50 text-violet-700 border-violet-200",
+  APPROVER_1: "bg-violet-50 text-violet-700 border-violet-200",
+  VERIFIER: "bg-teal-50 text-teal-700 border-teal-200",
+  USER: "bg-slate-50 text-slate-600 border-slate-200",
+};
+
+const getHighestRole = (roleNames) => {
+  if (!roleNames.length) return null;
+  for (const r of ROLE_PRIORITY) {
+    if (roleNames.includes(r)) return r;
+  }
+  return roleNames[0];
+};
+
+/* eslint-disable react/prop-types */
+const RoleBadgeCell = ({ userRoles }) => {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = React.useRef(null);
+
+  const roleNames = (userRoles || [])
+    .map((ur) => ur.role?.name || ur.roleName)
+    .filter(Boolean);
+  const display = roleNames.length > 1
+    ? roleNames.filter((r) => r !== "USER")
+    : roleNames;
+
+  const highest = getHighestRole(display);
+
+  const handleToggle = (e) => {
+    e.stopPropagation();
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setOpen((v) => !v);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (btnRef.current && !btnRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  if (!highest) return <span className="text-slate-400">-</span>;
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={handleToggle}
+        className="group inline-flex items-center gap-1"
+      >
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${ROLE_COLOR[highest] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+        >
+          {highest}
+        </span>
+        {display.length > 1 && (
+          <span className="text-[10px] text-slate-400 group-hover:text-sky-500 transition">
+            +{display.length - 1}
+          </span>
+        )}
+      </button>
+
+      {open && display.length > 1 && ReactDOM.createPortal(
+        <div
+          style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
+          className="min-w-[140px] rounded-xl bg-white border border-slate-200 shadow-lg p-2 flex flex-col gap-1"
+        >
+          {display.map((r) => (
+            <span
+              key={r}
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border w-fit ${ROLE_COLOR[r] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+            >
+              {r}
+            </span>
+          ))}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+};
 
 function UserManage() {
   const [users, setUsers] = useState([]);
@@ -161,10 +260,13 @@ function UserManage() {
                   <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
                     แผนก
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
                     ประเภทบุคลากร
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[12%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
+                    บทบาท
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[10%]">
                     เบอร์โทร
                   </th>
                   <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
@@ -177,7 +279,7 @@ function UserManage() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       กำลังโหลด...
@@ -203,6 +305,9 @@ function UserManage() {
                       </td>
                       <td className="px-4 py-3 truncate text-sm">
                         {user.personnelType?.name || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
+                        <RoleBadgeCell userRoles={user.userRoles} />
                       </td>
                       <td className="px-4 py-3 truncate text-sm">
                         {user.phone}
@@ -231,7 +336,7 @@ function UserManage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่พบผู้ใช้งาน
