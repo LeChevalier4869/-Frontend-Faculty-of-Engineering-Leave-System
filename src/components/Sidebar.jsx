@@ -41,6 +41,7 @@ const adminNav = [
   { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
   { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaUsersCog /> },
   { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
+  { to: "/admin/role-management", text: "จัดการ Role", icon: <FaUsersCog /> },
   { to: "/admin/position-numbers", text: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
   { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
   { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
