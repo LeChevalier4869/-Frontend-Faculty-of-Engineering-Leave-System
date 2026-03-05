@@ -45,6 +45,7 @@ export default function UserEdit() {
 
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(initialForm);
+  const [initialFormData, setInitialFormData] = useState(initialForm);
   const [departments, setDepartments] = useState([]);
   const [personnelTypes, setPersonnelTypes] = useState([]);
   const [allRoles, setAllRoles] = useState([]);
@@ -76,7 +77,7 @@ export default function UserEdit() {
 
         const u = userRes.data.data;
 
-        setFormData({
+        const loadedForm = {
           prefixName: u.prefixName || "",
           firstName: u.firstName || "",
           lastName: u.lastName || "",
@@ -88,7 +89,9 @@ export default function UserEdit() {
           employmentType: u.employmentType || "",
           hireDate: u.hireDate?.substring(0, 10) || "",
           position: u.position || "",
-        });
+        };
+        setFormData(loadedForm);
+        setInitialFormData(loadedForm);
 
         setDepartments(deptRes.data.data);
         setPersonnelTypes(ptRes.data.data);
@@ -271,6 +274,12 @@ export default function UserEdit() {
     return `${th} (${roleName})`;
   };
 
+  // ตรวจสอบว่ามีการเปลี่ยนแปลงข้อมูลหรือไม่
+  const formChanged = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  const rolesChanged = currentUserIsSuperAdmin &&
+    (selectedRoles.size !== initialRoles.size || [...selectedRoles].some((r) => !initialRoles.has(r)));
+  const hasChanges = formChanged || rolesChanged;
+
   // ADMIN ไม่สามารถแก้ไขข้อมูล user ที่เป็น SUPER_ADMIN ได้
   const isReadOnly = targetIsSuperAdmin && !currentUserIsSuperAdmin;
 
@@ -428,7 +437,12 @@ export default function UserEdit() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-sm font-medium text-white shadow-sm transition"
+                disabled={!hasChanges}
+                className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition ${
+                  hasChanges
+                    ? "bg-sky-600 hover:bg-sky-500 text-white"
+                    : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                }`}
               >
                 บันทึกการเปลี่ยนแปลง
               </button>

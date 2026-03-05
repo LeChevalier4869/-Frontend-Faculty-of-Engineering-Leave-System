@@ -12,6 +12,7 @@ export default function OrganizationManage() {
   const [organizations, setOrganizations] = useState([]);
   const [newName, setNewName] = useState("");
   const [editId, setEditId] = useState(null);
+  const [initialEditName, setInitialEditName] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -59,6 +60,7 @@ export default function OrganizationManage() {
   const resetForm = () => {
     setNewName("");
     setEditId(null);
+    setInitialEditName("");
   };
 
   const handleAdd = async () => {
@@ -84,6 +86,7 @@ export default function OrganizationManage() {
     const org = organizations.find((o) => o.id === id);
     if (!org) return;
     setNewName(org.name);
+    setInitialEditName(org.name);
     setEditId(org.id);
   };
 
@@ -188,7 +191,12 @@ export default function OrganizationManage() {
               <div className="flex gap-2">
                 <button
                   onClick={handleUpdate}
-                  className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-amber-500 hover:bg-amber-400 flex-1"
+                  disabled={newName === initialEditName}
+                  className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium shadow-sm transition flex-1 ${
+                    newName === initialEditName
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-amber-500 hover:bg-amber-400 text-white"
+                  }`}
                 >
                   อัปเดต
                 </button>
