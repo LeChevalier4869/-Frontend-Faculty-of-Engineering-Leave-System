@@ -175,5 +175,12 @@ export const apiEndpoints = {
   // Settings
   getSettingByKey: (key) => `${BASE_URL}/setting/by/${key}`, // GET
   updateSettingByKey: (key) => `${BASE_URL}/setting/by/${key}`, // PUT
-  getAllSettings: `${BASE_URL}/setting`, // GET
+  getAllSettings: `${BASE_URL}/setting`, // GET,
+
+  // Role Management
+  getRoles: `${BASE_URL}/admin/role`, // GET
+  createRole: `${BASE_URL}/admin/role`, // POST
+  updateRole: (id) => `${BASE_URL}/admin/role/${id}`, // PUT
+  deleteRole: (id) => `${BASE_URL}/admin/role/${id}`, // DELETE
+  getRoleById: (id) => `${BASE_URL}/admin/role/${id}`, // GET
 };

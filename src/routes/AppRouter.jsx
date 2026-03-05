@@ -52,6 +52,7 @@ import ProxyApprovalManagement from "../layouts/admin/ProxyApprovalManagement";
 import AuditLogManagement from "../layouts/admin/AuditLogManagement";
 import Config from "../layouts/admin/Config";
 import PositionNumberManagement from "../layouts/admin/PositionNumberManagement";
+import RoleManagement from "../layouts/admin/RoleManagement";
 import ProtectedRoute from "../components/ProtectedRoute";
 import bg from "../assets/bg.jpg";
 
@@ -369,6 +370,14 @@ const userRouter = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <Config />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: "role-management",
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <RoleManagement />
               </ProtectedRoute>
             )
           },
