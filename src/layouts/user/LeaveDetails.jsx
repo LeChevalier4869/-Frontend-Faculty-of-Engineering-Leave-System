@@ -165,57 +165,57 @@ export default function LeaveDetail() {
   }, [approver]);
 
   // Head of Department Case
-  const approver1 = useMemo(() => {
-    const list = approverByRole.APPROVER_1;
-    return list.find(
-      (a) =>
-        departmentId != null &&
-        a?.department?.id === departmentId &&
-        departmentHeadId != null &&
-        departmentHeadId === a?.id
-    );
-  }, [approverByRole, departmentId, departmentHeadId]);
+  // const approver1 = useMemo(() => {
+  //   const list = approverByRole.APPROVER_1;
+  //   return list.find(
+  //     (a) =>
+  //       departmentId != null &&
+  //       a?.department?.id === departmentId &&
+  //       departmentHeadId != null &&
+  //       departmentHeadId === a?.id
+  //   );
+  // }, [approverByRole, departmentId, departmentHeadId]);
   // console.log("debug approver1: ", approver1);
   // console.log("dept: ", leave.user.department.id);
 
   // Verifier Case
-  const verifier = useMemo(() => {
-    const list = approverByRole.VERIFIER;
-    return list.find((a) => verifierId != null && a?.id === verifierId);
-  }, [approverByRole, verifierId]);
+  // const verifier = useMemo(() => {
+  //   const list = approverByRole.VERIFIER;
+  //   return list.find((a) => verifierId != null && a?.id === verifierId);
+  // }, [approverByRole, verifierId]);
   // console.log("debug verifier: ", verifier);
 
   // Approver_2 Case (สารบัญคณะ)
-  const approver2 = useMemo(() => {
-    const list = approverByRole.APPROVER_2;
-    return list.find(
-      (a) =>
-        hodOrganizationId != null &&
-        a?.department?.organizationId === hodOrganizationId
-    );
-  }, [approverByRole, hodOrganizationId]);
+  // const approver2 = useMemo(() => {
+  //   const list = approverByRole.APPROVER_2;
+  //   return list.find(
+  //     (a) =>
+  //       hodOrganizationId != null &&
+  //       a?.department?.organizationId === hodOrganizationId
+  //   );
+  // }, [approverByRole, hodOrganizationId]);
   // console.log("debig approver2: ", approver2);
 
   // Approver_3 Case (รองคณบดี)
-  const approver3 = useMemo(() => {
-    const list = approverByRole.APPROVER_3;
-    return list.find(
-      (a) =>
-        hodOrganizationId != null &&
-        a?.department?.organizationId === hodOrganizationId
-    );
-  }, [approverByRole, hodOrganizationId]);
+  // const approver3 = useMemo(() => {
+  //   const list = approverByRole.APPROVER_3;
+  //   return list.find(
+  //     (a) =>
+  //       hodOrganizationId != null &&
+  //       a?.department?.organizationId === hodOrganizationId
+  //   );
+  // }, [approverByRole, hodOrganizationId]);
   // console.log("debig approver3: ", approver3);
 
   // Approver_4 Case (คณบดี)
-  const approver4 = useMemo(() => {
-    const list = approverByRole.APPROVER_4;
-    return list.find(
-      (a) =>
-        hodOrganizationId != null &&
-        a?.department?.organizationId === hodOrganizationId
-    );
-  }, [approverByRole, hodOrganizationId]);
+  // const approver4 = useMemo(() => {
+  //   const list = approverByRole.APPROVER_4;
+  //   return list.find(
+  //     (a) =>
+  //       hodOrganizationId != null &&
+  //       a?.department?.organizationId === hodOrganizationId
+  //   );
+  // }, [approverByRole, hodOrganizationId]);
   // console.log("debig approver4: ", approver4);
 
   const {
@@ -231,7 +231,7 @@ export default function LeaveDetail() {
     status,
     documentNumber,
     documentIssuedDate,
-    leaveRequestDetails,
+    // leaveRequestDetails,
     files,
     approvalSteps,
   } = leave ?? {};
@@ -246,7 +246,7 @@ export default function LeaveDetail() {
 
 
   const EXPORTABLE_LEAVE_TYPE_IDS = [1, 3, 4];
-  const isFinalStatus = status === "APPROVED" || status === "REJECTED";
+  const isFinalStatus = status === "APPROVED" || status === "REJECTED" || status === "CANCELLED";
   const isExportableType = EXPORTABLE_LEAVE_TYPE_IDS.includes(
     Number(leaveType?.id)
   );
@@ -261,7 +261,7 @@ export default function LeaveDetail() {
       userId: leave?.userId ?? null,
       documentNumber: documentNumber || "-", //
       documentDate: documentIssuedDate || "-", //
-      title: `ขอ${leaveType?.name}` || "-", //
+      title: `ขอ${leaveType?.name || ""}`, //
       name: `${user?.prefixName ?? ""}${user?.firstName ?? ""} ${
         user?.lastName ?? ""
       }`.trim(), //
@@ -718,7 +718,16 @@ export default function LeaveDetail() {
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
-                    เอกสารแนบ {file.type}
+                    {file.name ? (
+                      <>
+                        เอกสารแนบ {file.type}
+                        <span className="text-gray-600 ml-2 text-sm">
+                          ({file.name.length > 50 ? file.name.substring(0, 50) + '...' : file.name})
+                        </span>
+                      </>
+                    ) : (
+                      `เอกสารแนบ ${file.type}`
+                    )}
                   </a>
                 </li>
               ))}
@@ -732,7 +741,9 @@ export default function LeaveDetail() {
               ? "bg-green-500"
               : status === "REJECTED"
                 ? "bg-red-500"
-                : "bg-yellow-400"
+                : status === "CANCELLED"
+                  ? "bg-gray-500"
+                  : "bg-yellow-400"
               }`}
           >
             สถานะ:{" "}
@@ -740,7 +751,9 @@ export default function LeaveDetail() {
               ? "อนุมัติแล้ว"
               : status === "REJECTED"
                 ? "ไม่อนุมัติ"
-                : "รออนุมัติ"}
+                : status === "CANCELLED"
+                  ? "ยกเลิกแล้ว"
+                  : "รออนุมัติ"}
           </span>
         </div>
 
@@ -781,17 +794,6 @@ export default function LeaveDetail() {
     </div>
   );
 }
-
-const Item = ({ label, value }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      {label}
-    </label>
-    <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800">
-      {value}
-    </p>
-  </div>
-);
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "-";

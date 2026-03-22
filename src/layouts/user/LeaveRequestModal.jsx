@@ -10,8 +10,14 @@ import { th } from "date-fns/locale";
 import { apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import useAuth from "../../hooks/useAuth";
+import {
+  filterLeaveBalancesLatestYear,
+  filterLeaveTypesBySex,
+} from "../../utils/leavePolicy";
 
 function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
+  const { user } = useAuth();
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [holidays, setHolidays] = useState([]);
 
@@ -19,14 +25,14 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     async function fetchData() {
       try {
         const response = await axios.get(apiEndpoints.availableLeaveType);
-        setLeaveTypes(response.data.data);
+        setLeaveTypes(filterLeaveTypesBySex(response.data.data, user?.sex));
       } catch (error) {
         console.error("Error fetching leave types:", error);
       }
     }
 
     fetchData();
-  }, []);
+  }, [user?.sex]);
 
   const [formData, setFormData] = useState({
     leaveTypeId: "",
@@ -34,7 +40,6 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     endDate: "",
     reason: "",
     contact: "",
-    isEmergency: "0",
     images: null,
   });
   const [leaveBalances, setLeaveBalances] = useState([]);
@@ -45,7 +50,6 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     "w-full bg-white text-black border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400";
 
   useEffect(() => {
-    // if (!isOpen) return;
     const fetchLeaveBalances = async () => {
       try {
         const token = localStorage.getItem("accessToken");
@@ -53,10 +57,9 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         const res = await axios.get(apiEndpoints.getLeaveBalanceForMe, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        // ทดสอบ response
-        // console.log("Leave Balances:", res.data.data);
         if (Array.isArray(res.data.data)) {
-          setLeaveBalances(res.data.data);
+          const latestYearOnly = filterLeaveBalancesLatestYear(res.data.data);
+          setLeaveBalances(latestYearOnly);
         }
         resetForm();
       } catch (error) {
@@ -126,6 +129,13 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
     return calculateWorkingDays(formData.startDate, formData.endDate);
   }, [formData.startDate, formData.endDate]);
 
+  const isInvalidDateRange = useMemo(() => {
+    if (!formData.startDate || !formData.endDate) return false;
+    const start = dayjs(formData.startDate);
+    const end = dayjs(formData.endDate);
+    return start.isValid() && end.isValid() && end.isBefore(start, "day");
+  }, [formData.startDate, formData.endDate]);
+
   const resetForm = () => {
     setFormData({
       leaveTypeId: "",
@@ -133,7 +143,6 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
       endDate: "",
       reason: "",
       contact: "",
-      isEmergency: "0",
       images: null,
     });
     setSelectedLeaveBalance(null);
@@ -151,6 +160,19 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
       return;
     }
 
+    // ตรวจสอบวันที่
+    const start = dayjs(formData.startDate);
+    const end = dayjs(formData.endDate);
+    if (start.isValid() && end.isValid() && end.isBefore(start, "day")) {
+      await Swal.fire({
+        icon: "warning",
+        title: "วันที่ไม่ถูกต้อง",
+        text: "วันที่สิ้นสุด ต้องมากกว่าวันที่เริ่มลา",
+        confirmButtonText: "ตกลง",
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const formDataToSend = new FormData();
@@ -159,7 +181,6 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
       formDataToSend.append("endDate", formData.endDate);
       formDataToSend.append("reason", formData.reason);
       formDataToSend.append("contact", formData.contact);
-      formDataToSend.append("isEmergency", formData.isEmergency === "1");
       if (formData.leaveTypeId === "1" && formData.images) {
         formDataToSend.append("images", formData.images);
       }
@@ -216,13 +237,35 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         <h2 className="text-2xl font-bold mb-6 text-center">ยื่นคำร้องการลา</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* แสดงสิทธิการลาเหลือ */}
+          {/* แสดงสิทธิการลาเหลือและคำเตือน */}
           {selectedLeaveBalance && (
             <div className="bg-gray-100 text-gray-700 px-4 py-3 rounded-lg mb-2 text-sm">
-              คุณมีสิทธิลาประเภทนี้เหลือ:{" "}
-              <span className="font-bold">
-                {selectedLeaveBalance.remainingDays} วัน
-              </span>
+              {(() => {
+                // ตรวจสอบว่าเป็นประเภทการลาที่ไม่ต้องหักวันหรือไม่
+                const nonDeductibleLeaveTypes = [5, 6, 10, 11, 13]; // ลาอุปสมบท, ลาเข้ารับการตรวจเลือก, ลาไปถือศีล, ลาไปปฏิบัติงานในองค์การระหว่างประเทศ, ลาไปประกอบพิธีฮัจย์
+                const isNonDeductible = (selectedLeaveBalance.maxDays === 0 && selectedLeaveBalance.remainingDays === 0) ||
+                                       nonDeductibleLeaveTypes.includes(selectedLeaveBalance.leaveType?.id);
+                
+                if (isNonDeductible) {
+                  return (
+                    <>
+                      <span className="font-medium text-emerald-600">📝 ประเภทการลานี้ไม่ต้องหักวันลา</span>
+                      <span className="ml-2 text-xs text-slate-500">
+                        (เป็นการบันทึกวันที่เท่านั้น)
+                      </span>
+                    </>
+                  );
+                } else {
+                  return (
+                    <>
+                      คุณมีสิทธิลาประเภทนี้เหลือ: {" "}
+                      <span className="font-bold">
+                        {selectedLeaveBalance.remainingDays} วัน
+                      </span>
+                    </>
+                  );
+                }
+              })()}
             </div>
           )}
 
@@ -302,12 +345,43 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
             />
           </div>
 
-          {/* จำนวนวันลา */}
+          {/* จำนวนวันลาและคำเตือน */}
           {formData.startDate && formData.endDate && (
-            <div className="text-sm text-gray-600">
-              จำนวนวันลา:{" "}
-              <span className="font-bold text-black">{workingDays} วัน</span>
-              <span className="ml-2 text-xs text-gray-500">(ไม่นับเสาร์-อาทิตย์ และวันหยุดราชการ)</span>
+            <div className="text-sm">
+              {isInvalidDateRange ? (
+                <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 border border-rose-200">
+                  <span className="font-medium">⚠️ กรุณาระบุวันที่เริ่มต้นและวันที่สิ้นสุดให้ถูกต้อง</span>
+                  <span className="ml-2 text-xs text-rose-600">
+                    (วันที่สิ้นสุดต้องไม่น้อยกว่าวันที่เริ่มต้น)
+                  </span>
+                </div>
+              ) : (
+                <div className={workingDays > selectedLeaveBalance?.remainingDays ? "text-red-600" : "text-gray-600"}>
+                  จำนวนวันลา: {" "}
+                  <span className={`font-bold ${workingDays > selectedLeaveBalance?.remainingDays ? "text-red-600" : "text-black"}`}>
+                    {workingDays} วัน
+                  </span>
+                  <span className="ml-2 text-xs text-gray-500">(ไม่นับเสาร์-อาทิตย์ และวันหยุดราชการ)</span>
+                </div>
+              )}
+              {/* แจ้งเตือนเมื่อจำนวนวันลาเกินสิทธิที่เหลืออยู่ */}
+              {selectedLeaveBalance && workingDays > selectedLeaveBalance.remainingDays && (
+                <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 border border-red-200">
+                  <span className="font-medium">⚠️ ลาเกินสิทธิ</span>
+                  <span className="ml-2 text-xs text-red-600">
+                    (จำนวนวันที่ขอลา {workingDays} วัน เกินสิทธิที่เหลือ {selectedLeaveBalance.remainingDays} วัน)
+                  </span>
+                </div>
+              )}
+              {/* แจ้งเตือนเมื่อจำนวนวันลาเกินกำหนด */}
+              {workingDays > 3 && (
+                <div className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700 border border-amber-200">
+                  <span className="font-medium">⚠️ คำเตือน: จำนวนวันลาเกินกำหนด</span>
+                  <span className="ml-2 text-xs text-amber-600">
+                    (การลาเกิน 3 วันขึ้นไป อาจส่งผลต่อการจ่ายเงินเดือน)
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
@@ -321,7 +395,6 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
               value={formData.reason}
               onChange={handleChange}
               rows="2"
-              // required
               className={inputStyle}
             />
           </div>
@@ -329,14 +402,13 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
           {/* ติดต่อ */}
           <div>
             <label className="block text-sm font-medium mb-1">
-              ช่องทางติดต่อติดต่อ
+              ช่องทางติดต่อ
             </label>
             <textarea
               name="contact"
               value={formData.contact}
               onChange={handleChange}
               rows="2"
-              // required
               className={inputStyle}
             />
           </div>

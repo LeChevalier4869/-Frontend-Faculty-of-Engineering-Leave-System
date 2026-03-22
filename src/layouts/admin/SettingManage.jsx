@@ -18,6 +18,7 @@ export default function SettingManage() {
   const [newValue, setNewValue] = useState("");
   const [description, setDescription] = useState("");
   const [editId, setEditId] = useState(null);
+  const [initialEditData, setInitialEditData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,6 +87,7 @@ export default function SettingManage() {
     setNewValue("");
     setDescription("");
     setEditId(null);
+    setInitialEditData(null);
   };
 
   const handleAdd = async () => {
@@ -115,6 +117,7 @@ export default function SettingManage() {
     setNewValue(setting.value);
     setDescription(setting.description || "");
     setEditId(id);
+    setInitialEditData({ key: setting.key, type: setting.type, value: setting.value, description: setting.description || "" });
   };
 
   const handleUpdate = async () => {
@@ -271,10 +274,13 @@ export default function SettingManage() {
           <div className="mt-4 flex justify-end">
             <button
               onClick={editId ? handleUpdate : handleAdd}
-              className={`inline-flex items-center justify-center rounded-xl text-sm font-medium text-white shadow-sm px-4 py-2 ${
-                editId
-                  ? "bg-emerald-600 hover:bg-emerald-500"
-                  : "bg-sky-600 hover:bg-sky-500"
+              disabled={editId && initialEditData && newKey === initialEditData.key && newType === initialEditData.type && newValue === initialEditData.value && description === initialEditData.description}
+              className={`inline-flex items-center justify-center rounded-xl text-sm font-medium shadow-sm px-4 py-2 ${
+                editId && initialEditData && newKey === initialEditData.key && newType === initialEditData.type && newValue === initialEditData.value && description === initialEditData.description
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : editId
+                    ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                    : "bg-sky-600 hover:bg-sky-500 text-white"
               }`}
             >
               {editId ? "อัปเดต" : "เพิ่ม"}
@@ -401,26 +407,57 @@ export default function SettingManage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-4">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
-              >
-                ก่อนหน้า
-              </button>
-              <span className="px-3 py-1 text-xs text-slate-700">
-                หน้า {currentPage} / {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
-              >
-                ถัดไป
-              </button>
+            <div className="flex items-center justify-between mt-4 bg-white rounded-lg px-4 py-3 border border-slate-200">
+              <div className="text-sm text-slate-700">
+                แสดง {startIndex + 1} ถึง {Math.min(startIndex + PAGE_SIZE, filteredSettings.length)} จาก {filteredSettings.length} รายการ
+              </div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ก่อนหน้า
+                </button>
+                {(() => {
+                  const pages = [];
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(1);
+                    if (currentPage <= 4) {
+                      pages.push(2, 3, 4, 5, '...', totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    } else {
+                      pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                    }
+                  }
+                  return pages.map((page, idx) => {
+                    if (page === '...') {
+                      return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                    }
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  });
+                })()}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
+              </nav>
             </div>
           )}
         </Panel>

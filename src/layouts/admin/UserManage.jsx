@@ -1,5 +1,6 @@
 // src/pages/admin/UserManage.jsx
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -11,6 +12,104 @@ const PAGE_SIZE = 10;
 const DEBOUNCE_MS = 200;
 
 const MySwal = withReactContent(Swal);
+
+const ROLE_PRIORITY = [
+  "SUPER_ADMIN", "ADMIN", "APPROVER_4", "APPROVER_3",
+  "APPROVER_2", "APPROVER_1", "VERIFIER", "USER",
+];
+const ROLE_COLOR = {
+  SUPER_ADMIN: "bg-rose-50 text-rose-700 border-rose-200",
+  ADMIN: "bg-amber-50 text-amber-700 border-amber-200",
+  APPROVER_4: "bg-violet-50 text-violet-700 border-violet-200",
+  APPROVER_3: "bg-violet-50 text-violet-700 border-violet-200",
+  APPROVER_2: "bg-violet-50 text-violet-700 border-violet-200",
+  APPROVER_1: "bg-violet-50 text-violet-700 border-violet-200",
+  VERIFIER: "bg-teal-50 text-teal-700 border-teal-200",
+  USER: "bg-slate-50 text-slate-600 border-slate-200",
+};
+
+const getHighestRole = (roleNames) => {
+  if (!roleNames.length) return null;
+  for (const r of ROLE_PRIORITY) {
+    if (roleNames.includes(r)) return r;
+  }
+  return roleNames[0];
+};
+
+/* eslint-disable react/prop-types */
+const RoleBadgeCell = ({ userRoles }) => {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = React.useRef(null);
+
+  const roleNames = (userRoles || [])
+    .map((ur) => ur.role?.name || ur.roleName)
+    .filter(Boolean);
+  const display = roleNames.length > 1
+    ? roleNames.filter((r) => r !== "USER")
+    : roleNames;
+
+  const highest = getHighestRole(display);
+
+  const handleToggle = (e) => {
+    e.stopPropagation();
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setOpen((v) => !v);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (btnRef.current && !btnRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  if (!highest) return <span className="text-slate-400">-</span>;
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={handleToggle}
+        className="group inline-flex items-center gap-1"
+      >
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${ROLE_COLOR[highest] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+        >
+          {highest}
+        </span>
+        {display.length > 1 && (
+          <span className="text-[10px] text-slate-400 group-hover:text-sky-500 transition">
+            +{display.length - 1}
+          </span>
+        )}
+      </button>
+
+      {open && display.length > 1 && ReactDOM.createPortal(
+        <div
+          style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
+          className="min-w-[140px] rounded-xl bg-white border border-slate-200 shadow-lg p-2 flex flex-col gap-1"
+        >
+          {display.map((r) => (
+            <span
+              key={r}
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border w-fit ${ROLE_COLOR[r] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+            >
+              {r}
+            </span>
+          ))}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+};
 
 function UserManage() {
   const [users, setUsers] = useState([]);
@@ -161,10 +260,13 @@ function UserManage() {
                   <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
                     แผนก
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
                     ประเภทบุคลากร
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[12%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
+                    บทบาท
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[10%]">
                     เบอร์โทร
                   </th>
                   <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
@@ -177,7 +279,7 @@ function UserManage() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       กำลังโหลด...
@@ -203,6 +305,9 @@ function UserManage() {
                       </td>
                       <td className="px-4 py-3 truncate text-sm">
                         {user.personnelType?.name || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
+                        <RoleBadgeCell userRoles={user.userRoles} />
                       </td>
                       <td className="px-4 py-3 truncate text-sm">
                         {user.phone}
@@ -231,7 +336,7 @@ function UserManage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่พบผู้ใช้งาน
@@ -244,24 +349,57 @@ function UserManage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-6">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-            >
-              ก่อนหน้า
-            </button>
-            <span className="text-sm text-slate-700">
-              หน้า {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-            >
-              ถัดไป
-            </button>
+          <div className="flex items-center justify-between mt-6 bg-white rounded-lg px-4 py-3 border border-slate-200">
+            <div className="text-sm text-slate-700">
+              แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ
+            </div>
+            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ก่อนหน้า
+              </button>
+              {(() => {
+                const pages = [];
+                if (totalPages <= 7) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (currentPage <= 4) {
+                    pages.push(2, 3, 4, 5, '...', totalPages);
+                  } else if (currentPage >= totalPages - 3) {
+                    pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                  } else {
+                    pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                  }
+                }
+                return pages.map((page, idx) => {
+                  if (page === '...') {
+                    return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                });
+              })()}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ถัดไป
+              </button>
+            </nav>
           </div>
         )}
       </div>

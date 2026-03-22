@@ -1,5 +1,4 @@
 // components/SplashScreen.jsx
-import React from "react";
 
 export default function SplashScreen() {
   return (

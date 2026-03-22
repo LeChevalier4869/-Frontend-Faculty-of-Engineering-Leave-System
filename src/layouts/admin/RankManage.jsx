@@ -1,0 +1,509 @@
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import axios from "axios";
+import Swal from "sweetalert2";
+import { BASE_URL } from "../../utils/api";
+import { ChevronDown } from "lucide-react";
+
+const PAGE_SIZE = 10;
+
+export default function RankManage() {
+  const [searchParams] = useSearchParams();
+  const initialLeaveTypeId = searchParams.get("leaveTypeId") || "";
+  const initialPersonnelTypeId = searchParams.get("personnelTypeId") || "";
+
+  const [ranks, setRanks] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [personnelTypes, setPersonnelTypes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Filters
+  const [filterLeaveTypeId, setFilterLeaveTypeId] = useState(initialLeaveTypeId);
+  const [filterPersonnelTypeId, setFilterPersonnelTypeId] = useState(initialPersonnelTypeId);
+
+  // Form
+  const [editId, setEditId] = useState(null);
+  const [initialEditData, setInitialEditData] = useState(null);
+  const [form, setForm] = useState({
+    rank: "",
+    minHireMonths: "",
+    maxHireMonths: "",
+    receiveDays: "",
+    maxDays: "",
+    isBalance: false,
+    leaveTypeId: initialLeaveTypeId,
+    personnelTypeId: initialPersonnelTypeId,
+  });
+
+  const authHeader = () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
+        () => (window.location.href = "/login")
+      );
+      throw new Error("No token");
+    }
+    return { headers: { Authorization: `Bearer ${token}` } };
+  };
+
+  const handleApiError = (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("accessToken");
+      Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
+        () => (window.location.href = "/login")
+      );
+    } else {
+      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+    }
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [rankRes, ltRes, ptRes] = await Promise.all([
+        axios.get(`${BASE_URL}/ranks`, authHeader()),
+        axios.get(`${BASE_URL}/leave-types/`, authHeader()),
+        axios.get(`${BASE_URL}/admin/personnel-types`, authHeader()),
+      ]);
+      setRanks(rankRes.data.data || []);
+      setLeaveTypes(ltRes.data.data || []);
+      setPersonnelTypes(ptRes.data.data || []);
+    } catch (err) {
+      handleApiError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const resetForm = () => {
+    setForm({
+      rank: "",
+      minHireMonths: "",
+      maxHireMonths: "",
+      receiveDays: "",
+      maxDays: "",
+      isBalance: false,
+      leaveTypeId: initialLeaveTypeId,
+      personnelTypeId: initialPersonnelTypeId,
+    });
+    setEditId(null);
+    setInitialEditData(null);
+  };
+
+  const handleAdd = async () => {
+    if (!form.rank.trim() || !form.leaveTypeId || !form.personnelTypeId) {
+      return Swal.fire("Error", "กรุณาระบุชื่อ, ประเภทการลา และประเภทบุคลากร", "error");
+    }
+    try {
+      await axios.post(`${BASE_URL}/ranks`, form, authHeader());
+      Swal.fire("บันทึกสำเร็จ!", "", "success");
+      resetForm();
+      loadData();
+      setCurrentPage(1);
+    } catch (err) {
+      handleApiError(err);
+    }
+  };
+
+  const handleEdit = (id) => {
+    const r = ranks.find((x) => x.id === id);
+    if (!r) return;
+    const editForm = {
+      rank: r.rank || "",
+      minHireMonths: r.minHireMonths ?? "",
+      maxHireMonths: r.maxHireMonths ?? "",
+      receiveDays: r.receiveDays ?? "",
+      maxDays: r.maxDays ?? "",
+      isBalance: r.isBalance ?? false,
+      leaveTypeId: String(r.leaveTypeId),
+      personnelTypeId: String(r.personnelTypeId),
+    };
+    setForm(editForm);
+    setInitialEditData(editForm);
+    setEditId(id);
+  };
+
+  const handleUpdate = async () => {
+    if (!form.rank.trim() || !form.leaveTypeId || !form.personnelTypeId) {
+      return Swal.fire("Error", "กรุณาระบุชื่อ, ประเภทการลา และประเภทบุคลากร", "error");
+    }
+    try {
+      await axios.put(`${BASE_URL}/ranks/${editId}`, form, authHeader());
+      Swal.fire("อัปเดตสำเร็จ!", "", "success");
+      resetForm();
+      loadData();
+    } catch (err) {
+      handleApiError(err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirm = await Swal.fire({
+      title: "ยืนยันการลบ?",
+      text: "การลบนี้ไม่สามารถย้อนกลับได้!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "ลบ",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#dc2626",
+    });
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await axios.delete(`${BASE_URL}/ranks/${id}`, authHeader());
+      Swal.fire("ลบสำเร็จ!", "", "success");
+      loadData();
+    } catch (err) {
+      handleApiError(err);
+    }
+  };
+
+  // Filter ranks
+  const filteredRanks = ranks.filter((r) => {
+    if (filterLeaveTypeId && r.leaveTypeId !== +filterLeaveTypeId) return false;
+    if (filterPersonnelTypeId && r.personnelTypeId !== +filterPersonnelTypeId) return false;
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredRanks.length / PAGE_SIZE);
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const displayed = filteredRanks.slice(startIndex, startIndex + PAGE_SIZE);
+
+  const inputBase =
+    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+  const selectClass = `${inputBase} pr-8 appearance-none`;
+  const checkboxClass = "h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500";
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">Admin View</span>
+          </div>
+          <div className="w-full flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col items-center gap-1 md:items-start">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">จัดการเงื่อนไขวันลา (Rank)</h1>
+              <p className="text-sm text-slate-600">กำหนดสิทธิ์วันลาตามประเภทบุคลากรและประเภทการลา</p>
+            </div>
+            <div className="text-xs text-slate-500">
+              ทั้งหมด <span className="font-semibold text-sky-600">{filteredRanks.length}</span> รายการ
+            </div>
+          </div>
+        </div>
+
+        {/* Warning */}
+        <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+              <span className="text-amber-600 text-xs font-bold">!</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-amber-800 mb-1">โปรดระมัดระวังในการแก้ไข</h3>
+              <p className="text-xs text-amber-700">
+                เงื่อนไขวันลามีผลต่อการคำนวณสิทธิ์การลาของผู้ใช้งานทั้งระบบ กรุณาตรวจสอบให้แน่ใจก่อนทำการเปลี่ยนแปลง
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Form */}
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">ชื่อเงื่อนไข *</label>
+              <input
+                type="text"
+                placeholder="เช่น ปกติ, อายุงาน 10 ปี"
+                value={form.rank}
+                onChange={(e) => setForm({ ...form, rank: e.target.value })}
+                className={inputBase}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">ประเภทการลา *</label>
+              <div className="relative">
+                <select
+                  value={form.leaveTypeId}
+                  onChange={(e) => setForm({ ...form, leaveTypeId: e.target.value })}
+                  className={selectClass}
+                >
+                  <option value="">เลือกประเภทการลา</option>
+                  {leaveTypes.map((lt) => (
+                    <option key={lt.id} value={lt.id}>{lt.name}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                  <ChevronDown className="w-4 h-4 text-slate-500" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">ประเภทบุคลากร *</label>
+              <div className="relative">
+                <select
+                  value={form.personnelTypeId}
+                  onChange={(e) => setForm({ ...form, personnelTypeId: e.target.value })}
+                  className={selectClass}
+                >
+                  <option value="">เลือกประเภทบุคลากร</option>
+                  {personnelTypes.map((pt) => (
+                    <option key={pt.id} value={pt.id}>{pt.name}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                  <ChevronDown className="w-4 h-4 text-slate-500" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">วันที่ได้รับ</label>
+              <input
+                type="number"
+                placeholder="จำนวนวัน"
+                value={form.receiveDays}
+                onChange={(e) => setForm({ ...form, receiveDays: e.target.value })}
+                className={inputBase}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">วันลาสูงสุด</label>
+              <input
+                type="number"
+                placeholder="จำนวนวัน"
+                value={form.maxDays}
+                onChange={(e) => setForm({ ...form, maxDays: e.target.value })}
+                className={inputBase}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">อายุงานขั้นต่ำ (เดือน)</label>
+              <input
+                type="number"
+                placeholder="เดือน"
+                value={form.minHireMonths}
+                onChange={(e) => setForm({ ...form, minHireMonths: e.target.value })}
+                className={inputBase}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">อายุงานสูงสุด (เดือน)</label>
+              <input
+                type="number"
+                placeholder="เดือน"
+                value={form.maxHireMonths}
+                onChange={(e) => setForm({ ...form, maxHireMonths: e.target.value })}
+                className={inputBase}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-5">
+              <input
+                type="checkbox"
+                checked={form.isBalance}
+                onChange={(e) => setForm({ ...form, isBalance: e.target.checked })}
+                className={checkboxClass}
+              />
+              <span className="text-sm text-slate-800">สะสมได้</span>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              {editId ? (
+                <>
+                  <button
+                    onClick={handleUpdate}
+                    disabled={initialEditData && JSON.stringify(form) === JSON.stringify(initialEditData)}
+                    className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium shadow-sm transition ${
+                      initialEditData && JSON.stringify(form) === JSON.stringify(initialEditData)
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        : "bg-amber-500 hover:bg-amber-400 text-white"
+                    }`}
+                  >
+                    อัปเดต
+                  </button>
+                  <button
+                    onClick={resetForm}
+                    className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-slate-400 hover:bg-slate-300"
+                  >
+                    ยกเลิก
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleAdd}
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-sky-600 hover:bg-sky-500"
+                >
+                  เพิ่มเงื่อนไข
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 flex flex-wrap gap-4 items-center">
+          <span className="text-sm text-slate-600 font-medium">กรอง:</span>
+          <div className="relative">
+            <select
+              value={filterLeaveTypeId}
+              onChange={(e) => { setFilterLeaveTypeId(e.target.value); setCurrentPage(1); }}
+              className={`${selectClass} w-52`}
+            >
+              <option value="">ทุกประเภทการลา</option>
+              {leaveTypes.map((lt) => (
+                <option key={lt.id} value={lt.id}>{lt.name}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+              <ChevronDown className="w-4 h-4 text-slate-500" />
+            </div>
+          </div>
+          <div className="relative">
+            <select
+              value={filterPersonnelTypeId}
+              onChange={(e) => { setFilterPersonnelTypeId(e.target.value); setCurrentPage(1); }}
+              className={`${selectClass} w-52`}
+            >
+              <option value="">ทุกประเภทบุคลากร</option>
+              {personnelTypes.map((pt) => (
+                <option key={pt.id} value={pt.id}>{pt.name}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+              <ChevronDown className="w-4 h-4 text-slate-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white text-sm text-slate-900 border-collapse">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-3 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[5%]">#</th>
+                  <th className="px-3 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">ชื่อ</th>
+                  <th className="px-3 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">ประเภทการลา</th>
+                  <th className="px-3 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">ประเภทบุคลากร</th>
+                  <th className="px-3 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">ได้รับ</th>
+                  <th className="px-3 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">สูงสุด</th>
+                  <th className="px-3 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">อายุงาน (เดือน)</th>
+                  <th className="px-3 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">สะสม</th>
+                  <th className="px-3 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold w-[14%]">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={9} className="text-center py-6 text-sm text-slate-500">กำลังโหลด...</td>
+                  </tr>
+                ) : displayed.length > 0 ? (
+                  displayed.map((r, idx) => (
+                    <tr
+                      key={r.id}
+                      className={`border-t border-slate-100 transition-colors ${idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"} hover:bg-sky-50`}
+                    >
+                      <td className="px-3 py-2">{startIndex + idx + 1}</td>
+                      <td className="px-3 py-2 font-medium">{r.rank}</td>
+                      <td className="px-3 py-2">{r.leaveType?.name || "-"}</td>
+                      <td className="px-3 py-2">{r.personnelType?.name || "-"}</td>
+                      <td className="px-3 py-2 text-center">{r.receiveDays ?? "-"}</td>
+                      <td className="px-3 py-2 text-center">{r.maxDays ?? "-"}</td>
+                      <td className="px-3 py-2 text-center">
+                        {r.minHireMonths != null || r.maxHireMonths != null
+                          ? `${r.minHireMonths ?? 0} - ${r.maxHireMonths ?? "∞"}`
+                          : "-"}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          r.isBalance
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-slate-100 text-slate-600 border border-slate-200"
+                        }`}>
+                          {r.isBalance ? "สะสมได้" : "ไม่สะสม"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(r.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 px-3 py-1 text-xs font-medium text-white"
+                          >
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => handleDelete(r.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 hover:bg-rose-400 px-3 py-1 text-xs font-medium text-white"
+                          >
+                            ลบ
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={9} className="text-center py-6 text-sm text-slate-500">ยังไม่มีข้อมูลเงื่อนไขวันลา</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4 bg-white rounded-lg px-4 py-3 border border-slate-200">
+            <div className="text-sm text-slate-700">
+              แสดง {startIndex + 1} ถึง {Math.min(startIndex + PAGE_SIZE, filteredRanks.length)} จาก {filteredRanks.length} รายการ
+            </div>
+            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ก่อนหน้า
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                    currentPage === page
+                      ? "z-10 bg-sky-50 border-sky-500 text-sky-600"
+                      : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ถัดไป
+              </button>
+            </nav>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

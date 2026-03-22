@@ -1,4 +1,9 @@
 import bg from "../assets/bg.jpg";
+import { useState } from "react";
+import clsx from "clsx";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
+import { Outlet } from "react-router-dom";
 
 function AppLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
@@ -38,3 +43,5 @@ function AppLayout() {
     </div>
   );
 }
+
+export default AppLayout;

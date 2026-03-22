@@ -108,6 +108,38 @@ export default function LeaveApprover1() {
     }
   };
 
+  const handleReject = async (detailId) => {
+    const commentFromInput = (comments[detailId] || "").trim();
+    Swal.fire({
+      title: "กำลังดำเนินการ...",
+      text: "กรุณารอสักครู่",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.patch(
+        apiEndpoints.RejectleaveRequestsByFirstApprover(detailId),
+        {
+          remarks:
+            commentFromInput || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
+          comment:
+            commentFromInput || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.close();
+      await Swal.fire("สำเร็จ", "ปฏิเสธเรียบร้อยแล้ว", "success");
+      setLeaveRequest((prev) =>
+        prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
+      );
+    } catch (error) {
+      console.error("❌ Error rejecting request", error);
+      Swal.close();
+      Swal.fire("ผิดพลาด", "ไม่สามารถปฏิเสธได้", "error");
+    }
+  };
+
   const filtered = useMemo(() => {
     const sorted = [...leaveRequest].sort((a, b) => {
       const dateA = new Date(a.createdAt);
@@ -364,32 +396,36 @@ export default function LeaveApprover1() {
                           </div>
                         </td>
                         <td className="px-4 py-2 whitespace-nowrap">
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              const result = await Swal.fire({
-                                title: "รับรองคำขอลา",
-                                text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
-                                icon: "warning",
-                                showCancelButton: true,
-                                confirmButtonText: "ใช่, รับรอง",
-                                cancelButtonText: "ยกเลิก",
-                                confirmButtonColor: "#16a34a",
-                                cancelButtonColor: "#d33",
-                              });
-                              if (result.isConfirmed) {
-                                handleApprove(detailId);
-                              }
-                            }}
-                            disabled={loadingApprovals[detailId]}
-                            className={`px-4 py-1 rounded-lg text-xs font-medium shadow-sm ${
-                              loadingApprovals[detailId]
-                                ? "bg-emerald-400/70 cursor-not-allowed text-white"
-                                : "bg-emerald-500 hover:bg-emerald-400 text-white"
-                            } transition`}
-                          >
-                            ตกลง
-                          </button>
+                          <div className="flex flex-col sm:flex-row justify-center gap-2">
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                  handleApprove(detailId);
+                              }}
+                              disabled={loadingApprovals[detailId]}
+                              className={`px-4 py-1 rounded-lg text-xs font-medium shadow-sm ${
+                                loadingApprovals[detailId]
+                                  ? "bg-emerald-400/70 cursor-not-allowed text-white"
+                                  : "bg-emerald-500 hover:bg-emerald-400 text-white"
+                              } transition`}
+                            >
+                              ตกลง
+                            </button>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                  handleReject(detailId);
+                              }}
+                              disabled={loadingApprovals[detailId]}
+                              className={`px-4 py-1 rounded-lg text-xs font-medium shadow-sm ${
+                                loadingApprovals[detailId]
+                                  ? "bg-red-400/70 cursor-not-allowed text-white"
+                                  : "bg-red-500 hover:bg-red-400 text-white"
+                              } transition`}
+                            >
+                              ปฏิเสธ
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -409,26 +445,57 @@ export default function LeaveApprover1() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-5">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border border-slate-200 rounded-lg bg-white text-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
-              >
-                ก่อนหน้า
-              </button>
-              <span className="px-3 py-1 text-slate-700 text-sm">
-                หน้า {currentPage} / {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border border-slate-200 rounded-lg bg-white text-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
-              >
-                ถัดไป
-              </button>
+            <div className="flex items-center justify-between mt-5 bg-white rounded-lg px-4 py-3 border border-slate-200">
+              <div className="text-sm text-slate-700">
+                แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ
+              </div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ก่อนหน้า
+                </button>
+                {(() => {
+                  const pages = [];
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(1);
+                    if (currentPage <= 4) {
+                      pages.push(2, 3, 4, 5, '...', totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    } else {
+                      pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                    }
+                  }
+                  return pages.map((page, idx) => {
+                    if (page === '...') {
+                      return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                    }
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  });
+                })()}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
+              </nav>
             </div>
           )}
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { BASE_URL, apiEndpoints } from "../../utils/api";
@@ -6,9 +7,11 @@ import { BASE_URL, apiEndpoints } from "../../utils/api";
 const PAGE_SIZE = 10;
 
 export default function PersonnelTypeManage() {
+  const navigate = useNavigate();
   const [types, setTypes] = useState([]);
   const [newName, setNewName] = useState("");
   const [editId, setEditId] = useState(null);
+  const [initialEditName, setInitialEditName] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -56,6 +59,7 @@ export default function PersonnelTypeManage() {
   const resetForm = () => {
     setNewName("");
     setEditId(null);
+    setInitialEditName("");
   };
 
   const handleAdd = async () => {
@@ -63,12 +67,22 @@ export default function PersonnelTypeManage() {
       return Swal.fire("Error", "ต้องระบุชื่อประเภทบุคลากร", "error");
     }
     try {
-      await axios.post(
+      const res = await axios.post(
         `${BASE_URL}/admin/personnel-type`,
         { name: newName },
         authHeader()
       );
-      Swal.fire("เพิ่มสำเร็จ!", "", "success");
+      if (res.data.warning) {
+        await Swal.fire({
+          title: "สร้างสำเร็จ!",
+          html: `<p class="text-sm text-green-700 mb-2">เพิ่มประเภทบุคลากรเรียบร้อยแล้ว</p>` +
+                `<p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">⚠️ ${res.data.warning}</p>`,
+          icon: "warning",
+          confirmButtonText: "รับทราบ",
+        });
+      } else {
+        Swal.fire("เพิ่มสำเร็จ!", "", "success");
+      }
       resetForm();
       loadData();
       setCurrentPage(1);
@@ -81,6 +95,7 @@ export default function PersonnelTypeManage() {
     const item = types.find((t) => t.id === id);
     if (!item) return;
     setNewName(item.name);
+    setInitialEditName(item.name);
     setEditId(id);
   };
 
@@ -151,7 +166,22 @@ export default function PersonnelTypeManage() {
                 จัดการประเภทบุคลากร
               </h1>
               <p className="text-sm text-slate-600">
-                เพิ่ม แก้ไข หรือลบประเภทบุคลากรที่ใช้กำหนดสิทธิ์และข้อมูลในระบบ
+                จัดการข้อมูลประเภทบุคลากรที่ใช้กำหนดสิทธิ์และข้อมูลในระบบ
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+              <span className="text-amber-600 text-xs font-bold">!</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-amber-800 mb-1">โปรดระมัดระวังในการแก้ไข</h3>
+              <p className="text-xs text-amber-700">
+                ข้อมูลประเภทบุคลากรมีผลต่อการคำนวณสิทธิ์การลาและ dependencies ที่ซับซ้อน
+                กรุณาตรวจสอบให้แน่ใจก่อนทำการเปลี่ยนแปลง
               </p>
             </div>
           </div>
@@ -166,16 +196,34 @@ export default function PersonnelTypeManage() {
               onChange={(e) => setNewName(e.target.value)}
               className={`${inputBase} col-span-2`}
             />
-            <button
-              onClick={editId ? handleUpdate : handleAdd}
-              className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition ${
-                editId
-                  ? "bg-slate-700 hover:bg-slate-600"
-                  : "bg-sky-600 hover:bg-sky-500"
-              }`}
-            >
-              {editId ? "อัปเดตประเภทบุคลากร" : "เพิ่มประเภทบุคลากร"}
-            </button>
+            {editId ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUpdate}
+                  disabled={newName === initialEditName}
+                  className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium shadow-sm transition flex-1 ${
+                    newName === initialEditName
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-amber-500 hover:bg-amber-400 text-white"
+                  }`}
+                >
+                  อัปเดต
+                </button>
+                <button
+                  onClick={resetForm}
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-slate-400 hover:bg-slate-300"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleAdd}
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-sky-600 hover:bg-sky-500"
+              >
+                เพิ่มประเภทบุคลากร
+              </button>
+            )}
           </div>
         </div>
 
@@ -218,14 +266,20 @@ export default function PersonnelTypeManage() {
                       <td className="px-4 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <button
+                            onClick={() => navigate(`/admin/rank-manage?personnelTypeId=${t.id}`)}
+                            className="inline-flex items-center justify-center rounded-lg bg-sky-600 hover:bg-sky-500 px-3 py-1 text-xs font-medium text-white"
+                          >
+                            เงื่อนไขวันลา
+                          </button>
+                          <button
                             onClick={() => handleEdit(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-slate-600"
+                            className="inline-flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 px-3 py-1 text-xs font-medium text-white"
                           >
                             แก้ไข
                           </button>
                           <button
                             onClick={() => handleDelete(t.id)}
-                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-rose-400"
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 hover:bg-rose-400 px-3 py-1 text-xs font-medium text-white"
                           >
                             ลบ
                           </button>
@@ -249,24 +303,57 @@ export default function PersonnelTypeManage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-4">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-            >
-              ก่อนหน้า
-            </button>
-            <span className="text-sm text-slate-700">
-              หน้า {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-1 rounded-lg bg-white border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-            >
-              ถัดไป
-            </button>
+          <div className="flex items-center justify-between mt-4 bg-white rounded-lg px-4 py-3 border border-slate-200">
+            <div className="text-sm text-slate-700">
+              แสดง {startIndex + 1} ถึง {Math.min(startIndex + PAGE_SIZE, types.length)} จาก {types.length} รายการ
+            </div>
+            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ก่อนหน้า
+              </button>
+              {(() => {
+                const pages = [];
+                if (totalPages <= 7) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (currentPage <= 4) {
+                    pages.push(2, 3, 4, 5, '...', totalPages);
+                  } else if (currentPage >= totalPages - 3) {
+                    pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                  } else {
+                    pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                  }
+                }
+                return pages.map((page, idx) => {
+                  if (page === '...') {
+                    return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                });
+              })()}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ถัดไป
+              </button>
+            </nav>
           </div>
         )}
       </div>

@@ -1,9 +1,11 @@
 import axios from "axios";
-// export const BASE_URL = "http://localhost:8000";
+export const BASE_URL = window.location.hostname === "localhost"
+    ? "http://localhost:8000"
+    : import.meta.env.VITE_BACKEND_URL;
 
 export const API = axios.create({
-  baseURL:"https://backend-faculty-of-engineering-leave.onrender.com",
-  // baseURL: "localhost:8000",
+  // baseURL: "https://backend-faculty-of-engineering-leave.onrender.com",
+  baseURL: BASE_URL,
 });
 
 // Token interceptor (optional)
@@ -15,10 +17,6 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-export const BASE_URL =
-  "https://backend-faculty-of-engineering-leave.onrender.com";
-  // "http://localhost:8000";
-
 export const apiEndpoints = {
   // auth
   login: `${BASE_URL}/auth/login`, // POST
@@ -27,6 +25,8 @@ export const apiEndpoints = {
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
   getVerifier: `${BASE_URL}/auth/verifier`, // GET
+  getApproversForLevel: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET
+  getApproversForLevelProxy: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET (alias for proxy checking)
   updateUserRole: `${BASE_URL}/auth/update-role`,
   forgotPassword: `${BASE_URL}/auth/forgot-password`,
   resetPassword: `${BASE_URL}/auth/reset-password`,
@@ -40,6 +40,12 @@ export const apiEndpoints = {
   userInfoById: (id) => `${BASE_URL}/auth/user-info/${id}`,
   getHoliday : `${BASE_URL}/admin/holiday`, // GET
   adminLeaveRequests : `${BASE_URL}/admin/leave-requests`, //POST
+
+  // Position Number Management
+  updatePositionNumber: (userId) => `${BASE_URL}/admin/users/${userId}/position-number`, // PUT
+  getUserPositionHistory: (userId) => `${BASE_URL}/admin/users/${userId}/position-number/history`, // GET
+  getCurrentPositionNumber: (userId) => `${BASE_URL}/admin/users/${userId}/position-number/current`, // GET
+  getPositionNumberByNumber: (positionNumber) => `${BASE_URL}/admin/position-numbers/${positionNumber}`, // GET
 
   //API
   getContact : `${BASE_URL}/api/contact`, // GET
@@ -79,7 +85,6 @@ export const apiEndpoints = {
   leaveRequestForSecondApprover: `${BASE_URL}/leave-requests/for-approver2`, // GET
   leaveRequestForThirdApprover: `${BASE_URL}/leave-requests/for-approver3`, // GET
   leaveRequestForFouthApprover: `${BASE_URL}/leave-requests/for-approver4`, // GET
-  leaveRequestLanding: `${BASE_URL}/leave-requests/landing`,
   leaveBalance: `${BASE_URL}/leave-balances`,
 
   //----------------- Approve Leave Requests ------------------//
@@ -127,7 +132,7 @@ export const apiEndpoints = {
   lookupEmploymentTypes: `${BASE_URL}/api/lookups/employment-types`,
 
   // signature
-  signatureUpload: (userId) => `${BASE_URL}/signature/${userId}`, // POST 
+  signatureUpload: (userId) => `${BASE_URL}/signature/${userId}`, // POST
   signatureGetAll: `${BASE_URL}/signature`, // GET
   signatureGetById: (id) => `${BASE_URL}/signature/get/${id}`, // GET
   signatureUpdate: (userId) => `${BASE_URL}/signature/update/${userId}`, // PUT
@@ -137,4 +142,46 @@ export const apiEndpoints = {
 
   //PDF
   generatePdf: `${BASE_URL}/api/download-report`, // POST
+
+  // Proxy Approval
+  proxyApproval: `${BASE_URL}/proxy-approval`, // CRUD
+  proxyApprovalById: (id) => `${BASE_URL}/proxy-approval/${id}`, // GET/PUT
+  proxyApprovalByOriginal: (userId) => `${BASE_URL}/proxy-approval/original/${userId}`, // GET
+  proxyApprovalByProxy: (userId) => `${BASE_URL}/proxy-approval/proxy/${userId}`, // GET
+  proxyApprovalActive: (userId, level) => `${BASE_URL}/proxy-approval/active/${userId}/${level}`, // GET
+  proxyApprovalCheckPermission: (userId, level) => `${BASE_URL}/proxy-approval/check-permission/${userId}/${level}`, // GET
+  proxyApprovalPotentialApprovers: (level) => `${BASE_URL}/proxy-approval/potential-approvers/${level}`, // GET
+  proxyApprovalCancel: (id) => `${BASE_URL}/proxy-approval/${id}/cancel`, // PATCH
+  proxyApprovalExpire: `${BASE_URL}/proxy-approval/expire`, // PATCH
+  proxyApprovalStats: `${BASE_URL}/proxy-approval/stats`, // GET
+
+  // Leave Balance Reset
+  resetLeaveBalance: `${BASE_URL}/admin/reset-leave-balance`, // POST
+  getAvailableYears: `${BASE_URL}/admin/leave-balance/years`, // GET
+  deleteLeaveBalanceByYear: (year) => `${BASE_URL}/admin/leave-balance/${year}`, // DELETE
+  getFiscalYear: `${BASE_URL}/admin/fiscal-year`, // GET
+  updateFiscalYear: `${BASE_URL}/admin/fiscal-year`, // PUT
+  // Audit Log
+  auditLogs: `${BASE_URL}/admin/audit-logs`, // GET
+  auditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
+  auditLogsStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
+  auditLogsUser: `${BASE_URL}/admin/audit-logs/user/:userId`, // GET
+  auditLogsEntity: `${BASE_URL}/admin/audit-logs/entity/:entityType/:entityId`, // GET
+  // Legacy endpoints (for backward compatibility)
+  getAllAuditLogs: `${BASE_URL}/admin/audit-logs`, // GET
+  getAllAuditLogsAll: `${BASE_URL}/admin/audit-logs/all`, // GET
+  getActionStats: `${BASE_URL}/admin/audit-logs/stats`, // GET
+  getAuditLogsByUserId: `${BASE_URL}/admin/audit-logs/user/:userId`, // GET
+  getEntityData: `${BASE_URL}/admin/audit-logs/entity/:entityType/:entityId`, // GET
+  // Settings
+  getSettingByKey: (key) => `${BASE_URL}/setting/by/${key}`, // GET
+  updateSettingByKey: (key) => `${BASE_URL}/setting/by/${key}`, // PUT
+  getAllSettings: `${BASE_URL}/setting`, // GET,
+
+  // Role Management
+  getRoles: `${BASE_URL}/admin/role`, // GET
+  createRole: `${BASE_URL}/admin/role`, // POST
+  updateRole: (id) => `${BASE_URL}/admin/role/${id}`, // PUT
+  deleteRole: (id) => `${BASE_URL}/admin/role/${id}`, // DELETE
+  getRoleById: (id) => `${BASE_URL}/admin/role/${id}`, // GET
 };

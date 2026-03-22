@@ -3,7 +3,6 @@ import {
   RouterProvider,
   Outlet,
   Navigate,
-  useLocation,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
@@ -30,9 +29,6 @@ import LeaveApprover3 from "../layouts/approver/LeaveApprover3";
 import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
 import LeaveVerifier from "../layouts/approver/LeaveVerifier";
 import Approver1Dashboard from "../layouts/approver/Approver1DashBoard";
-
-/** Admin pages **/
-import AdminDashboard from "../layouts/admin/AdminDashBoard";
 import DashBoard from "../layouts/admin/DashBoard";
 import DepartmentManage from "../layouts/admin/DepartmentManage";
 import OrganizationManage from "../layouts/admin/OrganizationManage";
@@ -49,11 +45,7 @@ import LeaveAdmin from "../layouts/admin/LeaveAdmin";
 import LeaveReport from "../layouts/admin/LeaveReport";
 import AddOtherRequest from "../layouts/admin/AddOtherRequest";
 import ProxyApprovalManagement from "../layouts/admin/ProxyApprovalManagement";
-import AuditLogManagement from "../layouts/admin/AuditLogManagement";
 import Config from "../layouts/admin/Config";
-import PositionNumberManagement from "../layouts/admin/PositionNumberManagement";
-import RoleManagement from "../layouts/admin/RoleManagement";
-import RankManage from "../layouts/admin/RankManage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import bg from "../assets/bg.jpg";
 
@@ -61,7 +53,6 @@ function AppLayout() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMiniSidebar, setMiniSidebar] = useState(false);
-  const location = useLocation();
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -81,14 +72,6 @@ function AppLayout() {
       else mq.removeListener(apply);
     };
   }, []);
-
-  // Scroll to top when route changes
-  useEffect(() => {
-    const mainElement = document.querySelector('main');
-    if (mainElement) {
-      mainElement.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [location.pathname]);
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
@@ -142,6 +125,9 @@ const guestRouter = createBrowserRouter([
       { path: "/login", element: <Login2 /> },
       { path: "/callback", element: <Callback /> },
       { path: "/dashboard", element: <UserDashBoard /> },
+      { path: "/register", element: <Register /> },
+      { path: "/forgot-password", element: <ForgotPassword /> },
+      { path: "/reset-password", element: <ResetPassword /> },
       { path: "/add-other-request-dev", element: <AddOtherRequest /> },
       { path: "/leave-dev", element: <Leave2 /> },
       { path: "*", element: <Navigate to="/" replace /> },
@@ -166,226 +152,186 @@ const userRouter = createBrowserRouter([
       {
         path: "approver",
         children: [
-          {
-            path: "leave-request-approver1",
+          { 
+            path: "leave-request-approver1", 
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_1']} checkProxy={true}>
                 <LeaveApprover1 />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "leave-request-approver2",
+          { 
+            path: "leave-request-approver2", 
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_2']} checkProxy={true}>
                 <LeaveApprover2 />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "leave-request-approver3",
+          { 
+            path: "leave-request-approver3", 
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_3']} checkProxy={true}>
                 <LeaveApprover3 />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "leave-request-approver4",
+          { 
+            path: "leave-request-approver4", 
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_4']} checkProxy={true}>
                 <LeaveApprover4 />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "leave-request-verifier",
+          { 
+            path: "leave-request-verifier", 
             element: (
               <ProtectedRoute requiredRoles={['VERIFIER']} checkProxy={true}>
                 <LeaveVerifier />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "dashboard-approver1",
+          { 
+            path: "dashboard-approver1", 
             element: (
               <ProtectedRoute requiredRoles={['APPROVER_1']} checkProxy={true}>
                 <Approver1Dashboard />
               </ProtectedRoute>
-            )
+            ) 
           },
         ],
       },
       {
         path: "admin",
         children: [
-          {
-            path: "dashboard",
+          { 
+            path: "dashboard", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <DashBoard />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "leave-report",
+          { 
+            path: "leave-report", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <LeaveReport />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "manage-user",
+          { 
+            path: "manage-user", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <UserManage />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "position-numbers",
+          { 
+            path: "leave-request", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
-                <PositionNumberManagement />
+                <LeaveAdmin />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "organization",
-            element: (
-              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
-                <OrganizationManage />
-              </ProtectedRoute>
-            )
-          },
-          {
-            path: "organization-manage",
-            element: (
-              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
-                <OrganizationManage />
-              </ProtectedRoute>
-            )
-          },
-          {
-            path: "department-manage",
+          { 
+            path: "organization-manage", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
-                <DepartmentManage />
+                <OrganizationManage />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "personel-manage",
+          { 
+            path: "personel-manage", 
             element: (
-              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
+              <ProtectedRoute requiredRoles={['ADMIN']}>
                 <PersonnelTypeManage />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "rank-manage",
-            element: (
-              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
-                <RankManage />
-              </ProtectedRoute>
-            )
-          },
-          {
-            path: "holiday-manage",
+          { 
+            path: "holiday-manage", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <HolidayManage />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "setting-manage",
+          { 
+            path: "setting-manage", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <SettingManage />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "leave-type-manage",
+          { 
+            path: "leave-type-manage", 
             element: (
-              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
+              <ProtectedRoute requiredRoles={['ADMIN']}>
                 <LeaveTypeManage />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "user-info/:id",
+          { 
+            path: "user-info/:id", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <UserInfo />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "add-user",
+          { 
+            path: "add-user", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <AddnewUser />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "edit-profile",
+          { 
+            path: "edit-profile", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <EditProfile />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "user/:id",
+          { 
+            path: "user/:id", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <EditUser />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "add-other-request",
+          { 
+            path: "add-other-request", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <AddOtherRequest />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "proxy-approval",
+          { 
+            path: "proxy-approval", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <ProxyApprovalManagement />
               </ProtectedRoute>
-            )
+            ) 
           },
-          {
-            path: "audit-logs",
-            element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
-                <AuditLogManagement />
-              </ProtectedRoute>
-            )
-          },
-          {
-            path: "config",
+          { 
+            path: "config", 
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <Config />
               </ProtectedRoute>
-            )
-          },
-          {
-            path: "role-management",
-            element: (
-              <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
-                <RoleManagement />
-              </ProtectedRoute>
-            )
+            ) 
           },
         ],
       },
@@ -396,10 +342,23 @@ const userRouter = createBrowserRouter([
 
 export default function AppRouter() {
   const { user } = useAuth();
-
+  
   // ตรวจสอบว่ามี token และ user หรือไม่
   const hasToken = localStorage.getItem("accessToken");
   const finalRouter = (user?.id && hasToken) ? userRouter : guestRouter;
-
+  
+  // Debug: ดูข้อมูล user และ routes
+  console.log('🔍 Debug - AppRouter:', {
+    user: user ? {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      roles: user.roles
+    } : null,
+    hasToken: !!hasToken,
+    finalRouter: finalRouter === userRouter ? 'userRouter' : 'guestRouter'
+  });
+  
   return <RouterProvider router={finalRouter} />;
 }

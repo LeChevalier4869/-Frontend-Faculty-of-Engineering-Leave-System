@@ -41,11 +41,31 @@ export default function LeaveApprover2() {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await axios.get(apiEndpoints.leaveRequestForSecondApprover, {
+      
+      // ดึงข้อมูลจาก proxy API แทนที่เดิด
+      const res = await axios.get(apiEndpoints.getApproversForLevel(3, new Date().toISOString().split('T')[0]), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Debug leave: ", res?.data ?? res?.data?.data);
-      setLeaveRequest(Array.isArray(res.data) ? res.data : []);
+      
+      console.log('🔍 Debug - LeaveApprover2 - Proxy API Response:', res.data);
+      
+      // ตรวจสอบว่า User11 เป็น proxy หรือไม่
+      const approvers = res.data.data || [];
+      const user11Proxy = approvers.find(a => a.id === 11 && a.isProxy);
+      console.log('👤 User11 is proxy for level 3:', user11Proxy);
+      
+      // ใช้ API endpoint สำหรับ approver (ทำงานเหมือนกันทั้ง proxy และปกติ)
+      console.log('🔄 Using approver API endpoint');
+      const apiUrl = apiEndpoints.leaveRequestForSecondApprover;
+      
+      const res2 = await axios.get(apiUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('📋 Leave Requests Response:', res2.data);
+      
+      // ตั้งค่าข้อมูลคำขอลาโดยตรงจาก res2.data (ถ้าเป็น array)
+      const data = Array.isArray(res2.data) ? res2.data : [];
+      setLeaveRequest(data);
     } catch (err) {
       console.error("Error fetching leave requests:", err);
       setLeaveRequest([]);
@@ -101,6 +121,40 @@ export default function LeaveApprover2() {
       console.error("❌ Error approving request", error);
       Swal.close();
       Swal.fire("ผิดพลาด", "ไม่สามารถอนุมัติได้", "error");
+    } finally {
+      setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
+    }
+  };
+
+  const handleReject = async (detailId) => {
+    const commentText = (comments[detailId] || "").trim();
+    setLoadingApprovals((prev) => ({ ...prev, [detailId]: true }));
+
+    Swal.fire({
+      title: "กำลังดำเนินการ...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.patch(
+        apiEndpoints.RejectleaveRequestsBySecondApprover(detailId),
+        {
+          remarks: commentText || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
+          comment: commentText || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.close();
+      Swal.fire("สำเร็จ", "ปฏิเสธเรียบร้อยแล้ว", "success");
+      setLeaveRequest((prev) =>
+        prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
+      );
+    } catch (error) {
+      console.error("❌ Error rejecting request", error);
+      Swal.close();
+      Swal.fire("ผิดพลาด", "ไม่สามารถปฏิเสธได้", "error");
     } finally {
       setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
     }
@@ -338,31 +392,36 @@ export default function LeaveApprover2() {
                       </div>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const result = await Swal.fire({
-                            title: "รับรองคำขอลา",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "ใช่, รับรอง",
-                            cancelButtonText: "ยกเลิก",
-                            confirmButtonColor: "#16a34a",
-                            cancelButtonColor: "#d33",
-                          });
-                          if (result.isConfirmed) {
-                            handleApprove(detailId);
-                          }
-                        }}
-                        disabled={loadingApprovals[detailId]}
-                        className={`px-4 py-1 rounded text-white ${
-                          loadingApprovals[detailId]
-                            ? "bg-green-300 cursor-not-allowed"
-                            : "bg-green-500 hover:bg-green-600"
-                        }`}
-                      >
-                        {loadingApprovals[detailId] ? "ตกลง" : "ตกลง"}
-                      </button>
+                      <div className="flex flex-col sm:flex-row justify-center gap-2">
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                              handleApprove(detailId);
+                          }}
+                          disabled={loadingApprovals[detailId]}
+                          className={`px-4 py-1 rounded text-white ${
+                            loadingApprovals[detailId]
+                              ? "bg-green-300 cursor-not-allowed"
+                              : "bg-green-500 hover:bg-green-600"
+                          }`}
+                        >
+                          {loadingApprovals[detailId] ? "ตกลง" : "ตกลง"}
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                              handleReject(detailId);
+                          }}
+                          disabled={loadingApprovals[detailId]}
+                          className={`px-4 py-1 rounded text-white ${
+                            loadingApprovals[detailId]
+                              ? "bg-red-300 cursor-not-allowed"
+                              : "bg-red-500 hover:bg-red-600"
+                          }`}
+                        >
+                          {loadingApprovals[detailId] ? "ปฏิเสธ" : "ปฏิเสธ"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -383,24 +442,57 @@ export default function LeaveApprover2() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border border-gray-300 rounded-lg bg-white disabled:opacity-50 transition"
-          >
-            ก่อนหน้า
-          </button>
-          <span className="px-3 py-1 text-gray-800">
-            หน้า {currentPage} / {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border border-gray-300 rounded-lg bg-white disabled:opacity-50 transition"
-          >
-            ถัดไป
-          </button>
+        <div className="flex items-center justify-between mt-6 bg-white rounded-lg px-4 py-3 border border-slate-200">
+          <div className="text-sm text-slate-700">
+            แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ
+          </div>
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ก่อนหน้า
+            </button>
+            {(() => {
+              const pages = [];
+              if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+              } else {
+                pages.push(1);
+                if (currentPage <= 4) {
+                  pages.push(2, 3, 4, 5, '...', totalPages);
+                } else if (currentPage >= totalPages - 3) {
+                  pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                } else {
+                  pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                }
+              }
+              return pages.map((page, idx) => {
+                if (page === '...') {
+                  return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                }
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                      currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              });
+            })()}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ถัดไป
+            </button>
+          </nav>
         </div>
       )}
     </div>
