@@ -20,39 +20,120 @@ import PropTypes from "prop-types";
 
 const userNav = [
   { to: "/", text: "แดชบอร์ด", icon: <FaTachometerAlt />, title: "แดชบอร์ด" },
-  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaChartBar />, title: "ยอดวันลาคงเหลือ" },
+  {
+    to: "/leave/balance",
+    text: "ยอดวันลาคงเหลือ",
+    icon: <FaChartBar />,
+    title: "ยอดวันลาคงเหลือ",
+  },
   { to: "/leave", text: "การลา", icon: <FaClipboardList />, title: "การลา" },
   { to: "/Calendar", text: "ปฏิทิน", icon: <FaCalendarAlt />, title: "ปฏิทิน" },
-  { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser />, title: "โปรไฟล์ผู้ใช้" },
+  {
+    to: "/profile",
+    text: "โปรไฟล์ผู้ใช้",
+    icon: <FaUser />,
+    title: "โปรไฟล์ผู้ใช้",
+  },
 ];
 
 const approverNav1 = [
-  { to: "/approver/dashboard-approver1", text: "แดชบอร์ดหัวหน้าสาขา", icon: <FaTachometerAlt /> },
-  { to: "/approver/leave-request-approver1", text: "อนุมัติระดับหัวหน้าสาขา", icon: <FaCheckCircle /> },
+  {
+    to: "/approver/dashboard-approver1",
+    text: "แดชบอร์ดหัวหน้าสาขา",
+    icon: <FaTachometerAlt />,
+  },
+  {
+    to: "/approver/leave-request-approver1",
+    text: "อนุมัติระดับหัวหน้าสาขา",
+    icon: <FaCheckCircle />,
+  },
 ];
 
-const verifierNav = [{ to: "/approver/leave-request-verifier", text: "ตรวจสอบคำขอการลา", icon: <FaCheckCircle /> }];
-const approverNav2 = [{ to: "/approver/leave-request-approver2", text: "อนุมัติระดับ 2", icon: <FaCheckCircle /> }];
-const approverNav3 = [{ to: "/approver/leave-request-approver3", text: "อนุมัติระดับ 3", icon: <FaCheckCircle /> }];
-const approverNav4 = [{ to: "/approver/leave-request-approver4", text: "อนุมัติระดับ 4", icon: <FaCheckCircle /> }];
+const DashboardApproverNav2 = [
+  {
+    to: "/approver/second-approver-dashboard",
+    text: "แดชบอร์ด",
+    icon: <FaCheckCircle />,
+  },
+];
+const verifierNav = [
+  {
+    to: "/approver/leave-request-verifier",
+    text: "ตรวจสอบคำขอการลา",
+    icon: <FaCheckCircle />,
+  },
+];
+const approverNav2 = [
+  {
+    to: "/approver/leave-request-approver2",
+    text: "อนุมัติระดับ 2",
+    icon: <FaCheckCircle />,
+  },
+];
+const approverNav3 = [
+  {
+    to: "/approver/leave-request-approver3",
+    text: "อนุมัติระดับ 3",
+    icon: <FaCheckCircle />,
+  },
+];
+const approverNav4 = [
+  {
+    to: "/approver/leave-request-approver4",
+    text: "อนุมัติระดับ 4",
+    icon: <FaCheckCircle />,
+  },
+];
 
 const adminNav = [
   { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <FaUsersCog /> },
   { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
-  { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaUsersCog /> },
+  {
+    to: "/admin/add-other-request",
+    text: "บันทึกคำขอการลาลงระบบ",
+    icon: <FaUsersCog />,
+  },
   { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
-  { to: "/admin/position-numbers", text: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
+  {
+    to: "/admin/position-numbers",
+    text: "จัดการเลขที่ตำแหน่ง",
+    icon: <FaIdBadge />,
+  },
   { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
   { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
-  { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
-  { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
+  {
+    to: "/admin/proxy-approval",
+    text: "จัดการการมอบอำนาจ",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/audit-logs",
+    text: "บันทึกการทำงาน",
+    icon: <FaClipboardList />,
+  },
 ];
 
 const superAdminOnlyNav = [
-  { to: "/admin/organization-manage", text: "จัดการองค์กร", icon: <FaUsersCog /> },
-  { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaUsersCog /> },
-  { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
-  { to: "/admin/rank-manage", text: "เงื่อนไขวันลา (Rank)", icon: <FaUsersCog /> },
+  {
+    to: "/admin/organization-manage",
+    text: "จัดการองค์กร",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/personel-manage",
+    text: "จัดการประเภทบุคคล",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/leave-type-manage",
+    text: "จัดการประเภทการลา",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/rank-manage",
+    text: "เงื่อนไขวันลา (Rank)",
+    icon: <FaUsersCog />,
+  },
   { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUsersCog /> },
 ];
 
@@ -60,7 +141,13 @@ const adminConfigNav = [
   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 
-export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = () => {}, isMobile = false }) {
+export default function Sidebar({
+  isOpen,
+  isMini,
+  toggleMiniSidebar,
+  onClose = () => {},
+  isMobile = false,
+}) {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -81,6 +168,11 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
   const [proxyApprovers2, setProxyApprovers2] = useState([]);
   const [proxyApprovers3, setProxyApprovers3] = useState([]);
   const [proxyApprovers4, setProxyApprovers4] = useState([]);
+  const [proxyDashboardVerifiers, setProxyDashboardVerifiers] = useState([]);
+  const [proxyDashboardApprovers1, setProxyDashboardApprovers1] = useState([]);
+  const [proxyDashboardApprovers2, setProxyDashboardApprovers2] = useState([]);
+  const [proxyDashboardApprovers3, setProxyDashboardApprovers3] = useState([]);
+  const [proxyDashboardApprovers4, setProxyDashboardApprovers4] = useState([]);
 
   // Define Item component before using it in useMemo
   const Item = ({ to, icon, text, proxyId, title }) => {
@@ -91,18 +183,20 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
     const active =
       currentPath === to &&
       ((currentProxy === null && itemProxy === null) ||
-        (currentProxy !== null && itemProxy !== null && currentProxy === itemProxy));
+        (currentProxy !== null &&
+          itemProxy !== null &&
+          currentProxy === itemProxy));
 
     const handleClick = () => {
       // Scroll sidebar to top with multiple attempts for reliability
       const scrollToTop = () => {
-        const sidebarElement = document.querySelector('aside');
+        const sidebarElement = document.querySelector("aside");
         if (sidebarElement) {
-          sidebarElement.scrollTo({ top: 0, behavior: 'smooth' });
+          sidebarElement.scrollTo({ top: 0, behavior: "smooth" });
           // Fallback: try instant scroll if smooth doesn't work
           setTimeout(() => {
             if (sidebarElement.scrollTop > 0) {
-              sidebarElement.scrollTo({ top: 0, behavior: 'auto' });
+              sidebarElement.scrollTo({ top: 0, behavior: "auto" });
             }
           }, 100);
         }
@@ -192,14 +286,16 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
   const roles = Array.isArray(user.roles)
     ? user.roles
     : Array.isArray(user.role)
-    ? user.role
-    : Array.isArray(user.roleNames)
-    ? user.roleNames
-    : [];
+      ? user.role
+      : Array.isArray(user.roleNames)
+        ? user.roleNames
+        : [];
 
   // SUPER_ADMIN สามารถเข้าถึงทุกเมนูที่ ADMIN เข้าได้
-  const hasRole = (r) => roles.includes(r) || (r === "ADMIN" && roles.includes("SUPER_ADMIN"));
-  const isActive = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
+  const hasRole = (r) =>
+    roles.includes(r) || (r === "ADMIN" && roles.includes("SUPER_ADMIN"));
+  const isActive = (to) =>
+    location.pathname === to || location.pathname.startsWith(`${to}/`);
 
   // Proxy role flags (menu จะโชว์เมื่อมี proxy อย่างน้อย 1 รายการ)
   const isProxyVerifier = proxyVerifiers.length > 0;
@@ -207,6 +303,11 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
   const isProxyApprover2 = proxyApprovers2.length > 0;
   const isProxyApprover3 = proxyApprovers3.length > 0;
   const isProxyApprover4 = proxyApprovers4.length > 0;
+  const isProxyDashboardVerifier = proxyDashboardVerifiers.length > 0;
+  const isProxyDashboardApprovers1 = proxyDashboardApprovers1.length > 0;
+  const isProxyDashboardApprovers2 = proxyDashboardApprovers2.length > 0;
+  const isProxyDashboardApprovers3 = proxyDashboardApprovers3.length > 0;
+  const isProxyDashboardApprovers4 = proxyDashboardApprovers4.length > 0;
 
   // Debug admin menu render
   const shouldShowAdminMenu = hasRole("ADMIN");
@@ -217,22 +318,26 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
       try {
         const token = localStorage.getItem("accessToken");
         if (!token) {
-          console.log('No token found for proxy checking');
+          console.log("No token found for proxy checking");
           return;
         }
 
         // ดึงข้อมูล proxy approvals ทั้งหมด (ACTIVE และ EXPIRED)
         const response = await axios.get(`${BASE_URL}/proxy-approval`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         const proxyApprovals = response.data.data || [];
 
         // กรองเฉพาะ proxy ที่มีสถานะ ACTIVE
-        const activeProxies = proxyApprovals.filter(proxy => proxy.status === 'ACTIVE');
+        const activeProxies = proxyApprovals.filter(
+          (proxy) => proxy.status === "ACTIVE",
+        );
 
         // กรองเฉพาะที่ user ปัจจุบันเป็น proxy approver
-        const userAsProxyProxies = activeProxies.filter(proxy => proxy.proxyApproverId === user.id);
+        const userAsProxyProxies = activeProxies.filter(
+          (proxy) => proxy.proxyApproverId === user.id,
+        );
 
         // Debug ทุก proxy ที่ active
         // activeProxies.forEach((proxy) => {
@@ -260,6 +365,11 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
           setProxyApprovers2([]);
           setProxyApprovers3([]);
           setProxyApprovers4([]);
+          setProxyDashboardVerifiers([]);
+          setProxyDashboardApprovers1([]);
+          setProxyDashboardApprovers2([]);
+          setProxyDashboardApprovers3([]);
+          setProxyDashboardApprovers4([]);
           return;
         }
 
@@ -272,7 +382,7 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
           5: new Set(), // APPROVER_4
         };
 
-        userAsProxyProxies.forEach(proxy => {
+        userAsProxyProxies.forEach((proxy) => {
           if (proxyData[proxy.approverLevel]) {
             // User ปัจจุบันเป็น proxy approver -> แสดง original approver (ที่เราจะทำงานแทน)
             const displayUser = proxy.originalApprover;
@@ -298,8 +408,13 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
         setProxyApprovers2(proxyArrays[3]); // สำหรับ APPROVER_2
         setProxyApprovers3(proxyArrays[4]); // สำหรับ APPROVER_3
         setProxyApprovers4(proxyArrays[5]); // สำหรับ APPROVER_4
+        setProxyDashboardVerifiers(proxyArrays[2]);
+        setProxyDashboardApprovers1(proxyArrays[1]);
+        setProxyDashboardApprovers2(proxyArrays[3]);
+        setProxyDashboardApprovers3(proxyArrays[4]);
+        setProxyDashboardApprovers4(proxyArrays[5]);
       } catch (err) {
-        console.error('Error checking proxy roles:', err);
+        console.error("Error checking proxy roles:", err);
       }
     };
 
@@ -316,15 +431,17 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
     isProxyApprover2 ||
     isProxyApprover3 ||
     isProxyApprover4 ||
-    isProxyVerifier;
+    isProxyVerifier ||
+    isProxyDashboardVerifier ||
+    isProxyDashboardApprovers1 ||
+    isProxyDashboardApprovers2 ||
+    isProxyDashboardApprovers3 ||
+    isProxyDashboardApprovers4;
 
   return (
     <>
       {isMobile && isOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/60"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 z-30 bg-black/60" onClick={onClose} />
       )}
       <aside
         className={`fixed top-0 left-0 z-40 h-full transform transition-transform duration-300 ease-in-out ${
@@ -340,14 +457,20 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <div className="flex items-center gap-3">
                 {!isMini && (
-                    <img src={logo} alt="Logo" className="w-10 h-10 rounded-md shadow-lg" />
+                  <img
+                    src={logo}
+                    alt="Logo"
+                    className="w-10 h-10 rounded-md shadow-lg"
+                  />
                 )}
                 {!isMini && (
                   <div className="flex flex-col leading-tight">
                     <span className="font-kanit text-lg font-semibold tracking-wide whitespace-nowrap">
                       eLeave System
                     </span>
-                    <span className="text-xs text-slate-300 whitespace-nowrap">คณะวิศวกรรมศาสตร์</span>
+                    <span className="text-xs text-slate-300 whitespace-nowrap">
+                      คณะวิศวกรรมศาสตร์
+                    </span>
                   </div>
                 )}
               </div>
@@ -358,7 +481,12 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                   className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition"
                   aria-label="Close menu"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -373,11 +501,26 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                   className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition"
                   aria-label="Toggle mini sidebar"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     {isMini ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M4 6h16M4 12h16M4 18h7"
+                      />
                     ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M4 6h16M4 12h8m-8 6h16"
+                      />
                     )}
                   </svg>
                 </button>
@@ -389,7 +532,12 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
               {hasRole("USER") && (
                 <Section title="ทั่วไป">
                   {userNav.map((m, i) => (
-                    <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                    <Item
+                      key={`${m.to}-${i}`}
+                      to={m.to}
+                      icon={m.icon}
+                      text={m.text}
+                    />
                   ))}
                 </Section>
               )}
@@ -398,27 +546,70 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                 <Section title="งานอนุมัติ / สารบรรณ">
                   {hasRole("APPROVER_1") &&
                     approverNav1.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("VERIFIER") &&
                     verifierNav.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
+                    ))}
+                  {hasRole("APPROVER_2") &&
+                    DashboardApproverNav2.map((m, i) => (
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("APPROVER_2") &&
                     approverNav2.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("APPROVER_3") &&
                     approverNav3.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("APPROVER_4") &&
                     approverNav4.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
 
                   {/* Proxy Menu - รวมทั้งหมดเป็น dropdown เดียว */}
-                  {(proxyVerifiers.length > 0 || proxyApprovers1.length > 0 || proxyApprovers2.length > 0 || proxyApprovers3.length > 0 || proxyApprovers4.length > 0) && (
+                  {(proxyVerifiers.length > 0 ||
+                    proxyApprovers1.length > 0 ||
+                    proxyApprovers2.length > 0 ||
+                    proxyApprovers3.length > 0 ||
+                    proxyApprovers4.length > 0 ||
+                    proxyDashboardVerifiers.length > 0 ||
+                    proxyDashboardApprovers1.length > 0 ||
+                    proxyDashboardApprovers2.length > 0 ||
+                    proxyDashboardApprovers3.length > 0 ||
+                    proxyDashboardApprovers4.length > 0) && (
                     <Section title="การมอบอำนาจ (Proxy)">
                       <button
                         onClick={() => setOpenProxy((prev) => !prev)}
@@ -438,48 +629,214 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                       </button>
                       {openProxy && (
                         <div className="flex flex-col mt-1 ml-4">
+                           {/* Proxy Dashboard Verifiers */}
+                          {proxyDashboardVerifiers.map((proxy) => (
+                            <div
+                              key={`proxy-dashboard-Verifiers-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                แดชบอร์ด2 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
+                              {approverNav2.map((m) => (
+                                <Item
+                                  key={`proxy-dashboard-Verifiers-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
+                              ))}
+                            </div>
+                          ))}
                           {/* Proxy Verifiers */}
                           {proxyVerifiers.map((proxy) => (
-                            <div key={`proxy-verifier-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">ผู้ตรวจสอบ (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-verifier-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                ผู้ตรวจสอบ (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {verifierNav.map((m) => (
-                                <Item key={`proxy-verifier-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-verifier-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
+                              ))}
+                            </div>
+                          ))}
+                          {/* Proxy Dashboard Approvers1 */}
+                          {proxyDashboardApprovers1.map((proxy) => (
+                            <div
+                              key={`proxy-dashboard-approver1-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                แดชบอร์ด1 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
+                              {approverNav2.map((m) => (
+                                <Item
+                                  key={`proxy-dashboard-approver1-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
                           {/* Proxy Approvers1 */}
                           {proxyApprovers1.map((proxy) => (
-                            <div key={`proxy-approver1-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">หัวหน้าสาขา (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-approver1-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                หัวหน้าสาขา (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {approverNav1.map((m) => (
-                                <Item key={`proxy-approver1-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-approver1-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
+                              ))}
+                            </div>
+                          ))}
+                          {/* Proxy Dashboard Approvers2 */}
+                          {proxyDashboardApprovers2.map((proxy) => (
+                            <div
+                              key={`proxy-dashboard-approver2-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                แดชบอร์ด2 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
+                              {approverNav2.map((m) => (
+                                <Item
+                                  key={`proxy-dashboard-approver2-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
                           {/* Proxy Approvers2 */}
                           {proxyApprovers2.map((proxy) => (
-                            <div key={`proxy-approver2-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">ผู้อนุมัติ2 (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-approver2-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                ผู้อนุมัติ2 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {approverNav2.map((m) => (
-                                <Item key={`proxy-approver2-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-approver2-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
+                           {/* Proxy Dashboard Approvers3 */}
+                          {proxyDashboardApprovers3.map((proxy) => (
+                            <div
+                              key={`proxy-dashboard-approver3-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                แดชบอร์ด3 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
+                              {approverNav2.map((m) => (
+                                <Item
+                                  key={`proxy-dashboard-approver3-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
+                              ))}
+                            </div>
+                          ))}
+                          
                           {/* Proxy Approvers3 */}
                           {proxyApprovers3.map((proxy) => (
-                            <div key={`proxy-approver3-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">ผู้อนุมัติ3 (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-approver3-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                ผู้อนุมัติ3 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {approverNav3.map((m) => (
-                                <Item key={`proxy-approver3-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-approver3-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
+                              ))}
+                            </div>
+                          ))}
+                           {/* Proxy Dashboard Approvers4 */}
+                          {proxyDashboardApprovers2.map((proxy) => (
+                            <div
+                              key={`proxy-dashboard-approver4-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                แดชบอร์ด2 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
+                              {approverNav2.map((m) => (
+                                <Item
+                                  key={`proxy-dashboard-approver4-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
                           {/* Proxy Approvers4 */}
                           {proxyApprovers4.map((proxy) => (
-                            <div key={`proxy-approver4-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">ผู้อนุมัติ4 (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-approver4-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                ผู้อนุมัติ4 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {approverNav4.map((m) => (
-                                <Item key={`proxy-approver4-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-approver4-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
@@ -514,7 +871,14 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                     {openAdmin && (
                       <div className="flex flex-col mt-1 ml-4">
                         {adminNav.map((m, i) => {
-                          return <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                          return (
+                            <Item
+                              key={`${m.to}-${i}`}
+                              to={m.to}
+                              icon={m.icon}
+                              text={m.text}
+                            />
+                          );
                         })}
                       </div>
                     )}
@@ -522,7 +886,14 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
 
                   <Section title="การตั้งค่า">
                     {adminConfigNav.map((m, i) => {
-                      return <HighLevelAdminItem key={`cfg-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                      return (
+                        <HighLevelAdminItem
+                          key={`cfg-${m.to}-${i}`}
+                          to={m.to}
+                          icon={m.icon}
+                          text={m.text}
+                        />
+                      );
                     })}
                   </Section>
 
@@ -536,7 +907,14 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                         </div>
                       )}
                       {superAdminOnlyNav.map((m, i) => {
-                        return <HighLevelAdminItem key={`high-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                        return (
+                          <HighLevelAdminItem
+                            key={`high-${m.to}-${i}`}
+                            to={m.to}
+                            icon={m.icon}
+                            text={m.text}
+                          />
+                        );
                       })}
                     </Section>
                   )}
@@ -557,7 +935,10 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
       </aside>
 
       {isOpen && isMobile && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30" onClick={onClose} />
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+          onClick={onClose}
+        />
       )}
     </>
   );
