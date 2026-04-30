@@ -19,8 +19,12 @@ const PositionNumberManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 10
+  });
   const [sortField, setSortField] = useState('firstName');
   const [sortDirection, setSortDirection] = useState('asc');
 
@@ -34,16 +38,19 @@ const PositionNumberManagement = () => {
     try {
       setLoading(true);
       const response = await PositionNumberService.getUsersWithPositionNumbers({
-        page: currentPage,
-        limit: 20,
         search: searchTerm
       });
 
       console.log('API Response:', response); // Debug
       console.log('Users data:', response.data); // Debug
 
-      setUsers(response.data || []);
-      setTotalPages(response.totalPages || 1);
+      const allUsers = response.data || [];
+      setUsers(allUsers);
+      setPagination(prev => ({
+        ...prev,
+        totalItems: allUsers.length,
+        totalPages: Math.ceil(allUsers.length / prev.limit)
+      }));
     } catch (error) {
       console.error('Error fetching users:', error);
       // แสดง error message
@@ -57,7 +64,7 @@ const PositionNumberManagement = () => {
     if (e) {
       e.preventDefault();
     }
-    setCurrentPage(1);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
     fetchUsers();
   };
 
@@ -73,6 +80,11 @@ const PositionNumberManagement = () => {
     const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
     setSortField(field);
     setSortDirection(newDirection);
+  };
+
+  // Page change handler
+  const handlePageChange = (page) => {
+    setPagination(prev => ({ ...prev, currentPage: page }));
   };
 
   // Modal handlers
@@ -121,6 +133,11 @@ const PositionNumberManagement = () => {
     }
   });
 
+  // Client-side pagination
+  const startIndex = (pagination.currentPage - 1) * pagination.limit;
+  const endIndex = startIndex + pagination.limit;
+  const paginatedUsers = sortedUsers.slice(startIndex, endIndex);
+
   // Get sort icon
   const getSortIcon = (field) => {
     if (sortField !== field) return <FaSort className="text-gray-400" />;
@@ -129,7 +146,7 @@ const PositionNumberManagement = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, sortField, sortDirection]);
+  }, [searchTerm]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
@@ -260,7 +277,7 @@ const PositionNumberManagement = () => {
                     </tr>
                   ) : (
                     <>
-                      {sortedUsers.map((user, idx) => {
+                      {paginatedUsers.map((user, idx) => {
                         const currentPosition = user.positionNumbers?.[0];
                         return (
                           <tr key={user.id} className={`border-t border-slate-100 transition-colors ${
@@ -325,8 +342,8 @@ const PositionNumberManagement = () => {
                         );
                       })}
                       {/* Fill empty rows to maintain consistent table height */}
-                      {Array.from({ length: Math.max(0, 20 - sortedUsers.length) }).map((_, idx) => (
-                        <tr key={`empty-${idx}`} className={sortedUsers.length % 2 === 0 ? "bg-slate-50/70" : "bg-white"}>
+                      {Array.from({ length: Math.max(0, pagination.limit - paginatedUsers.length) }).map((_, idx) => (
+                        <tr key={`empty-${idx}`} className={paginatedUsers.length % 2 === 0 ? "bg-slate-50/70" : "bg-white"}>
                           <td colSpan="7" className="px-6 py-4 text-center text-slate-300">
                             <div className="h-6"></div>
                           </td>
@@ -341,32 +358,64 @@ const PositionNumberManagement = () => {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-white border-t border-slate-200">
-            <div className="flex items-center justify-between px-6 py-3">
+        {!loading && sortedUsers.length > 0 && (
+          <div className="bg-slate-50 px-4 py-3 border-t border-slate-200">
+            {/* Mobile Pagination */}
+            <div className="flex flex-col sm:hidden gap-3">
+              <div className="text-center text-sm text-slate-700">
+                แสดง <span className="font-medium">{(pagination.currentPage - 1) * pagination.limit + 1}</span> ถึง{' '}
+                <span className="font-medium">
+                  {Math.min(pagination.currentPage * pagination.limit, pagination.totalItems)}
+                </span>{' '}
+                จาก <span className="font-medium">{pagination.totalItems}</span> รายการ
+              </div>
+              <div className="flex justify-between">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ก่อนหน้า
+                </button>
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className="relative inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Pagination */}
+            <div className="hidden sm:flex items-center justify-between">
               <div className="text-sm text-slate-700">
-                หน้า {currentPage} จาก {totalPages}
+                แสดง <span className="font-medium">{(pagination.currentPage - 1) * pagination.limit + 1}</span> ถึง{' '}
+                <span className="font-medium">
+                  {Math.min(pagination.currentPage * pagination.limit, pagination.totalItems)}
+                </span>{' '}
+                จาก <span className="font-medium">{pagination.totalItems}</span> รายการ
               </div>
               <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
                   className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ก่อนหน้า
                 </button>
                 {(() => {
                   const pages = [];
-                  if (totalPages <= 7) {
-                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  if (pagination.totalPages <= 7) {
+                    for (let i = 1; i <= pagination.totalPages; i++) pages.push(i);
                   } else {
                     pages.push(1);
-                    if (currentPage <= 4) {
-                      pages.push(2, 3, 4, 5, '...', totalPages);
-                    } else if (currentPage >= totalPages - 3) {
-                      pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    if (pagination.currentPage <= 4) {
+                      pages.push(2, 3, 4, 5, '...', pagination.totalPages);
+                    } else if (pagination.currentPage >= pagination.totalPages - 3) {
+                      pages.push('...', pagination.totalPages - 4, pagination.totalPages - 3, pagination.totalPages - 2, pagination.totalPages - 1, pagination.totalPages);
                     } else {
-                      pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                      pages.push('...', pagination.currentPage - 1, pagination.currentPage, pagination.currentPage + 1, '...', pagination.totalPages);
                     }
                   }
                   return pages.map((page, idx) => {
@@ -380,9 +429,9 @@ const PositionNumberManagement = () => {
                     return (
                       <button
                         key={page}
-                        onClick={() => setCurrentPage(page)}
+                        onClick={() => handlePageChange(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                          pagination.currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                         }`}
                       >
                         {page}
@@ -391,8 +440,8 @@ const PositionNumberManagement = () => {
                   });
                 })()}
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
                   className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ถัดไป
