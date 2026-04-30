@@ -50,10 +50,8 @@ const PositionNumberService = {
   // ดึงข้อมูลผู้ใช้พร้อมเลขที่ตำแหน่ง (สำหรับแสดงในตาราง)
   getUsersWithPositionNumbers: async (options = {}) => {
     try {
-      const { page = 1, limit = 50, search } = options;
+      const { search } = options;
       const params = new URLSearchParams();
-      params.append('page', page);
-      params.append('limit', limit);
 
       if (search) params.append('search', search);
 
