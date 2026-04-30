@@ -60,7 +60,6 @@ import bg from "../assets/bg.jpg";
 function AppLayout() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [isMiniSidebar, setMiniSidebar] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -69,7 +68,6 @@ function AppLayout() {
       const mobile = mq.matches;
       setIsMobile(mobile);
       setSidebarOpen(!mobile);
-      setMiniSidebar(false);
     };
 
     apply();
@@ -92,11 +90,10 @@ function AppLayout() {
 
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
-  const toggleMiniSidebar = () => setMiniSidebar((v) => !v);
 
   const mainShift = clsx(
     "transition-all duration-300",
-    isMobile ? "ml-0" : isMiniSidebar ? "ml-16" : "ml-64"
+    isMobile ? "ml-0" : "ml-64"
   );
 
   return (
@@ -113,8 +110,6 @@ function AppLayout() {
       <div className="relative z-10 flex h-screen overflow-hidden">
         <Sidebar
           isOpen={isSidebarOpen}
-          isMini={isMiniSidebar}
-          toggleMiniSidebar={toggleMiniSidebar}
           onClose={closeSidebar}
           isMobile={isMobile}
         />
@@ -122,7 +117,6 @@ function AppLayout() {
           <Header
             onMenuClick={toggleSidebar}
             isSidebarOpen={isSidebarOpen}
-            isSidebarMini={isMiniSidebar}
             isMobile={isMobile}
           />
           <main className={clsx("flex-1 overflow-auto p-4", mainShift)}>

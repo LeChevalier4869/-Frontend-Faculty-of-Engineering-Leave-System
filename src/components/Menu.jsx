@@ -36,7 +36,7 @@ const adminNav = [
   { to: "/admin/edit-profile", text: "การตั้งค่า", icon: <FaUsersCog /> },
 ];
 
-function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
+function Sidebar({ isOpen }) {
   const { user } = useAuth();
   const [openDropdown, setOpenDropdown] = useState(null);
   const [isProxyVerifier, setIsProxyVerifier] = useState(false);
@@ -131,18 +131,16 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
       >
         <div className="flex items-center gap-3">
           {menu[0]?.icon}
-          {!isMini && <span>{title}</span>}
+          <span>{title}</span>
         </div>
-        {!isMini && (
-          <HiOutlineChevronDown
-            className={`w-5 h-5 ml-auto transition-transform duration-300 ${
-              openDropdown === title ? "rotate-180" : "rotate-0"
-            }`}
-          />
-        )}
+        <HiOutlineChevronDown
+          className={`w-5 h-5 ml-auto transition-transform duration-300 ${
+            openDropdown === title ? "rotate-180" : "rotate-0"
+          }`}
+        />
       </button>
       {openDropdown === title && (
-        <div className={`flex flex-col ${isMini ? "pl-2" : "ml-4"} mt-1`}>
+        <div className="flex flex-col ml-4 mt-1">
           {menu.map((item, idx) => (
             <Link
               key={idx}
@@ -150,7 +148,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
               className="flex items-center gap-3 py-2 px-4 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded font-kanit"
             >
               {item.icon}
-              {!isMini && item.text}
+              {item.text}
             </Link>
           ))}
         </div>
@@ -160,8 +158,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
 
   return (
     <aside
-      className={`fixed md:static top-0 left-0 z-40 bg-gray-900 text-white font-kanit transform transition-all duration-300 ease-in-out
-        ${isMini ? "w-16" : "w-64"}
+      className={`fixed md:static top-0 left-0 z-40 bg-gray-900 text-white font-kanit transform transition-all duration-300 ease-in-out w-64
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
         h-full
       `}
@@ -169,20 +166,8 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 h-16">
         <span className="text-xl md:text-2xl font-bold truncate">
-          {!isMini && "ระบบลาคณะวิศวกรรมศาสตร์"}
+          ระบบลาคณะวิศวกรรมศาสตร์
         </span>
-        <button
-          onClick={toggleMiniSidebar}
-          className="p-1 rounded hover:bg-gray-700 transition md:hidden"
-        >
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {isMini ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
-            )}
-          </svg>
-        </button>
       </div>
 
       {/* Menu */}
@@ -195,7 +180,7 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
               className="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 rounded font-kanit"
             >
               {item.icon}
-              {!isMini && item.text}
+              {item.text}
             </Link>
           ))}
 
@@ -224,8 +209,6 @@ function Sidebar({ isOpen, isMini, toggleMiniSidebar }) {
 
 Sidebar.propTypes = {
   isOpen: PropTypes.bool.isRequired,
-  isMini: PropTypes.bool.isRequired,
-  toggleMiniSidebar: PropTypes.func.isRequired,
 };
 
 export default Sidebar;
