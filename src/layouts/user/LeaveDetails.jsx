@@ -29,7 +29,6 @@ export default function LeaveDetail() {
     status,
     documentNumber,
     documentIssuedDate,
-    // leaveRequestDetails,
     files,
     approvalSteps,
   } = leave ?? {};
