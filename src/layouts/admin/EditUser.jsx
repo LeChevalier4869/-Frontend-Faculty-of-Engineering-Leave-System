@@ -388,26 +388,10 @@ export default function UserEdit() {
                     เลือกบทบาทสำหรับผู้ใช้งาน (ใช้กำหนด Approver/Verifier/Admin)
                   </div>
                 </div>
-                
-                {/* Warning for APPROVER_1 role */}
-                <div className="mt-2 rounded-xl bg-amber-50 border border-amber-200 p-3">
-                  <div className="flex items-start gap-2">
-                    <div className="flex-shrink-0 w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center mt-0.5">
-                      <span className="text-amber-600 text-xs font-bold">!</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs text-amber-700">
-                        <strong>หมายเหตุ:</strong> บทบาท "หัวหน้าสาขา (APPROVER_1)" จะถูกกำหนดโดยอัตโนมัติเมื่อกำหนดผู้ใช้เป็นหัวหน้าแผนกในหน้าจัดการแผนกเท่านั้น
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {(allRoles.length ? allRoles : [{ name: "USER" }]).map((r) => {
                     const isUserRole = r.name === "USER";
-                    const isApprover1Role = r.name === "APPROVER_1";
-                    const isDisabled = isUserRole || isApprover1Role;
+                    const isDisabled = isUserRole;
                     return (
                       <label
                         key={r.name}
@@ -429,9 +413,6 @@ export default function UserEdit() {
                         </span>
                         {isUserRole && (
                           <span className="ml-auto text-[10px] text-slate-400">ค่าเริ่มต้น</span>
-                        )}
-                        {isApprover1Role && (
-                          <span className="ml-auto text-[10px] text-amber-600">จัดการที่หน้าแผนก</span>
                         )}
                       </label>
                     );

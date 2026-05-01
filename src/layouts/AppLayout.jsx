@@ -1,5 +1,5 @@
 import bg from "../assets/bg.jpg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import clsx from "clsx";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
@@ -7,12 +7,28 @@ import { Outlet } from "react-router-dom";
 
 function AppLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [isMiniSidebar, setMiniSidebar] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+      // Auto-close sidebar on mobile
+      if (window.innerWidth < 1024) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
-  const toggleMiniSidebar = () => setMiniSidebar(!isMiniSidebar);
 
-  const mainShift = clsx("transition-all duration-300", isMiniSidebar ? "ml-16" : "ml-64");
+  const mainShift = isMobile ? "" : "ml-64";
 
   return (
     <div
@@ -29,12 +45,15 @@ function AppLayout() {
       <div className="relative z-10 flex h-screen overflow-hidden">
         <Sidebar
           isOpen={isSidebarOpen}
-          isMini={isMiniSidebar}
-          toggleMiniSidebar={toggleMiniSidebar}
+          onClose={() => setSidebarOpen(false)}
+          isMobile={isMobile}
         />
 
         <div className="flex flex-col flex-1 overflow-hidden">
-          <Header onToggleSidebar={toggleSidebar} />
+          <Header 
+            onMenuClick={toggleSidebar} 
+            isMobile={isMobile}
+          />
           <main className={clsx("flex-1 overflow-auto p-4", mainShift)}>
             <Outlet />
           </main>

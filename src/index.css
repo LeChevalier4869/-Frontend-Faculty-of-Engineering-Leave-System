@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Set minimum width to mobile phone size (320px) and make responsive */
+html, body, #root {
+  min-width: 320px;
+  width: 100%;
+}

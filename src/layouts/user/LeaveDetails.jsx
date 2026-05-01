@@ -45,6 +45,19 @@ export default function LeaveDetail() {
   const verifierId = leave?.verifierId ?? null;
   const hodOrganizationId = leave?.headOfDepartment?.department?.organizationId ?? null;
 
+  // const authHeader = () => {
+  //   const token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     Swal.fire("หมดเวลาการใช้งาน", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
+  //       () => {
+  //         window.location.href = "/login";
+  //       }
+  //     );
+  //     throw new Error("No token");
+  //   }
+  //   return { headers: { Authorization: `Bearer ${token}` } };
+  // };
+
   // useEffect ที่ 1: โหลดข้อมูล leave ตาม id (ใบปัจจุบัน)
   useEffect(() => {
     const controller = new AbortController();
@@ -53,15 +66,21 @@ export default function LeaveDetail() {
         const res = await API.get(
           apiEndpoints.getLeaveById(id),
           { signal: controller.signal }
+          // authHeader()
         );
+        // ทดสอบ response
+        // console.log("Leave Details:", res.data.data);
         const payload = res?.data?.data ?? res?.data ?? null;
-        setLeave(payload);
-        setLoading(false);
+        setLeave(payload); //ได้ข้อมูลใบลา
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error("Error loading leave:", err);
-          setLoading(false);
-        }
+        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") return;
+        Swal.fire(
+          "ผิดพลาด",
+          err.response?.data?.message || err.message,
+          "error"
+        );
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
@@ -72,22 +91,34 @@ export default function LeaveDetail() {
     };
   }, [id]);
 
-  // useEffect ที่ 2: โหลดข้อมูล lastLeave (ใบลาก่อนหน้า)
+  // useEffect ที่ 2: โหลดข้อมูล leave ล่าสุดของผู้ใช้และประเภทลานี้ (ใบก่อนหน้า startDate < ใบปัจจุบัน)
   useEffect(() => {
+    if (!leave || !leave.userId || !leave.leaveType?.id || !leave.startDate) return;
+
     const controller = new AbortController();
+
     const loadLastLeave = async () => {
       try {
-        if (!leave?.userId || !leave?.leaveType?.id || !leave?.startDate) return;
-        const res = await API.get(
+        const res = await API.post(
           apiEndpoints.getLastLeaveBefore(leave.userId),
+          {
+            leaveTypeId: leave.leaveType.id,
+            beforeDate: new Date(leave.startDate).toISOString(),
+          },
           { signal: controller.signal }
+          // authHeader()
         );
+        // ทดสอบ response
+        // console.log("Last Leave Details:", res.data);
         const payload = res?.data?.data ?? res?.data ?? null;
         setLastLeave(payload);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error("Error loading last leave:", err);
-        }
+        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") return;
+        Swal.fire(
+          "ผิดพลาด",
+          err.response?.data?.message || err.message,
+          "error"
+        );
       }
     };
 
@@ -211,7 +242,32 @@ export default function LeaveDetail() {
   // }, [approverByRole, hodOrganizationId]);
   // console.log("debig approver4: ", approver4);
 
+  const {
+    user,
+    leaveType,
+    reason,
+    startDate,
+    endDate,
+    totalDays,
+    thisTimeDays,
+    leavedDays,
+    contact,
+    status,
+    documentNumber,
+    documentIssuedDate,
+    // leaveRequestDetails,
+    files,
+    approvalSteps,
+  } = leave ?? {};
+  console.log("Debug approvalSteps: ", approvalSteps);
   
+
+  const sortedApprovalSteps = useMemo(() => {
+    const steps = Array.isArray(approvalSteps) ? [...approvalSteps] : [];
+    steps.sort((a, b) => (Number(a?.stepOrder) || 0) - (Number(b?.stepOrder) || 0));
+    return steps;
+  }, [approvalSteps]);
+
 
   const EXPORTABLE_LEAVE_TYPE_IDS = [1, 3, 4];
   const isFinalStatus = status === "APPROVED" || status === "REJECTED" || status === "CANCELLED";
