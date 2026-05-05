@@ -3,6 +3,7 @@ import { ChevronDown, LogOut, Bell, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import PropTypes from "prop-types";
+import ProfileImage from "./ProfileImage";
 
 function Header({ onMenuClick, isMobile = false }) {
   const { user, logout } = useAuth();
@@ -68,9 +69,11 @@ function Header({ onMenuClick, isMobile = false }) {
               className="group flex items-center gap-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1.5 lg:px-3 lg:py-2 shadow-sm hover:shadow-lg transition text-slate-50"
             >
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-semibold shadow-md">
-                  {initials}
-                </div>
+                <ProfileImage 
+                  profilePicturePath={user?.profilePicturePath} 
+                  size="small" 
+                  className="rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500"
+                />
                 <div className="hidden md:block text-left">
                   <div className="text-sm font-medium leading-none truncate max-w-[10rem]">
                     {fullName || "ไม่มีชื่อ"}
@@ -93,9 +96,11 @@ function Header({ onMenuClick, isMobile = false }) {
                 {/* ส่วนบน: ข้อมูล user */}
                 <div className="p-4 bg-gradient-to-br from-slate-900 to-slate-800">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-semibold shadow-md">
-                      {initials}
-                    </div>
+                    <ProfileImage 
+                      profilePicturePath={user?.profilePicturePath} 
+                      size="small" 
+                      className="rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500"
+                    />
                     <div className="min-w-0">
                       <div className="text-sm font-semibold text-slate-50 truncate">
                         {fullName || "ไม่มีชื่อ"}
