@@ -31,6 +31,8 @@ export const apiEndpoints = {
   forgotPassword: `${BASE_URL}/auth/forgot-password`,
   resetPassword: `${BASE_URL}/auth/reset-password`,
   changePassword: `${BASE_URL}/auth/change-password`,
+  updateProfile: `${BASE_URL}/auth/update-picture`,
+  deleteProfilePicture: `${BASE_URL}/auth/delete-picture`,
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,

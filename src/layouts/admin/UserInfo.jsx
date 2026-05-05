@@ -6,6 +6,7 @@ import { apiEndpoints } from "../../utils/api";
 import { FaUserAlt } from "react-icons/fa";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
+import ProfileImage from "../../components/ProfileImage";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
@@ -183,17 +184,11 @@ export default function UserInfo() {
         {/* User Info */}
         <Panel className="p-6 sm:p-8">
           <div className="flex justify-center mb-8">
-            {user.profilePicturePath ? (
-              <img
-                src={user.profilePicturePath}
-                alt="Profile"
-                className="w-40 h-40 rounded-full object-cover border-4 border-slate-200 shadow-md"
+            <ProfileImage 
+                profilePicturePath={user?.profilePicturePath} 
+                size="medium"
+                className="border-4 border-slate-200 shadow-md"
               />
-            ) : (
-              <div className="w-40 h-40 rounded-full flex justify-center items-center bg-slate-100 border-4 border-slate-200 shadow-md">
-                <FaUserAlt className="text-slate-500 w-16 h-16" />
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
