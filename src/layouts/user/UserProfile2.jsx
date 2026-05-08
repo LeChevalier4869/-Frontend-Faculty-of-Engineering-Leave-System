@@ -1,15 +1,157 @@
 import { Link } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import { FaUserAlt } from "react-icons/fa";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
+import ProfileImage from "../../components/ProfileImage";
 
 function UserProfile2() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const MySwal = withReactContent(Swal);
+  const [profileKey, setProfileKey] = useState(0);
+
+  const handleProfilePictureUpload = async () => {
+    const handleUpload = async (file) => {
+      const formData = new FormData();
+      formData.append("profilePicturePath", file);
+
+      try {
+        const res = await axios.patch(
+          apiEndpoints.updateProfile,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+
+        // Update user context with new profile picture
+        const newProfilePath = res.data.user.profilePicturePath;
+        setUser(prevUser => ({
+          ...prevUser,
+          profilePicturePath: newProfilePath
+        }));
+
+        Swal.fire("สำเร็จ", "อัปเดตรูปโปรไฟล์เรียบร้อยแล้ว", "success");
+      } catch (err) {
+        Swal.fire(
+          "เกิดข้อผิดพลาด",
+          err.response?.data?.error || err.message,
+          "error"
+        );
+      }
+    };
+
+    const handleDelete = async () => {
+      try {
+        const result = await Swal.fire({
+          title: "ยืนยันการลบรูปโปรไฟล์",
+          text: "คุณต้องการลบรูปโปรไฟล์นี้ใช่หรือไม่?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33",
+          cancelButtonColor: "#3085d6",
+          confirmButtonText: "ลบรูป",
+          cancelButtonText: "ยกเลิก"
+        });
+
+        if (result.isConfirmed) {
+          const res = await axios.delete(
+            apiEndpoints.deleteProfilePicture,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              },
+            }
+          );
+
+          // Update user context to remove profile picture
+          setUser(prevUser => ({
+            ...prevUser,
+            profilePicturePath: res.data.user.profilePicturePath
+          }));
+
+          // Force re-render by updating a timestamp
+          setUser(prevUser => ({
+            ...prevUser,
+            profilePicturePath: res.data.user.profilePicturePath,
+            _profileUpdate: Date.now()
+          }));
+
+          // Force ProfileImage component to remount
+          setProfileKey(prev => prev + 1);
+
+          Swal.fire("สำเร็จ", "ลบรูปโปรไฟล์เรียบร้อยแล้ว", "success");
+        }
+      } catch (err) {
+        Swal.fire(
+          "เกิดข้อผิดพลาด",
+          err.response?.data?.error || err.message,
+          "error"
+        );
+      }
+    };
+
+    MySwal.fire({
+      title: "จัดการรูปโปรไฟล์",
+      html: (
+        <div className="flex flex-col items-center font-kanit p-4">
+          <p className="mb-4 text-slate-600 text-sm">
+            เลือกรูปภาพสำหรับโปรไฟล์ของคุณ (ขนาดไม่เกิน 2MB)
+          </p>
+          <div className="flex gap-3 mb-4">
+            <label className="cursor-pointer px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-lg transition">
+              เลือกรูปภาพ
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                      Swal.fire(
+                        "ขนาดไฟล์ใหญ่เกินไป",
+                        "กรุณาเลือกรูปภาพที่มีขนาดไม่เกิน 2MB",
+                        "error"
+                      );
+                      return;
+                    }
+                    if (!file.type.startsWith("image/")) {
+                      Swal.fire(
+                        "ประเภทไฟล์ไม่ถูกต้อง",
+                        "กรุณาเลือกไฟล์รูปภาพเท่านั้น",
+                        "error"
+                      );
+                      return;
+                    }
+                    handleUpload(file);
+                  }
+                }}
+              />
+            </label>
+            {user?.profilePicturePath && (
+              <button
+                onClick={handleDelete}
+                className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg transition"
+              >
+                ลบรูปปัจจุบัน
+              </button>
+            )}
+          </div>
+        </div>
+      ),
+      showConfirmButton: false,
+      showCloseButton: true,
+      width: 400,
+      background: "#ffffff",
+    });
+  };
 
   const handleSignatureClick = async () => {
     try {
@@ -172,17 +314,23 @@ function UserProfile2() {
         <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 sm:p-8 space-y-10">
           
           <div className="flex justify-center">
-            {user?.profilePicturePath ? (
-              <img
-                src={user.profilePicturePath}
-                alt="Profile"
-                className="h-40 w-40 rounded-full object-cover border border-slate-200 shadow"
+            <div className="relative group cursor-pointer" onClick={handleProfilePictureUpload}>
+              <ProfileImage 
+                key={profileKey}
+                profilePicturePath={user?.profilePicturePath} 
+                size="medium" 
+                className="border-4 border-slate-200 shadow-md"
               />
-            ) : (
-              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-slate-100 border border-slate-300 shadow">
-                <FaUserAlt className="h-16 w-16 text-slate-500" />
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="text-center text-white">
+                  <svg className="w-8 h-8 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <p className="text-xs">เปลี่ยนรูป</p>
+                </div>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

@@ -6,12 +6,24 @@ import { apiEndpoints } from "../../utils/api";
 import { FaUserAlt } from "react-icons/fa";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
+import ProfileImage from "../../components/ProfileImage";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
     {children}
   </div>
 );
+
+const ROLE_LABEL_TH = {
+  USER: "ผู้ใช้งานทั่วไป",
+  ADMIN: "ผู้ดูแลระบบ",
+  SUPER_ADMIN: "ผู้ดูแลระดับสูง",
+  VERIFIER: "ผู้ตรวจสอบ",
+  APPROVER_1: "หัวหน้าสาขา",
+  APPROVER_2: "สรรบรรณคณะ",
+  APPROVER_3: "รองคณบดี",
+  APPROVER_4: "คณบดี",
+};
 
 export default function UserInfo() {
   const { id } = useParams();
@@ -172,17 +184,11 @@ export default function UserInfo() {
         {/* User Info */}
         <Panel className="p-6 sm:p-8">
           <div className="flex justify-center mb-8">
-            {user.profilePicturePath ? (
-              <img
-                src={user.profilePicturePath}
-                alt="Profile"
-                className="w-40 h-40 rounded-full object-cover border-4 border-slate-200 shadow-md"
+            <ProfileImage 
+                profilePicturePath={user?.profilePicturePath} 
+                size="medium"
+                className="border-4 border-slate-200 shadow-md"
               />
-            ) : (
-              <div className="w-40 h-40 rounded-full flex justify-center items-center bg-slate-100 border-4 border-slate-200 shadow-md">
-                <FaUserAlt className="text-slate-500 w-16 h-16" />
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -232,6 +238,48 @@ export default function UserInfo() {
                 </p>
               </div>
             ))}
+          </div>
+
+          {/* Roles Section */}
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="flex flex-col gap-1 mb-3">
+              <div className="text-sm font-medium text-slate-800">บทบาท (Roles)</div>
+              <div className="text-xs text-slate-600">
+                บทบาทที่ผู้ใช้งานได้รับมอบหมายในระบบ
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(() => {
+                const roleNames = (user.userRoles || [])
+                  .map((ur) => ur.role?.name || ur.roleName)
+                  .filter(Boolean);
+                const display = roleNames.length > 1
+                  ? roleNames.filter((r) => r !== "USER")
+                  : roleNames;
+                if (!display.length) return <span className="text-sm text-slate-400">ไม่มีบทบาทที่กำหนด</span>;
+                const colorMap = {
+                  SUPER_ADMIN: "bg-rose-50 text-rose-700 border-rose-200",
+                  ADMIN: "bg-amber-50 text-amber-700 border-amber-200",
+                  APPROVER_4: "bg-violet-50 text-violet-700 border-violet-200",
+                  APPROVER_3: "bg-violet-50 text-violet-700 border-violet-200",
+                  APPROVER_2: "bg-violet-50 text-violet-700 border-violet-200",
+                  APPROVER_1: "bg-violet-50 text-violet-700 border-violet-200",
+                  VERIFIER: "bg-teal-50 text-teal-700 border-teal-200",
+                  USER: "bg-slate-50 text-slate-600 border-slate-200",
+                };
+                return display.map((r) => {
+                  const label = ROLE_LABEL_TH[r];
+                  return (
+                    <span
+                      key={r}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${colorMap[r] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+                    >
+                      {label ? `${label} (${r})` : r}
+                    </span>
+                  );
+                });
+              })()}
+            </div>
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">

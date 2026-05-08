@@ -12,6 +12,7 @@ export default function HolidayManage() {
   const [isRecurring, setIsRecurring] = useState(false);
   const [holidayType, setHolidayType] = useState("");
   const [editId, setEditId] = useState(null);
+  const [initialEditData, setInitialEditData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState("");
@@ -80,6 +81,7 @@ export default function HolidayManage() {
     setIsRecurring(false);
     setHolidayType("");
     setEditId(null);
+    setInitialEditData(null);
   };
 
   const handleAdd = async () => {
@@ -109,6 +111,7 @@ export default function HolidayManage() {
     setIsRecurring(h.isRecurring);
     setHolidayType(h.holidayType || "");
     setEditId(id);
+    setInitialEditData({ date: h.date.split("T")[0], description: h.description, isRecurring: h.isRecurring, holidayType: h.holidayType || "" });
   };
 
   const handleUpdate = async () => {
@@ -256,7 +259,12 @@ export default function HolidayManage() {
               <div className="flex gap-2">
                 <button
                   onClick={editId ? handleUpdate : handleAdd}
-                  className="inline-flex flex-1 items-center justify-center rounded-xl bg-sky-600 px-3 py-2 text-xs md:text-sm font-medium text-white shadow-sm transition hover:bg-sky-500"
+                  disabled={editId && initialEditData && date === initialEditData.date && description === initialEditData.description && isRecurring === initialEditData.isRecurring && holidayType === initialEditData.holidayType}
+                  className={`inline-flex flex-1 items-center justify-center rounded-xl px-3 py-2 text-xs md:text-sm font-medium shadow-sm transition ${
+                    editId && initialEditData && date === initialEditData.date && description === initialEditData.description && isRecurring === initialEditData.isRecurring && holidayType === initialEditData.holidayType
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-sky-600 hover:bg-sky-500 text-white"
+                  }`}
                 >
                   {editId ? "อัปเดตวันหยุด" : "เพิ่มวันหยุด"}
                 </button>

@@ -7,8 +7,7 @@ import { apiEndpoints, BASE_URL } from "../../utils/api";
 import bg from "../../assets/bg.jpg";
 import engLogo from "../../assets/logo.png";
 
-const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL ?? BASE_URL;
+const BACKEND_URL = BASE_URL;
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);

@@ -48,14 +48,19 @@ const adminNav = [
   { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
 ];
 
-const highLevelAdminNav = [
+const superAdminOnlyNav = [
   { to: "/admin/organization-manage", text: "จัดการองค์กร", icon: <FaUsersCog /> },
   { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaUsersCog /> },
   { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
+  { to: "/admin/rank-manage", text: "เงื่อนไขวันลา (Rank)", icon: <FaUsersCog /> },
+  { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUsersCog /> },
+];
+
+const adminConfigNav = [
   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 
-export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = () => {}, isMobile = false }) {
+export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }) {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -125,7 +130,7 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
         }`}
       >
         <span className="text-base">{icon}</span>
-        {!isMini && <span className="truncate">{text}</span>}
+        <span className="truncate">{text}</span>
       </Link>
     );
   };
@@ -154,17 +159,15 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
         }`}
       >
         <span className="text-base">{icon}</span>
-        {!isMini && <span className="truncate">{text}</span>}
+        <span className="truncate">{text}</span>
       </Link>
     );
   };
   const Section = ({ title, children }) => (
     <div className="space-y-2">
-      {!isMini && (
-        <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider px-4 mt-2 mb-1">
-          {title}
-        </div>
-      )}
+      <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider px-4 mt-2 mb-1">
+        {title}
+      </div>
       <div className="flex flex-col gap-1">{children}</div>
     </div>
   );
@@ -192,7 +195,8 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
     ? user.roleNames
     : [];
 
-  const hasRole = (r) => roles.includes(r);
+  // SUPER_ADMIN สามารถเข้าถึงทุกเมนูที่ ADMIN เข้าได้
+  const hasRole = (r) => roles.includes(r) || (r === "ADMIN" && roles.includes("SUPER_ADMIN"));
   const isActive = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
 
   // Proxy role flags (menu จะโชว์เมื่อมี proxy อย่างน้อย 1 รายการ)
@@ -321,9 +325,9 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
         />
       )}
       <aside
-        className={`fixed top-0 left-0 z-40 h-full transform transition-transform duration-300 ease-in-out ${
-          isMini ? "w-20" : "w-64"
-        } ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-0 left-0 z-40 h-full w-64 transform transition-transform duration-300 ease-in-out ${
+          isMobile && !isOpen ? "-translate-x-full" : ""
+        }`}
       >
         <div className="relative h-full">
           <div className="absolute inset-0 bg-gradient-to-b from-sky-500/20 via-sky-600/10 to-blue-900/20" />
@@ -333,19 +337,15 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                {!isMini && (
-                    <img src={logo} alt="Logo" className="w-10 h-10 rounded-md shadow-lg" />
-                )}
-                {!isMini && (
-                  <div className="flex flex-col leading-tight">
-                    <span className="font-kanit text-lg font-semibold tracking-wide whitespace-nowrap">
-                      eLeave System
-                    </span>
-                    <span className="text-xs text-slate-300 whitespace-nowrap">คณะวิศวกรรมศาสตร์</span>
-                  </div>
-                )}
+                <img src={logo} alt="Logo" className="w-10 h-10 rounded-md shadow-lg" />
+                <div className="flex flex-col leading-tight">
+                  <span className="font-kanit text-lg font-semibold tracking-wide whitespace-nowrap">
+                    eLeave System
+                  </span>
+                  <span className="text-xs text-slate-300 whitespace-nowrap">คณะวิศวกรรมศาสตร์</span>
+                </div>
               </div>
-              {isMobile ? (
+              {isMobile && (
                 <button
                   type="button"
                   onClick={onClose}
@@ -359,20 +359,6 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                       strokeWidth="2"
                       d="M6 18L18 6M6 6l12 12"
                     />
-                  </svg>
-                </button>
-              ) : (
-                <button
-                  onClick={toggleMiniSidebar}
-                  className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition"
-                  aria-label="Toggle mini sidebar"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {isMini ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
-                    )}
                   </svg>
                 </button>
               )}
@@ -420,15 +406,13 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                       >
                         <span className="flex items-center gap-3">
                           <FaUsersCog className="text-base" />
-                          {!isMini && <span>การมอบอำนาจ (Proxy)</span>}
+                          <span>การมอบอำนาจ (Proxy)</span>
                         </span>
-                        {!isMini && (
-                          <HiOutlineChevronDown
-                            className={`w-5 h-5 ml-2 transition-transform ${
-                              openProxy ? "rotate-180" : "rotate-0"
-                            }`}
-                          />
-                        )}
+                        <HiOutlineChevronDown
+                          className={`w-5 h-5 ml-2 transition-transform ${
+                            openProxy ? "rotate-180" : "rotate-0"
+                          }`}
+                        />
                       </button>
                       {openProxy && (
                         <div className="flex flex-col mt-1 ml-4">
@@ -495,15 +479,13 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                     >
                       <span className="flex items-center gap-3">
                         <FaUsersCog className="text-base" />
-                        {!isMini && <span>เมนูผู้ดูแล</span>}
+                        <span>เมนูผู้ดูแล</span>
                       </span>
-                      {!isMini && (
-                        <HiOutlineChevronDown
-                          className={`w-5 h-5 ml-2 transition-transform ${
-                            openAdmin ? "rotate-180" : "rotate-0"
-                          }`}
-                        />
-                      )}
+                      <HiOutlineChevronDown
+                        className={`w-5 h-5 ml-2 transition-transform ${
+                          openAdmin ? "rotate-180" : "rotate-0"
+                        }`}
+                      />
                     </button>
                     {openAdmin && (
                       <div className="flex flex-col mt-1 ml-4">
@@ -514,28 +496,34 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
                     )}
                   </Section>
 
-                  <Section title="ผู้ดูแลระดับสูง">
-                    <div className="mb-2">
-                      <div className="text-xs text-amber-300 px-4 py-1">
-                        ⚠️ ฟีเจอร์สำคัญ - โปรดระมัดระวัง
-                      </div>
-                    </div>
-                    {highLevelAdminNav.map((m, i) => {
-                      return <HighLevelAdminItem key={`high-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                  <Section title="การตั้งค่า">
+                    {adminConfigNav.map((m, i) => {
+                      return <HighLevelAdminItem key={`cfg-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
                     })}
                   </Section>
+
+                  {hasRole("SUPER_ADMIN") && (
+                    <Section title="ผู้ดูแลระดับสูง">
+                      <div className="mb-1">
+                        <div className="text-xs text-amber-300 px-4 py-1">
+                          ⚠️ การตั้งค่าที่สำคัญ - โปรดระมัดระวัง
+                        </div>
+                      </div>
+                      {superAdminOnlyNav.map((m, i) => {
+                        return <HighLevelAdminItem key={`high-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                      })}
+                    </Section>
+                  )}
                 </>
               )}
             </nav>
 
-            {/* Footer - แสดงเฉพาะถ้าเป็น sidebar และไม่ใช่ mini mode */}
-            {!isMini && (
-              <footer className="p-4 text-center text-xs text-slate-300 border-t border-white/10 whitespace-nowrap">
-                © คณะวิศวกรรมศาสตร์
-                <br />
-                มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน
-              </footer>
-            )}
+            {/* Footer */}
+            <footer className="p-4 text-center text-xs text-slate-300 border-t border-white/10 whitespace-nowrap">
+              © คณะวิศวกรรมศาสตร์
+              <br />
+              มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน
+            </footer>
           </div>
         </div>
       </aside>
@@ -549,8 +537,6 @@ export default function Sidebar({ isOpen, isMini, toggleMiniSidebar, onClose = (
 
 Sidebar.propTypes = {
   isOpen: PropTypes.bool.isRequired,
-  isMini: PropTypes.bool.isRequired,
-  toggleMiniSidebar: PropTypes.func.isRequired,
   onClose: PropTypes.func,
   isMobile: PropTypes.bool,
 };

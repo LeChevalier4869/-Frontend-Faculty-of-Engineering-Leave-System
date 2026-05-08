@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { BASE_URL } from "../../utils/api";
@@ -7,9 +8,11 @@ import { apiEndpoints } from "../../utils/api";
 const PAGE_SIZE = 10;
 
 export default function OrganizationManage() {
+  const navigate = useNavigate();
   const [organizations, setOrganizations] = useState([]);
   const [newName, setNewName] = useState("");
   const [editId, setEditId] = useState(null);
+  const [initialEditName, setInitialEditName] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -57,6 +60,7 @@ export default function OrganizationManage() {
   const resetForm = () => {
     setNewName("");
     setEditId(null);
+    setInitialEditName("");
   };
 
   const handleAdd = async () => {
@@ -82,6 +86,7 @@ export default function OrganizationManage() {
     const org = organizations.find((o) => o.id === id);
     if (!org) return;
     setNewName(org.name);
+    setInitialEditName(org.name);
     setEditId(org.id);
   };
 
@@ -152,7 +157,7 @@ export default function OrganizationManage() {
                 จัดการองค์กร
               </h1>
               <p className="text-sm text-slate-600">
-                ดูข้อมูลหน่วยงานสำหรับใช้กำหนดแผนกและสิทธิ์ต่าง ๆ (ปิดกั้นการแก้ไขชั่วคราว)
+                จัดการข้อมูลหน่วยงานสำหรับใช้กำหนดแผนกและสิทธิ์ต่าง ๆ
               </p>
             </div>
           </div>
@@ -164,30 +169,52 @@ export default function OrganizationManage() {
               <span className="text-amber-600 text-xs font-bold">!</span>
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
+              <h3 className="text-sm font-semibold text-amber-800 mb-1">โปรดระมัดระวังในการแก้ไข</h3>
               <p className="text-xs text-amber-700">
-                ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
-                การเปลี่ยนแปลงข้อมูลอาจทำให้ระบบทำงานผิดพลาดได้จาก hardcoded logic และ dependencies ที่ซับซ้อน
+                ข้อมูลองค์กรมีผลต่อแผนก สิทธิ์การเข้าถึง และ dependencies ที่ซับซ้อน
+                กรุณาตรวจสอบให้แน่ใจก่อนทำการเปลี่ยนแปลง
               </p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5 space-y-4 opacity-75">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 opacity-50">
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <input
               type="text"
               placeholder="กรอกชื่อองค์กร"
               value={newName}
-              disabled
-              className={`${inputBase} col-span-2 bg-slate-100 cursor-not-allowed`}
+              onChange={(e) => setNewName(e.target.value)}
+              className={`${inputBase} col-span-2`}
             />
-            <button
-              disabled
-              className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-slate-300 cursor-not-allowed opacity-50"
-            >
-              ปิดกั้นการแก้ไข
-            </button>
+            {editId ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUpdate}
+                  disabled={newName === initialEditName}
+                  className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium shadow-sm transition flex-1 ${
+                    newName === initialEditName
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-amber-500 hover:bg-amber-400 text-white"
+                  }`}
+                >
+                  อัปเดต
+                </button>
+                <button
+                  onClick={resetForm}
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-slate-400 hover:bg-slate-300"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleAdd}
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition bg-sky-600 hover:bg-sky-500"
+              >
+                เพิ่มองค์กร
+              </button>
+            )}
           </div>
         </div>
 
@@ -230,16 +257,22 @@ export default function OrganizationManage() {
                       <td className="px-4 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            disabled
-                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
+                            onClick={() => navigate(`/admin/department-manage?orgId=${o.id}`)}
+                            className="inline-flex items-center justify-center rounded-lg bg-sky-600 hover:bg-sky-500 px-3 py-1 text-xs font-medium text-white"
                           >
-                            แก้ไข (ปิดกั้น)
+                            จัดการแผนก
                           </button>
                           <button
-                            disabled
-                            className="inline-flex items-center justify-center rounded-lg bg-slate-300 px-3 py-1 text-xs font-medium text-slate-500 cursor-not-allowed opacity-50"
+                            onClick={() => handleEdit(o.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 px-3 py-1 text-xs font-medium text-white"
                           >
-                            ลบ (ปิดกั้น)
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => handleDelete(o.id)}
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-500 hover:bg-rose-400 px-3 py-1 text-xs font-medium text-white"
+                          >
+                            ลบ
                           </button>
                         </div>
                       </td>

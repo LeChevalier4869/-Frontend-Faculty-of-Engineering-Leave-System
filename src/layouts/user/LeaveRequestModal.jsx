@@ -75,7 +75,10 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
           headers: { Authorization: `Bearer ${token}` },
         });
         
-        const holidayDates = res.data.data.map((h) => h.date);
+        const holidayDates = res.data.data.map((h) => {
+          // แปลง ISO string เป็น YYYY-MM-DD format
+          return h.date.split('T')[0];
+        });
         setHolidays(holidayDates);
       } catch (error) {
         console.error("Error fetching holidays:", error);
@@ -115,10 +118,13 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
 
     let workingDays = 0;
     let d = startDate.clone();
+    
     while (d.isSameOrBefore(endDate, "day")) {
       const isWeekend = d.day() === 0 || d.day() === 6;
       const isHoliday = holidays.includes(d.format("YYYY-MM-DD"));
+      
       if (!isWeekend && !isHoliday) workingDays++;
+      
       d = d.add(1, "day");
     }
     return workingDays;

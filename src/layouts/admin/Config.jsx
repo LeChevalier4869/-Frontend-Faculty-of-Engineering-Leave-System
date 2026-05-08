@@ -24,11 +24,18 @@ export default function ConfigPage() {
     AdminPhone: "",
     AdminMail: "",
   });
+  const [initialContacts, setInitialContacts] = useState({
+    AdminName: "",
+    AdminPhone: "",
+    AdminMail: "",
+  });
   const [driveLink, setDriveLink] = useState("");
+  const [initialDriveLink, setInitialDriveLink] = useState("");
   const [leaveInformationUrl, setLeaveInformationUrl] = useState("");
+  const [initialLeaveInformationUrl, setInitialLeaveInformationUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   // Fiscal Year states
   const [fiscalYear, setFiscalYear] = useState({ fiscalYear: null, currentYear: null });
   const [resetLoading, setResetLoading] = useState(false);
@@ -74,11 +81,13 @@ export default function ConfigPage() {
       data.forEach((item) => {
         map[item.key] = item.value;
       });
-      setContacts({
+      const loaded = {
         AdminName: map.AdminName || "",
         AdminPhone: map.AdminPhone || "",
         AdminMail: map.AdminMail || "",
-      });
+      };
+      setContacts(loaded);
+      setInitialContacts(loaded);
     } catch (err) {
       console.error(err);
       showAlert(
@@ -94,7 +103,10 @@ export default function ConfigPage() {
   const fetchDriveLink = async () => {
     try {
       const res = await axios.get(apiEndpoints.getDriveLink, authHeader());
-      if (res.data?.url) setDriveLink(res.data.url);
+      if (res.data?.url) {
+        setDriveLink(res.data.url);
+        setInitialDriveLink(res.data.url);
+      }
     } catch (err) {
       console.error("ไม่สามารถโหลดลิงก์ Google Drive:", err);
     }
@@ -103,7 +115,10 @@ export default function ConfigPage() {
   const fetchLeaveInformationUrl = async () => {
     try {
       const res = await axios.get(apiEndpoints.getSettingByKey('leave_information'));
-      if (res.data?.data?.value) setLeaveInformationUrl(res.data.data.value);
+      if (res.data?.data?.value) {
+        setLeaveInformationUrl(res.data.data.value);
+        setInitialLeaveInformationUrl(res.data.data.value);
+      }
     } catch (err) {
       console.error("ไม่สามารถโหลดลิงก์ข้อมูลการลา:", err);
     }
@@ -149,6 +164,7 @@ export default function ConfigPage() {
         );
       }
 
+      setInitialContacts({ ...contacts });
       showAlert(
         "success",
         "บันทึกสำเร็จ",
@@ -185,6 +201,7 @@ export default function ConfigPage() {
         { value: driveLink },
         authHeader()
       );
+      setInitialDriveLink(driveLink);
       showAlert("success", "บันทึกลิงก์สำเร็จ", "", 1500);
     } catch (err) {
       console.error(err);
@@ -204,13 +221,14 @@ export default function ConfigPage() {
       setSaving(true);
       await axios.put(
         apiEndpoints.updateSettingByKey('leave_information'),
-        { 
+        {
           value: leaveInformationUrl,
           type: 'url',
           description: 'สิทธิประโยชน์ว่าด้วยการลา'
         },
         authHeader()
       );
+      setInitialLeaveInformationUrl(leaveInformationUrl);
       showAlert("success", "บันทึกลิงก์ข้อมูลการลาสำเร็จ", "", 1500);
     } catch (err) {
       console.error(err);
@@ -265,7 +283,7 @@ export default function ConfigPage() {
     try {
       setResetLoading(true);
       const res = await axios.post(apiEndpoints.resetLeaveBalance, {}, authHeader());
-      
+
       await Swal.fire({
         title: "รีเซ็ตสำเร็จ!",
         html: `
@@ -278,7 +296,7 @@ export default function ConfigPage() {
         timer: 3000,
         timerProgressBar: true
       });
-      
+
       // Refresh fiscal year data
       await fetchFiscalYear();
     } catch (err) {
@@ -336,7 +354,7 @@ export default function ConfigPage() {
         fiscalYear: parseInt(yearInputs.fiscalYear),
         currentYear: parseInt(yearInputs.currentYear)
       }, authHeader());
-      
+
       showAlert("success", "อัปเดตปีงบประมาณสำเร็จ", "", 1500);
       await fetchFiscalYear();
     } catch (err) {
@@ -391,7 +409,7 @@ export default function ConfigPage() {
     try {
       setDeleteLoading(true);
       const res = await axios.delete(apiEndpoints.deleteLeaveBalanceByYear(year), authHeader());
-      
+
       await Swal.fire({
         title: "ลบข้อมูลสำเร็จ!",
         html: `
@@ -405,7 +423,7 @@ export default function ConfigPage() {
         timer: 3000,
         timerProgressBar: true
       });
-      
+
       setDeleteYearInput("");
       // Refresh available years after deletion
       await fetchAvailableYears();
@@ -513,11 +531,11 @@ export default function ConfigPage() {
           <div className="flex justify-end mt-8">
             <button
               onClick={handleSaveContacts}
-              disabled={saving}
-              className={`px-6 py-2 rounded-xl font-medium text-sm text-white transition-all duration-150 shadow-sm ${
-                saving
-                  ? "bg-slate-400 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-500"
+              disabled={saving || JSON.stringify(contacts) === JSON.stringify(initialContacts)}
+              className={`px-6 py-2 rounded-xl font-medium text-sm transition-all duration-150 shadow-sm ${
+                saving || JSON.stringify(contacts) === JSON.stringify(initialContacts)
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white"
               }`}
             >
               {saving ? "กำลังบันทึก..." : "บันทึกข้อมูลเจ้าหน้าที่"}
@@ -526,36 +544,18 @@ export default function ConfigPage() {
         </Panel>
 
         {/* Drive Link */}
-        <Panel className={`p-6 sm:p-8 ${!isSuperAdmin() ? 'opacity-75' : ''}`}>
+        <Panel className="p-6 sm:p-8">
           <h2 className="text-xl md:text-2xl font-semibold text-slate-900 mb-6">
             ลิงก์ดาวน์โหลดใบลา (Google Drive)
           </h2>
-
-          {!isSuperAdmin() && (
-            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
-                  <span className="text-amber-600 text-xs font-bold">!</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
-                  <p className="text-xs text-amber-700">
-                    ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
-                    การเปลี่ยนแปลงลิงก์อาจทำให้ผู้ใช้ไม่สามารถดาวน์โหลดเอกสารได้
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="flex flex-col md:flex-row md:items-center md:gap-4">
             <input
               type="text"
               value={driveLink}
-              onChange={(e) => isSuperAdmin() && setDriveLink(e.target.value)}
+              onChange={(e) => setDriveLink(e.target.value)}
               placeholder="วางลิงก์ Google Drive ที่นี่"
-              disabled={!isSuperAdmin()}
-              className={`${inputBase} flex-1 ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
+              className={`${inputBase} flex-1`}
             />
 
             <button
@@ -570,42 +570,23 @@ export default function ConfigPage() {
           <div className="flex justify-end mt-8">
             <button
               onClick={handleSaveDriveLink}
-              disabled={!isSuperAdmin() || saving}
-              className={`px-6 py-2 rounded-xl font-medium text-sm text-white transition-all duration-150 shadow-sm ${
-                !isSuperAdmin()
-                  ? "bg-slate-300 cursor-not-allowed opacity-50"
-                  : saving
-                  ? "bg-slate-400 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-500"
+              disabled={saving || driveLink === initialDriveLink}
+              className={`px-6 py-2 rounded-xl font-medium text-sm transition-all duration-150 shadow-sm ${
+                saving || driveLink === initialDriveLink
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white"
               }`}
             >
-              {!isSuperAdmin() ? "แก้ไข (ปิดกั้น)" : (saving ? "กำลังบันทึก..." : "บันทึกลิงก์")}
+              {saving ? "กำลังบันทึก..." : "บันทึกลิงก์"}
             </button>
           </div>
         </Panel>
 
         {/* Leave Information Link */}
-        <Panel className={`p-6 sm:p-8 ${!isSuperAdmin() ? 'opacity-75' : ''}`}>
+        <Panel className="p-6 sm:p-8">
           <h2 className="text-xl md:text-2xl font-semibold text-slate-900 mb-6">
             ลิงก์ข้อมูลสิทธิประโยชน์การลา
           </h2>
-
-          {!isSuperAdmin() && (
-            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
-                  <span className="text-amber-600 text-xs font-bold">!</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
-                  <p className="text-xs text-amber-700">
-                    ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
-                    การเปลี่ยนแปลงลิงก์อาจทำให้ผู้ใช้ไม่สามารถตรวจสอบข้อมูลสิทธิประโยชน์ได้
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="mb-4">
             <p className="text-sm text-slate-600">
@@ -617,10 +598,9 @@ export default function ConfigPage() {
             <input
               type="text"
               value={leaveInformationUrl}
-              onChange={(e) => isSuperAdmin() && setLeaveInformationUrl(e.target.value)}
+              onChange={(e) => setLeaveInformationUrl(e.target.value)}
               placeholder="วางลิงก์ข้อมูลสิทธิประโยชน์การลาที่นี่"
-              disabled={!isSuperAdmin()}
-              className={`${inputBase} flex-1 ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
+              className={`${inputBase} flex-1`}
             />
 
             <button
@@ -635,16 +615,14 @@ export default function ConfigPage() {
           <div className="flex justify-end mt-8">
             <button
               onClick={handleSaveLeaveInformationUrl}
-              disabled={!isSuperAdmin() || saving}
-              className={`px-6 py-2 rounded-xl font-medium text-sm text-white transition-all duration-150 shadow-sm ${
-                !isSuperAdmin()
-                  ? "bg-slate-300 cursor-not-allowed opacity-50"
-                  : saving
-                  ? "bg-slate-400 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-500"
+              disabled={saving || leaveInformationUrl === initialLeaveInformationUrl}
+              className={`px-6 py-2 rounded-xl font-medium text-sm transition-all duration-150 shadow-sm ${
+                saving || leaveInformationUrl === initialLeaveInformationUrl
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white"
               }`}
             >
-              {!isSuperAdmin() ? "แก้ไข (ปิดกั้น)" : (saving ? "กำลังบันทึก..." : "บันทึกลิงก์ข้อมูลการลา")}
+              {saving ? "กำลังบันทึก..." : "บันทึกลิงก์ข้อมูลการลา"}
             </button>
           </div>
         </Panel>
@@ -661,7 +639,7 @@ export default function ConfigPage() {
         </Panel>
 
         {/* Leave Balance Reset Section */}
-        <Panel className={`p-6 sm:p-8 border-amber-200 bg-gradient-to-br from-amber-50 to-white ${!isSuperAdmin() ? 'opacity-75' : ''}`}>
+        <Panel className="p-6 sm:p-8 border-amber-200 bg-gradient-to-br from-amber-50 to-white">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-11 h-11 rounded-2xl bg-amber-100 flex items-center justify-center border border-amber-200">
               <FaSync className="text-xl text-amber-600" />
@@ -676,22 +654,20 @@ export default function ConfigPage() {
             </div>
           </div>
 
-          {!isSuperAdmin() && (
-            <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
-                  <span className="text-amber-600 text-xs font-bold">!</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-amber-800 mb-1">ปิดกั้นการแก้ไขชั่วคราว</h3>
-                  <p className="text-xs text-amber-700">
-                    ฟีเจอร์นี้ถูกปิดกั้นการแก้ไขชั่วคราวเนื่องจากมีความเสี่ยงต่อความเสถียรของระบบ 
-                    การรีเซ็ตยอดวันลาอาจทำให้ข้อมูลสิทธิ์การลาของผู้ใช้ทั้งระบบเสียหายได้
-                  </p>
-                </div>
+          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                <span className="text-amber-600 text-xs font-bold">!</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-amber-800 mb-1">โปรดระมัดระวังในการแก้ไข</h3>
+                <p className="text-xs text-amber-700">
+                  การรีเซ็ตยอดวันลาอาจทำให้ข้อมูลสิทธิ์การลาของผู้ใช้ทั้งระบบเสียหายได้
+                  กรุณาตรวจสอบให้แน่ใจก่อนทำการเปลี่ยนแปลง
+                </p>
               </div>
             </div>
-          )}
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Current Fiscal Year Info */}
@@ -737,31 +713,27 @@ export default function ConfigPage() {
                     type="number"
                     placeholder="ปีงบฯ"
                     value={yearInputs.fiscalYear}
-                    onChange={(e) => isSuperAdmin() && setYearInputs({...yearInputs, fiscalYear: e.target.value})}
-                    disabled={!isSuperAdmin()}
-                    className={`${inputBase} text-xs ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
+                    onChange={(e) => setYearInputs({...yearInputs, fiscalYear: e.target.value})}
+                    className={`${inputBase} text-xs`}
                   />
                   <input
                     type="number"
                     placeholder="ปีปฏิทิน"
                     value={yearInputs.currentYear}
-                    onChange={(e) => isSuperAdmin() && setYearInputs({...yearInputs, currentYear: e.target.value})}
-                    disabled={!isSuperAdmin()}
-                    className={`${inputBase} text-xs ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
+                    onChange={(e) => setYearInputs({...yearInputs, currentYear: e.target.value})}
+                    className={`${inputBase} text-xs`}
                   />
                 </div>
                 <button
                   onClick={handleUpdateFiscalYear}
-                  disabled={!isSuperAdmin() || saving}
+                  disabled={saving}
                   className={`w-full px-4 py-2 rounded-lg font-medium text-xs text-white transition-all ${
-                    !isSuperAdmin()
-                      ? "bg-slate-300 cursor-not-allowed opacity-50"
-                      : saving
+                    saving
                       ? "bg-slate-400 cursor-not-allowed"
                       : "bg-sky-600 hover:bg-sky-500"
                   }`}
                 >
-                  {!isSuperAdmin() ? "อัปเดต (ปิดกั้น)" : (saving ? "กำลังอัปเดต..." : "อัปเดตปี")}
+                  {saving ? "กำลังอัปเดต..." : "อัปเดตปี"}
                 </button>
               </div>
             </div>
@@ -781,7 +753,7 @@ export default function ConfigPage() {
                     <li>• ใช้เมื่อต้องการลบข้อมูลผิดพลาด</li>
                   </ul>
                 </div>
-                
+
                 {/* Available Years Display */}
                 <div className="bg-slate-50 rounded-lg p-3">
                   <p className="text-xs font-medium text-slate-700 mb-2">📅 ปีที่มีในระบบ:</p>
@@ -793,7 +765,7 @@ export default function ConfigPage() {
                   ) : availableYears.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
                       {availableYears.map((yearInfo) => (
-                        <span 
+                        <span
                           key={yearInfo.year}
                           className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs text-slate-700"
                         >
@@ -811,31 +783,28 @@ export default function ConfigPage() {
                   type="number"
                   placeholder="ปีที่ต้องการลบ"
                   value={deleteYearInput}
-                  onChange={(e) => isSuperAdmin() && setDeleteYearInput(e.target.value)}
-                  disabled={!isSuperAdmin()}
-                  className={`${inputBase} text-xs border-red-300 focus:ring-red-400 ${!isSuperAdmin() ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}`}
+                  onChange={(e) => setDeleteYearInput(e.target.value)}
+                  className={`${inputBase} text-xs border-red-300 focus:ring-red-400`}
                   min="2000"
                   max="2100"
                 />
                 <button
                   onClick={handleDeleteLeaveBalanceByYear}
-                  disabled={!isSuperAdmin() || deleteLoading || !deleteYearInput}
+                  disabled={deleteLoading || !deleteYearInput}
                   className={`w-full px-4 py-2 rounded-lg font-medium text-xs text-white transition-all ${
-                    !isSuperAdmin()
-                      ? "bg-slate-300 cursor-not-allowed opacity-50"
-                      : deleteLoading || !deleteYearInput
+                    deleteLoading || !deleteYearInput
                       ? "bg-red-300 cursor-not-allowed"
                       : "bg-red-600 hover:bg-red-500"
                   }`}
                 >
-                  {!isSuperAdmin() ? "ลบ (ปิดกั้น)" : (deleteLoading ? (
+                  {deleteLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="inline-flex h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
                       กำลังลบ...
                     </span>
                   ) : (
                     "ลบข้อมูลปีนั้น"
-                  ))}
+                  )}
                 </button>
               </div>
             </div>
@@ -863,21 +832,14 @@ export default function ConfigPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleResetLeaveBalance}
-                    disabled={!isSuperAdmin() || resetLoading}
+                    disabled={resetLoading}
                     className={`px-6 py-3 rounded-xl font-medium text-sm text-white transition-all shadow-sm ${
-                      !isSuperAdmin()
-                        ? "bg-slate-300 cursor-not-allowed opacity-50"
-                        : resetLoading
+                      resetLoading
                         ? "bg-amber-400 cursor-not-allowed"
                         : "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
                     }`}
                   >
-                    {!isSuperAdmin() ? (
-                      <span className="flex items-center gap-2">
-                        <FaSync />
-                        รีเซ็ต (ปิดกั้น)
-                      </span>
-                    ) : resetLoading ? (
+                    {resetLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="inline-flex h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
                         กำลังรีเซ็ต...

@@ -1,8 +1,11 @@
 import axios from "axios";
-// export const BASE_URL = "http://localhost:8000";
+export const BASE_URL = window.location.hostname === "localhost"
+    ? "http://localhost:8000"
+    : import.meta.env.VITE_BACKEND_URL;
 
 export const API = axios.create({
-  baseURL: "https://backend-faculty-of-engineering-leave.onrender.com",
+  // baseURL: "https://backend-faculty-of-engineering-leave.onrender.com",
+  baseURL: BASE_URL,
 });
 
 // Token interceptor (optional)
@@ -13,8 +16,6 @@ API.interceptors.request.use((config) => {
   }
   return config;
 });
-
-export const BASE_URL = "https://backend-faculty-of-engineering-leave.onrender.com";
 
 export const apiEndpoints = {
   // auth
@@ -30,6 +31,8 @@ export const apiEndpoints = {
   forgotPassword: `${BASE_URL}/auth/forgot-password`,
   resetPassword: `${BASE_URL}/auth/reset-password`,
   changePassword: `${BASE_URL}/auth/change-password`,
+  updateProfile: `${BASE_URL}/auth/update-picture`,
+  deleteProfilePicture: `${BASE_URL}/auth/delete-picture`,
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,
@@ -175,5 +178,12 @@ export const apiEndpoints = {
   // Settings
   getSettingByKey: (key) => `${BASE_URL}/setting/by/${key}`, // GET
   updateSettingByKey: (key) => `${BASE_URL}/setting/by/${key}`, // PUT
-  getAllSettings: `${BASE_URL}/setting`, // GET
+  getAllSettings: `${BASE_URL}/setting`, // GET,
+
+  // Role Management
+  getRoles: `${BASE_URL}/admin/role`, // GET
+  createRole: `${BASE_URL}/admin/role`, // POST
+  updateRole: (id) => `${BASE_URL}/admin/role/${id}`, // PUT
+  deleteRole: (id) => `${BASE_URL}/admin/role/${id}`, // DELETE
+  getRoleById: (id) => `${BASE_URL}/admin/role/${id}`, // GET
 };
