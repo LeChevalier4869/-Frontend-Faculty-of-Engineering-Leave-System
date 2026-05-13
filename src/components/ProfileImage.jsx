@@ -3,11 +3,9 @@ import { FaUserAlt } from "react-icons/fa";
 import axios from "axios";
 import { BASE_URL } from "../utils/api";
 
-const ProfileImage = ({ profilePicturePath, size = "medium", className = "" }) => {
+const ProfileImage = ({ profilePicturePath, googleProfilePictureUrl, size = "medium", className = "" }) => {
   const [imageUrl, setImageUrl] = useState(null);
-  const [googleProfilePicture, setGoogleProfilePicture] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   // Size configurations
   const sizeClasses = {
@@ -23,24 +21,6 @@ const ProfileImage = ({ profilePicturePath, size = "medium", className = "" }) =
   };
 
   useEffect(() => {
-    const fetchGoogleProfilePicture = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/auth/google-profile-picture`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`
-          }
-        });
-        setGoogleProfilePicture(response.data.googleProfilePicture);
-      } catch (error) {
-        console.error("Error fetching Google profile picture:", error);
-        setGoogleProfilePicture(null);
-      }
-    };
-
-    fetchGoogleProfilePicture();
-  }, []);
-
-  useEffect(() => {
     const fetchImage = async () => {
       try {
         if (profilePicturePath?.startsWith('http')) {
@@ -53,81 +33,31 @@ const ProfileImage = ({ profilePicturePath, size = "medium", className = "" }) =
             }
           });
           setImageUrl(response.data.imageUrl);
+        } else if (googleProfilePictureUrl) {
+          // Use Google profile picture from prop if no custom profile picture
+          setImageUrl(googleProfilePictureUrl);
         } else {
           setImageUrl(null);
         }
       } catch (error) {
         console.error("Error fetching profile image:", error);
-        setImageUrl(null);
+        // Fallback to Google profile picture if custom picture fetch fails
+        if (googleProfilePictureUrl) {
+          setImageUrl(googleProfilePictureUrl);
+        } else {
+          setImageUrl(null);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    if (profilePicturePath) {
+    if (profilePicturePath || googleProfilePictureUrl) {
       fetchImage();
-    } else if (googleProfilePicture) {
-      setImageUrl(googleProfilePicture);
-      setLoading(false);
     } else {
       setLoading(false);
     }
-  }, [profilePicturePath, googleProfilePicture]);
-
-  // Refetch Google profile picture when profilePicturePath changes to null
-  useEffect(() => {
-    if (profilePicturePath === null) {
-      // Clear all cached images and force refresh
-      setImageUrl(null);
-      setGoogleProfilePicture(null);
-      setLoading(true);
-      setRefreshKey(prev => prev + 1);
-      
-      const fetchGoogleProfilePicture = async () => {
-        try {
-          const response = await axios.get(`${BASE_URL}/auth/google-profile-picture`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`
-            }
-          });
-          setGoogleProfilePicture(response.data.googleProfilePicture);
-        } catch (error) {
-          console.error("Error fetching Google profile picture:", error);
-          setGoogleProfilePicture(null);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchGoogleProfilePicture();
-    }
-  }, [profilePicturePath]);
-
-  // Force refresh when refreshKey changes
-  useEffect(() => {
-    if (refreshKey > 0) {
-      setImageUrl(null);
-      setLoading(true);
-      
-      const fetchGoogleProfilePicture = async () => {
-        try {
-          const response = await axios.get(`${BASE_URL}/auth/google-profile-picture`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`
-            }
-          });
-          setGoogleProfilePicture(response.data.googleProfilePicture);
-        } catch (error) {
-          console.error("Error fetching Google profile picture:", error);
-          setGoogleProfilePicture(null);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchGoogleProfilePicture();
-    }
-  }, [refreshKey]);
+  }, [profilePicturePath, googleProfilePictureUrl]);
 
   if (loading) {
     return (

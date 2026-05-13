@@ -186,6 +186,7 @@ export default function UserInfo() {
           <div className="flex justify-center mb-8">
             <ProfileImage 
                 profilePicturePath={user?.profilePicturePath} 
+                googleProfilePictureUrl={user?.accounts?.find(acc => acc.provider === 'google')?.profilePictureUrl}
                 size="medium"
                 className="border-4 border-slate-200 shadow-md"
               />

@@ -71,6 +71,7 @@ function Header({ onMenuClick, isMobile = false }) {
               <div className="flex items-center gap-2">
                 <ProfileImage 
                   profilePicturePath={user?.profilePicturePath} 
+                  googleProfilePictureUrl={user?.accounts?.find(acc => acc.provider === 'google')?.profilePictureUrl}
                   size="small" 
                   className="rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500"
                 />
@@ -98,6 +99,7 @@ function Header({ onMenuClick, isMobile = false }) {
                   <div className="flex items-center gap-3">
                     <ProfileImage 
                       profilePicturePath={user?.profilePicturePath} 
+                      googleProfilePictureUrl={user?.accounts?.find(acc => acc.provider === 'google')?.profilePictureUrl}
                       size="small" 
                       className="rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500"
                     />
