@@ -13,12 +13,8 @@ import {
   FaClipboardList,
   FaClipboardCheck,
   FaCheckCircle,
-  FaIdBadge,
   FaIdCard,
-  FaUsers,
   FaFileSignature,
-  FaBuilding,
-  FaUmbrellaBeach,
   FaUserShield,
   FaUserLock,
   FaHistory,
@@ -51,14 +47,13 @@ const approverNav4 = [{ to: "/approver/leave-request-approver4", text: "อน�
 
 const adminNav = [
   { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
+  // จัดการผู้ใช้งาน / เลขที่ตำแหน่ง / แผนก / วันหยุด รวมอยู่ในหน้า "การจัดการ" แล้ว
+  { to: "/admin/management", text: "การจัดการ", icon: <FaUsersCog /> },
   { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaChartBar /> },
   { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaFileSignature /> },
-  { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsers /> },
-  { to: "/admin/position-numbers", text: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
-  { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaBuilding /> },
-  { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUmbrellaBeach /> },
   { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUserShield /> },
   { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaHistory /> },
+  { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 
 const superAdminOnlyNav = [
@@ -69,9 +64,9 @@ const superAdminOnlyNav = [
   { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUserLock /> },
 ];
 
-const adminConfigNav = [
-  { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
-];
+// const adminConfigNav = [
+//   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
+// ];
 
 // Context ส่ง isMobile/onClose ลงไปยัง Item ที่อยู่ระดับ module (ไม่ต้องส่ง prop ทุกจุดเรียก)
 const SidebarContext = createContext({ isMobile: false, onClose: () => {} });
@@ -538,11 +533,11 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                     )}
                   </Section>
 
-                  <Section title="การตั้งค่า">
+                  {/* <Section title="การตั้งค่า">
                     {adminConfigNav.map((m, i) => {
                       return <HighLevelAdminItem key={`cfg-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
                     })}
-                  </Section>
+                  </Section> */}
 
                   {hasRole("SUPER_ADMIN") && (
                     <Section title="ผู้ดูแลระดับสูง">

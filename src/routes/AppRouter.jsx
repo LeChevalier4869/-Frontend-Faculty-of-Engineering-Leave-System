@@ -38,6 +38,8 @@ const LeaveVerifier = lazy(() => import("../layouts/approver/LeaveVerifier"));
 const Approver1Dashboard = lazy(() => import("../layouts/approver/Approver1DashBoard"));
 
 /** Admin pages **/
+const AdminDashboard = lazy(() => import("../layouts/admin/AdminDashBoard"));
+const AdminManagementPage = lazy(() => import("../layouts/admin/AdminManege"));
 const DashBoard = lazy(() => import("../layouts/admin/DashBoard"));
 const DepartmentManage = lazy(() => import("../layouts/admin/DepartmentManage"));
 const OrganizationManage = lazy(() => import("../layouts/admin/OrganizationManage"));
@@ -226,7 +228,7 @@ const userRouter = createBrowserRouter([
             path: "dashboard",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
-                <DashBoard />
+                <AdminDashboard />
               </ProtectedRoute>
             )
           },
@@ -387,6 +389,14 @@ const userRouter = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
                 <RoleManagement />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: "management",
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <AdminManagementPage />
               </ProtectedRoute>
             )
           },

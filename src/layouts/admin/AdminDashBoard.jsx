@@ -1,296 +1,395 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, Clock, XCircle } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
-import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import {
+  Users,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  List,
+  BarChart,
+  FileText,
+  Settings,
+  ClipboardList,
+} from "lucide-react";
 import getApiUrl from "../../utils/apiUtils";
 import useAuth from "../../hooks/useAuth";
 import LoadingSpinner from "../../components/LoadingSpinner";
-import { apiEndpoints } from "../../utils/api";
-import Swal from "sweetalert2";
-import useLeaveRequest from "../../hooks/useLeaveRequest";
-import dayjs from "dayjs";
 
 export default function AdminDashboard() {
-  const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { token } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [recent, setRecent] = useState([]);
-  const [leaveType, setLeaveType] = useState([]);
-  const [token, setToken] = useState(localStorage.getItem("accessToken"));
   const [stats, setStats] = useState({
-    approved: 0,
+    totalUsers: 0,
+    totalRequests: 0,
     pending: 0,
+    approved: 0,
     rejected: 0,
+    cancelled: 0,
   });
-
-  const statusLabels = {
-    APPROVED: "อนุมัติแล้ว",
-    PENDING: "รออนุมัติ",
-    REJECTED: "ปฏิเสธแล้ว",
-  };
-
-  const statusColors = {
-    APPROVED: "bg-green-500 text-white",
-    PENDING: "bg-yellow-400 text-black",
-    REJECTED: "bg-red-500 text-white",
-  };
-
+  const [recent, setRecent] = useState([]);
+  const [summary, setSummary] = useState([]);
   useEffect(() => {
-    const fetchUserStats = async () => {
+    if (!token) {
+      setLoading(false); // 👈 กันค้าง
+      return;
+    }
+
+    const fetchStats = async () => {
       setLoading(true);
       try {
-        if (!token) {
-          Swal.fire({
-            icon: "warning",
-            title: "กรุณาเข้าสู่ระบบ",
-            confirmButtonColor: "#ef4444",
-          });
-          return;
-        }
-        const [leavesRes] = await Promise.all([
-          axios.get(getApiUrl("leave-requests/"), {
+        const [usersRes, leavesRes, summaryRes] = await Promise.all([
+          axios.get(getApiUrl("admin/users"), {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(getApiUrl("admin/leave-requests"), {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(getApiUrl("admin/report/leave-summary"), {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
-        const leaves = Array.isArray(leavesRes.data.data)
-          ? leavesRes.data.data
-          : [];
+        const users = usersRes.data.data || [];
+        const leaves = leavesRes.data.data || [];
+        const s = summaryRes.data.data || [];
 
-        const approved = leaves.filter((r) => r.status === "APPROVED").length;
-        const pending = leaves.filter((r) => r.status === "PENDING").length;
-        const rejected = leaves.filter((r) => r.status === "REJECTED").length;
+        setStats({
+          totalUsers: users.length,
+          totalRequests: leaves.length,
+          pending: leaves.filter((r) => r.status === "PENDING").length,
+          approved: leaves.filter((r) => r.status === "APPROVED").length,
+          rejected: leaves.filter((r) => r.status === "REJECTED").length,
+          cancelled: leaves.filter((r) => r.status === "CANCELLED").length,
+        });
 
-        setStats({ approved, pending, rejected });
-
-        const sorted = leaves
-          .slice()
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setRecent(sorted.slice(0, 5));
+        setRecent(
+          leaves
+            .slice()
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5)
+        );
+        setSummary(s);
       } catch (err) {
-        console.error("UserDashboard fetch error:", err.response || err);
+        console.error("AdminDashboard fetch error:", err.response || err);
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchAllLeaveTypes = async () => {
-      try {
-        if (!token) {
-          Swal.fire({
-            icon: "warning",
-            title: "กรุณาเข้าสู่ระบบ",
-            confirmButtonColor: "#ef4444",
-          });
-          return;
-        }
-        const response = await axios.get(getApiUrl("leave-types/"), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = Array.isArray(response.data)
-          ? response.data
-          : [];
-        setLeaveType(data); // อัปเดต state
-        console.log(leaveType)
-      } catch (error) {
-        console.error("fetchAllLeaveTypes error:", error.response || error);
-        setLeaveType([]); // กรณี error
-      }
-    };
+    fetchStats();
+  }, [token]);
 
-    fetchUserStats();
-    fetchAllLeaveTypes();
-  }, []);
+  const formatDate = (iso) =>
+    new Date(iso).toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
 
-  const pieData = [
-    { name: "อนุมัติแล้ว", value: stats.approved },
-    { name: "รออนุมัติ", value: stats.pending },
-    { name: "ปฏิเสธแล้ว", value: stats.rejected },
-  ];
+  const statusPill = (status) => {
+    const base =
+      "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium";
+    switch (status) {
+      case "PENDING":
+        return (
+          <span
+            className={`${base} bg-amber-50 text-amber-700 border border-amber-200`}
+          >
+            รออนุมัติ
+          </span>
+        );
+      case "APPROVED":
+        return (
+          <span
+            className={`${base} bg-emerald-50 text-emerald-700 border border-emerald-200`}
+          >
+            อนุมัติแล้ว
+          </span>
+        );
+      case "REJECTED":
+        return (
+          <span
+            className={`${base} bg-rose-50 text-rose-700 border border-rose-200`}
+          >
+            ถูกปฏิเสธ
+          </span>
+        );
+      case "CANCELLED":
+        return (
+          <span
+            className={`${base} bg-slate-50 text-slate-700 border border-slate-200`}
+          >
+            ยกเลิก
+          </span>
+        );
+      default:
+        return (
+          <span
+            className={`${base} bg-slate-50 text-slate-700 border border-slate-200`}
+          >
+            {status}
+          </span>
+        );
+    }
+  };
 
-  const leaveTypeStats = leaveRequest.reduce((acc, leave) => {
-    const type = leave.leaveType?.name || "อื่นๆ";
-    acc[type] = acc[type] ? acc[type] + 1 : 1;
-    return acc;
-  }, {});
+  function ActionButton({ title, icon, details, onClick }) {
+    return (
+      <button
+        onClick={onClick}
+        className="w-full text-left rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition"
+      >
+        {/* Title */}
+        <div className="mb-3 px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm font-semibold">
+          {title}
+        </div>
 
-  const barData = Object.keys(leaveTypeStats).map((type) => ({
-    name: type,
-    value: leaveTypeStats[type],
-  }));
+        {/* Content */}
+        <div className="flex items-center gap-4">
+          {/* Icon */}
+          <div className="w-14 h-14 flex items-center justify-center rounded-xl border bg-slate-50">
+            {icon}
+          </div>
 
-  const COLORS = ["#22c55e", "#facc15", "#ef4444"];
-
-  const formatDateTime = (iso) =>
-    dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
-
-  const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY");
+          {/* Details */}
+          <div className="flex-1 text-sm text-slate-600">
+            {details || "รายละเอียด..."}
+          </div>
+        </div>
+      </button>
+    );
+  }
 
   if (loading) {
-    return <LoadingSpinner message="กำลังโหลดแดชบอร์ด..." fullScreen={false} />;
+    return <LoadingSpinner message="กำลังโหลดแดชบอร์ดผู้ดูแลระบบ..." fullScreen={false} />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 font-kanit">
-      <h1 className="text-3xl font-bold mb-6 text-black">
-        สวัสดีผู้ดูแลระบบ คุณ{user?.firstName || ""} {user?.lastName || ""}
-      </h1>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow flex items-center">
-          <CheckCircle className="w-8 h-8 text-green-500" />
-          <div className="ml-4">
-            <p className="text-black">อนุมัติแล้ว</p>
-            <p className="text-2xl font-semibold text-black">
-              {stats.approved}
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900 px-4 py-8 md:px-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-700">
+              Admin Dashboard
+            </span>
           </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-slate-900">
+            แดชบอร์ด{" "}
+            <span className="bg-gradient-to-r from-red-500 via-rose-400 to-amber-400 bg-clip-text text-transparent">
+              ผู้ดูแลระบบ
+            </span>
+          </h1>
+          <p className="text-slate-600 text-sm">
+            ภาพรวมการใช้งานระบบ การยื่นลา และสถานะคำขอทั้งหมดในองค์กร
+          </p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow flex items-center">
-          <Clock className="w-8 h-8 text-yellow-500" />
-          <div className="ml-4">
-            <p className="text-black">รออนุมัติ</p>
-            <p className="text-2xl font-semibold text-black">{stats.pending}</p>
-          </div>
+        {/* Stat cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-2">
+          <Card
+            icon={<Users className="w-6 h-6" />}
+            label="ผู้ใช้งานทั้งหมด"
+            value={stats.totalUsers}
+            tone="indigo"
+          />
+          <Card
+            icon={<List className="w-6 h-6" />}
+            label="คำขอลาทั้งหมด"
+            value={stats.totalRequests}
+            tone="violet"
+          />
+          <Card
+            icon={<Clock className="w-6 h-6" />}
+            label="รออนุมัติ"
+            value={stats.pending}
+            tone="amber"
+          />
+          <Card
+            icon={<CheckCircle className="w-6 h-6" />}
+            label="อนุมัติแล้ว"
+            value={stats.approved}
+            tone="emerald"
+          />
+          <Card
+            icon={<XCircle className="w-6 h-6" />}
+            label="ถูกปฏิเสธ"
+            value={stats.rejected}
+            tone="rose"
+          />
+          <Card
+            icon={<Calendar className="w-6 h-6" />}
+            label="ยกเลิก"
+            value={stats.cancelled}
+            tone="slate"
+          />
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow flex items-center">
-          <XCircle className="w-8 h-8 text-red-500" />
-          <div className="ml-4">
-            <p className="text-black">ปฏิเสธแล้ว</p>
-            <p className="text-2xl font-semibold text-black">
-              {stats.rejected}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Pie + Bar Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Pie Chart */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4 text-black">
-            สัดส่วนสถานะคำขอลาทั้งหมด
-          </h2>
-          <div className="flex justify-center items-center relative">
-            <PieChart width={450} height={300}>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
-                outerRadius={100}
-                dataKey="value"
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </div>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-6">
+          <ActionButton
+            title="รายงานสรุปผล"
+            icon={<BarChart className="w-6 h-6 text-slate-600" />}
+            details="ดูภาพรวมจำนวนการลาและสถิติทั้งหมด"
+            onClick={() => navigate("/admin/leave-report")}
+          />
+          <ActionButton
+            title="บันทึกคำขอการลาลงระบบ"
+            icon={<BarChart className="w-6 h-6 text-slate-600" />}
+            details="สำหรับบันทึกคำขอการลาที่ส่งนอกระบบออนไลน์ หรือคำขออื่น ๆ แทนผู้ใช้"
+            onClick={() => navigate("/admin/add-other-request")}
+          />
+          <ActionButton
+            title="จัดการการมอบอำนาจ"
+            icon={<BarChart className="w-6 h-6 text-slate-600" />}
+            details="ตั้งค่าการมอบอำนาจสำหรับผู้อนุมัติในระบบ"
+            onClick={() => navigate("/admin/proxy-approval")}
+          />
+          <ActionButton
+            title="บันทึกการทำงาน(Audit Log)"
+            icon={<BarChart className="w-6 h-6 text-slate-600" />}
+            details="ตรวจสอบประวัติการทำงานทั้งหมดในระบบ"
+            onClick={() => navigate("/admin/audit-logs")}
+          />
         </div>
 
-        {/* Bar Chart */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4 text-black">
-            จำนวนคำขอลาทั้งหมดตามประเภท
-          </h2>
-          <div className="flex justify-center items-center">
-            <BarChart width={450} height={300} data={barData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#4CAF50" />
-            </BarChart>
-          </div>
-        </div>
-      </div>
 
-      {/* Status Legend */}
-      <div className="flex flex-wrap gap-4 items-center text-sm mb-4">
-        {Object.entries(statusLabels).map(([key, label]) => (
-          <div key={key} className="flex items-center gap-2">
-            <span
-              className={`w-3 h-3 rounded-full ${
-                statusColors[key]?.split(" ")[0] || "bg-gray-300"
-              }`}
-            />
-            <span className="text-gray-700">{label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Recent Leave Table */}
-      <div className="rounded-lg shadow border border-gray-300 overflow-x-auto mb-8 bg-white">
-        <table className="min-w-[640px] w-full text-sm text-black">
-          <thead className="bg-gray-100 text-gray-800">
-            <tr>
-              <th className="px-4 py-3 text-left">วันที่ยื่น</th>
-              <th className="px-4 py-3 text-left">ผู้ลา</th>
-              <th className="px-4 py-3 text-left">ประเภทการลา</th>
-              <th className="px-4 py-3 text-left">วันเริ่มต้น</th>
-              <th className="px-4 py-3 text-left">วันสิ้นสุด</th>
-              <th className="px-4 py-3 text-left">สถานะ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recent.length > 0 ? (
-              recent.map((leave, idx) => {
-                const statusKey = (leave.status || "").toUpperCase();
-                return (
-                  <tr
-                    key={leave.id}
-                    className={`${
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-gray-100 transition cursor-pointer`}
-                    onClick={() => navigate(`/leave/${leave.id}`)}
-                  >
-                    <td className="px-4 py-3">
-                      {formatDateTime(leave.createdAt)}
-                    </td>
-                    <td className="px-4 py-3">
-                      {leave.user.prefixName}
-                      {leave.user.firstName} {leave.user.lastName}
-                    </td>
-                    <td className="px-4 py-3">
-                      {leave.leaveType?.name || "-"}
-                    </td>
-                    <td className="px-4 py-3">{formatDate(leave.startDate)}</td>
-                    <td className="px-4 py-3">{formatDate(leave.endDate)}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          statusColors[statusKey] || "bg-gray-200 text-gray-700"
-                        }`}
-                      >
-                        {statusLabels[statusKey] || leave.status}
-                      </span>
-                    </td>
+        {/* Tables */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <Section title="คำขอลาล่าสุด">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-slate-600">
+                  <tr className="border-b border-slate-200">
+                    <Th>วันที่</Th>
+                    <Th>ผู้ขอ</Th>
+                    <Th>ประเภทลา</Th>
+                    <Th>สถานะ</Th>
                   </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
-                  ไม่มีข้อมูลการลา
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                </thead>
+                <tbody>
+                  {recent.map((r) => (
+                    <tr
+                      key={r.id}
+                      className="border-b border-slate-100 hover:bg-slate-50/80 transition"
+                    >
+                      <Td>{formatDate(r.createdAt)}</Td>
+                      <Td>
+                        {r.user?.firstName} {r.user?.lastName}
+                      </Td>
+                      <Td>{r.leaveType?.name}</Td>
+                      <Td>{statusPill(r.status)}</Td>
+                    </tr>
+                  ))}
+                  {recent.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="py-6 text-center text-slate-500"
+                      >
+                        ไม่มีคำขอลา
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+
+          <Section title="สรุปวันลาของผู้ใช้งาน (อนุมัติแล้ว)">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-slate-600">
+                  <tr className="border-b border-slate-200">
+                    <Th>ชื่อผู้ใช้</Th>
+                    <Th>จำนวนวันลา</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.map((s) => (
+                    <tr
+                      key={s.userId}
+                      className="border-b border-slate-100 hover:bg-slate-50/80 transition"
+                    >
+                      <Td>{s.name}</Td>
+                      <Td>{s.totalDays}</Td>
+                    </tr>
+                  ))}
+                  {summary.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={2}
+                        className="py-6 text-center text-slate-500"
+                      >
+                        ไม่มีข้อมูล
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        </div>
       </div>
     </div>
   );
 }
+
+function Card({ icon, label, value, tone = "indigo" }) {
+  const tones =
+    {
+      indigo: "from-indigo-100 to-indigo-50 border-indigo-200",
+      violet: "from-violet-100 to-violet-50 border-violet-200",
+      amber: "from-amber-100 to-amber-50 border-amber-200",
+      emerald: "from-emerald-100 to-emerald-50 border-emerald-200",
+      rose: "from-rose-100 to-rose-50 border-rose-200",
+      slate: "from-slate-100 to-slate-50 border-slate-200",
+    }[tone] ||
+    "from-sky-100 to-sky-50 border-sky-200";
+
+  return (
+    <div className="relative rounded-2xl p-5 bg-white border shadow-sm overflow-hidden">
+      <div
+        className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${tones} opacity-70 pointer-events-none`}
+      />
+      <div className="relative flex items-center gap-4">
+        <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm">
+          {icon}
+        </div>
+        <div>
+          <p className="text-3xl font-semibold leading-tight text-slate-900 tracking-tight">
+            {value}
+          </p>
+          <p className="text-sm text-slate-600">{label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm text-slate-900">
+      <header className="px-6 pt-6 pb-2">
+        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+      </header>
+      <div className="px-6 pb-6">{children}</div>
+    </section>
+  );
+}
+
+const Th = ({ children }) => (
+  <th className="py-3 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+    {children}
+  </th>
+);
+
+const Td = ({ children }) => (
+  <td className="py-3 px-3 text-sm text-slate-800 whitespace-nowrap">
+    {children}
+  </td>
+);
