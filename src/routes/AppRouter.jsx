@@ -56,6 +56,7 @@ import RoleManagement from "../layouts/admin/RoleManagement";
 import RankManage from "../layouts/admin/RankManage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import bg from "../assets/bg.jpg";
+import AdminManagementPage from "../layouts/admin/AdminManege";
 
 function AppLayout() {
   const [isMobile, setIsMobile] = useState(false);
@@ -217,7 +218,7 @@ const userRouter = createBrowserRouter([
             path: "dashboard",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
-                <DashBoard />
+                <AdminDashboard />
               </ProtectedRoute>
             )
           },
@@ -378,6 +379,14 @@ const userRouter = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
                 <RoleManagement />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: "management",
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <AdminManagementPage />
               </ProtectedRoute>
             )
           },
