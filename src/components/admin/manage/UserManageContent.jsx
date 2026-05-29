@@ -216,12 +216,6 @@ function UserManageContent() {
     <div className="font-kanit text-slate-900">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
-              Admin View
-            </span>
-          </div>
           <div className="w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col items-center gap-1 md:items-start">
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">

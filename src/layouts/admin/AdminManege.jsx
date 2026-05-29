@@ -1,4 +1,11 @@
 import { useState } from "react";
+import {
+  FaUsersCog,
+  FaIdBadge,
+  FaBuilding,
+  FaCalendarAlt,
+} from "react-icons/fa";
+
 import UserManageContent from "../../components/admin/manage/UserManageContent";
 import PositionNumberManageContent from "../../components/admin/manage/PositionNumberManageContent";
 import DepartmentManageContent from "../../components/admin/manage/OrganizationManageContent";
@@ -7,10 +14,10 @@ export default function ManagementPage() {
   const [activeTab, setActiveTab] = useState("users");
 
   const tabs = [
-    { id: "users", label: "จัดการผู้ใช้งาน", icon: "👤" },
-    { id: "positions", label: "จัดการเลขที่ตำแหน่ง", icon: "💼" },
-    { id: "departments", label: "จัดการแผนก", icon: "🏢" },
-    { id: "holidays", label: "จัดการวันหยุด", icon: "📅" },
+    { id: "users", label: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
+    { id: "positions", label: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
+    { id: "departments", label: "จัดการแผนก", icon: <FaBuilding /> },
+    { id: "holidays", label: "จัดการวันหยุด", icon: <FaCalendarAlt /> },
   ];
 
   // =========================
@@ -57,15 +64,28 @@ export default function ManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-4xl font-bold text-gray-900">
-            ระบบจัดการข้อมูลหลัก
-          </h1>
+        <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+              Admin View
+            </span>
+          </div>
 
-          <p className="text-gray-500 mt-2">จัดการข้อมูลทั้งหมดในหน้าเดียว</p>
+          <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between w-full">
+            <div className="flex flex-col items-center gap-1 md:items-start">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                ระบบจัดการข้อมูลหลัก
+              </h1>
+
+              <p className="text-sm text-slate-600">
+                จัดการข้อมูลทั้งหมดในหน้าเดียว
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}

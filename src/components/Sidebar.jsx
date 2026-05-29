@@ -6,6 +6,7 @@ import {
   FaUser,
   FaCalendarAlt,
   FaUsersCog,
+  FaTools,
   FaCog,
   FaTachometerAlt,
   FaChartBar,
@@ -48,7 +49,7 @@ const approverNav4 = [{ to: "/approver/leave-request-approver4", text: "อน�
 const adminNav = [
   { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
   // จัดการผู้ใช้งาน / เลขที่ตำแหน่ง / แผนก / วันหยุด รวมอยู่ในหน้า "การจัดการ" แล้ว
-  { to: "/admin/management", text: "การจัดการ", icon: <FaUsersCog /> },
+  { to: "/admin/management", text: "การจัดการ", icon: <FaTools /> },
   { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaChartBar /> },
   { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaFileSignature /> },
   { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUserShield /> },
