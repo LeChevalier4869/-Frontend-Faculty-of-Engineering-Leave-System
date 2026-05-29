@@ -57,6 +57,7 @@ import RankManage from "../layouts/admin/RankManage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import bg from "../assets/bg.jpg";
 import AdminManagementPage from "../layouts/admin/AdminManege";
+import ReportPage from "../layouts/admin/Report";
 
 function AppLayout() {
   const [isMobile, setIsMobile] = useState(false);
@@ -387,6 +388,14 @@ const userRouter = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <AdminManagementPage />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: "report",
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <ReportPage />
               </ProtectedRoute>
             )
           },
