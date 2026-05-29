@@ -239,7 +239,7 @@ export default function AdminDashboard() {
             title="รายงานสรุปผล"
             icon={<BiSolidReport className="w-10 h-10 text-slate-600" />}
             details="ดูภาพรวมจำนวนการลาและสถิติทั้งหมด"
-            onClick={() => navigate("/admin/leave-report")}
+            onClick={() => navigate("/admin/report")}
           />
           <ActionButton
             title="บันทึกคำขอการลาลงระบบ"

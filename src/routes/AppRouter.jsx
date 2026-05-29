@@ -40,7 +40,7 @@ const Approver1Dashboard = lazy(() => import("../layouts/approver/Approver1DashB
 /** Admin pages **/
 const AdminDashboard = lazy(() => import("../layouts/admin/AdminDashBoard"));
 const AdminManagementPage = lazy(() => import("../layouts/admin/AdminManege"));
-const DashBoard = lazy(() => import("../layouts/admin/DashBoard"));
+const ReportPage = lazy(() => import("../layouts/admin/Report"));
 const DepartmentManage = lazy(() => import("../layouts/admin/DepartmentManage"));
 const OrganizationManage = lazy(() => import("../layouts/admin/OrganizationManage"));
 const PersonnelTypeManage = lazy(() => import("../layouts/admin/PersonelTypeManage"));
@@ -397,6 +397,14 @@ const userRouter = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <AdminManagementPage />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: "report",
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <ReportPage />
               </ProtectedRoute>
             )
           },
