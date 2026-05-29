@@ -13,6 +13,10 @@ import {
   Settings,
   ClipboardList,
 } from "lucide-react";
+import { FaHistory } from "react-icons/fa";
+import { FaFileCirclePlus } from "react-icons/fa6";
+import { MdAssignmentInd } from "react-icons/md";
+import { BiSolidReport } from "react-icons/bi";
 import getApiUrl from "../../utils/apiUtils";
 import useAuth from "../../hooks/useAuth";
 
@@ -68,7 +72,7 @@ export default function AdminDashboard() {
           leaves
             .slice()
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 5)
+            .slice(0, 5),
         );
         setSummary(s);
       } catch (err) {
@@ -171,9 +175,7 @@ export default function AdminDashboard() {
               <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
               <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.9)]" />
             </div>
-            <span className="font-medium">
-              กำลังโหลดแดชบอร์ดผู้ดูแลระบบ...
-            </span>
+            <span className="font-medium">กำลังโหลดแดชบอร์ดผู้ดูแลระบบ...</span>
             <span className="text-xs text-slate-500">
               กรุณารอสักครู่ ระบบกำลังดึงข้อมูลภาพรวม
             </span>
@@ -249,30 +251,29 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-6">
           <ActionButton
             title="รายงานสรุปผล"
-            icon={<BarChart className="w-6 h-6 text-slate-600" />}
+            icon={<BiSolidReport className="w-10 h-10 text-slate-600" />}
             details="ดูภาพรวมจำนวนการลาและสถิติทั้งหมด"
             onClick={() => navigate("/admin/leave-report")}
           />
           <ActionButton
             title="บันทึกคำขอการลาลงระบบ"
-            icon={<BarChart className="w-6 h-6 text-slate-600" />}
+            icon={<FaFileCirclePlus className="w-10 h-10 text-slate-600" />}
             details="สำหรับบันทึกคำขอการลาที่ส่งนอกระบบออนไลน์ หรือคำขออื่น ๆ แทนผู้ใช้"
             onClick={() => navigate("/admin/add-other-request")}
           />
           <ActionButton
             title="จัดการการมอบอำนาจ"
-            icon={<BarChart className="w-6 h-6 text-slate-600" />}
+            icon={<MdAssignmentInd className="w-12 h-12 text-slate-600" />}
             details="ตั้งค่าการมอบอำนาจสำหรับผู้อนุมัติในระบบ"
             onClick={() => navigate("/admin/proxy-approval")}
           />
           <ActionButton
             title="บันทึกการทำงาน(Audit Log)"
-            icon={<BarChart className="w-6 h-6 text-slate-600" />}
+            icon={<FaHistory className="w-10 h-10 text-slate-600" />}
             details="ตรวจสอบประวัติการทำงานทั้งหมดในระบบ"
             onClick={() => navigate("/admin/audit-logs")}
           />
         </div>
-
 
         {/* Tables */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -364,8 +365,7 @@ function Card({ icon, label, value, tone = "indigo" }) {
       emerald: "from-emerald-100 to-emerald-50 border-emerald-200",
       rose: "from-rose-100 to-rose-50 border-rose-200",
       slate: "from-slate-100 to-slate-50 border-slate-200",
-    }[tone] ||
-    "from-sky-100 to-sky-50 border-sky-200";
+    }[tone] || "from-sky-100 to-sky-50 border-sky-200";
 
   return (
     <div className="relative rounded-2xl p-5 bg-white border shadow-sm overflow-hidden">
