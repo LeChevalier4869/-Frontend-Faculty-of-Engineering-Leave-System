@@ -14,13 +14,13 @@ const initialForm = {
   email: "",
   phone: "",
   sex: "",
-  password: "",
-  confirmPassword: "",
+  position: "",
   personnelTypeId: "",
   organizationId: "",
   departmentId: "",
   employmentType: "",
   hireDate: "",
+  positionNumber: "",
 };
 
 const Panel = ({ className = "", children }) => (
@@ -113,9 +113,6 @@ export default function AddUser() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      return Swal.fire("ข้อผิดพลาด", "รหัสผ่านไม่ตรงกัน", "error");
-    }
     setLoading(true);
     try {
       const fd = new FormData();
@@ -225,8 +222,8 @@ export default function AddUser() {
                 {/* เพศ */}
                 <div className="md:col-span-2">
                   {renderDropdown("เพศ", "sex", [
-                    { value: "MALE", label: "ชาย" },
-                    { value: "FEMALE", label: "หญิง" },
+                    { value: "ชาย", label: "ชาย" },
+                    { value: "หญิง", label: "หญิง" },
                   ])}
                 </div>
 
@@ -279,34 +276,6 @@ export default function AddUser() {
                     placeholder="เช่น 081-234-5678"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-800">
-                    รหัสผ่าน
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    className={inputClass}
-                    placeholder="กำหนดรหัสผ่าน"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-800">
-                    ยืนยันรหัสผ่าน
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-                    className={inputClass}
-                    placeholder="พิมพ์รหัสผ่านอีกครั้ง"
-                  />
-                </div>
               </div>
             </section>
 
@@ -347,6 +316,34 @@ export default function AddUser() {
                     onChange={handleChange}
                     required
                     className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    ตำแหน่งงาน
+                  </label>
+                  <input
+                    type="text"
+                    name="position"
+                    value={formData.position}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="เช่น อาจารย์ / นักวิชาการศึกษา"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    เลขที่ตำแหน่ง
+                  </label>
+                  <input
+                    type="text"
+                    name="positionNumber"
+                    value={formData.positionNumber}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="เช่น ENG-001"
                   />
                 </div>
               </div>

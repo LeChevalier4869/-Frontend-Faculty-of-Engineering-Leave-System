@@ -18,19 +18,13 @@ API.interceptors.request.use((config) => {
 });
 
 export const apiEndpoints = {
-  // auth
-  login: `${BASE_URL}/auth/login`, // POST
-  // loginByUsername: `${BASE_URL}/auth/login/username`, // POST
-  register: `${BASE_URL}/auth/register`, // POST
+  // auth (Google OAuth only — manual login/register removed)
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
   getVerifier: `${BASE_URL}/auth/verifier`, // GET
   getApproversForLevel: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET
   getApproversForLevelProxy: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET (alias for proxy checking)
   updateUserRole: `${BASE_URL}/auth/update-role`,
-  forgotPassword: `${BASE_URL}/auth/forgot-password`,
-  resetPassword: `${BASE_URL}/auth/reset-password`,
-  changePassword: `${BASE_URL}/auth/change-password`,
   updateProfile: `${BASE_URL}/auth/update-picture`,
   deleteProfilePicture: `${BASE_URL}/auth/delete-picture`,
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,

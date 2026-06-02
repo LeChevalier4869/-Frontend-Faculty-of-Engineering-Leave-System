@@ -211,6 +211,11 @@ export default function UserInfo() {
               ],
               ["สาขา", user.department?.name || "-"],
               ["ประเภทบุคลากร", user.personnelType?.name || "-"],
+              ["ตำแหน่งงาน", user.position || "-"],
+              [
+                "เลขที่ตำแหน่ง",
+                user.positionNumbers?.[0]?.positionNumber || "-",
+              ],
               [
                 "สายงาน",
                 user.employmentType === "SUPPORT"
