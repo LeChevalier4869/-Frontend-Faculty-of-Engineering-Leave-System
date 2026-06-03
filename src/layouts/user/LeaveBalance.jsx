@@ -22,6 +22,7 @@ import {
   filterLeaveBalancesLatestYear,
   formatRemainingDays,
 } from "../../utils/leavePolicy";
+import { formatLeaveDays } from "../../utils/formatLeaveDays";
 
 export default function LeaveBalancePage() {
   const { user } = useAuth();
@@ -270,14 +271,14 @@ export default function LeaveBalancePage() {
                         <div className="flex justify-between items-center">
                           <span>ใช้ไปแล้ว:</span>
                           <span className="font-semibold text-slate-900">
-                            {leaveInfo.used} วัน
+                            {formatLeaveDays(leaveInfo.used)}
                           </span>
                         </div>
                         {leaveInfo.pending > 0 && (
                           <div className="flex justify-between items-center">
                             <span>กำลังดำเนินการ:</span>
                             <span className="font-semibold text-amber-600">
-                              {leaveInfo.pending} วัน
+                              {formatLeaveDays(leaveInfo.pending)}
                             </span>
                           </div>
                         )}
@@ -291,26 +292,26 @@ export default function LeaveBalancePage() {
                         <div className="flex justify-between items-center">
                           <span>จำนวนวันทั้งหมด:</span>
                           <span className="font-semibold text-slate-900">
-                            {leaveInfo.total}
+                            {formatLeaveDays(leaveInfo.total)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>ใช้ไปแล้ว:</span>
                           <span className="font-semibold text-rose-600">
-                            {leaveInfo.used}
+                            {formatLeaveDays(leaveInfo.used)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>กำลังดำเนินการ:</span>
                           <span className="font-semibold text-amber-600">
-                            {leaveInfo.pending}
+                            {formatLeaveDays(leaveInfo.pending)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center border-t pt-1">
                           <span className="font-medium">คงเหลือ:</span>
                           <span className={`font-bold ${leaveInfo.hasOverused ? 'text-rose-600' : 'text-emerald-600'}`}>
-                            {leaveInfo.hasOverused 
-                              ? `เกิน ${leaveInfo.overusedDays} วัน`
+                            {leaveInfo.hasOverused
+                              ? `เกิน ${formatLeaveDays(leaveInfo.overusedDays)}`
                               : formatRemainingDays(leaveInfo.remaining).text
                             }
                           </span>

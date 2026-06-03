@@ -1,3 +1,5 @@
+import { formatLeaveDays } from "./formatLeaveDays";
+
 export function normalizeSex(sex) {
   const s = String(sex || "").trim();
   if (!s) return "";
@@ -106,12 +108,12 @@ export function formatRemainingDays(remainingDays) {
   const num = Number(remainingDays) || 0;
   if (num < 0) {
     return {
-      text: `เกิน ${Math.abs(num)} วัน`,
+      text: `เกิน ${formatLeaveDays(Math.abs(num))}`,
       className: "text-rose-600 font-bold",
     };
   }
   return {
-    text: String(num),
+    text: formatLeaveDays(num),
     className: "text-emerald-600 font-bold",
   };
 }
