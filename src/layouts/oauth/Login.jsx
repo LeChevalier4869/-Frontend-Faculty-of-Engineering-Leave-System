@@ -65,7 +65,7 @@ export default function Login() {
         style={{ backgroundImage: `url(${bg})` }}
       />
       {/* ม่านสีเลือดหมูทับพื้นหลังให้เข้าธีมคณะ */}
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-900/85 via-brand-800/75 to-black/80 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-slate-900/75 to-brand-900/55 backdrop-blur-[2px]" />
 
       <div className="relative z-10 px-4 w-full">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 text-white drop-shadow-lg">
