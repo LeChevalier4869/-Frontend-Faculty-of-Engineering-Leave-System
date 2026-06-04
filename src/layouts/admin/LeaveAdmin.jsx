@@ -16,7 +16,7 @@ const SectionHeader = ({ eyebrow, title, description, right }) => (
   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
     <div>
       {eyebrow && (
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-[11px] text-sky-700 uppercase tracking-[0.2em]">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 text-[11px] text-brand-700 uppercase tracking-[0.2em]">
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
           <span>{eyebrow}</span>
         </div>
@@ -147,12 +147,12 @@ function LeaveAdmin() {
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.7)]" />
             </div>
             <span className="text-slate-800 font-medium">กำลังโหลดข้อมูลคำขอลา...</span>
             <span className="text-xs text-slate-500 flex items-center gap-1">
-              <Clock className="w-4 h-4 text-sky-500" />
+              <Clock className="w-4 h-4 text-brand-500" />
               กำลังดึงข้อมูลจากระบบ
             </span>
           </div>
@@ -170,7 +170,8 @@ function LeaveAdmin() {
             title="คำขอลาทั้งหมดในระบบ"
             description="ตรวจสอบคำขอลาทั้งหมด และดำเนินการอนุมัติหรือปฏิเสธ"
           />
-          <div className="overflow-x-auto">
+          {/* Desktop: ตาราง */}
+          <div className="overflow-x-auto hidden md:block">
             <table className="min-w-full text-sm text-left border-collapse">
               <thead className="bg-slate-50 text-slate-700">
                 <tr>
@@ -200,7 +201,7 @@ function LeaveAdmin() {
                     <tr
                       key={item.id}
                       onClick={() => navigate(`/leave/${item.id}`)}
-                      className={`${idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"} hover:bg-sky-50 cursor-pointer transition-colors border-b border-slate-100`}
+                      className={`${idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"} hover:bg-brand-50 cursor-pointer transition-colors border-b border-slate-100`}
                     >
                       <td className="px-4 py-3">
                         {item.user?.prefixName} {item.user?.firstName} {item.user?.lastName}
@@ -247,6 +248,65 @@ function LeaveAdmin() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: การ์ด */}
+          <div className="md:hidden space-y-3">
+            {currentItems.length > 0 ? (
+              currentItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <div
+                    onClick={() => navigate(`/leave/${item.id}`)}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium text-slate-800">
+                        {item.user?.prefixName} {item.user?.firstName}{" "}
+                        {item.user?.lastName}
+                      </span>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                          statusColors[item.status] ||
+                          "bg-slate-100 text-slate-700 border border-slate-200"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-sm text-slate-600">
+                      {leaveTypes[item.leaveTypeId] || "ไม่ระบุ"}
+                    </div>
+                    <div className="mt-1 text-sm text-slate-600">
+                      {formatDate(item.startDate)} – {formatDate(item.endDate)}
+                    </div>
+                  </div>
+                  <div
+                    className="mt-3 grid grid-cols-2 gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => handleApprove(item.id)}
+                      className="py-2 rounded-lg text-sm font-medium bg-emerald-500 hover:bg-emerald-400 text-white"
+                    >
+                      อนุมัติ
+                    </button>
+                    <button
+                      onClick={() => handleReject(item.id)}
+                      className="py-2 rounded-lg text-sm font-medium bg-rose-500 hover:bg-rose-400 text-white"
+                    >
+                      ลบ
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-500">
+                ไม่มีข้อมูลคำขอ
+              </div>
+            )}
+          </div>
         </Panel>
 
         {totalPages > 1 && (
@@ -285,7 +345,7 @@ function LeaveAdmin() {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                       }`}
                     >
                       {page}

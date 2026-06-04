@@ -14,13 +14,13 @@ const initialForm = {
   email: "",
   phone: "",
   sex: "",
-  password: "",
-  confirmPassword: "",
+  position: "",
   personnelTypeId: "",
   organizationId: "",
   departmentId: "",
   employmentType: "",
   hireDate: "",
+  positionNumber: "",
 };
 
 const Panel = ({ className = "", children }) => (
@@ -92,7 +92,7 @@ export default function AddUser() {
           value={formData[name]}
           onChange={handleChange}
           required
-          className="appearance-none w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-slate-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+          className="appearance-none w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-slate-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
         >
           <option value="" disabled>
             -- เลือก{label} --
@@ -113,9 +113,6 @@ export default function AddUser() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      return Swal.fire("ข้อผิดพลาด", "รหัสผ่านไม่ตรงกัน", "error");
-    }
     setLoading(true);
     try {
       const fd = new FormData();
@@ -147,16 +144,16 @@ export default function AddUser() {
   };
 
   const inputClass =
-    "w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400";
+    "w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder:text-slate-400";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 px-4 py-8 md:px-8 font-kanit rounded-2xl">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -225,8 +222,8 @@ export default function AddUser() {
                 {/* เพศ */}
                 <div className="md:col-span-2">
                   {renderDropdown("เพศ", "sex", [
-                    { value: "MALE", label: "ชาย" },
-                    { value: "FEMALE", label: "หญิง" },
+                    { value: "ชาย", label: "ชาย" },
+                    { value: "หญิง", label: "หญิง" },
                   ])}
                 </div>
 
@@ -279,34 +276,6 @@ export default function AddUser() {
                     placeholder="เช่น 081-234-5678"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-800">
-                    รหัสผ่าน
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    className={inputClass}
-                    placeholder="กำหนดรหัสผ่าน"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-slate-800">
-                    ยืนยันรหัสผ่าน
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-                    className={inputClass}
-                    placeholder="พิมพ์รหัสผ่านอีกครั้ง"
-                  />
-                </div>
               </div>
             </section>
 
@@ -349,6 +318,34 @@ export default function AddUser() {
                     className={inputClass}
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    ตำแหน่งงาน
+                  </label>
+                  <input
+                    type="text"
+                    name="position"
+                    value={formData.position}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="เช่น อาจารย์ / นักวิชาการศึกษา"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-slate-800">
+                    เลขที่ตำแหน่ง
+                  </label>
+                  <input
+                    type="text"
+                    name="positionNumber"
+                    value={formData.positionNumber}
+                    onChange={handleChange}
+                    required
+                    className={inputClass}
+                    placeholder="เช่น ENG-001"
+                  />
+                </div>
               </div>
             </section>
 
@@ -366,8 +363,8 @@ export default function AddUser() {
                 disabled={loading}
                 className={`px-5 py-2 rounded-xl text-sm font-medium text-white shadow-sm transition ${
                   loading
-                    ? "bg-sky-300 cursor-not-allowed"
-                    : "bg-sky-600 hover:bg-sky-500"
+                    ? "bg-brand-300 cursor-not-allowed"
+                    : "bg-brand-600 hover:bg-brand-500"
                 }`}
               >
                 {loading ? "กำลังบันทึก..." : "บันทึกผู้ใช้งาน"}

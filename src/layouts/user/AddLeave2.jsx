@@ -12,6 +12,7 @@ function AddLeave2() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [leaveTypes, setLeaveTypes] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -63,6 +64,7 @@ function AddLeave2() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("leaveTypeId", formData.leaveTypeId);
@@ -98,6 +100,8 @@ function AddLeave2() {
         text: err.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้",
         confirmButtonColor: "#ef4444",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -267,9 +271,13 @@ function AddLeave2() {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+              disabled={isSubmitting}
+              className="inline-flex items-center justify-center gap-2 px-6 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
-              บันทึก
+              {isSubmitting && (
+                <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              )}
+              {isSubmitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>
           </div>
         </form>

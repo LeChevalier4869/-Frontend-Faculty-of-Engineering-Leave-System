@@ -339,7 +339,7 @@ export default function ConfigPage() {
       `,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#0ea5e9",
+      confirmButtonColor: "#7A1B22",
       cancelButtonColor: "#ef4444",
       confirmButtonText: "ยืนยันอัปเดต",
       cancelButtonText: "ยกเลิก",
@@ -441,7 +441,7 @@ export default function ConfigPage() {
   };
 
   const inputBase =
-    "px-4 py-2 rounded-xl border bg-white text-slate-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 border-slate-300 placeholder:text-slate-400";
+    "px-4 py-2 rounded-xl border bg-white text-slate-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400 border-slate-300 placeholder:text-slate-400";
 
   if (loading) {
     return (
@@ -449,8 +449,8 @@ export default function ConfigPage() {
         <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-sm p-6 text-center">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500" />
             </div>
             <span className="font-medium">กำลังโหลดหน้าตั้งค่าระบบ...</span>
             <span className="text-xs text-slate-500">
@@ -467,15 +467,15 @@ export default function ConfigPage() {
       <div className="mx-auto max-w-6xl space-y-8">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 mb-4 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] uppercase tracking-[0.2em] text-sky-700">
+            <span className="text-[11px] uppercase tracking-[0.2em] text-brand-700">
               System Configuration
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-sky-100 flex items-center justify-center border border-sky-200">
-              <FaCog className="text-xl text-sky-600" />
+            <div className="w-11 h-11 rounded-2xl bg-brand-100 flex items-center justify-center border border-brand-200">
+              <FaCog className="text-xl text-brand-600" />
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
@@ -561,7 +561,7 @@ export default function ConfigPage() {
             <button
               type="button"
               onClick={() => driveLink && window.open(driveLink, "_blank")}
-              className="mt-3 md:mt-0 px-6 py-2 rounded-xl font-medium text-sm text-white bg-sky-600 hover:bg-sky-500 transition-all duration-150 shadow-sm"
+              className="mt-3 md:mt-0 px-6 py-2 rounded-xl font-medium text-sm text-white bg-brand-600 hover:bg-brand-500 transition-all duration-150 shadow-sm"
             >
               เปิดลิงก์
             </button>
@@ -673,7 +673,7 @@ export default function ConfigPage() {
             {/* Current Fiscal Year Info */}
             <div className="bg-white rounded-xl p-4 border border-slate-200">
               <div className="flex items-center gap-2 mb-3">
-                <FaCalendarAlt className="text-sky-600" />
+                <FaCalendarAlt className="text-brand-600" />
                 <h3 className="font-medium text-slate-900">ข้อมูลปีปัจจุบัน</h3>
               </div>
               <div className="space-y-2 text-sm">
@@ -695,13 +695,13 @@ export default function ConfigPage() {
             {/* Manual Update Fiscal Year */}
             <div className="bg-white rounded-xl p-4 border border-slate-200">
               <div className="flex items-center gap-2 mb-3">
-                <FaCog className="text-sky-600" />
+                <FaCog className="text-brand-600" />
                 <h3 className="font-medium text-slate-900">อัปเดตปีงบประมาณ</h3>
               </div>
               <div className="space-y-3">
-                <div className="text-xs text-slate-500 bg-sky-50 rounded-lg p-2">
-                  <p className="font-medium text-sky-700 mb-1">📝 คำอธิบายการใช้งาน:</p>
-                  <ul className="space-y-1 text-sky-600">
+                <div className="text-xs text-slate-500 bg-brand-50 rounded-lg p-2">
+                  <p className="font-medium text-brand-700 mb-1">📝 คำอธิบายการใช้งาน:</p>
+                  <ul className="space-y-1 text-brand-600">
                     <li>• <strong>ปีงบฯ:</strong> ปีงบประมาณสำหรับคำนวณวันหยุด (1 ต.ค. - 30 ก.ย.)</li>
                     <li>• <strong>ปีปฏิทิน:</strong> ปีปฏิทินปกติสำหรับวันหยุดประจำปี</li>
                     <li>• <strong>อัตโนมัติ:</strong> ระบบจะอัปเดตอัตโนมัติเมื่อขึ้นปีงบประมาณใหม่ (1 ต.ค.)</li>
@@ -730,7 +730,7 @@ export default function ConfigPage() {
                   className={`w-full px-4 py-2 rounded-lg font-medium text-xs text-white transition-all ${
                     saving
                       ? "bg-slate-400 cursor-not-allowed"
-                      : "bg-sky-600 hover:bg-sky-500"
+                      : "bg-brand-600 hover:bg-brand-500"
                   }`}
                 >
                   {saving ? "กำลังอัปเดต..." : "อัปเดตปี"}

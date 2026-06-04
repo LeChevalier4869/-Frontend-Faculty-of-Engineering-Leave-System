@@ -236,8 +236,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Leave Table */}
-      <div className="rounded-lg shadow border border-gray-300 overflow-hidden mb-8 bg-white">
-        <table className="table-fixed w-full text-sm text-black">
+      <div className="rounded-lg shadow border border-gray-300 overflow-x-auto mb-8 bg-white">
+        <table className="min-w-[640px] w-full text-sm text-black">
           <thead className="bg-gray-100 text-gray-800">
             <tr>
               <th className="px-4 py-3 text-left">วันที่ยื่น</th>

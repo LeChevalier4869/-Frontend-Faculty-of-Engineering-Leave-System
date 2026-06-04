@@ -1,62 +1,10 @@
-import axios from "axios";
-import { BASE_URL } from "./api";
+// DEPRECATED: ไฟล์นี้เคยสร้าง axios instance ตัวที่สอง (พร้อม refresh ที่ทำงานไม่ได้
+// เพราะเก็บ token ไว้ในตัวแปร memory ที่ไม่เคยถูกตั้งค่า)
+// ปัจจุบันรวมมาใช้ instance เดียวกับ utils/api.js เพื่อให้พฤติกรรม (แนบ token / จัดการ 401)
+// สอดคล้องกันทั้งระบบ — โค้ดเดิมที่ import จากไฟล์นี้ยังใช้งานได้ตามปกติ
+import { API } from "./api";
 
-// base URL ของ backend
-const API = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true, // ถ้าใช้ cookie
-});
-
-// --- Token Storage ---
-let accessToken = null;
-let refreshToken = null;
-
-export function setTokens(tokens) {
-  accessToken = tokens.accessToken;
-  refreshToken = tokens.refreshToken;
-}
-
-// --- Interceptor Request ---
-API.interceptors.request.use(
-  async (config) => {
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// --- Interceptor Response ---
-API.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // ถ้า access token หมดอายุ
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        // ขอ token ใหม่จาก refresh
-        const res = await axios.post(`${BASE_URL}/auth/refresh`, {
-          refreshToken,
-        });
-
-        accessToken = res.data.accessToken;
-        refreshToken = res.data.refreshToken;
-
-        // retry request เดิม
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return API(originalRequest);
-      } catch (err) {
-        console.error("Refresh token failed", err);
-        window.location.href = "/login"; // บังคับ logout
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
+// คงไว้เพื่อความเข้ากันได้กับโค้ดเดิม (no-op — token อ่านจาก localStorage ผ่าน interceptor แล้ว)
+export function setTokens() {}
 
 export default API;

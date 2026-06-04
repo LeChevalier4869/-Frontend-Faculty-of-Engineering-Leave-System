@@ -78,9 +78,9 @@ export default function AddUsersByExcel() {
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -104,9 +104,9 @@ export default function AddUsersByExcel() {
               <div className="text-center">
                 <label
                   htmlFor="excelUpload"
-                  className="inline-flex items-center gap-2 bg-sky-50 text-sky-700 px-5 py-2 rounded-xl border border-sky-200 cursor-pointer hover:bg-sky-100 hover:border-sky-300 transition font-medium shadow-sm"
+                  className="inline-flex items-center gap-2 bg-brand-50 text-brand-700 px-5 py-2 rounded-xl border border-brand-200 cursor-pointer hover:bg-brand-100 hover:border-brand-300 transition font-medium shadow-sm"
                 >
-                  <FiFile className="text-sky-600 text-lg" />
+                  <FiFile className="text-brand-600 text-lg" />
                   <span>เลือกไฟล์ Excel</span>
                 </label>
 
@@ -190,8 +190,8 @@ export default function AddUsersByExcel() {
                   disabled={uploading || !!fileError}
                   className={`px-5 py-2 rounded-xl font-medium text-sm text-white shadow-sm transition ${
                     uploading || fileError
-                      ? "bg-sky-300 cursor-not-allowed"
-                      : "bg-sky-600 hover:bg-sky-500"
+                      ? "bg-brand-300 cursor-not-allowed"
+                      : "bg-brand-600 hover:bg-brand-500"
                   }`}
                 >
                   {uploading ? "กำลังอัปโหลด..." : "อัปโหลด"}

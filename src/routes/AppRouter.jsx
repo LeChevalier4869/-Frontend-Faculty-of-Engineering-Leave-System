@@ -11,9 +11,6 @@ import useAuth from "../hooks/useAuth";
 import Login2 from "../layouts/oauth/Login";
 import Callback from "../layouts/oauth/Callback";
 
-import Register from "../layouts/auth/Register";
-import ForgotPassword from "../layouts/auth/ForgotPassword";
-import ResetPassword from "../layouts/auth/ResetPassword";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import Leave2 from "../layouts/user/Leave2";

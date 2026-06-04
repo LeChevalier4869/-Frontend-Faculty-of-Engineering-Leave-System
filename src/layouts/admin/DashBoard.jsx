@@ -133,8 +133,8 @@ export default function AdminDashboard() {
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-xl p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.9)]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.9)]" />
             </div>
             <span className="font-medium">
               กำลังโหลดแดชบอร์ดผู้ดูแลระบบ...
@@ -301,7 +301,7 @@ function Card({ icon, label, value, tone = "indigo" }) {
       rose: "from-rose-100 to-rose-50 border-rose-200",
       slate: "from-slate-100 to-slate-50 border-slate-200",
     }[tone] ||
-    "from-sky-100 to-sky-50 border-sky-200";
+    "from-brand-100 to-brand-50 border-brand-200";
 
   return (
     <div className="relative rounded-2xl p-5 bg-white border shadow-sm overflow-hidden">

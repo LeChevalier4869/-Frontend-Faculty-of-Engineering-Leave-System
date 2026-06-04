@@ -326,9 +326,9 @@ const AuditLogManagement = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -363,7 +363,7 @@ const AuditLogManagement = () => {
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => searchTerm.trim() && setShowUserSuggestions(true)}
-                className="w-full text-sm px-3 py-1.5 pl-8 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400"
+                className="w-full text-sm px-3 py-1.5 pl-8 rounded-lg border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
               <FaSearch className="absolute left-2.5 top-2 text-slate-400 text-xs" />
             {searchTerm && (
@@ -386,7 +386,7 @@ const AuditLogManagement = () => {
           <select
             value={filters.action}
             onChange={(e) => handleFilterChange('action', e.target.value)}
-            className="text-sm px-2 py-1.5 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400 min-w-[120px]"
+            className="text-sm px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-400 min-w-[120px]"
           >
             <option value="">การกระทำ</option>
             <option value="CREATE">สร้าง</option>
@@ -402,7 +402,7 @@ const AuditLogManagement = () => {
           <select
             value={filters.entityType}
             onChange={(e) => handleFilterChange('entityType', e.target.value)}
-            className="text-sm px-2 py-1.5 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-sky-400 min-w-[120px]"
+            className="text-sm px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-400 min-w-[120px]"
           >
             <option value="">ประเภท</option>
             {Object.entries(entityTypeTranslations).map(([key, value]) => (
@@ -417,12 +417,12 @@ const AuditLogManagement = () => {
               <DatePicker
                 selected={filters.startDate}
                 onChange={(date) => handleFilterChange('startDate', date)}
-                className="text-sm pl-3 pr-8 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-400 w-[130px] bg-white"
+                className="text-sm pl-3 pr-8 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400 w-[130px] bg-white"
                 placeholderText="dd/mm/yyyy"
                 locale={th}
                 dateFormat="dd/MM/yyyy"
                 wrapperClassName="w-auto"
-                calendarClassName="!rounded-xl !border-2 !border-sky-300 p-2"
+                calendarClassName="!rounded-xl !border-2 !border-brand-300 p-2"
                 isClearable
                 showMonthDropdown
                 showYearDropdown
@@ -435,12 +435,12 @@ const AuditLogManagement = () => {
               <DatePicker
                 selected={filters.endDate}
                 onChange={(date) => handleFilterChange('endDate', date)}
-                className="text-sm pl-3 pr-8 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-400 w-[130px] bg-white"
+                className="text-sm pl-3 pr-8 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400 w-[130px] bg-white"
                 placeholderText="dd/mm/yyyy"
                 locale={th}
                 dateFormat="dd/MM/yyyy"
                 wrapperClassName="w-auto"
-                calendarClassName="!rounded-xl !border-2 !border-sky-300 p-2"
+                calendarClassName="!rounded-xl !border-2 !border-brand-300 p-2"
                 isClearable
                 showMonthDropdown
                 showYearDropdown
@@ -484,7 +484,7 @@ const AuditLogManagement = () => {
               </span>
             )}
             {filters.startDate && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-sky-50 text-sky-700 rounded text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-50 text-brand-700 rounded text-xs">
                 เริ่ม: {format(filters.startDate, 'dd/MM/yy')}
                 <button onClick={() => handleFilterChange('startDate', null)}><FaTimes className="text-[10px]" /></button>
               </span>
@@ -523,7 +523,7 @@ const AuditLogManagement = () => {
                     <tr>
                       <td colSpan="8" className="px-2 sm:px-3 lg:px-4 py-16 lg:py-20 text-center">
                         <div className="flex flex-col items-center justify-center">
-                          <div className="animate-spin rounded-full h-6 w-6 lg:h-8 lg:w-8 border-b-2 border-sky-600"></div>
+                          <div className="animate-spin rounded-full h-6 w-6 lg:h-8 lg:w-8 border-b-2 border-brand-600"></div>
                           <p className="mt-2 text-xs lg:text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
                         </div>
                       </td>
@@ -543,7 +543,7 @@ const AuditLogManagement = () => {
                       {auditLogs.map((log, idx) => (
                         <tr key={log.id} className={`border-t border-slate-100 transition-colors ${
                           idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                        } hover:bg-sky-50`}>
+                        } hover:bg-brand-50`}>
                           <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 font-mono text-left">{log.id}</td>
                           <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
                             <div className="min-w-0">
@@ -593,7 +593,7 @@ const AuditLogManagement = () => {
                             <div className="flex items-center justify-center gap-1 lg:gap-2">
                               <button
                                 onClick={() => viewLogDetail(log)}
-                                className="text-sky-600 hover:text-sky-900 p-1 hover:bg-sky-50 rounded transition-colors"
+                                className="text-brand-600 hover:text-brand-900 p-1 hover:bg-brand-50 rounded transition-colors"
                                 title="ดูรายละเอียด"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -643,7 +643,7 @@ const AuditLogManagement = () => {
             {loading ? (
               <div className="px-4 py-20 text-center">
                 <div className="flex flex-col items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
                   <p className="mt-2 text-sm text-slate-500">กำลังโหลดข้อมูล...</p>
                 </div>
               </div>
@@ -682,7 +682,7 @@ const AuditLogManagement = () => {
                         <div className="flex gap-1 ml-2 flex-shrink-0">
                           <button
                             onClick={() => viewLogDetail(log)}
-                            className="text-sky-600 hover:text-sky-900 p-2 active:bg-sky-50 rounded-lg transition-colors"
+                            className="text-brand-600 hover:text-brand-900 p-2 active:bg-brand-50 rounded-lg transition-colors"
                             title="ดูรายละเอียด"
                           >
                             <FaEye className="text-sm" />
@@ -789,7 +789,7 @@ const AuditLogManagement = () => {
                         onClick={() => handlePageChange(page)}
                         className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium ${
                           isCurrentPage
-                            ? 'z-10 bg-sky-50 border-sky-500 text-sky-600'
+                            ? 'z-10 bg-brand-50 border-brand-500 text-brand-600'
                             : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                         }`}
                       >
@@ -856,7 +856,7 @@ const AuditLogManagement = () => {
                           key={page}
                           onClick={() => handlePageChange(page)}
                           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                            currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                           }`}
                         >
                           {page}

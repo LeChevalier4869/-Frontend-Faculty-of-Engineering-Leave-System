@@ -54,8 +54,8 @@ const StatCard = ({ icon, label, value, accent = "sky" }) => {
   const colorMap =
     {
       sky: {
-        ring: "ring-sky-200",
-        bg: "bg-sky-50",
+        ring: "ring-brand-200",
+        bg: "bg-brand-50",
         label: "text-slate-500",
         value: "text-slate-900",
       },
@@ -78,8 +78,8 @@ const StatCard = ({ icon, label, value, accent = "sky" }) => {
         value: "text-slate-900",
       },
     }[accent] ?? {
-      ring: "ring-sky-200",
-      bg: "bg-sky-50",
+      ring: "ring-brand-200",
+      bg: "bg-brand-50",
       label: "text-slate-500",
       value: "text-slate-900",
     };
@@ -202,12 +202,12 @@ export default function Approver1DashBoard() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 text-slate-800 font-kanit">
+      <div className="flex items-center justify-center py-20 text-slate-800 font-kanit">
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.7)]" />
             </div>
             <span className="font-medium">กำลังโหลดแดชบอร์ดผู้อนุมัติ...</span>
             <span className="text-xs text-slate-500">
@@ -239,7 +239,7 @@ export default function Approver1DashBoard() {
                   />
                   <span className="relative">
                     แดชบอร์ดผู้อนุมัติ{" "}
-                    <span className="bg-gradient-to-r from-emerald-500 via-sky-500 to-sky-400 bg-clip-text text-transparent">
+                    <span className="bg-gradient-to-r from-emerald-500 via-brand-500 to-brand-400 bg-clip-text text-transparent">
                       สวัสดีคุณ {user?.firstName} {user?.lastName}
                     </span>
                   </span>
@@ -256,8 +256,8 @@ export default function Approver1DashBoard() {
         <Panel className="p-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="flex items-center gap-2 text-slate-800">
-              <div className="w-9 h-9 rounded-2xl bg-sky-50 flex items-center justify-center ring-1 ring-sky-200">
-                <Filter className="w-4 h-4 text-sky-500" />
+              <div className="w-9 h-9 rounded-2xl bg-brand-50 flex items-center justify-center ring-1 ring-brand-200">
+                <Filter className="w-4 h-4 text-brand-500" />
               </div>
               <div>
                 <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -277,7 +277,7 @@ export default function Approver1DashBoard() {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-300"
                 >
                   <option value="ALL">ทั้งหมด</option>
                   <option value="PENDING">รออนุมัติ</option>
@@ -293,7 +293,7 @@ export default function Approver1DashBoard() {
                 <select
                   value={filterLeaveType}
                   onChange={(e) => setFilterLeaveType(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-300"
                 >
                   <option value="ALL">ทั้งหมด</option>
                   {leaveTypeOptions.map((t) => (
@@ -312,7 +312,7 @@ export default function Approver1DashBoard() {
                   type="date"
                   value={filterStartDate}
                   onChange={(e) => setFilterStartDate(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-300"
                 />
               </div>
 
@@ -322,7 +322,7 @@ export default function Approver1DashBoard() {
                   <button
                     type="button"
                     onClick={resetFilters}
-                    className="text-[10px] text-sky-600 hover:text-sky-500 underline underline-offset-2"
+                    className="text-[10px] text-brand-600 hover:text-brand-500 underline underline-offset-2"
                   >
                     ล้างตัวกรอง
                   </button>
@@ -331,7 +331,7 @@ export default function Approver1DashBoard() {
                   type="date"
                   value={filterEndDate}
                   onChange={(e) => setFilterEndDate(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-300"
                 />
               </div>
             </div>
@@ -381,7 +381,7 @@ export default function Approver1DashBoard() {
                   nameKey="name"
                   labelLine={false}
                   label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
+                    percent > 0 ? `${name}: ${(percent * 100).toFixed(0)}%` : null
                   }
                 >
                   {pieData.map((d) => (

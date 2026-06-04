@@ -8,7 +8,7 @@ export const API = axios.create({
   baseURL: BASE_URL,
 });
 
-// Token interceptor (optional)
+// Request interceptor: แนบ access token จาก localStorage ทุก request
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
   if (token) {
@@ -17,20 +17,34 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor: ถ้า token หมดอายุ/ไม่ถูกต้อง (401) ให้ logout แบบนุ่มนวล
+// หมายเหตุ: ระบบยังไม่มี refresh-token flow ฝั่ง client ที่ใช้งานได้
+// (refresh token เป็น httpOnly cookie และ backend ยังไม่มี cookie-parser)
+// จึงเลือก logout + ส่งไปหน้า login แทนการ refresh ที่ทำงานไม่ได้
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("status");
+      localStorage.removeItem("hasShownSplash");
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const apiEndpoints = {
-  // auth
-  login: `${BASE_URL}/auth/login`, // POST
-  // loginByUsername: `${BASE_URL}/auth/login/username`, // POST
-  register: `${BASE_URL}/auth/register`, // POST
+  // auth (Google OAuth only — manual login/register removed)
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
   getVerifier: `${BASE_URL}/auth/verifier`, // GET
   getApproversForLevel: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET
   getApproversForLevelProxy: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET (alias for proxy checking)
   updateUserRole: `${BASE_URL}/auth/update-role`,
-  forgotPassword: `${BASE_URL}/auth/forgot-password`,
-  resetPassword: `${BASE_URL}/auth/reset-password`,
-  changePassword: `${BASE_URL}/auth/change-password`,
   updateProfile: `${BASE_URL}/auth/update-picture`,
   deleteProfilePicture: `${BASE_URL}/auth/delete-picture`,
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,

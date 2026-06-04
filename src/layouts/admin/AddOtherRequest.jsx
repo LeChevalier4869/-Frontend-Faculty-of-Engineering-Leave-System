@@ -76,7 +76,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
   const debounceRef = useRef(null);
 
   const inputStyle =
-    "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
   const normalizeUsers = (payload) => {
     const arr = Array.isArray(payload?.data)
@@ -174,7 +174,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
           {base}
         </span>
         {name ? (
-          <span className="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-[12px] font-medium text-sky-800 ring-1 ring-sky-200">
+          <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-1 text-[12px] font-medium text-brand-800 ring-1 ring-brand-200">
             {name}
           </span>
         ) : (
@@ -529,7 +529,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       <div className="w-[min(92vw,720px)] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl font-kanit flex flex-col min-h-0">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div className="flex flex-col gap-1">
-            <span className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-700">
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-brand-700">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Admin Action
             </span>
@@ -893,7 +893,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 disabled:opacity-60"
+              className="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-500 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึกคำขอการลา"}
             </button>
@@ -1073,14 +1073,14 @@ export default function AddOtherRequest() {
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.7)]" />
             </div>
             <span className="text-slate-800 font-medium">
               กำลังโหลดข้อมูลการลา...
             </span>
             <span className="text-xs text-slate-500 flex items-center gap-1">
-              <Clock className="w-4 h-4 text-sky-500" />
+              <Clock className="w-4 h-4 text-brand-500" />
               กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากระบบ
             </span>
           </div>
@@ -1093,9 +1093,9 @@ export default function AddOtherRequest() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 font-kanit px-4 py-8 md:px-8 rounded-2xl">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -1139,7 +1139,7 @@ export default function AddOtherRequest() {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setModalOpen(true)}
-              className="flex items-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
+              className="flex items-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-500 whitespace-nowrap"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               บันทึกคำขอการลาใหม่
@@ -1179,7 +1179,7 @@ export default function AddOtherRequest() {
                   setFilterStartDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
               <label className="text-xs text-slate-600">ถึง</label>
               <input
@@ -1189,7 +1189,7 @@ export default function AddOtherRequest() {
                   setFilterEndDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
             </div>
 
@@ -1200,7 +1200,7 @@ export default function AddOtherRequest() {
                   setFilterStatus(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               >
                 <option value="">สถานะทั้งหมด</option>
                 {Object.keys(statusLabels).map((k) => (
@@ -1221,7 +1221,7 @@ export default function AddOtherRequest() {
                   setFilterLeaveType(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               >
                 <option value="">ประเภทการลาทั้งหมด</option>
                 {Object.entries(leaveTypesMap).map(([id, name]) => (
@@ -1239,7 +1239,7 @@ export default function AddOtherRequest() {
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               >
                 <option value="desc">เรียงจากใหม่ไปเก่า</option>
                 <option value="asc">เรียงจากเก่าไปใหม่</option>
@@ -1295,7 +1295,7 @@ export default function AddOtherRequest() {
                   displayItems.map((r, idx) => (
                     <tr
                       key={r.id}
-                      className={`border-t border-slate-100 whitespace-nowrap hover:bg-sky-50 cursor-pointer transition-colors ${
+                      className={`border-t border-slate-100 whitespace-nowrap hover:bg-brand-50 cursor-pointer transition-colors ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
                       }`}
                       onClick={() => navigate(`/leave/${r.id}`)}
@@ -1371,7 +1371,7 @@ export default function AddOtherRequest() {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                          currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                         }`}
                       >
                         {page}

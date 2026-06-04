@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import { formatLeaveDays } from "../../utils/formatLeaveDays";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 dayjs.extend(isSameOrBefore);
@@ -266,7 +267,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
                     <>
                       คุณมีสิทธิลาประเภทนี้เหลือ: {" "}
                       <span className="font-bold">
-                        {selectedLeaveBalance.remainingDays} วัน
+                        {formatLeaveDays(selectedLeaveBalance.remainingDays)}
                       </span>
                     </>
                   );
