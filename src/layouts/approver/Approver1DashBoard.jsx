@@ -381,7 +381,7 @@ export default function Approver1DashBoard() {
                   nameKey="name"
                   labelLine={false}
                   label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
+                    percent > 0 ? `${name}: ${(percent * 100).toFixed(0)}%` : null
                   }
                 >
                   {pieData.map((d) => (

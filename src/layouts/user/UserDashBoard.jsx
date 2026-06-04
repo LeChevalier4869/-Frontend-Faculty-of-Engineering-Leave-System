@@ -7,6 +7,8 @@ import {
   PlusCircle,
   List,
   XCircle,
+  CalendarDays,
+  ChevronRight,
 } from "lucide-react";
 import {
   BarChart,
@@ -23,7 +25,8 @@ import {
 } from "recharts";
 import getApiUrl from "../../utils/apiUtils";
 import useAuth from "../../hooks/useAuth";
-import { apiEndpoints } from "../../utils/api";
+import { apiEndpoints, API } from "../../utils/api";
+import { expandHolidays, defaultHolidayYears } from "../../utils/holidayUtils";
 import Swal from "sweetalert2";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import LeaveRequestModal from "./LeaveRequestModal";
@@ -152,6 +155,7 @@ export default function UserDashboard() {
     rejected: 0,
   });
   const [recent, setRecent] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);
   const [entitlements, setEntitlements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -261,6 +265,45 @@ export default function UserDashboard() {
 
   useEffect(() => {
     fetchLeaveRequests();
+  }, []);
+
+  // ดึงวันหยุด + วันลาที่อนุมัติแล้ว เพื่อแสดง "ที่กำลังจะมาถึง" บน dashboard
+  useEffect(() => {
+    const fetchUpcoming = async () => {
+      try {
+        const [holidayRes, leaveRes] = await Promise.all([
+          API.get(apiEndpoints.getHoliday),
+          API.get(apiEndpoints.leaveRequestApprovedMe),
+        ]);
+
+        const holidays = expandHolidays(
+          holidayRes.data.data || [],
+          defaultHolidayYears()
+        ).map((h) => ({
+          kind: "holiday",
+          title: h.description,
+          date: h._date,
+        }));
+        const leaves = (Array.isArray(leaveRes.data) ? leaveRes.data : []).map(
+          (l) => ({
+            kind: "leave",
+            title: l.leaveType?.name || "การลา",
+            date: l.startDate,
+            leaveId: l.id,
+          })
+        );
+
+        const startOfToday = dayjs().startOf("day");
+        const merged = [...holidays, ...leaves]
+          .filter((e) => dayjs(e.date).isAfter(startOfToday.subtract(1, "day")))
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .slice(0, 5);
+        setUpcoming(merged);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchUpcoming();
   }, []);
 
   const pieData = [
@@ -549,6 +592,62 @@ export default function UserDashboard() {
                 <span className="text-slate-800">{label}</span>
               </div>
             ))}
+          </div>
+        </Panel>
+
+        <Panel className="overflow-hidden">
+          <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-3">
+            <SectionHeader
+              eyebrow="Upcoming"
+              title="วันหยุด & วันลาที่กำลังจะมาถึง"
+              description="รายการถัดไป 5 รายการ"
+            />
+            <button
+              onClick={() => navigate("/Calendar")}
+              className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-sky-700 bg-sky-50 border border-sky-200 hover:bg-sky-100 transition"
+            >
+              <CalendarDays className="w-4 h-4" />
+              ดูปฏิทินทั้งหมด
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="px-4 pb-4">
+            {upcoming.length > 0 ? (
+              <ul className="divide-y divide-slate-100">
+                {upcoming.map((e, idx) => (
+                  <li
+                    key={idx}
+                    onClick={() =>
+                      e.kind === "leave" && e.leaveId
+                        ? navigate(`/leave/${e.leaveId}`)
+                        : navigate("/Calendar")
+                    }
+                    className="flex items-center gap-3 py-3 cursor-pointer hover:bg-slate-50 rounded-lg px-2 -mx-2 transition"
+                  >
+                    <span
+                      className={`flex-shrink-0 w-2.5 h-2.5 rounded-full ${
+                        e.kind === "leave" ? "bg-amber-500" : "bg-rose-500"
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-slate-800 truncate">
+                        {e.title}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {e.kind === "leave" ? "วันลาของคุณ" : "วันหยุด"}
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 text-sm text-slate-600 whitespace-nowrap">
+                      {dayjs(e.date).locale("th").format("DD MMM")}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="py-6 text-center text-sm text-slate-500">
+                ไม่มีวันหยุดหรือวันลาที่กำลังจะมาถึง
+              </p>
+            )}
           </div>
         </Panel>
 

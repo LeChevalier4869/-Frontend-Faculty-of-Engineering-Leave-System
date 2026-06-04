@@ -8,7 +8,7 @@ export const API = axios.create({
   baseURL: BASE_URL,
 });
 
-// Token interceptor (optional)
+// Request interceptor: แนบ access token จาก localStorage ทุก request
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
   if (token) {
@@ -16,6 +16,26 @@ API.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Response interceptor: ถ้า token หมดอายุ/ไม่ถูกต้อง (401) ให้ logout แบบนุ่มนวล
+// หมายเหตุ: ระบบยังไม่มี refresh-token flow ฝั่ง client ที่ใช้งานได้
+// (refresh token เป็น httpOnly cookie และ backend ยังไม่มี cookie-parser)
+// จึงเลือก logout + ส่งไปหน้า login แทนการ refresh ที่ทำงานไม่ได้
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("status");
+      localStorage.removeItem("hasShownSplash");
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const apiEndpoints = {
   // auth (Google OAuth only — manual login/register removed)
