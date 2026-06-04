@@ -197,12 +197,12 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 font-kanit text-slate-800">
+      <div className="flex items-center justify-center py-20 font-kanit text-slate-800">
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.7)]" />
             </div>
             <span className="font-medium">
               กำลังโหลดรายการการลาที่รออนุมัติ...
@@ -221,9 +221,9 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm mb-3">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] uppercase tracking-[0.2em] text-sky-700">
+              <span className="text-[11px] uppercase tracking-[0.2em] text-brand-700">
                 Pending Approval
               </span>
             </div>
@@ -247,7 +247,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
                   setFilterStartDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-white text-sm text-slate-900 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="bg-white text-sm text-slate-900 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
               />
               <span className="text-sm text-slate-700">ถึง</span>
               <input
@@ -257,7 +257,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
                   setFilterEndDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-white text-sm text-slate-900 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="bg-white text-sm text-slate-900 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-300"
               />
             </div>
 
@@ -268,7 +268,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
                   setFilterLeaveType(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full bg-white text-sm text-slate-900 px-3 py-2 pr-8 border border-slate-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="w-full bg-white text-sm text-slate-900 px-3 py-2 pr-8 border border-slate-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-brand-300"
               >
                 <option value="">ประเภทการลาทั้งหมด</option>
                 {Object.entries(leaveTypesMap).map(([id, name]) => (
@@ -289,7 +289,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
                   setSortOrder(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full bg-white text-sm text-slate-900 px-3 py-2 pr-8 border border-slate-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-sky-300"
+                className="w-full bg-white text-sm text-slate-900 px-3 py-2 pr-8 border border-slate-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-brand-300"
               >
                 <option value="desc">ล่าสุดก่อน</option>
                 <option value="asc">เก่าสุดก่อน</option>
@@ -314,7 +314,8 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
             </button>
           </div>
 
-          <div className="rounded-xl border border-slate-200 overflow-visible bg-white">
+          {/* Desktop: ตาราง */}
+          <div className="rounded-xl border border-slate-200 overflow-x-auto bg-white hidden md:block">
             <table className="w-full table-auto text-sm text-slate-800">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
@@ -390,7 +391,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
                                   [detailId]: e.target.value,
                                 }))
                               }
-                              className="w-full bg-white text-slate-900 border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-inner focus:outline-none focus:ring-2 focus:ring-sky-300"
+                              className="w-full bg-white text-slate-900 border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-300"
                               placeholder="ใส่ความคิดเห็นสำหรับผู้อนุมัติถัดไป"
                             />
                             <Pencil
@@ -448,6 +449,88 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
             </table>
           </div>
 
+          {/* Mobile: การ์ด */}
+          <div className="md:hidden space-y-3">
+            {displayItems.length > 0 ? (
+              displayItems.map((leave) => {
+                const detailId = leave.leaveRequestDetails?.[0]?.id;
+                const statusKey = (leave.status || "").toUpperCase();
+                return (
+                  <div
+                    key={leave.id}
+                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  >
+                    <div
+                      onClick={() => navigate(`/leave/${leave.id}`)}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-medium text-slate-800">
+                          {leave.user.prefixName}
+                          {leave.user.firstName} {leave.user.lastName}
+                        </div>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                            statusColors[statusKey] ||
+                            "bg-slate-100 text-slate-700 border border-slate-200"
+                          }`}
+                        >
+                          {statusLabels[statusKey] || leave.status}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {leaveTypesMap[leave.leaveTypeId] || "-"}
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {formatDate(leave.startDate)} – {formatDate(leave.endDate)}
+                      </div>
+                      <div className="mt-1 text-xs text-slate-400">
+                        ยื่นเมื่อ {formatDateTime(leave.createdAt)}
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      value={comments[detailId] || ""}
+                      onChange={(e) =>
+                        setComments((c) => ({ ...c, [detailId]: e.target.value }))
+                      }
+                      className="mt-3 w-full bg-white text-slate-900 border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-300"
+                      placeholder="ใส่ความคิดเห็นสำหรับผู้อนุมัติถัดไป"
+                    />
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleApprove(detailId)}
+                        disabled={loadingApprovals[detailId]}
+                        className={`py-2 rounded-lg text-sm font-medium ${
+                          loadingApprovals[detailId]
+                            ? "bg-emerald-400/70 cursor-not-allowed text-white"
+                            : "bg-emerald-500 hover:bg-emerald-400 text-white"
+                        } transition`}
+                      >
+                        ตกลง
+                      </button>
+                      <button
+                        onClick={() => handleReject(detailId)}
+                        disabled={loadingApprovals[detailId]}
+                        className={`py-2 rounded-lg text-sm font-medium ${
+                          loadingApprovals[detailId]
+                            ? "bg-red-400/70 cursor-not-allowed text-white"
+                            : "bg-red-500 hover:bg-red-400 text-white"
+                        } transition`}
+                      >
+                        ปฏิเสธ
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">
+                ไม่มีข้อมูลการลา
+              </div>
+            )}
+          </div>
+
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-5 bg-white rounded-lg px-4 py-3 border border-slate-200">
               <div className="text-sm text-slate-700">
@@ -484,7 +567,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page ? "z-10 bg-sky-50 border-sky-500 text-sky-600" : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
+                          currentPage === page ? "z-10 bg-brand-50 border-brand-500 text-brand-600" : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                         }`}
                       >
                         {page}

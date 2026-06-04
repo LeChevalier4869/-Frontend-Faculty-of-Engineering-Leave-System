@@ -127,8 +127,8 @@ export default function UserInfo() {
         <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-sm p-6 text-center">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500" />
             </div>
             <span className="font-medium">กำลังโหลดข้อมูลผู้ใช้งาน...</span>
             <span className="text-xs text-slate-500">
@@ -183,9 +183,9 @@ export default function UserInfo() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -301,7 +301,7 @@ export default function UserInfo() {
                   return (
                     <span
                       key={r}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${colorMap[r] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${colorMap[r] || "bg-brand-50 text-brand-700 border-brand-200"}`}
                     >
                       {label ? `${label} (${r})` : r}
                     </span>
@@ -320,7 +320,7 @@ export default function UserInfo() {
             </Link>
             <Link
               to={`/admin/user/${id}`}
-              className="inline-block px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium transition"
+              className="inline-block px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition"
             >
               แก้ไขข้อมูลผู้ใช้
             </Link>
@@ -549,7 +549,7 @@ export default function UserInfo() {
                     return (
                       <tr
                         key={leave.id}
-                        className={`border-t border-slate-100 cursor-pointer hover:bg-sky-50 ${
+                        className={`border-t border-slate-100 cursor-pointer hover:bg-brand-50 ${
                           idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
                         }`}
                         onClick={() => navigate(`/leave/${leave.id}`)}

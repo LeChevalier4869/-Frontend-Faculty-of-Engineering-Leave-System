@@ -1,4 +1,3 @@
-import { FiLogIn } from "react-icons/fi";
 import { FaGoogle } from "react-icons/fa";
 import { useState } from "react";
 import Swal from "sweetalert2";
@@ -62,51 +61,64 @@ export default function Login() {
   return (
     <div className="relative flex items-center justify-center min-h-screen w-screen overflow-hidden font-kanit">
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
         style={{ backgroundImage: `url(${bg})` }}
       />
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+      {/* ม่านสีเลือดหมูทับพื้นหลังให้เข้าธีมคณะ */}
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-900/85 via-brand-800/75 to-black/80 backdrop-blur-[2px]" />
 
       <div className="relative z-10 px-4 w-full">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 text-white drop-shadow">
-          ระบบลา <span className="text-red-600">คณะวิศวกรรมศาสตร์</span>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 text-white drop-shadow-lg">
+          ระบบจัดการวันลา{" "}
+          <span className="text-gold">คณะวิศวกรรมศาสตร์</span>
         </h1>
 
-        <div className="mx-auto bg-gray-900/20 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700 backdrop-blur-md">
+        <div className="mx-auto bg-white/10 p-6 sm:p-8 rounded-3xl shadow-2xl w-full max-w-md border border-white/15 backdrop-blur-xl">
+          {/* แถบทองด้านบนการ์ด */}
+          <div className="mx-auto mb-5 h-1 w-16 rounded-full bg-gold" />
+
           <div className="flex justify-center mb-4">
-            <img
-              src={engLogo}
-              alt="Engineering Faculty Logo"
-              className="w-20 h-20 object-contain drop-shadow-lg"
-            />
+            <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
+              <img
+                src={engLogo}
+                alt="Engineering Faculty Logo"
+                className="w-16 h-16 object-contain drop-shadow-lg"
+              />
+            </div>
           </div>
-          <h2 className="text-xl sm:text-2xl font-semibold text-center text-white mb-6">
+          <h2 className="text-xl sm:text-2xl font-semibold text-center text-white mb-1">
             เข้าสู่ระบบ
           </h2>
+          <p className="text-center text-white/60 text-sm mb-6">
+            ใช้บัญชี Google ของมหาวิทยาลัย
+          </p>
 
           <button
             type="button"
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed text-white py-2 rounded-lg transition duration-300 font-medium flex justify-center items-center gap-2"
+            className="w-full bg-white hover:bg-slate-100 disabled:opacity-70 disabled:cursor-not-allowed text-slate-800 py-2.5 rounded-xl transition duration-300 font-medium flex justify-center items-center gap-2 shadow-lg"
           >
-            <FaGoogle />
+            <FaGoogle className="text-[#EA4335]" />
             {isLoading ? "กำลังนำไปยัง Google..." : "เข้าสู่ระบบด้วย Google"}
           </button>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-300 text-sm">
+            <p className="text-white/70 text-sm">
               ต้องการความช่วยเหลือ?{" "}
               <button
                 onClick={handleContactClick}
-                className="text-red-400 hover:underline"
+                className="text-gold hover:underline font-medium"
               >
                 ติดต่อเจ้าหน้าที่ระบบ
               </button>
             </p>
           </div>
         </div>
+
+        <p className="mt-6 text-center text-white/50 text-xs">
+          © คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น
+        </p>
       </div>
     </div>
   );

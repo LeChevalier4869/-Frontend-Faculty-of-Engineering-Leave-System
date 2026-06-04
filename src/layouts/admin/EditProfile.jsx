@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import Swal from "sweetalert2";
@@ -60,6 +61,7 @@ export default function EditProfile() {
 
   /* ---------- state ---------- */
   const [formData, setFormData]       = useState(mapUser(user));
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [personnel, setPersonnel]     = useState([]);
   const [employment, setEmployment]   = useState([]);
@@ -104,6 +106,7 @@ export default function EditProfile() {
   /* ---------- submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const token   = localStorage.getItem("accessToken");
       const headers = { Authorization: `Bearer ${token}` };
@@ -139,6 +142,8 @@ export default function EditProfile() {
     } catch (err) {
       console.error("Update error:", err);
       Swal.fire("อัปเดตล้มเหลว", err.response?.data?.message || err.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -227,7 +232,7 @@ export default function EditProfile() {
 
           <div className="flex justify-end gap-4">
             <Button text="ยกเลิก" onClick={() => navigate("/profile")} color="gray" />
-            <Button text="บันทึก" submit color="blue" />
+            <Button text="บันทึก" submit color="brand" loading={isSubmitting} />
           </div>
         </form>
       </div>
@@ -264,18 +269,30 @@ function Checkbox({ label, ...rest }) {
   );
 }
 
-function Button({ text, submit, color, onClick }) {
+function Button({ text, submit, color, onClick, loading = false }) {
   const cls =
     color === "gray"
       ? "bg-gray-300 hover:bg-gray-400 text-gray-800"
-      : "bg-blue-600 hover:bg-blue-700 text-white";
+      : "bg-brand-600 hover:bg-brand-700 text-white";
   return (
     <button
       type={submit ? "submit" : "button"}
       onClick={onClick}
-      className={`rounded-lg px-6 py-3 font-medium transition ${cls}`}
+      disabled={loading}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 font-medium transition disabled:opacity-60 disabled:cursor-not-allowed ${cls}`}
     >
-      {text}
+      {loading && (
+        <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+      )}
+      {loading ? "กำลังบันทึก..." : text}
     </button>
   );
 }
+
+Button.propTypes = {
+  text: PropTypes.string.isRequired,
+  submit: PropTypes.bool,
+  color: PropTypes.string,
+  onClick: PropTypes.func,
+  loading: PropTypes.bool,
+};

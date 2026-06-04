@@ -339,8 +339,8 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
         }`}
       >
         <div className="relative h-full">
-          <div className="absolute inset-0 bg-gradient-to-b from-sky-500/20 via-sky-600/10 to-blue-900/20" />
-          <div className="absolute inset-0 backdrop-blur-md bg-slate-900/60 ring-1 ring-white/10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-700/45 via-brand-800/35 to-brand-900/55" />
+          <div className="absolute inset-0 backdrop-blur-md bg-brand-900/70 ring-1 ring-white/10" />
 
           <div className="relative h-full flex flex-col text-white">
             {/* Header */}

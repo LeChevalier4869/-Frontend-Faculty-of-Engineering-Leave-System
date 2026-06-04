@@ -73,7 +73,7 @@ function Header({ onMenuClick, isMobile = false }) {
                   profilePicturePath={user?.profilePicturePath} 
                   googleProfilePictureUrl={user?.accounts?.find(acc => acc.provider === 'google')?.profilePictureUrl}
                   size="small" 
-                  className="rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500"
+                  className="rounded-xl bg-gradient-to-br from-brand-600 to-brand-800"
                 />
                 <div className="hidden md:block text-left">
                   <div className="text-sm font-medium leading-none truncate max-w-[10rem]">
@@ -101,7 +101,7 @@ function Header({ onMenuClick, isMobile = false }) {
                       profilePicturePath={user?.profilePicturePath} 
                       googleProfilePictureUrl={user?.accounts?.find(acc => acc.provider === 'google')?.profilePictureUrl}
                       size="small" 
-                      className="rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500"
+                      className="rounded-xl bg-gradient-to-br from-brand-600 to-brand-800"
                     />
                     <div className="min-w-0">
                       <div className="text-sm font-semibold text-slate-50 truncate">

@@ -18,6 +18,11 @@ function UserProfile2() {
       const formData = new FormData();
       formData.append("profilePicturePath", file);
 
+      Swal.fire({
+        title: "กำลังอัปโหลดรูป...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
       try {
         const res = await axios.patch(
           apiEndpoints.updateProfile,
@@ -105,7 +110,7 @@ function UserProfile2() {
             เลือกรูปภาพสำหรับโปรไฟล์ของคุณ (ขนาดไม่เกิน 2MB)
           </p>
           <div className="flex gap-3 mb-4">
-            <label className="cursor-pointer px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-lg transition">
+            <label className="cursor-pointer px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition">
               เลือกรูปภาพ
               <input
                 type="file"
@@ -167,6 +172,11 @@ function UserProfile2() {
         const formData = new FormData();
         formData.append("images", file);
 
+        Swal.fire({
+          title: "กำลังบันทึกลายเซ็น...",
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading(),
+        });
         try {
           await axios({
             method: isUpdate ? "put" : "post",
@@ -232,7 +242,7 @@ function UserProfile2() {
                   alt="ลายเซ็น"
                   className="max-w-full h-40 border border-slate-200 rounded mb-4"
                 />
-                <label className="cursor-pointer px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded transition">
+                <label className="cursor-pointer px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded transition">
                   เปลี่ยนลายเซ็น
                   <input
                     type="file"
@@ -255,7 +265,7 @@ function UserProfile2() {
             ) : (
               <>
                 <p className="mb-4 text-slate-600">ยังไม่มีลายเซ็น</p>
-                <label className="cursor-pointer px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded transition">
+                <label className="cursor-pointer px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded transition">
                   อัปโหลดลายเซ็น
                   <input
                     type="file"
@@ -295,8 +305,8 @@ function UserProfile2() {
       <div className="mx-auto max-w-6xl space-y-10">
 
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
-            <FaUserAlt className="text-sky-600 text-xl" />
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
+            <FaUserAlt className="text-brand-600 text-xl" />
             <span className="text-[11px] tracking-[0.2em] uppercase text-slate-700">
               User Profile
             </span>

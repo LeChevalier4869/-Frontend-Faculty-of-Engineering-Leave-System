@@ -20,9 +20,9 @@ export default function HolidayManage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const inputBase =
-    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
   const selectBase =
-    "appearance-none w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "appearance-none w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
   const selectWrapper = "relative w-full";
 
   const ArrowIcon = () => (
@@ -185,9 +185,9 @@ export default function HolidayManage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -252,7 +252,7 @@ export default function HolidayManage() {
                   type="checkbox"
                   checked={isRecurring}
                   onChange={() => setIsRecurring(!isRecurring)}
-                  className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                 />
                 <span>ประจำทุกปี</span>
               </label>
@@ -263,7 +263,7 @@ export default function HolidayManage() {
                   className={`inline-flex flex-1 items-center justify-center rounded-xl px-3 py-2 text-xs md:text-sm font-medium shadow-sm transition ${
                     editId && initialEditData && date === initialEditData.date && description === initialEditData.description && isRecurring === initialEditData.isRecurring && holidayType === initialEditData.holidayType
                       ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                      : "bg-sky-600 hover:bg-sky-500 text-white"
+                      : "bg-brand-600 hover:bg-brand-500 text-white"
                   }`}
                 >
                   {editId ? "อัปเดตวันหยุด" : "เพิ่มวันหยุด"}
@@ -404,7 +404,7 @@ export default function HolidayManage() {
                       key={h.id}
                       className={`border-t border-slate-100 ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-sky-50 transition-colors`}
+                      } hover:bg-brand-50 transition-colors`}
                     >
                       <td className="px-3 py-2 text-sm">
                         {startIndex + idx + 1}
@@ -487,7 +487,7 @@ export default function HolidayManage() {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                          currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                         }`}
                       >
                         {page}

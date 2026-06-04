@@ -152,9 +152,9 @@ const PositionNumberManagement = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -176,12 +176,12 @@ const PositionNumberManagement = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full md:w-64 rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  className="w-full md:w-64 rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
                 />
               </div>
               <button
                 onClick={handleSearch}
-                className="px-6 py-2 bg-sky-600 text-white rounded-xl hover:bg-sky-700 transition-colors flex items-center justify-center gap-2"
+                className="px-6 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
               >
                 <FaSearch />
                 ค้นหา
@@ -282,7 +282,7 @@ const PositionNumberManagement = () => {
                         return (
                           <tr key={user.id} className={`border-t border-slate-100 transition-colors ${
                             idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                          } hover:bg-sky-50`}>
+                          } hover:bg-brand-50`}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
                               #{user.id}
                             </td>
@@ -431,7 +431,7 @@ const PositionNumberManagement = () => {
                         key={page}
                         onClick={() => handlePageChange(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          pagination.currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                          pagination.currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                         }`}
                       >
                         {page}

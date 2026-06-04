@@ -564,7 +564,7 @@ export default function LeaveVerifier() {
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                      currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                      currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                     }`}
                   >
                     {page}

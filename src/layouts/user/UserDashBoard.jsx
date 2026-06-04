@@ -73,8 +73,8 @@ const StatCard = ({ icon, label, value, accent = "sky" }) => {
   const colorMap =
     {
       sky: {
-        ring: "ring-sky-200",
-        bg: "bg-sky-50",
+        ring: "ring-brand-200",
+        bg: "bg-brand-50",
         label: "text-slate-500",
         value: "text-slate-900",
       },
@@ -97,8 +97,8 @@ const StatCard = ({ icon, label, value, accent = "sky" }) => {
         value: "text-slate-900",
       },
     }[accent] ?? {
-      ring: "ring-sky-200",
-      bg: "bg-sky-50",
+      ring: "ring-brand-200",
+      bg: "bg-brand-50",
       label: "text-slate-500",
       value: "text-slate-900",
     };
@@ -339,12 +339,12 @@ export default function UserDashboard() {
 
   if (loading || isLoading)
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 text-slate-800 font-kanit">
+      <div className="flex items-center justify-center py-20 text-slate-800 font-kanit">
         <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.7)]" />
             </div>
             <span className="text-slate-800 font-medium">
               กำลังโหลดแดชบอร์ดของคุณ...
@@ -362,9 +362,9 @@ export default function UserDashboard() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 mb-3 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 mb-3 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] text-sky-700 tracking-[0.2em] uppercase">
+              <span className="text-[11px] text-brand-700 tracking-[0.2em] uppercase">
                 Leave Dashboard
               </span>
             </div>
@@ -373,12 +373,12 @@ export default function UserDashboard() {
               <span className="inline-flex items-center gap-2">
                 <span className="relative inline-flex">
                   <span
-                    className="absolute inset-0 bg-sky-100 blur-xl opacity-70"
+                    className="absolute inset-0 bg-brand-100 blur-xl opacity-70"
                     aria-hidden="true"
                   />
                   <span className="relative">
                     สวัสดีคุณ{" "}
-                    <span className="text-back text-transparent">
+                    <span className="text-brand-700 font-bold">
                       {user?.firstName || ""} {user?.lastName || ""}
                     </span>
                   </span>
@@ -390,7 +390,7 @@ export default function UserDashboard() {
               ภาพรวมการลาของคุณในปีการทำงานนี้
             </p>
             <p className="mt-1 text-xs md:text-sm text-slate-500 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-sky-500" />
+              <Clock className="w-4 h-4 text-brand-500" />
               <span>วันนี้ วันที่ {todayText}</span>
             </p>
           </div>
@@ -398,7 +398,7 @@ export default function UserDashboard() {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 h-11 rounded-xl bg-sky-600 text-white text-sm font-medium shadow-sm hover:bg-sky-500 hover:-translate-y-0.5 transition-all duration-150"
+              className="inline-flex items-center gap-2 px-4 h-11 rounded-xl bg-brand-600 text-white text-sm font-medium shadow-sm hover:bg-brand-500 hover:-translate-y-0.5 transition-all duration-150"
             >
               <PlusCircle className="w-5 h-5" />
               ยื่นคำขอลา
@@ -448,7 +448,7 @@ export default function UserDashboard() {
             right={
               <button
                 onClick={() => navigate("/leave/balance")}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-50 text-sky-700 text-sm font-medium hover:bg-sky-100 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-brand-50 text-brand-700 text-sm font-medium hover:bg-brand-100 transition-colors"
               >
                 <List className="w-4 h-4" />
                 ดูทั้งหมด
@@ -604,7 +604,7 @@ export default function UserDashboard() {
             />
             <button
               onClick={() => navigate("/Calendar")}
-              className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-sky-700 bg-sky-50 border border-sky-200 hover:bg-sky-100 transition"
+              className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-brand-700 bg-brand-50 border border-brand-200 hover:bg-brand-100 transition"
             >
               <CalendarDays className="w-4 h-4" />
               ดูปฏิทินทั้งหมด
@@ -659,7 +659,8 @@ export default function UserDashboard() {
               description="รายการล่าสุด 5 รายการ คลิกที่แถวเพื่อดูรายละเอียดเพิ่มเติม"
             />
           </div>
-          <div className="overflow-x-auto">
+          {/* Desktop: ตาราง */}
+          <div className="overflow-x-auto hidden md:block">
             <table className="table-fixed w-full text-sm text-slate-800">
               <thead>
                 <tr className="bg-slate-50 border-y border-slate-200">
@@ -727,6 +728,46 @@ export default function UserDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile: การ์ด */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {recent.length > 0 ? (
+              recent.map((leave, idx) => {
+                const key = (leave.status || "").toUpperCase();
+                return (
+                  <button
+                    key={leave.id ?? idx}
+                    onClick={() => navigate(`/leave/${leave.id}`)}
+                    className="w-full text-left p-4 hover:bg-slate-50 transition"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-slate-800">
+                        {leave.leaveType?.name || "-"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          chipClass[key] ||
+                          "bg-slate-100 text-slate-700 border border-slate-200"
+                        }`}
+                      >
+                        {statusLabels[key] || leave.status}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-sm text-slate-600">
+                      {formatDate(leave.startDate)} – {formatDate(leave.endDate)}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-400">
+                      ยื่นเมื่อ {formatDateTime(leave.createdAt)}
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="p-6 text-center text-slate-500">
+                ไม่มีข้อมูลการลา
+              </div>
+            )}
           </div>
         </Panel>
 

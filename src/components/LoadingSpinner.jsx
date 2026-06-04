@@ -29,8 +29,8 @@ export default function LoadingSpinner({
         <div className="flex flex-col items-center gap-3 text-sm">
           {/* Loading Spinner */}
           <div className={`relative flex ${sizeClasses[size]} items-center justify-center`}>
-            <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-            <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
+            <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+            <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.7)]" />
           </div>
           
           {/* Loading Message */}

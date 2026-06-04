@@ -216,7 +216,7 @@ export default function UserEdit() {
           value={formData[name]}
           onChange={handleChange}
           required
-          className="w-full appearance-none bg-white border border-slate-300 rounded-xl px-4 py-2 pr-10 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          className="w-full appearance-none bg-white border border-slate-300 rounded-xl px-4 py-2 pr-10 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-400"
         >
           <option value="">-- เลือก{label} --</option>
           {options.map((opt) => (
@@ -252,8 +252,8 @@ export default function UserEdit() {
         <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-sm p-6 text-center">
           <div className="flex flex-col items-center gap-3 text-sm">
             <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500" />
             </div>
             <span className="font-medium">กำลังโหลดข้อมูลผู้ใช้งาน...</span>
             <span className="text-xs text-slate-500">
@@ -266,7 +266,7 @@ export default function UserEdit() {
   }
 
   const inputClass =
-    "w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
 
   const getRoleLabel = (roleName) => {
     const th = ROLE_LABEL_TH[roleName];
@@ -288,9 +288,9 @@ export default function UserEdit() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -459,7 +459,7 @@ export default function UserEdit() {
                 disabled={!hasChanges}
                 className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition ${
                   hasChanges
-                    ? "bg-sky-600 hover:bg-sky-500 text-white"
+                    ? "bg-brand-600 hover:bg-brand-500 text-white"
                     : "bg-slate-200 text-slate-400 cursor-not-allowed"
                 }`}
               >
