@@ -37,6 +37,7 @@ import {
   filterLeaveBalancesLatestYear,
   formatRemainingDays,
 } from "../../utils/leavePolicy";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 const COLORS = {
   APPROVED: "#22c55e",
@@ -338,24 +339,7 @@ export default function UserDashboard() {
   const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY");
 
   if (loading || isLoading)
-    return (
-      <div className="flex items-center justify-center py-20 text-slate-800 font-kanit">
-        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.7)]" />
-            </div>
-            <span className="text-slate-800 font-medium">
-              กำลังโหลดแดชบอร์ดของคุณ...
-            </span>
-            <span className="text-xs text-slate-500">
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลการลาของคุณ
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดแดชบอร์ดของคุณ..." fullScreen={false} />;
 
   return (
 <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 font-kanit px-4 py-8 md:px-8 rounded-2xl">

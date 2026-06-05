@@ -23,6 +23,7 @@ import {
   formatRemainingDays,
 } from "../../utils/leavePolicy";
 import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function LeaveBalancePage() {
   const { user } = useAuth();
@@ -135,24 +136,7 @@ export default function LeaveBalancePage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20 text-slate-800 font-kanit">
-        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_16px_rgba(122,27,34,0.7)]" />
-            </div>
-            <span className="text-slate-800 font-medium">
-              กำลังโหลดข้อมูลสิทธิลาการลา...
-            </span>
-            <span className="text-xs text-slate-500">
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากเซิร์ฟเวอร์
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลสิทธิลาการลา..." fullScreen={false} />;
   }
 
   if (visibleEntitlements.data.length === 0) {

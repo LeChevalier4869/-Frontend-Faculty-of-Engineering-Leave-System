@@ -6,6 +6,7 @@ import isBetween from "dayjs/plugin/isBetween";
 import { ChevronDown } from "lucide-react";
 import { apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 dayjs.extend(isBetween);
 
@@ -245,11 +246,7 @@ export default function LeaveVerifier() {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
-        กำลังโหลดข้อมูลการลา...
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลการลา..." fullScreen={false} />;
   }
 
   return (

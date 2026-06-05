@@ -1,5 +1,5 @@
 import { FaGoogle } from "react-icons/fa";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints, BASE_URL } from "../../utils/api";
@@ -10,6 +10,14 @@ const BACKEND_URL = BASE_URL;
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
+
+  // เมื่อผู้ใช้กด back จากหน้าเลือกบัญชี Google เบราว์เซอร์จะคืนหน้านี้จาก bfcache
+  // ทำให้ state isLoading=true ค้างมาด้วย (ปุ่มกดไม่ได้) จึงรีเซ็ตทุกครั้งที่หน้าถูกแสดง
+  useEffect(() => {
+    const resetLoading = () => setIsLoading(false);
+    window.addEventListener("pageshow", resetLoading);
+    return () => window.removeEventListener("pageshow", resetLoading);
+  }, []);
 
   const handleGoogleLogin = () => {
     setIsLoading(true);

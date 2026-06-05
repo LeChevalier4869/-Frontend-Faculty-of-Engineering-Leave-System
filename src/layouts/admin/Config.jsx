@@ -3,6 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { apiEndpoints } from "../../utils/api";
 import { FaCog, FaSync, FaCalendarAlt, FaExclamationTriangle } from "react-icons/fa";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 const Panel = ({ className = "", children }) => (
   <div
@@ -444,22 +445,7 @@ export default function ConfigPage() {
     "px-4 py-2 rounded-xl border bg-white text-slate-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400 border-slate-300 placeholder:text-slate-400";
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center font-kanit text-slate-900 px-4">
-        <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-sm p-6 text-center">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500" />
-            </div>
-            <span className="font-medium">กำลังโหลดหน้าตั้งค่าระบบ...</span>
-            <span className="text-xs text-slate-500">
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากเซิร์ฟเวอร์
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดหน้าตั้งค่าระบบ..." fullScreen={false} />;
   }
 
   return (

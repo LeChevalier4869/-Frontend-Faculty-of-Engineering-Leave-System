@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import getApiUrl from "../../utils/apiUtils";
 import useAuth from "../../hooks/useAuth";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import { apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
@@ -129,11 +130,7 @@ export default function AdminDashboard() {
   const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY");
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
-        กำลังโหลดแดชบอร์ด...
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดแดชบอร์ด..." fullScreen={false} />;
   }
 
   return (

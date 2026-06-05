@@ -6,6 +6,7 @@ import { ChevronDown, Pencil } from "lucide-react";
 import Swal from "sweetalert2";
 import PropTypes from "prop-types";
 import { API, apiEndpoints } from "../../utils/api";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 dayjs.extend(isBetween);
 
@@ -196,24 +197,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
   const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY");
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 font-kanit text-slate-800">
-        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.7)]" />
-            </div>
-            <span className="font-medium">
-              กำลังโหลดรายการการลาที่รออนุมัติ...
-            </span>
-            <span className="text-xs text-slate-500">
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูล
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดรายการการลาที่รออนุมัติ..." fullScreen={false} />;
   }
 
   return (
