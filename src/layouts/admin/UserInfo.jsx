@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/th";
 import ProfileImage from "../../components/ProfileImage";
 import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
@@ -122,22 +123,7 @@ export default function UserInfo() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center font-kanit text-slate-700 px-4">
-        <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-sm p-6 text-center">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500" />
-            </div>
-            <span className="font-medium">กำลังโหลดข้อมูลผู้ใช้งาน...</span>
-            <span className="text-xs text-slate-500">
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากเซิร์ฟเวอร์
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลผู้ใช้งาน..." fullScreen={false} />;
   }
 
   if (!user) {

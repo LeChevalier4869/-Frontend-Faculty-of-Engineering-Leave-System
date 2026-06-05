@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 function UserLanding() {
   const [users, setUsers] = useState([]);
@@ -31,7 +32,7 @@ function UserLanding() {
 
   const formatUserInitial = (name) => name?.charAt(0).toUpperCase() || "?";
 
-  if (loading) return <div className="text-center mt-8">กำลังโหลดข้อมูล...</div>;
+  if (loading) return <LoadingSpinner message="กำลังโหลดข้อมูล..." fullScreen={false} />;
 
   if (error)
     return (

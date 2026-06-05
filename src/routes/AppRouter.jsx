@@ -5,54 +5,59 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import clsx from "clsx";
 import useAuth from "../hooks/useAuth";
-import Login2 from "../layouts/oauth/Login";
-import Callback from "../layouts/oauth/Callback";
 
+// คอมโพเนนต์โครงหลัก (โหลดทันที ไม่ lazy เพื่อให้ layout/route guard พร้อมใช้)
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
-import Leave2 from "../layouts/user/Leave2";
-import AddLeave2 from "../layouts/user/AddLeave2";
-import LeaveBalance from "../layouts/user/LeaveBalance";
-import LeaveDetail from "../layouts/user/LeaveDetails";
-import UserProfile2 from "../layouts/user/UserProfile2";
-import UserLanding from "../layouts/user/UserLanding";
-import UserDashBoard from "../layouts/user/UserDashBoard";
-import CalendarPage from "../layouts/user/CalendarPage";
-import LeaveApprover1 from "../layouts/approver/LeaveApprover1";
-import LeaveApprover2 from "../layouts/approver/LeaveApprover2";
-import LeaveApprover3 from "../layouts/approver/LeaveApprover3";
-import LeaveApprover4 from "../layouts/approver/LeaveApprover4";
-import LeaveVerifier from "../layouts/approver/LeaveVerifier";
-import Approver1Dashboard from "../layouts/approver/Approver1DashBoard";
+import ProtectedRoute from "../components/ProtectedRoute";
+import LoadingSpinner from "../components/LoadingSpinner";
+import bg from "../assets/bg.jpg";
+
+/*
+ * ทุกหน้าโหลดแบบ lazy (code-splitting) แล้วครอบด้วย <Suspense> ที่มี fallback กลางตัวเดียว
+ * → ตอน navigate ไปหน้าใดๆ จะเห็น loading UI แบบเดียวกันเสมอ และ bundle ถูกแบ่งเป็นก้อนย่อย
+ */
+const Login2 = lazy(() => import("../layouts/oauth/Login"));
+const Callback = lazy(() => import("../layouts/oauth/Callback"));
+const Leave2 = lazy(() => import("../layouts/user/Leave2"));
+const AddLeave2 = lazy(() => import("../layouts/user/AddLeave2"));
+const LeaveBalance = lazy(() => import("../layouts/user/LeaveBalance"));
+const LeaveDetail = lazy(() => import("../layouts/user/LeaveDetails"));
+const UserProfile2 = lazy(() => import("../layouts/user/UserProfile2"));
+const UserLanding = lazy(() => import("../layouts/user/UserLanding"));
+const UserDashBoard = lazy(() => import("../layouts/user/UserDashBoard"));
+const CalendarPage = lazy(() => import("../layouts/user/CalendarPage"));
+const LeaveApprover1 = lazy(() => import("../layouts/approver/LeaveApprover1"));
+const LeaveApprover2 = lazy(() => import("../layouts/approver/LeaveApprover2"));
+const LeaveApprover3 = lazy(() => import("../layouts/approver/LeaveApprover3"));
+const LeaveApprover4 = lazy(() => import("../layouts/approver/LeaveApprover4"));
+const LeaveVerifier = lazy(() => import("../layouts/approver/LeaveVerifier"));
+const Approver1Dashboard = lazy(() => import("../layouts/approver/Approver1DashBoard"));
 
 /** Admin pages **/
-import AdminDashboard from "../layouts/admin/AdminDashBoard";
-import DashBoard from "../layouts/admin/DashBoard";
-import DepartmentManage from "../layouts/admin/DepartmentManage";
-import OrganizationManage from "../layouts/admin/OrganizationManage";
-import PersonnelTypeManage from "../layouts/admin/PersonelTypeManage";
-import HolidayManage from "../layouts/admin/HolidayManage";
-import SettingManage from "../layouts/admin/SettingManage";
-import LeaveTypeManage from "../layouts/admin/LeaveTypeManage";
-import UserManage from "../layouts/admin/UserManage";
-import UserInfo from "../layouts/admin/UserInfo";
-import EditUser from "../layouts/admin/EditUser";
-import EditProfile from "../layouts/admin/EditProfile";
-import AddnewUser from "../layouts/admin/AddnewUser";
-import LeaveAdmin from "../layouts/admin/LeaveAdmin";
-import LeaveReport from "../layouts/admin/LeaveReport";
-import AddOtherRequest from "../layouts/admin/AddOtherRequest";
-import ProxyApprovalManagement from "../layouts/admin/ProxyApprovalManagement";
-import AuditLogManagement from "../layouts/admin/AuditLogManagement";
-import Config from "../layouts/admin/Config";
-import PositionNumberManagement from "../layouts/admin/PositionNumberManagement";
-import RoleManagement from "../layouts/admin/RoleManagement";
-import RankManage from "../layouts/admin/RankManage";
-import ProtectedRoute from "../components/ProtectedRoute";
-import bg from "../assets/bg.jpg";
+const DashBoard = lazy(() => import("../layouts/admin/DashBoard"));
+const DepartmentManage = lazy(() => import("../layouts/admin/DepartmentManage"));
+const OrganizationManage = lazy(() => import("../layouts/admin/OrganizationManage"));
+const PersonnelTypeManage = lazy(() => import("../layouts/admin/PersonelTypeManage"));
+const HolidayManage = lazy(() => import("../layouts/admin/HolidayManage"));
+const SettingManage = lazy(() => import("../layouts/admin/SettingManage"));
+const LeaveTypeManage = lazy(() => import("../layouts/admin/LeaveTypeManage"));
+const UserManage = lazy(() => import("../layouts/admin/UserManage"));
+const UserInfo = lazy(() => import("../layouts/admin/UserInfo"));
+const EditUser = lazy(() => import("../layouts/admin/EditUser"));
+const EditProfile = lazy(() => import("../layouts/admin/EditProfile"));
+const AddnewUser = lazy(() => import("../layouts/admin/AddnewUser"));
+const LeaveReport = lazy(() => import("../layouts/admin/LeaveReport"));
+const AddOtherRequest = lazy(() => import("../layouts/admin/AddOtherRequest"));
+const ProxyApprovalManagement = lazy(() => import("../layouts/admin/ProxyApprovalManagement"));
+const AuditLogManagement = lazy(() => import("../layouts/admin/AuditLogManagement"));
+const Config = lazy(() => import("../layouts/admin/Config"));
+const PositionNumberManagement = lazy(() => import("../layouts/admin/PositionNumberManagement"));
+const RoleManagement = lazy(() => import("../layouts/admin/RoleManagement"));
+const RankManage = lazy(() => import("../layouts/admin/RankManage"));
 
 function AppLayout() {
   const [isMobile, setIsMobile] = useState(false);
@@ -117,7 +122,10 @@ function AppLayout() {
             isMobile={isMobile}
           />
           <main className={clsx("flex-1 overflow-auto p-4", mainShift)}>
-            <Outlet />
+            {/* fallback กลาง: ทุกหน้าที่ navigate เข้ามาจะเห็น loading แบบเดียวกัน */}
+            <Suspense fallback={<LoadingSpinner message="กำลังโหลดหน้า..." fullScreen={false} />}>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
       </div>
@@ -127,7 +135,11 @@ function AppLayout() {
 
 const guestRouter = createBrowserRouter([
   {
-    element: <Outlet />,
+    element: (
+      <Suspense fallback={<LoadingSpinner message="กำลังโหลด..." />}>
+        <Outlet />
+      </Suspense>
+    ),
     children: [
       { path: "/", element: <Login2 /> },
       { path: "/login", element: <Login2 /> },

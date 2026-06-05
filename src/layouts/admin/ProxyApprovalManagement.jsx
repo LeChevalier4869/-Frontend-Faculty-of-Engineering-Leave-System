@@ -534,6 +534,8 @@ const ProxyApprovalManagement = () => {
         if (response.status === 200 || response.status === 201) {
           Swal.fire('สำเร็จ', 'ยกเลิกการมอบอำนาจสำเร็จ', 'success');
           loadProxyApprovals();
+          // แจ้ง Sidebar ให้ดึงสิทธิ์ proxy ใหม่ทันที
+          window.dispatchEvent(new Event("proxy-updated"));
         } else {
           throw new Error('การยกเลิกไม่สำเร็จ');
         }
@@ -808,6 +810,8 @@ const ProxyApprovalManagement = () => {
       loadProxyApprovals();
       setShowModal(false);
       resetForm();
+      // แจ้ง Sidebar ให้ดึงสิทธิ์ proxy ใหม่ทันที (ไม่ต้องรอ refresh หน้า)
+      window.dispatchEvent(new Event("proxy-updated"));
     } catch (err) {
       console.error("Error saving proxy approval:", err);
       console.error("Error response:", err.response);

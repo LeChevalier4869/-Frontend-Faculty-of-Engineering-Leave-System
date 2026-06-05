@@ -6,6 +6,7 @@ import { apiEndpoints } from "../../utils/api";
 import { Link } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
 import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function UserHome() {
   // 1) leaveBalance array, loading flag, and error message
@@ -34,11 +35,7 @@ export default function UserHome() {
 
   // 3) Render loading or error
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600 text-lg">กำลังโหลดข้อมูลสิทธิ์การลา…</p>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลสิทธิ์การลา…" fullScreen={false} />;
   }
 
   if (error) {

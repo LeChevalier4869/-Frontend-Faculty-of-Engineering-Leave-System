@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
 import { Clock } from "lucide-react";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
@@ -142,23 +143,7 @@ function LeaveAdmin() {
   const totalPages = Math.ceil(leaveRequests.length / itemsPerPage);
 
   if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-slate-50 text-slate-800 font-kanit rounded-2xl">
-        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand-500 shadow-[0_0_18px_rgba(122,27,34,0.7)]" />
-            </div>
-            <span className="text-slate-800 font-medium">กำลังโหลดข้อมูลคำขอลา...</span>
-            <span className="text-xs text-slate-500 flex items-center gap-1">
-              <Clock className="w-4 h-4 text-brand-500" />
-              กำลังดึงข้อมูลจากระบบ
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลคำขอลา..." fullScreen={false} />;
   }
 
   return (
