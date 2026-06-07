@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import { ChevronDown, Pencil } from "lucide-react";
+import { ChevronDown, CalendarDays, FileText, Clock } from "lucide-react";
 import Swal from "sweetalert2";
 import PropTypes from "prop-types";
 import { API, apiEndpoints } from "../../utils/api";
@@ -298,222 +298,153 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
             </button>
           </div>
 
-          {/* Desktop: ตาราง */}
-          <div className="rounded-xl border border-slate-200 overflow-x-auto bg-white hidden md:block">
-            <table className="w-full table-auto text-sm text-slate-800">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  {[
-                    "วันที่ยื่น",
-                    "ชื่อผู้ลา",
-                    "ประเภทการลา",
-                    "วันเริ่มต้น",
-                    "วันสิ้นสุด",
-                    "สถานะ",
-                    "ความคิดเห็น",
-                    "ดำเนินการ",
-                  ].map((h, i) => (
-                    <th
-                      key={i}
-                      className={`px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] text-slate-500 ${
-                        h === "ชื่อผู้ลา" ? "w-[220px]" : ""
-                      }`}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {displayItems.length > 0 ? (
-                  displayItems.map((leave, idx) => {
-                    const detailId = leave.leaveRequestDetails?.[0]?.id;
-                    const statusKey = (leave.status || "").toUpperCase();
-                    return (
-                      <tr
-                        key={leave.id}
-                        className={`${
-                          idx % 2 === 0 ? "bg-white" : "bg-slate-50"
-                        } border-b border-slate-100 hover:bg-slate-100 transition cursor-pointer`}
-                        onClick={() => navigate(`/leave/${leave.id}`)}
-                      >
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {formatDateTime(leave.createdAt)}
-                        </td>
-                        <td className="px-4 py-2 whitespace-normal break-words w-[220px]">
-                          {leave.user.prefixName}
-                          {leave.user.firstName} {leave.user.lastName}
-                        </td>
-                        <td className="px-4 py-2 whitespace-normal break-words">
-                          {leaveTypesMap[leave.leaveTypeId] || "-"}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {formatDate(leave.startDate)}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {formatDate(leave.endDate)}
-                        </td>
-                        <td className="px-4 py-2">
-                          <span
-                            className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                              statusColors[statusKey] ||
-                              "bg-slate-100 text-slate-700 border border-slate-200"
-                            }`}
-                          >
-                            {statusLabels[statusKey] || leave.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 align-top">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={comments[detailId] || ""}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) =>
-                                setComments((c) => ({
-                                  ...c,
-                                  [detailId]: e.target.value,
-                                }))
-                              }
-                              className="w-full bg-white text-slate-900 border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-300"
-                              placeholder="ใส่ความคิดเห็นสำหรับผู้อนุมัติถัดไป"
-                            />
-                            <Pencil
-                              className="w-4 h-4 text-slate-400 cursor-pointer"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          <div className="flex flex-col sm:flex-row justify-center gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleApprove(detailId);
-                              }}
-                              disabled={loadingApprovals[detailId]}
-                              className={`px-4 py-1 rounded-lg text-xs font-medium shadow-sm ${
-                                loadingApprovals[detailId]
-                                  ? "bg-emerald-400/70 cursor-not-allowed text-white"
-                                  : "bg-emerald-500 hover:bg-emerald-400 text-white"
-                              } transition`}
-                            >
-                              ตกลง
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleReject(detailId);
-                              }}
-                              disabled={loadingApprovals[detailId]}
-                              className={`px-4 py-1 rounded-lg text-xs font-medium shadow-sm ${
-                                loadingApprovals[detailId]
-                                  ? "bg-red-400/70 cursor-not-allowed text-white"
-                                  : "bg-red-500 hover:bg-red-400 text-white"
-                              } transition`}
-                            >
-                              ปฏิเสธ
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      className="px-4 py-6 text-center text-slate-500"
-                    >
-                      ไม่มีข้อมูลการลา
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile: การ์ด */}
-          <div className="md:hidden space-y-3">
-            {displayItems.length > 0 ? (
-              displayItems.map((leave) => {
+          {/* รายการคำขอ: การ์ด (responsive, ไม่ใช้ overflow-x) */}
+          {displayItems.length > 0 ? (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              {displayItems.map((leave) => {
                 const detailId = leave.leaveRequestDetails?.[0]?.id;
                 const statusKey = (leave.status || "").toUpperCase();
+                const initials = `${leave.user?.firstName?.[0] || ""}${leave.user?.lastName?.[0] || ""}`.toUpperCase();
+                const dayCount =
+                  leave.thisTimeDays ??
+                  leave.leavedDays ??
+                  (dayjs(leave.endDate).diff(dayjs(leave.startDate), "day") + 1);
                 return (
                   <div
                     key={leave.id}
-                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                    className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition"
                   >
-                    <div
-                      onClick={() => navigate(`/leave/${leave.id}`)}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="font-medium text-slate-800">
-                          {leave.user.prefixName}
-                          {leave.user.firstName} {leave.user.lastName}
+                    {/* หัวการ์ด: ผู้ลา + สถานะ */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 font-semibold ring-1 ring-brand-100">
+                          {initials || "—"}
                         </div>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
-                            statusColors[statusKey] ||
-                            "bg-slate-100 text-slate-700 border border-slate-200"
-                          }`}
-                        >
-                          {statusLabels[statusKey] || leave.status}
-                        </span>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-900 truncate">
+                            {leave.user.prefixName}
+                            {leave.user.firstName} {leave.user.lastName}
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-slate-400">
+                            <Clock className="w-3.5 h-3.5" />
+                            ยื่นเมื่อ {formatDateTime(leave.createdAt)}
+                          </div>
+                        </div>
                       </div>
-                      <div className="mt-1 text-sm text-slate-600">
-                        {leaveTypesMap[leave.leaveTypeId] || "-"}
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                          statusColors[statusKey] ||
+                          "bg-slate-100 text-slate-700 border border-slate-200"
+                        }`}
+                      >
+                        {statusLabels[statusKey] || leave.status}
+                      </span>
+                    </div>
+
+                    {/* รายละเอียดการลา */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2 min-w-0">
+                        <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-400">
+                          <FileText className="w-3.5 h-3.5" /> ประเภทการลา
+                        </div>
+                        <div className="text-sm font-medium text-slate-800 mt-0.5 break-words">
+                          {leaveTypesMap[leave.leaveTypeId] || "-"}
+                        </div>
                       </div>
-                      <div className="mt-1 text-sm text-slate-600">
-                        {formatDate(leave.startDate)} – {formatDate(leave.endDate)}
+                      <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2">
+                        <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-400">
+                          <CalendarDays className="w-3.5 h-3.5" /> วันเริ่มต้น
+                        </div>
+                        <div className="text-sm font-medium text-slate-800 mt-0.5">
+                          {formatDate(leave.startDate)}
+                        </div>
                       </div>
-                      <div className="mt-1 text-xs text-slate-400">
-                        ยื่นเมื่อ {formatDateTime(leave.createdAt)}
+                      <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2">
+                        <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-400">
+                          <CalendarDays className="w-3.5 h-3.5" /> วันสิ้นสุด
+                        </div>
+                        <div className="text-sm font-medium text-slate-800 mt-0.5">
+                          {formatDate(leave.endDate)}
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2">
+                        <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                          จำนวนวัน
+                        </div>
+                        <div className="text-sm font-medium text-slate-800 mt-0.5">
+                          {dayCount} วัน
+                        </div>
                       </div>
                     </div>
-                    <input
-                      type="text"
-                      value={comments[detailId] || ""}
-                      onChange={(e) =>
-                        setComments((c) => ({ ...c, [detailId]: e.target.value }))
-                      }
-                      className="mt-3 w-full bg-white text-slate-900 border border-slate-200 rounded-lg px-3 py-2 text-xs shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-300"
-                      placeholder="ใส่ความคิดเห็นสำหรับผู้อนุมัติถัดไป"
-                    />
-                    <div className="mt-3 grid grid-cols-2 gap-2">
+
+                    {leave.reason ? (
+                      <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2">
+                        <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                          เหตุผลการลา
+                        </div>
+                        <div className="text-sm text-slate-700 mt-0.5 break-words">
+                          {leave.reason}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* กล่องความคิดเห็น (ใหญ่ขึ้น เป็น textarea) */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                        ความคิดเห็นถึงผู้อนุมัติถัดไป{" "}
+                        <span className="text-slate-400 font-normal">(ไม่บังคับ)</span>
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={comments[detailId] || ""}
+                        onChange={(e) =>
+                          setComments((c) => ({ ...c, [detailId]: e.target.value }))
+                        }
+                        className="w-full resize-y bg-white text-slate-900 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-300 placeholder:text-slate-400"
+                        placeholder="ใส่ความคิดเห็น/หมายเหตุสำหรับผู้อนุมัติถัดไป..."
+                      />
+                    </div>
+
+                    {/* ปุ่มดำเนินการ */}
+                    <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-1">
                       <button
-                        onClick={() => handleApprove(detailId)}
-                        disabled={loadingApprovals[detailId]}
-                        className={`py-2 rounded-lg text-sm font-medium ${
-                          loadingApprovals[detailId]
-                            ? "bg-emerald-400/70 cursor-not-allowed text-white"
-                            : "bg-emerald-500 hover:bg-emerald-400 text-white"
-                        } transition`}
+                        onClick={() => navigate(`/leave/${leave.id}`)}
+                        className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
                       >
-                        ตกลง
+                        ดูรายละเอียด
                       </button>
                       <button
                         onClick={() => handleReject(detailId)}
                         disabled={loadingApprovals[detailId]}
-                        className={`py-2 rounded-lg text-sm font-medium ${
+                        className={`inline-flex items-center justify-center px-5 py-2 rounded-xl text-sm font-semibold shadow-sm transition ${
                           loadingApprovals[detailId]
-                            ? "bg-red-400/70 cursor-not-allowed text-white"
-                            : "bg-red-500 hover:bg-red-400 text-white"
-                        } transition`}
+                            ? "bg-rose-300 cursor-not-allowed text-white"
+                            : "bg-rose-500 hover:bg-rose-600 text-white"
+                        }`}
                       >
                         ปฏิเสธ
+                      </button>
+                      <button
+                        onClick={() => handleApprove(detailId)}
+                        disabled={loadingApprovals[detailId]}
+                        className={`inline-flex items-center justify-center px-5 py-2 rounded-xl text-sm font-semibold shadow-sm transition ${
+                          loadingApprovals[detailId]
+                            ? "bg-emerald-300 cursor-not-allowed text-white"
+                            : "bg-emerald-500 hover:bg-emerald-600 text-white"
+                        }`}
+                      >
+                        {loadingApprovals[detailId] ? "กำลังดำเนินการ..." : "อนุมัติ"}
                       </button>
                     </div>
                   </div>
                 );
-              })
-            ) : (
-              <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">
-                ไม่มีข้อมูลการลา
-              </div>
-            )}
-          </div>
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+              ไม่มีข้อมูลการลา
+            </div>
+          )}
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-5 bg-white rounded-lg px-4 py-3 border border-slate-200">
