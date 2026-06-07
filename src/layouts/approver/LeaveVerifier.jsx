@@ -161,7 +161,16 @@ export default function LeaveVerifier() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       Swal.close();
-      Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
+      await Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "รับรองคำขอลาเรียบร้อยแล้ว",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true, // ปุ่มกากบาทปิดแบบแมนนวล
+        allowOutsideClick: true, // คลิกพื้นที่ด้านนอกเพื่อปิดได้
+      });
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
@@ -191,7 +200,16 @@ export default function LeaveVerifier() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       Swal.close();
-      Swal.fire("สำเร็จ", "ปฏิเสธเรียบร้อยแล้ว", "success");
+      await Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "ปฏิเสธคำขอลาเรียบร้อยแล้ว",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true, // ปุ่มกากบาทปิดแบบแมนนวล
+        allowOutsideClick: true, // คลิกพื้นที่ด้านนอกเพื่อปิดได้
+      });
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
@@ -439,21 +457,10 @@ export default function LeaveVerifier() {
                       ) : (
                         <div className="flex flex-col sm:flex-row justify-center gap-2">
                           <button
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
-                              const result = await Swal.fire({
-                                title: "รับรองคำขอลา",
-                                text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
-                                icon: "warning",
-                                showCancelButton: true,
-                                confirmButtonText: "ใช่, รับรอง",
-                                cancelButtonText: "ยกเลิก",
-                                confirmButtonColor: "#16a34a",
-                                cancelButtonColor: "#d33",
-                              });
-                              if (result.isConfirmed) {
-                                handleApprove(detailId);
-                              }
+                              // อนุมัติ/รับรอง: กดได้ทันที ไม่ต้องถามยืนยันซ้ำ
+                              handleApprove(detailId);
                             }}
                             disabled={loadingApprovals[detailId]}
                             className={`px-4 py-1 rounded text-white ${
