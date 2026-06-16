@@ -6,38 +6,37 @@ import React from "react";
  */
 export default function LoadingSpinner({
   message = "กำลังโหลดข้อมูล...",
-  size = "lg",
+  size = "md",
   fullScreen = true
 }) {
-  // ขนาดวงแหวน ping + จุดตรงกลาง (ปรับให้สมส่วนกับการ์ด)
+  // ขนาดวงแหวน ping + จุดตรงกลาง (ย่อให้กระทัดรัดขึ้น)
   const sizeClasses = {
-    sm: { ring: "h-10 w-10", dot: "h-3 w-3" },
-    md: { ring: "h-14 w-14", dot: "h-4 w-4" },
-    lg: { ring: "h-20 w-20", dot: "h-5 w-5" },
+    sm: { ring: "h-7 w-7", dot: "h-2 w-2" },
+    md: { ring: "h-9 w-9", dot: "h-2.5 w-2.5" },
+    lg: { ring: "h-12 w-12", dot: "h-3.5 w-3.5" },
   };
-  const s = sizeClasses[size] || sizeClasses.lg;
+  const s = sizeClasses[size] || sizeClasses.md;
 
-  // โหมด fullScreen = ทับทั้งจอ, โหมด in-content = กึ่งกลางพื้นที่เนื้อหา (มีความสูงให้กลางแนวตั้งจริง)
+  // โหมด fullScreen = ทับทั้งจอ, โหมด in-content = กึ่งกลางพื้นที่เนื้อหา (สูงพอให้อยู่กลางแนวตั้งจริง)
   const containerClasses = fullScreen
-    ? "fixed inset-0 z-50 flex items-center justify-center bg-slate-50 font-kanit text-slate-800"
+    ? "fixed inset-0 z-50 flex items-center justify-center bg-slate-50/80 backdrop-blur-sm font-kanit text-slate-800"
     : "flex items-center justify-center w-full min-h-[70vh] p-4 font-kanit text-slate-800";
 
   return (
     <div className={containerClasses}>
-      <div className="w-full max-w-lg rounded-3xl bg-white border border-slate-200 shadow-xl px-8 py-12">
-        <div className="flex flex-col items-center gap-5 text-base">
+      <div className="rounded-2xl bg-white border border-slate-200 shadow-lg px-8 py-6">
+        {/* จัดกึ่งกลางแนวตั้ง: ไอคอนบน ข้อความล่าง ทุกอย่าง center */}
+        <div className="flex flex-col items-center gap-3 text-center">
           {/* Loading Spinner */}
           <div className={`relative flex ${s.ring} items-center justify-center`}>
             <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
-            <span className={`relative inline-flex ${s.dot} rounded-full bg-brand-500 shadow-[0_0_24px_rgba(122,27,34,0.7)]`} />
+            <span className={`relative inline-flex ${s.dot} rounded-full bg-brand-500 shadow-[0_0_14px_rgba(122,27,34,0.6)]`} />
           </div>
 
           {/* Loading Message */}
-          <div className="text-center">
-            <span className="font-medium text-lg">
-              {message}
-            </span>
-            <span className="text-sm text-slate-500 block mt-1.5">
+          <div>
+            <span className="font-medium text-slate-800 block">{message}</span>
+            <span className="text-xs text-slate-500 block mt-0.5">
               กรุณารอสักครู่ ระบบกำลังดึงข้อมูล
             </span>
           </div>

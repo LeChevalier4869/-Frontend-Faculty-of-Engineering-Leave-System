@@ -456,11 +456,14 @@ export default function UserDashboard() {
                         คงเหลือ
                       </span>
                     </div>
-                    <div className="mt-1 flex items-baseline justify-between">
-                      <span className={`text-2xl font-semibold ${remainingDisplay.className}`}>
+                    <div className="mt-1">
+                      <span
+                        className={`block whitespace-nowrap text-xl font-semibold leading-tight ${remainingDisplay.className}`}
+                        title={remainingDisplay.text}
+                      >
                         {remainingDisplay.text}
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="mt-0.5 block text-xs text-slate-500">
                         วันลาคงเหลือ
                       </span>
                     </div>
