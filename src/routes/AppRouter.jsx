@@ -16,6 +16,53 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import LoadingSpinner from "../components/LoadingSpinner";
 import bg from "../assets/bg.jpg";
 
+/*
+ * ทุกหน้าโหลดแบบ lazy (code-splitting) แล้วครอบด้วย <Suspense> ที่มี fallback กลางตัวเดียว
+ * → ตอน navigate ไปหน้าใดๆ จะเห็น loading UI แบบเดียวกันเสมอ และ bundle ถูกแบ่งเป็นก้อนย่อย
+ */
+const Login2 = lazy(() => import("../layouts/oauth/Login"));
+const Callback = lazy(() => import("../layouts/oauth/Callback"));
+const Leave2 = lazy(() => import("../layouts/user/Leave2"));
+const AddLeave2 = lazy(() => import("../layouts/user/AddLeave2"));
+const LeaveBalance = lazy(() => import("../layouts/user/LeaveBalance"));
+const LeaveDetail = lazy(() => import("../layouts/user/LeaveDetails"));
+const UserProfile2 = lazy(() => import("../layouts/user/UserProfile2"));
+const UserLanding = lazy(() => import("../layouts/user/UserLanding"));
+const UserDashBoard = lazy(() => import("../layouts/user/UserDashBoard"));
+const CalendarPage = lazy(() => import("../layouts/user/CalendarPage"));
+const LeaveApprover1 = lazy(() => import("../layouts/approver/LeaveApprover1"));
+const LeaveApprover2 = lazy(() => import("../layouts/approver/LeaveApprover2"));
+const LeaveApprover3 = lazy(() => import("../layouts/approver/LeaveApprover3"));
+const LeaveApprover4 = lazy(() => import("../layouts/approver/LeaveApprover4"));
+const LeaveVerifier = lazy(() => import("../layouts/approver/LeaveVerifier"));
+const Approver1Dashboard = lazy(() => import("../layouts/approver/Approver1DashBoard"));
+
+/** Admin pages **/
+import AdminDashboard from "../layouts/admin/AdminDashBoard";
+import DashBoard from "../layouts/admin/DashBoard";
+import DepartmentManage from "../layouts/admin/DepartmentManage";
+import OrganizationManage from "../layouts/admin/OrganizationManage";
+import PersonnelTypeManage from "../layouts/admin/PersonelTypeManage";
+import HolidayManage from "../layouts/admin/HolidayManage";
+import SettingManage from "../layouts/admin/SettingManage";
+import LeaveTypeManage from "../layouts/admin/LeaveTypeManage";
+import UserManage from "../layouts/admin/UserManage";
+import UserInfo from "../layouts/admin/UserInfo";
+import EditUser from "../layouts/admin/EditUser";
+import EditProfile from "../layouts/admin/EditProfile";
+import AddnewUser from "../layouts/admin/AddnewUser";
+import LeaveAdmin from "../layouts/admin/LeaveAdmin";
+import LeaveReport from "../layouts/admin/LeaveReport";
+import AddOtherRequest from "../layouts/admin/AddOtherRequest";
+import ProxyApprovalManagement from "../layouts/admin/ProxyApprovalManagement";
+import AuditLogManagement from "../layouts/admin/AuditLogManagement";
+import Config from "../layouts/admin/Config";
+import PositionNumberManagement from "../layouts/admin/PositionNumberManagement";
+import RoleManagement from "../layouts/admin/RoleManagement";
+import RankManage from "../layouts/admin/RankManage";
+import AdminManagementPage from "../layouts/admin/AdminManege";
+import ReportPage from "../layouts/admin/Report";
+
 function AppLayout() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);

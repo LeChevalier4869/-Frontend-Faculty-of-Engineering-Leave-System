@@ -14,9 +14,15 @@ import {
   FaClipboardList,
   FaClipboardCheck,
   FaCheckCircle,
-  FaIdBadge,
+  FaIdCard,
+  FaFileSignature,
+  FaUserShield,
   FaUserLock,
-  FaTools 
+  FaHistory,
+  FaSitemap,
+  FaTags,
+  FaLayerGroup,
+  FaIdBadge
 } from "react-icons/fa";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { HiOutlineChevronDown } from "react-icons/hi";
@@ -26,12 +32,7 @@ import PropTypes from "prop-types";
 
 const userNav = [
   { to: "/", text: "แดชบอร์ด", icon: <FaTachometerAlt />, title: "แดชบอร์ด" },
-  {
-    to: "/leave/balance",
-    text: "ยอดวันลาคงเหลือ",
-    icon: <FaChartBar />,
-    title: "ยอดวันลาคงเหลือ",
-  },
+  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaChartPie />, title: "ยอดวันลาคงเหลือ" },
   { to: "/leave", text: "การลา", icon: <FaClipboardList />, title: "การลา" },
   { to: "/Calendar", text: "ปฏิทิน", icon: <FaCalendarAlt />, title: "ปฏิทิน" },
   {
@@ -126,11 +127,132 @@ const superAdminOnlyNav = [
 //   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 // ];
 
-export default function Sidebar({
-  isOpen,
-  onClose = () => {},
-  isMobile = false,
-}) {
+// Context ส่ง isMobile/onClose ลงไปยัง Item ที่อยู่ระดับ module (ไม่ต้องส่ง prop ทุกจุดเรียก)
+const SidebarContext = createContext({ isMobile: false, onClose: () => {} });
+
+// เลื่อน sidebar ขึ้นบนสุดเมื่อเปลี่ยนเมนู
+const scrollSidebarTop = () => {
+  const run = () => {
+    const sidebarElement = document.querySelector("aside");
+    if (sidebarElement) {
+      sidebarElement.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        if (sidebarElement.scrollTop > 0) {
+          sidebarElement.scrollTo({ top: 0, behavior: "auto" });
+        }
+      }, 100);
+    }
+  };
+  run();
+  setTimeout(run, 50);
+};
+
+/*
+ * สำคัญ: Item / HighLevelAdminItem / Section ต้องประกาศที่ระดับ module (ไม่ใช่ภายใน Sidebar)
+ * เพื่อให้ component identity คงที่ตลอด ไม่เช่นนั้นทุกครั้งที่ Sidebar re-render (เช่น location เปลี่ยน
+ * หลังคลิกเมนู) React จะมองเป็น type ใหม่แล้ว unmount+remount ทั้งซับทรี ทำให้คลิกแรกถูก "กิน"
+ * ต้องคลิกซ้ำถึงจะ navigate ได้ (บั๊คเมนู proxy)
+ */
+function Item({ to, icon, text, proxyId, title }) {
+  const location = useLocation();
+  const { isMobile, onClose } = useContext(SidebarContext);
+
+  const currentPath = location.pathname;
+  const currentProxy = new URLSearchParams(location.search).get("proxy");
+  const itemProxy = proxyId ? proxyId.toString() : null;
+
+  const active =
+    currentPath === to &&
+    ((currentProxy === null && itemProxy === null) ||
+      (currentProxy !== null && itemProxy !== null && currentProxy === itemProxy));
+
+  const handleClick = () => {
+    scrollSidebarTop();
+    if (isMobile && typeof onClose === "function") {
+      onClose();
+    }
+  };
+
+  return (
+    <Link
+      to={proxyId ? `${to}?proxy=${proxyId}` : to}
+      onClick={handleClick}
+      title={title || text}
+      className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition ${
+        active
+          ? "bg-white/20 text-white ring-1 ring-white/30"
+          : "text-slate-200 hover:text-white hover:bg-white/10"
+      }`}
+    >
+      <span className="text-base shrink-0">{icon}</span>
+      <span className="truncate">{text}</span>
+    </Link>
+  );
+}
+
+Item.propTypes = {
+  to: PropTypes.string.isRequired,
+  icon: PropTypes.node.isRequired,
+  text: PropTypes.string.isRequired,
+  proxyId: PropTypes.number,
+  title: PropTypes.string,
+};
+
+// Special Item for high-level admin that handles navigation properly
+function HighLevelAdminItem({ to, icon, text, title }) {
+  const location = useLocation();
+  const { isMobile, onClose } = useContext(SidebarContext);
+
+  const currentPath = location.pathname;
+  const active = currentPath === to || currentPath.startsWith(`${to}/`);
+
+  const handleClick = () => {
+    if (isMobile && typeof onClose === "function") {
+      onClose();
+    }
+  };
+
+  return (
+    <Link
+      to={to}
+      onClick={handleClick}
+      title={title || text}
+      className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition w-full text-left ${
+        active
+          ? "bg-white/20 text-white ring-1 ring-white/30"
+          : "text-slate-200 hover:text-white hover:bg-white/10"
+      }`}
+    >
+      <span className="text-base shrink-0">{icon}</span>
+      <span className="truncate">{text}</span>
+    </Link>
+  );
+}
+
+HighLevelAdminItem.propTypes = {
+  to: PropTypes.string.isRequired,
+  icon: PropTypes.node.isRequired,
+  text: PropTypes.string.isRequired,
+  title: PropTypes.string,
+};
+
+function Section({ title, children }) {
+  return (
+    <div className="space-y-2">
+      <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider px-4 mt-2 mb-1">
+        {title}
+      </div>
+      <div className="flex flex-col gap-1">{children}</div>
+    </div>
+  );
+}
+
+Section.propTypes = {
+  title: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+};
+
+export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }) {
   const { user } = useAuth();
   const [openAdmin, setOpenAdmin] = useState(false);
 
@@ -152,26 +274,36 @@ export default function Sidebar({
         return;
       }
 
-    const active =
-      currentPath === to &&
-      ((currentProxy === null && itemProxy === null) ||
-        (currentProxy !== null &&
-          itemProxy !== null &&
-          currentProxy === itemProxy));
+      // ดึงข้อมูล proxy approvals ทั้งหมด (ACTIVE และ EXPIRED)
+      const response = await axios.get(`${BASE_URL}/proxy-approval`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    const handleClick = () => {
-      // Scroll sidebar to top with multiple attempts for reliability
-      const scrollToTop = () => {
-        const sidebarElement = document.querySelector("aside");
-        if (sidebarElement) {
-          sidebarElement.scrollTo({ top: 0, behavior: "smooth" });
-          // Fallback: try instant scroll if smooth doesn't work
-          setTimeout(() => {
-            if (sidebarElement.scrollTop > 0) {
-              sidebarElement.scrollTo({ top: 0, behavior: "auto" });
-            }
-          }, 100);
-        }
+      const proxyApprovals = response.data.data || [];
+
+      // กรองเฉพาะ proxy ที่มีสถานะ ACTIVE
+      const activeProxies = proxyApprovals.filter((proxy) => proxy.status === "ACTIVE");
+
+      // กรองเฉพาะที่ user ปัจจุบันเป็น proxy approver
+      const userAsProxyProxies = activeProxies.filter((proxy) => proxy.proxyApproverId === user.id);
+
+      // ถ้าไม่มี proxy ที่ user เป็น proxy approver ก็ clear state ทั้งหมด
+      if (userAsProxyProxies.length === 0) {
+        setProxyVerifiers([]);
+        setProxyApprovers1([]);
+        setProxyApprovers2([]);
+        setProxyApprovers3([]);
+        setProxyApprovers4([]);
+        return;
+      }
+
+      // จัดกลุ่ม proxy ตามระดับ (ใช้ Set เพื่อกำจัดซ้ำ)
+      const proxyData = {
+        1: new Set(), // APPROVER_1
+        2: new Set(), // VERIFIER
+        3: new Set(), // APPROVER_2
+        4: new Set(), // APPROVER_3
+        5: new Set(), // APPROVER_4
       };
 
       userAsProxyProxies.forEach((proxy) => {
@@ -221,10 +353,7 @@ export default function Sidebar({
         : [];
 
   // SUPER_ADMIN สามารถเข้าถึงทุกเมนูที่ ADMIN เข้าได้
-  const hasRole = (r) =>
-    roles.includes(r) || (r === "ADMIN" && roles.includes("SUPER_ADMIN"));
-  const isActive = (to) =>
-    location.pathname === to || location.pathname.startsWith(`${to}/`);
+  const hasRole = (r) => roles.includes(r) || (r === "ADMIN" && roles.includes("SUPER_ADMIN"));
 
   // Proxy role flags (menu จะโชว์เมื่อมี proxy อย่างน้อย 1 รายการ)
   const isProxyVerifier = proxyVerifiers.length > 0;
@@ -348,10 +477,7 @@ export default function Sidebar({
     isProxyVerifier;
 
   return (
-    <>
-      {isMobile && isOpen && (
-        <div className="fixed inset-0 z-30 bg-black/60" onClick={onClose} />
-      )}
+    <SidebarContext.Provider value={{ isMobile, onClose }}>
       <aside
         className={`fixed top-0 left-0 z-40 h-full w-64 transform transition-transform duration-300 ease-in-out ${
           isMobile && !isOpen ? "-translate-x-full" : ""
