@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   FaUsersCog,
   FaIdBadge,
@@ -11,7 +12,11 @@ import PositionNumberManageContent from "../../components/admin/manage/PositionN
 import DepartmentManageContent from "../../components/admin/manage/OrganizationManageContent";
 import HolidayManageContent from "../../components/admin/manage/HolidayManageContent";
 export default function ManagementPage() {
-  const [activeTab, setActiveTab] = useState("users");
+  const location = useLocation();
+
+  const [activeTab, setActiveTab] = useState(
+    location.state?.activeTab || "users",
+  );
 
   const tabs = [
     { id: "users", label: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },

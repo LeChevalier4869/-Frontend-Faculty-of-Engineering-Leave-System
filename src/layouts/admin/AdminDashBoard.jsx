@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { apiEndpoints } from "../../utils/api";
 import {
   Users,
   Calendar,
@@ -17,12 +18,13 @@ import { FaHistory } from "react-icons/fa";
 import { FaFileCirclePlus } from "react-icons/fa6";
 import { MdAssignmentInd } from "react-icons/md";
 import { BiSolidReport } from "react-icons/bi";
+import { Link } from "react-router-dom";
 import getApiUrl from "../../utils/apiUtils";
 import useAuth from "../../hooks/useAuth";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const token = localStorage.getItem("accessToken");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -42,39 +44,28 @@ export default function AdminDashboard() {
 
     const fetchStats = async () => {
       setLoading(true);
+
       try {
-        const [usersRes, leavesRes, summaryRes] = await Promise.all([
-          axios.get(getApiUrl("admin/users"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(getApiUrl("admin/leave-requests"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(getApiUrl("admin/report/leave-summary"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        const users = usersRes.data.data || [];
-        const leaves = leavesRes.data.data || [];
-        const s = summaryRes.data.data || [];
-
-        setStats({
-          totalUsers: users.length,
-          totalRequests: leaves.length,
-          pending: leaves.filter((r) => r.status === "PENDING").length,
-          approved: leaves.filter((r) => r.status === "APPROVED").length,
-          rejected: leaves.filter((r) => r.status === "REJECTED").length,
-          cancelled: leaves.filter((r) => r.status === "CANCELLED").length,
-        });
-
-        setRecent(
-          leaves
-            .slice()
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 5),
+        const response = await axios.get(
+          apiEndpoints.getAdminDashboardSummary,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
-        setSummary(s);
+
+        const data = response.data.data;
+
+        // console.log(data);
+        setStats({
+          totalUsers: data.totalUsers,
+          totalRequests: data.totalRequests,
+          pending: data.pendingRequests,
+          approved: data.approvedRequests,
+          rejected: data.rejectedRequests,
+          cancelled: data.cancelledRequests,
+        });
       } catch (err) {
         console.error("AdminDashboard fetch error:", err.response || err);
       } finally {
@@ -209,42 +200,68 @@ export default function AdminDashboard() {
 
         {/* Stat cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-2">
-          <Card
-            icon={<Users className="w-6 h-6" />}
-            label="ผู้ใช้งานทั้งหมด"
-            value={stats.totalUsers}
-            tone="indigo"
-          />
-          <Card
-            icon={<List className="w-6 h-6" />}
-            label="คำขอลาทั้งหมด"
-            value={stats.totalRequests}
-            tone="violet"
-          />
-          <Card
-            icon={<Clock className="w-6 h-6" />}
-            label="รออนุมัติ"
-            value={stats.pending}
-            tone="amber"
-          />
-          <Card
-            icon={<CheckCircle className="w-6 h-6" />}
-            label="อนุมัติแล้ว"
-            value={stats.approved}
-            tone="emerald"
-          />
-          <Card
-            icon={<XCircle className="w-6 h-6" />}
-            label="ถูกปฏิเสธ"
-            value={stats.rejected}
-            tone="rose"
-          />
-          <Card
-            icon={<Calendar className="w-6 h-6" />}
-            label="ยกเลิก"
-            value={stats.cancelled}
-            tone="slate"
-          />
+          <div
+            className="cursor-pointer transition-transform hover:-translate-y-1"
+            onClick={() =>
+              navigate("/admin/management", {
+                state: {
+                  activeTab: "users",
+                },
+              })
+            }
+          >
+            <Card
+              icon={<Users className="w-6 h-6" />}
+              label="ผู้ใช้งานทั้งหมด"
+              value={stats.totalUsers}
+              tone="indigo"
+            />
+          </div>
+
+          <Link to="/admin/leave-requests">
+            <Card
+              icon={<List className="w-6 h-6" />}
+              label="คำขอลาทั้งหมด"
+              value={stats.totalRequests}
+              tone="violet"
+            />
+          </Link>
+
+          <Link to="/admin/leave-requests?status=PENDING">
+            <Card
+              icon={<Clock className="w-6 h-6" />}
+              label="รออนุมัติ"
+              value={stats.pending}
+              tone="amber"
+            />
+          </Link>
+
+          <Link to="/admin/leave-requests?status=APPROVED">
+            <Card
+              icon={<CheckCircle className="w-6 h-6" />}
+              label="อนุมัติแล้ว"
+              value={stats.approved}
+              tone="emerald"
+            />
+          </Link>
+
+          <Link to="/admin/leave-requests?status=REJECTED">
+            <Card
+              icon={<XCircle className="w-6 h-6" />}
+              label="ถูกปฏิเสธ"
+              value={stats.rejected}
+              tone="rose"
+            />
+          </Link>
+
+          <Link to="/admin/leave-requests?status=CANCELLED">
+            <Card
+              icon={<Calendar className="w-6 h-6" />}
+              label="ยกเลิก"
+              value={stats.cancelled}
+              tone="slate"
+            />
+          </Link>
         </div>
 
         {/* Action Buttons */}
@@ -277,38 +294,74 @@ export default function AdminDashboard() {
 
         {/* Tables */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <Section title="คำขอลาล่าสุด">
+          <Section
+            title="คำขอลาล่าสุด"
+            action={
+              <Link
+                to="/admin/leave-requests"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700"
+              >
+                ดูทั้งหมด
+              </Link>
+            }
+          >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="text-slate-600">
-                  <tr className="border-b border-slate-200">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500">
+                    <Th>#</Th>
                     <Th>วันที่</Th>
                     <Th>ผู้ขอ</Th>
                     <Th>ประเภทลา</Th>
                     <Th>สถานะ</Th>
+                    <Th></Th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {recent.map((r) => (
+                  {recent.map((r, index) => (
                     <tr
                       key={r.id}
-                      className="border-b border-slate-100 hover:bg-slate-50/80 transition"
+                      className="border-b border-slate-100 hover:bg-slate-50 transition"
                     >
-                      <Td>{formatDate(r.createdAt)}</Td>
-                      <Td>
-                        {r.user?.firstName} {r.user?.lastName}
+                      <Td className="font-medium text-slate-500">
+                        {index + 1}
                       </Td>
-                      <Td>{r.leaveType?.name}</Td>
+
+                      <Td>{formatDate(r.createdAt)}</Td>
+
+                      <Td>
+                        <div className="font-medium text-slate-800">
+                          {r.user?.firstName} {r.user?.lastName}
+                        </div>
+                      </Td>
+
+                      <Td>
+                        <span className="truncate max-w-[150px] inline-block">
+                          {r.leaveType?.name}
+                        </span>
+                      </Td>
+
                       <Td>{statusPill(r.status)}</Td>
+
+                      <Td>
+                        <Link
+                          to={`/admin/leave-requests/${r.id}`}
+                          className="text-blue-600 hover:text-blue-700 text-xs font-medium"
+                        >
+                          ดูรายละเอียด
+                        </Link>
+                      </Td>
                     </tr>
                   ))}
+
                   {recent.length === 0 && (
                     <tr>
                       <td
-                        colSpan={4}
-                        className="py-6 text-center text-slate-500"
+                        colSpan={6}
+                        className="py-10 text-center text-slate-400"
                       >
-                        ไม่มีคำขอลา
+                        ยังไม่มีคำขอลา
                       </td>
                     </tr>
                   )}

@@ -1,63 +1,65 @@
 // src/context/AuthContext.jsx
-import axios from 'axios'
-import { createContext, useState, useEffect, useContext } from 'react'
-import getApiUrl from '../utils/apiUtils.js'
-import PropTypes from 'prop-types'
+import axios from "axios";
+import { createContext, useState, useEffect, useContext } from "react";
+import getApiUrl from "../utils/apiUtils.js";
+import PropTypes from "prop-types";
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
 function AuthContextProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const run = async () => {
       try {
-        setLoading(true)
-        const token = localStorage.getItem('accessToken')
-        // console.log('🔍 Debug - AuthContext token:', token ? 'exists' : 'not found')
-        if (!token) return
+        setLoading(true);
+        const token = localStorage.getItem("accessToken");
+        console.log("token : ", token);
 
-        const endpoint = 'auth/me'
-        const url = getApiUrl(endpoint)
+        if (!token) return;
+
+        const endpoint = "auth/me";
+        const url = getApiUrl(endpoint);
+
         const res = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        // ดึงเฉพาะ object user จริง ๆ จาก response
-        const returned = res.data.data ?? res.data.user ?? res.data
-        // console.log('🔍 Debug - AuthContext fetched user:', {
-        //   id: returned?.id,
-        //   firstName: returned?.firstName,
-        //   lastName: returned?.lastName,
-        //   role: returned?.role,
-        //   roles: returned?.roles
-        // })
-        setUser(returned)
+        const returned = res.data.data ?? res.data.user ?? res.data;
+
+        setUser(returned);
       } catch (err) {
-        console.error('Auth fetch error:', err)
-        setUser(null)
+        console.error("Auth fetch error:", err);
+        setUser(null);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    run()
-  }, [])
+    };
+
+    run();
+  }, []);
 
   const logout = () => {
-    setUser(null)
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('status')
-    localStorage.removeItem("hasShownSplash")
-
-  }
+    setUser(null);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("status");
+    localStorage.removeItem("hasShownSplash");
+  };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, logout}}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        loading,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 AuthContextProvider.propTypes = {
@@ -66,12 +68,14 @@ AuthContextProvider.propTypes = {
 
 // Custom hook to use the auth context
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
+
   if (!context) {
-    throw new Error('useAuth must be used within an AuthContextProvider')
+    throw new Error("useAuth must be used within an AuthContextProvider");
   }
-  return context
+
+  return context;
 }
 
-export { AuthContextProvider }
-export default AuthContext
+export { AuthContextProvider };
+export default AuthContext;

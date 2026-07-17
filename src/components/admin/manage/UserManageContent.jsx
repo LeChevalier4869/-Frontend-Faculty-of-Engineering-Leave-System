@@ -1,3 +1,4 @@
+
 // src/pages/admin/UserManage.jsx
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
@@ -258,6 +259,9 @@ function UserManageContent() {
             <table className="min-w-full table-fixed bg-white text-sm text-slate-900 border-collapse">
               <thead className="bg-slate-50 text-slate-700">
                 <tr>
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold w-[5%]">
+                    ลำดับ
+                  </th>
                   <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[20%]">
                     ชื่อ-นามสกุล
                   </th>
@@ -286,7 +290,7 @@ function UserManageContent() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       กำลังโหลด...
@@ -301,6 +305,9 @@ function UserManageContent() {
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
                       } hover:bg-sky-50`}
                     >
+                      <td className="px-4 py-3 text-center text-sm font-medium text-slate-500">
+                        {(currentPage - 1) * PAGE_SIZE + idx + 1}
+                      </td>
                       <td className="px-4 py-3 truncate text-sm">
                         {user.prefixName} {user.firstName} {user.lastName}
                       </td>
@@ -346,7 +353,7 @@ function UserManageContent() {
                 ) : (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่พบผู้ใช้งาน
