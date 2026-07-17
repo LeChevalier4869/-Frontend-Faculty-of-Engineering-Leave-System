@@ -249,28 +249,28 @@ function UserManage() {
         <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
           {/* Desktop: ตาราง */}
           <div className="overflow-x-auto hidden md:block">
-            <table className="min-w-full table-fixed bg-white text-sm text-slate-900 border-collapse">
+            <table className="w-full table-fixed bg-white text-sm text-slate-900 border-collapse">
               <thead className="bg-slate-50 text-slate-700">
                 <tr>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[20%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
                     ชื่อ-นามสกุล
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[22%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[20%]">
                     อีเมล
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
                     แผนก
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[13%]">
                     ประเภทบุคลากร
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[12%]">
                     บทบาท
                   </th>
                   <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[10%]">
                     เบอร์โทร
                   </th>
-                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold w-[12%]">
                     การจัดการ
                   </th>
                 </tr>
