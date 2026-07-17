@@ -7,6 +7,8 @@ import { FaUserAlt } from "react-icons/fa";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import ProfileImage from "../../components/ProfileImage";
+import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
@@ -121,22 +123,7 @@ export default function UserInfo() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center font-kanit text-slate-700 px-4">
-        <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-sm p-6 text-center">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500" />
-            </div>
-            <span className="font-medium">กำลังโหลดข้อมูลผู้ใช้งาน...</span>
-            <span className="text-xs text-slate-500">
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากเซิร์ฟเวอร์
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลผู้ใช้งาน..." fullScreen={false} />;
   }
 
   if (!user) {
@@ -155,14 +142,36 @@ export default function UserInfo() {
     );
   }
 
+  // ยอดวันลา: แสดงเฉพาะปีงบประมาณล่าสุด
+  const balanceYears = (user.leaveBalances || []).map((b) => b.year);
+  const latestYear = balanceYears.length ? Math.max(...balanceYears) : null;
+  const currentBalances = (user.leaveBalances || []).filter(
+    (b) => b.year === latestYear
+  );
+  const leaveName = (b) =>
+    b.leaveType?.name || leaveTypesMap[b.leaveTypeId] || `ประเภท #${b.leaveTypeId}`;
+  // แยกหมวด: ประเภทหักวันลาปกติ vs ประเภทไม่จำกัดสิทธิ์ (เก็บวันที่ลาไปแล้ว)
+  const deductibleBalances = currentBalances.filter(
+    (b) => !b.leaveType?.isNonDeductible
+  );
+  const nonDeductibleBalances = currentBalances.filter(
+    (b) => b.leaveType?.isNonDeductible === true
+  );
+  // เรียงให้ประเภทหักวันลาปกติขึ้นก่อน แล้วประเภทไม่หักวันลาไว้ล่างสุด
+  const userRanks = [...(user.userRanks || [])].sort((a, b) => {
+    const an = a.rank?.leaveType?.isNonDeductible ? 1 : 0;
+    const bn = b.rank?.leaveType?.isNonDeductible ? 1 : 0;
+    return an - bn;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -211,6 +220,11 @@ export default function UserInfo() {
               ],
               ["สาขา", user.department?.name || "-"],
               ["ประเภทบุคลากร", user.personnelType?.name || "-"],
+              ["ตำแหน่งงาน", user.position || "-"],
+              [
+                "เลขที่ตำแหน่ง",
+                user.positionNumbers?.[0]?.positionNumber || "-",
+              ],
               [
                 "สายงาน",
                 user.employmentType === "SUPPORT"
@@ -273,7 +287,7 @@ export default function UserInfo() {
                   return (
                     <span
                       key={r}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${colorMap[r] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${colorMap[r] || "bg-brand-50 text-brand-700 border-brand-200"}`}
                     >
                       {label ? `${label} (${r})` : r}
                     </span>
@@ -292,10 +306,199 @@ export default function UserInfo() {
             </Link>
             <Link
               to={`/admin/user/${id}`}
-              className="inline-block px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium transition"
+              className="inline-block px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition"
             >
               แก้ไขข้อมูลผู้ใช้
             </Link>
+          </div>
+        </Panel>
+
+        {/* Leave Balance */}
+        <Panel className="p-6 sm:p-8">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-5">
+            <h2 className="text-xl md:text-2xl font-semibold text-slate-900">
+              ยอดวันลาคงเหลือ
+            </h2>
+            {latestYear && (
+              <span className="text-sm text-slate-500">
+                ปีงบประมาณ {latestYear}
+              </span>
+            )}
+          </div>
+
+          {/* หมวด 1: ประเภทการลาปกติ (หักวันลา) */}
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">
+            ประเภทการลาปกติ
+          </h3>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white mb-7">
+            <table className="w-full text-sm text-slate-900 border-collapse">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ประเภทการลา
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    สิทธิ์ทั้งหมด
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ใช้ไป
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    รออนุมัติ
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    คงเหลือ
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {deductibleBalances.length > 0 ? (
+                  deductibleBalances.map((b, idx) => (
+                    <tr
+                      key={b.id ?? idx}
+                      className={`border-t border-slate-100 ${
+                        idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                      }`}
+                    >
+                      <td className="px-4 py-3">{leaveName(b)}</td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        {formatLeaveDays(b.maxDays)}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        {formatLeaveDays(b.usedDays)}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap text-amber-600">
+                        {formatLeaveDays(b.pendingDays)}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap font-semibold text-emerald-700">
+                        {formatLeaveDays(b.remainingDays)}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      className="text-center py-6 text-sm text-slate-500"
+                    >
+                      ไม่มีข้อมูล
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* หมวด 2: ประเภทการลาไม่จำกัดสิทธิ์ (เก็บวันที่ลาไปแล้ว) */}
+          <div className="flex items-baseline gap-2 mb-2">
+            <h3 className="text-sm font-semibold text-slate-700">
+              ประเภทการลาไม่จำกัดสิทธิ์
+            </h3>
+            <span className="text-[11px] text-slate-400">
+              (บันทึกเป็นจำนวนวันที่ลาไปแล้ว ไม่หักยอด)
+            </span>
+          </div>
+          {nonDeductibleBalances.length > 0 ? (
+            <div className="grid sm:grid-cols-2 gap-2">
+              {nonDeductibleBalances.map((b, idx) => (
+                <div
+                  key={b.id ?? idx}
+                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/60"
+                >
+                  <span className="text-sm text-slate-700">{leaveName(b)}</span>
+                  <span className="text-sm text-slate-500 whitespace-nowrap">
+                    ลาไปแล้ว{" "}
+                    <span className="font-semibold text-slate-800">
+                      {formatLeaveDays(b.usedDays)}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 px-1">ไม่มีข้อมูล</p>
+          )}
+        </Panel>
+
+        {/* Rank / Seniority entitlements */}
+        <Panel className="p-6 sm:p-8">
+          <h2 className="text-xl md:text-2xl font-semibold mb-1 text-slate-900">
+            ระดับสิทธิ์ตามอาวุโส (Rank)
+          </h2>
+          <p className="text-sm text-slate-600 mb-4">
+            สิทธิ์การลาที่ผู้ใช้ได้รับตามระดับ/อายุงาน ใช้เป็นฐานในการคำนวณยอดวันลา
+          </p>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <table className="w-full text-sm text-slate-900 border-collapse">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ประเภทการลา
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ได้รับ/ปี
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    สะสมสูงสุด
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {userRanks.length > 0 ? (
+                  userRanks.map((ur, idx) => {
+                    const lt = ur.rank?.leaveType;
+                    const nonDeductible = lt?.isNonDeductible === true;
+                    return (
+                      <tr
+                        key={ur.id ?? idx}
+                        className={`border-t border-slate-100 ${
+                          idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                        }`}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-slate-800">
+                            {lt?.name || "-"}
+                          </div>
+                          {ur.rank?.rank && (
+                            <div className="text-xs text-slate-400 mt-0.5">
+                              {ur.rank.rank}
+                            </div>
+                          )}
+                        </td>
+                        {nonDeductible ? (
+                          <td
+                            colSpan="2"
+                            className="px-4 py-3 text-right text-sm text-slate-500"
+                          >
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[11px] text-slate-500">
+                              ไม่หักวันลา
+                            </span>
+                          </td>
+                        ) : (
+                          <>
+                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                              {formatLeaveDays(ur.rank?.receiveDays)}
+                            </td>
+                            <td className="px-4 py-3 text-right whitespace-nowrap text-slate-600">
+                              {formatLeaveDays(ur.rank?.maxDays)}
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="3"
+                      className="text-center py-6 text-sm text-slate-500"
+                    >
+                      ไม่มีข้อมูลระดับสิทธิ์
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </Panel>
 
@@ -332,7 +535,7 @@ export default function UserInfo() {
                     return (
                       <tr
                         key={leave.id}
-                        className={`border-t border-slate-100 cursor-pointer hover:bg-sky-50 ${
+                        className={`border-t border-slate-100 cursor-pointer hover:bg-brand-50 ${
                           idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
                         }`}
                         onClick={() => navigate(`/leave/${leave.id}`)}

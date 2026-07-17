@@ -192,15 +192,15 @@ export default function DepartmentManage() {
   );
 
   const inputBase =
-    "w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -285,7 +285,7 @@ export default function DepartmentManage() {
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                   : editId
                     ? "bg-slate-700 hover:bg-slate-600 text-white"
-                    : "bg-sky-600 hover:bg-sky-500 text-white"
+                    : "bg-brand-600 hover:bg-brand-500 text-white"
               }`}
             >
               {editId ? "อัปเดตแผนก" : "เพิ่มแผนก"}
@@ -357,7 +357,7 @@ export default function DepartmentManage() {
                       key={d.id}
                       className={`border-t border-slate-100 transition-colors ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-sky-50`}
+                      } hover:bg-brand-50`}
                     >
                       <td className="px-4 py-2">{startIndex + idx + 1}</td>
                       <td className="px-4 py-2">{d.name}</td>
@@ -440,7 +440,7 @@ export default function DepartmentManage() {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                       }`}
                     >
                       {page}

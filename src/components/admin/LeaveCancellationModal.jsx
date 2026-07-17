@@ -34,7 +34,7 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
   };
 
   const inputStyle =
-    "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
   const searchLeaveRequest = async () => {
     if (!leaveRequestNumber.trim()) {
@@ -241,7 +241,7 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
                     type="button"
                     onClick={searchLeaveRequest}
                     disabled={searching || submitting || !leaveRequestNumber.trim()}
-                    className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {searching ? (
                       <>
@@ -316,7 +316,7 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
                       <button
                         type="button"
                         onClick={handleLeaveDetailClick}
-                        className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-800 text-sm font-medium transition-colors"
+                        className="inline-flex items-center gap-2 text-brand-600 hover:text-brand-800 text-sm font-medium transition-colors"
                       >
                         <ExternalLink className="w-4 h-4" />
                         ดูรายละเอียดคำขอลา
@@ -341,7 +341,7 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                       onChange={handleFileChange}
                       disabled={submitting}
-                      className="flex-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+                      className="flex-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100"
                     />
                   </div>
                   
@@ -358,7 +358,7 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
                             <button
                               type="button"
                               onClick={() => previewFile(file)}
-                              className="text-sky-600 hover:text-sky-800 truncate max-w-[200px] text-left underline decoration-dotted"
+                              className="text-brand-600 hover:text-brand-800 truncate max-w-[200px] text-left underline decoration-dotted"
                               title={`คลิกเพื่อดู: ${file.name}`}
                             >
                               {file.name}

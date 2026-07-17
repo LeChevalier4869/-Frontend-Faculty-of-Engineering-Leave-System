@@ -8,6 +8,7 @@ import isBetween from "dayjs/plugin/isBetween";
 import { Plus, ChevronDown, Download, Clock, Info, ExternalLink } from "lucide-react";
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 dayjs.extend(isBetween);
 
@@ -182,23 +183,7 @@ export default function Leave2() {
   );
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 text-slate-800 font-kanit">
-        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
-            </div>
-            <span className="text-slate-800 font-medium">กำลังโหลดข้อมูลการลา...</span>
-            <span className="text-xs text-slate-500 flex items-center gap-1">
-              <Clock className="w-4 h-4 text-sky-500" />
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลของคุณ
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลการลา..." fullScreen={false} />;
   }
 
   return (
@@ -206,9 +191,9 @@ export default function Leave2() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 mb-3 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 mb-3 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] text-sky-700 tracking-[0.2em] uppercase">
+              <span className="text-[11px] text-brand-700 tracking-[0.2em] uppercase">
                 Leave Records
               </span>
             </div>
@@ -230,7 +215,7 @@ export default function Leave2() {
             </button>
             <button
               onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 h-11 rounded-xl bg-sky-500 text-white text-sm font-medium shadow-sm hover:bg-sky-400 hover:-translate-y-0.5 transition-all duration-150"
+              className="inline-flex items-center gap-2 px-4 h-11 rounded-xl bg-brand-500 text-white text-sm font-medium shadow-sm hover:bg-brand-400 hover:-translate-y-0.5 transition-all duration-150"
             >
               <Plus className="w-5 h-5" />
               ยื่นลา
@@ -281,7 +266,7 @@ export default function Leave2() {
                   setFilterStartDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-white text-slate-800 text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                className="bg-white text-slate-800 text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400/70"
               />
               <span className="text-xs text-slate-500">ถึง</span>
               <input
@@ -291,7 +276,7 @@ export default function Leave2() {
                   setFilterEndDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-white text-slate-800 text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                className="bg-white text-slate-800 text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400/70"
               />
             </div>
 
@@ -302,7 +287,7 @@ export default function Leave2() {
                   setFilterStatus(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full bg-white text-slate-800 text-sm px-3 py-2 pr-8 rounded-lg border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                className="w-full bg-white text-slate-800 text-sm px-3 py-2 pr-8 rounded-lg border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-brand-400/70"
               >
                 <option value="">สถานะทั้งหมด</option>
                 {Object.entries(statusLabels).map(([key, label]) => (
@@ -323,7 +308,7 @@ export default function Leave2() {
                   setFilterLeaveType(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full bg-white text-slate-800 text-sm px-3 py-2 pr-8 rounded-lg border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                className="w-full bg-white text-slate-800 text-sm px-3 py-2 pr-8 rounded-lg border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-brand-400/70"
               >
                 <option value="">ประเภทการลาทั้งหมด</option>
                 {Object.entries(leaveTypesMap).map(([id, name]) => (
@@ -341,7 +326,7 @@ export default function Leave2() {
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full bg-white text-slate-800 text-sm px-3 py-2 pr-8 rounded-lg border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-sky-400/70"
+                className="w-full bg-white text-slate-800 text-sm px-3 py-2 pr-8 rounded-lg border border-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-brand-400/70"
               >
                 <option value="desc">เรียงจากใหม่ไปเก่า</option>
                 <option value="asc">เรียงจากเก่าไปใหม่</option>
@@ -383,7 +368,8 @@ export default function Leave2() {
               description="คลิกที่แถวเพื่อดูรายละเอียดคำขอลาแต่ละรายการ"
             />
           </div>
-          <div className="overflow-x-auto">
+          {/* Desktop: ตาราง */}
+          <div className="overflow-x-auto hidden md:block">
             <table className="min-w-full w-full text-sm text-slate-800">
               <thead>
                 <tr className="bg-slate-50 border-y border-slate-200">
@@ -461,6 +447,55 @@ export default function Leave2() {
             </table>
           </div>
 
+          {/* Mobile: การ์ด */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {displayItems.length > 0 ? (
+              displayItems.map((leave, idx) => {
+                const statusKey = (leave.status || "").toUpperCase();
+                return (
+                  <button
+                    key={leave.id ?? idx}
+                    onClick={() => navigate(`/leave/${leave.id}`)}
+                    className="w-full text-left p-4 hover:bg-slate-50 transition"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-slate-800">
+                        {leaveTypesMap[leave.leaveTypeId] || "-"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          statusChipClass[statusKey] ||
+                          "bg-slate-100 text-slate-700 border border-slate-200"
+                        }`}
+                      >
+                        {statusLabels[statusKey] || leave.status}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 text-sm text-slate-600">
+                      {formatDate(leave.startDate)} – {formatDate(leave.endDate)}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2 text-xs text-slate-400">
+                      <span>ยื่นเมื่อ {formatDateTime(leave.createdAt)}</span>
+                      {leaveAvailabilityMap[leave.leaveTypeId] ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          ยื่นเอง
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                          แอดมิน
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="p-8 text-center text-slate-500 text-sm">
+                ไม่มีข้อมูลการลา
+              </div>
+            )}
+          </div>
+
           {totalPages > 1 && (
             <div className="flex items-center justify-between py-3 px-4 bg-slate-50 border-t border-slate-200">
               <div className="text-sm text-slate-700">
@@ -497,7 +532,7 @@ export default function Leave2() {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                          currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                         }`}
                       >
                         {page}
@@ -520,7 +555,7 @@ export default function Leave2() {
 
       <button
         onClick={() => setModalOpen(true)}
-        className="fixed bottom-8 right-8 bg-sky-500 hover:bg-sky-400 text-white p-4 rounded-full shadow-xl shadow-sky-300/60 hover:-translate-y-0.5 transition-all duration-150"
+        className="fixed bottom-8 right-8 bg-brand-500 hover:bg-brand-400 text-white p-4 rounded-full shadow-xl shadow-brand-300/60 hover:-translate-y-0.5 transition-all duration-150"
       >
         <Plus className="w-6 h-6" />
       </button>

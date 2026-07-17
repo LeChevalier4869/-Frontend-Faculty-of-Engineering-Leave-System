@@ -80,12 +80,12 @@ const RoleBadgeCell = ({ userRoles }) => {
         className="group inline-flex items-center gap-1"
       >
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${ROLE_COLOR[highest] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${ROLE_COLOR[highest] || "bg-brand-50 text-brand-700 border-brand-200"}`}
         >
           {highest}
         </span>
         {display.length > 1 && (
-          <span className="text-[10px] text-slate-400 group-hover:text-sky-500 transition">
+          <span className="text-[10px] text-slate-400 group-hover:text-brand-500 transition">
             +{display.length - 1}
           </span>
         )}
@@ -99,7 +99,7 @@ const RoleBadgeCell = ({ userRoles }) => {
           {display.map((r) => (
             <span
               key={r}
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border w-fit ${ROLE_COLOR[r] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border w-fit ${ROLE_COLOR[r] || "bg-brand-50 text-brand-700 border-brand-200"}`}
             >
               {r}
             </span>
@@ -205,9 +205,9 @@ function UserManage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -229,12 +229,12 @@ function UserManage() {
                   setCurrentPage(1);
                 }}
                 placeholder="ค้นหาชื่อ..."
-                className="w-full md:w-64 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="w-full md:w-64 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
               <div className="flex items-center gap-3 justify-end">
                 <button
                   onClick={() => {navigate("/admin/add-user");}}
-                  className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
+                  className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-500 whitespace-nowrap"
                 >
                   + เพิ่มผู้ใช้งาน
                 </button>
@@ -247,7 +247,8 @@ function UserManage() {
         </div>
 
         <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop: ตาราง */}
+          <div className="overflow-x-auto hidden md:block">
             <table className="min-w-full table-fixed bg-white text-sm text-slate-900 border-collapse">
               <thead className="bg-slate-50 text-slate-700">
                 <tr>
@@ -292,7 +293,7 @@ function UserManage() {
                       onClick={() => navigate(`/admin/user-info/${user.id}`)}
                       className={`cursor-pointer border-t border-slate-100 transition-colors ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-sky-50`}
+                      } hover:bg-brand-50`}
                     >
                       <td className="px-4 py-3 truncate text-sm">
                         {user.prefixName} {user.firstName} {user.lastName}
@@ -346,6 +347,72 @@ function UserManage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: การ์ด */}
+          <div className="md:hidden space-y-3">
+            {loading ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-500">
+                กำลังโหลด...
+              </div>
+            ) : displayedUsers.length ? (
+              displayedUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <div
+                    onClick={() => navigate(`/admin/user-info/${user.id}`)}
+                    className="cursor-pointer"
+                  >
+                    <div className="font-medium text-slate-800">
+                      {user.prefixName} {user.firstName} {user.lastName}
+                    </div>
+                    <div className="text-sm text-slate-500 break-all">
+                      {user.email}
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-600">
+                      <div>
+                        <span className="text-slate-400">แผนก:</span>{" "}
+                        {user.department?.name || "-"}
+                      </div>
+                      <div>
+                        <span className="text-slate-400">ประเภท:</span>{" "}
+                        {user.personnelType?.name || "-"}
+                      </div>
+                      <div>
+                        <span className="text-slate-400">เบอร์:</span>{" "}
+                        {user.phone || "-"}
+                      </div>
+                    </div>
+                    <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                      <RoleBadgeCell userRoles={user.userRoles} />
+                    </div>
+                  </div>
+                  <div
+                    className="mt-3 grid grid-cols-2 gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link
+                      to={`/admin/user/${user.id}`}
+                      className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-white hover:bg-slate-600"
+                    >
+                      แก้ไข
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-2 text-xs font-medium text-white hover:bg-rose-400"
+                    >
+                      ลบ
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-500">
+                ไม่พบผู้ใช้งาน
+              </div>
+            )}
+          </div>
         </div>
 
         {totalPages > 1 && (
@@ -384,7 +451,7 @@ function UserManage() {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                       }`}
                     >
                       {page}

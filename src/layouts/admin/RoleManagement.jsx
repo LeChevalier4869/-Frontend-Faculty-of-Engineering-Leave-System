@@ -24,7 +24,7 @@ const RoleManagement = () => {
   const [loading, setLoading] = useState(false);
 
   const inputClass =
-    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400";
+    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder:text-slate-400";
   const buttonClass =
     "inline-flex items-center justify-center rounded-xl text-sm font-medium text-white shadow-sm transition px-4 py-2";
 
@@ -134,9 +134,9 @@ const RoleManagement = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -151,7 +151,7 @@ const RoleManagement = () => {
             </div>
             <div className="text-xs text-slate-500">
               ทั้งหมด{" "}
-              <span className="font-semibold text-sky-600">
+              <span className="font-semibold text-brand-600">
                 {roles.length}
               </span>{" "}
               บทบาท
@@ -230,7 +230,7 @@ const RoleManagement = () => {
               ) : (
                 <button
                   onClick={handleAdd}
-                  className={`${buttonClass} w-full lg:w-auto bg-sky-600 hover:bg-sky-500`}
+                  className={`${buttonClass} w-full lg:w-auto bg-brand-600 hover:bg-brand-500`}
                 >
                   เพิ่ม Role
                 </button>
@@ -277,12 +277,12 @@ const RoleManagement = () => {
                       key={r.id}
                       className={`border-t border-slate-100 ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-sky-50 transition-colors`}
+                      } hover:bg-brand-50 transition-colors`}
                     >
                       <td className="px-4 py-2 text-slate-600">{r.id}</td>
                       <td className="px-4 py-2 font-medium text-slate-900">
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200">
                             {r.name}
                           </span>
                           {SYSTEM_ROLES.includes(r.name) && (

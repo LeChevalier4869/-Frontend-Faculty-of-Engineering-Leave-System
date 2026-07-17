@@ -9,7 +9,7 @@ import { X, ChevronDown, AlertTriangle } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 
-const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
 const ProxyApprovalManagement = () => {
   // Tab navigation state
@@ -18,6 +18,7 @@ const ProxyApprovalManagement = () => {
   const [proxyApprovals, setProxyApprovals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userLoading, setUserLoading] = useState(true); // เพิ่ม loading state สำหรับ user
+  const [isSubmitting, setIsSubmitting] = useState(false); // สถานะกำลังบันทึกฟอร์ม
   const [showModal, setShowModal] = useState(false);
   const [editingProxy, setEditingProxy] = useState(null);
   const [userLand, setUserLand] = useState([]);
@@ -533,6 +534,8 @@ const ProxyApprovalManagement = () => {
         if (response.status === 200 || response.status === 201) {
           Swal.fire('สำเร็จ', 'ยกเลิกการมอบอำนาจสำเร็จ', 'success');
           loadProxyApprovals();
+          // แจ้ง Sidebar ให้ดึงสิทธิ์ proxy ใหม่ทันที
+          window.dispatchEvent(new Event("proxy-updated"));
         } else {
           throw new Error('การยกเลิกไม่สำเร็จ');
         }
@@ -699,7 +702,7 @@ const ProxyApprovalManagement = () => {
       showCancelButton: true,
       confirmButtonText: "ยืนยันการสร้าง",
       cancelButtonText: "ยกเลิก",
-      confirmButtonColor: "#0ea5e9",
+      confirmButtonColor: "#7A1B22",
       cancelButtonColor: "#64748b",
       reverseButtons: true,
     });
@@ -717,7 +720,7 @@ const ProxyApprovalManagement = () => {
         showCancelButton: true,
         confirmButtonText: "ดำเนินการต่อ",
         cancelButtonText: "ยกเลิก",
-        confirmButtonColor: "#0ea5e9",
+        confirmButtonColor: "#7A1B22",
         cancelButtonColor: "#64748b",
       });
 
@@ -726,6 +729,7 @@ const ProxyApprovalManagement = () => {
       }
     }
 
+    setIsSubmitting(true);
     try {
       // ดึงข้อมูล original approvers สำหรับระดับที่เลือก
       const token = localStorage.getItem("accessToken");
@@ -806,6 +810,8 @@ const ProxyApprovalManagement = () => {
       loadProxyApprovals();
       setShowModal(false);
       resetForm();
+      // แจ้ง Sidebar ให้ดึงสิทธิ์ proxy ใหม่ทันที (ไม่ต้องรอ refresh หน้า)
+      window.dispatchEvent(new Event("proxy-updated"));
     } catch (err) {
       console.error("Error saving proxy approval:", err);
       console.error("Error response:", err.response);
@@ -817,6 +823,8 @@ const ProxyApprovalManagement = () => {
         title: "เกิดข้อผิดพลาด",
         text: err.response?.data?.message || err.message || "บันทึกข้อมูลไม่สำเร็จ",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -824,9 +832,9 @@ const ProxyApprovalManagement = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -846,7 +854,7 @@ const ProxyApprovalManagement = () => {
                   setEditingProxy(null);
                   resetForm();
                 }}
-                className="px-6 py-2 bg-sky-600 text-white rounded-xl hover:bg-sky-700 transition-colors flex items-center justify-center gap-2"
+                className="px-6 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
               >
                 <FaPlus /> เพิ่มการมอบอำนาจ
               </button>
@@ -861,7 +869,7 @@ const ProxyApprovalManagement = () => {
               onClick={() => setActiveTab('today')}
               className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                 activeTab === 'today'
-                  ? 'bg-sky-600 text-white shadow-sm'
+                  ? 'bg-brand-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
@@ -871,7 +879,7 @@ const ProxyApprovalManagement = () => {
             onClick={() => setActiveTab('history')}
             className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
               activeTab === 'history'
-                ? 'bg-sky-600 text-white shadow-sm'
+                ? 'bg-brand-600 text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
           >
@@ -881,7 +889,7 @@ const ProxyApprovalManagement = () => {
       </div>
 
       <div className="mt-6 rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-        <div className="flex-grow" style={{ minHeight: `${44 + (itemsPerPage * 65)}px` }}>
+        <div className="flex-grow overflow-x-auto" style={{ minHeight: `${44 + (itemsPerPage * 65)}px` }}>
           <table className="min-w-full divide-y divide-slate-200 rounded-t-xl">
           <thead className="bg-slate-50">
             <tr>
@@ -911,55 +919,55 @@ const ProxyApprovalManagement = () => {
             {proxyApprovals.map((proxy, idx) => (
               <tr key={proxy.id} className={`border-t border-slate-100 transition-colors ${
                 idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-              } hover:bg-sky-50`}>
-                <td className="px-6 py-4 whitespace-nowrap">
+              } hover:bg-brand-50`}>
+                <td className="px-3 py-2.5 whitespace-nowrap">
                   <div className="flex items-center">
                     <FaUser className="mr-2 text-slate-400" />
                     <div>
-                      <div className="text-sm font-medium text-slate-900">
+                      <div className="text-sm font-medium text-slate-900 truncate max-w-[150px]">
                         {proxy.originalApprover?.firstName} {proxy.originalApprover?.lastName}
                       </div>
-                      <div className="text-sm text-slate-500">{proxy.originalApprover?.email}</div>
+                      <div className="text-xs text-slate-500 truncate max-w-[150px]">{proxy.originalApprover?.email}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-2.5 whitespace-nowrap">
                   <div className="flex items-center">
                     <FaUser className="mr-2 text-slate-400" />
                     <div>
-                      <div className="text-sm font-medium text-slate-900">
+                      <div className="text-sm font-medium text-slate-900 truncate max-w-[150px]">
                         {proxy.proxyApprover?.firstName} {proxy.proxyApprover?.lastName}
                       </div>
-                      <div className="text-sm text-slate-500">{proxy.proxyApprover?.email}</div>
+                      <div className="text-xs text-slate-500 truncate max-w-[150px]">{proxy.proxyApprover?.email}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                <td className="px-3 py-2.5 text-xs text-slate-900 align-top">
                   {approverLevels[proxy.approverLevel] || `ระดับ ${proxy.approverLevel}`}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                <td className="px-3 py-2.5 text-xs text-slate-900 align-top">
                   {proxy.isDaily ? (
                     <div className="flex items-center gap-2">
-                      <FaCalendarAlt className="text-sky-500" />
+                      <FaCalendarAlt className="text-brand-500" />
                       <div>{proxy.dailyDate ? new Date(proxy.dailyDate).toLocaleDateString('th-TH') : '-'}</div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <FaCalendarAlt className="text-sky-500" />
+                      <FaCalendarAlt className="text-brand-500" />
                       <div>{new Date(proxy.startDate).toLocaleDateString('th-TH')}</div>
-                      <div className="text-slate-500">ถึง {new Date(proxy.endDate).toLocaleDateString('th-TH')}</div>
+                      <div className="text-xs text-slate-500">ถึง {new Date(proxy.endDate).toLocaleDateString('th-TH')}</div>
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-2.5 whitespace-nowrap">
                   {getStatusBadge(proxy.status)}
                 </td>
                 {activeTab !== 'history' && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-3 py-2.5 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEdit(proxy)}
-                        className="text-sky-600 hover:text-sky-900 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+                        className="text-brand-600 hover:text-brand-900 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
                         disabled={proxy.status !== 'ACTIVE'}
                         title={proxy.status !== 'ACTIVE' ? 'ไม่สามารถแก้ไขการมอบอำนาจที่ไม่ได้ใช้งานอยู่' : 'แก้ไขการมอบอำนาจ'}
                       >
@@ -1025,7 +1033,7 @@ const ProxyApprovalManagement = () => {
                   key={page}
                   onClick={() => loadProxyApprovals(page)}
                   className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                    currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                    currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                   }`}
                 >
                   {page}
@@ -1087,7 +1095,7 @@ const ProxyApprovalManagement = () => {
                   key={page}
                   onClick={() => loadProxyApprovals(page)}
                   className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                    currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                    currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                   }`}
                 >
                   {page}
@@ -1111,9 +1119,9 @@ const ProxyApprovalManagement = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50">
           <div className="w-[min(92vw,720px)] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl font-kanit flex flex-col min-h-0">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+            <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2.5">
               <div className="flex flex-col gap-1">
-                <span className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-700">
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-brand-700">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Admin Action
                 </span>
@@ -1130,7 +1138,7 @@ const ProxyApprovalManagement = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-              <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
+              <div className="flex-1 overflow-y-auto px-3 py-2.5 min-h-0">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 relative">
 
                   {/* Original Approver Display (Auto-mapped) */}
@@ -1269,7 +1277,7 @@ const ProxyApprovalManagement = () => {
                             await autoMapOriginalApprover(newLevel);
                           }
                         }}
-                        className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
                         required
                       >
                         <option value="">
@@ -1296,7 +1304,7 @@ const ProxyApprovalManagement = () => {
                       <select
                         value={formData.isDaily}
                         onChange={(e) => setFormData({ ...formData, isDaily: e.target.value === 'true' })}
-                        className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
                       >
                         <option value={false}>ช่วงเวลา</option>
                         <option value={true}>รายวัน</option>
@@ -1324,7 +1332,7 @@ const ProxyApprovalManagement = () => {
                         placeholderText="เลือกวันที่มอบอำนาจ (วัน/เดือน/ปี)"
                         className={inputStyle}
                         wrapperClassName="w-full"
-                        calendarClassName="!rounded-xl !border-2 !border-sky-300 p-2"
+                        calendarClassName="!rounded-xl !border-2 !border-brand-300 p-2"
                         dayClassName={dayHighlight}
                         required
                       />
@@ -1346,7 +1354,7 @@ const ProxyApprovalManagement = () => {
                           placeholderText="เลือกวันที่เริ่มต้น (วัน/เดือน/ปี)"
                           className={inputStyle}
                           wrapperClassName="w-full"
-                          calendarClassName="!rounded-xl !border-2 !border-sky-300 p-2"
+                          calendarClassName="!rounded-xl !border-2 !border-brand-300 p-2"
                           dayClassName={dayHighlight}
                           required
                         />
@@ -1366,7 +1374,7 @@ const ProxyApprovalManagement = () => {
                           placeholderText="เลือกวันที่สิ้นสุด (วัน/เดือน/ปี)"
                           className={inputStyle}
                           wrapperClassName="w-full"
-                          calendarClassName="!rounded-xl !border-2 !border-sky-300 p-2"
+                          calendarClassName="!rounded-xl !border-2 !border-brand-300 p-2"
                           dayClassName={dayHighlight}
                           required
                         />
@@ -1419,10 +1427,17 @@ const ProxyApprovalManagement = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={roleConflict}
-                    className="px-4 py-2 text-sm font-medium text-white bg-sky-600 rounded-lg hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    disabled={roleConflict || isSubmitting}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {editingProxy ? "บันทึกการแก้ไข" : "สร้างการมอบอำนาจ"}
+                    {isSubmitting && (
+                      <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    )}
+                    {isSubmitting
+                      ? "กำลังบันทึก..."
+                      : editingProxy
+                      ? "บันทึกการแก้ไข"
+                      : "สร้างการมอบอำนาจ"}
                   </button>
                 </div>
                 </div>

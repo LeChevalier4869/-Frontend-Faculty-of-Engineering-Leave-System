@@ -5,6 +5,8 @@ import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { Link } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
+import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function UserHome() {
   // 1) leaveBalance array, loading flag, and error message
@@ -33,11 +35,7 @@ export default function UserHome() {
 
   // 3) Render loading or error
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600 text-lg">กำลังโหลดข้อมูลสิทธิ์การลา…</p>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลสิทธิ์การลา…" fullScreen={false} />;
   }
 
   if (error) {
@@ -79,14 +77,14 @@ export default function UserHome() {
                     <td className="border border-gray-200 px-4 py-2">
                       {e.leavetypes?.name || "-"}
                     </td>
-                    <td className="border border-gray-200 px-4 py-2 text-right">
-                      {e.maxDays}
+                    <td className="border border-gray-200 px-4 py-2 text-right whitespace-nowrap">
+                      {formatLeaveDays(e.maxDays)}
                     </td>
-                    <td className="border border-gray-200 px-4 py-2 text-right">
-                      {e.usedDays}
+                    <td className="border border-gray-200 px-4 py-2 text-right whitespace-nowrap">
+                      {formatLeaveDays(e.usedDays)}
                     </td>
-                    <td className="border border-gray-200 px-4 py-2 text-right">
-                      {e.remainingDays}
+                    <td className="border border-gray-200 px-4 py-2 text-right whitespace-nowrap">
+                      {formatLeaveDays(e.remainingDays)}
                     </td>
                   </tr>
                 ))}

@@ -26,9 +26,9 @@ export default function SettingManage() {
   const [filterType, setFilterType] = useState("ALL");
 
   const inputClass =
-    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400";
+    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder:text-slate-400";
   const dropdownClass =
-    "w-full appearance-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full appearance-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
   const wrapperClass = "relative w-full";
 
   const ArrowIcon = () => (
@@ -187,9 +187,9 @@ export default function SettingManage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -204,7 +204,7 @@ export default function SettingManage() {
             </div>
             <div className="text-xs text-slate-500 mt-1 md:mt-0">
               พบ{" "}
-              <span className="font-semibold text-sky-600">
+              <span className="font-semibold text-brand-600">
                 {filteredSettings.length}
               </span>{" "}
               รายการ
@@ -280,7 +280,7 @@ export default function SettingManage() {
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                   : editId
                     ? "bg-emerald-600 hover:bg-emerald-500 text-white"
-                    : "bg-sky-600 hover:bg-sky-500 text-white"
+                    : "bg-brand-600 hover:bg-brand-500 text-white"
               }`}
             >
               {editId ? "อัปเดต" : "เพิ่ม"}
@@ -299,7 +299,7 @@ export default function SettingManage() {
                 placeholder="ค้นหา Key / Value / คำอธิบาย"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full sm:w-64 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-400"
+                className="w-full sm:w-64 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder:text-slate-400"
               />
               <div className="relative w-full sm:w-48">
                 <select
@@ -359,7 +359,7 @@ export default function SettingManage() {
                       key={s.id}
                       className={`border-t border-slate-100 ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-sky-50 transition-colors`}
+                      } hover:bg-brand-50 transition-colors`}
                     >
                       <td className="px-4 py-2 text-slate-600">{s.id}</td>
                       <td className="px-4 py-2 font-medium text-slate-900">
@@ -370,7 +370,7 @@ export default function SettingManage() {
                         {s.description || "ไม่มี"}
                       </td>
                       <td className="px-4 py-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200">
                           {s.type}
                         </span>
                       </td>
@@ -442,7 +442,7 @@ export default function SettingManage() {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                          currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                         }`}
                       >
                         {page}

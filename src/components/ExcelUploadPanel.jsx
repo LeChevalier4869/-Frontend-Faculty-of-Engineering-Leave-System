@@ -72,7 +72,7 @@ export default function ExcelUploadPanel({
         <div className="text-center">
           <label
             htmlFor="excelUpload"
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-sky-50 border border-sky-200 cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-brand-50 border border-brand-200 cursor-pointer"
           >
             <FiFile />
             เลือกไฟล์ Excel
@@ -144,8 +144,8 @@ export default function ExcelUploadPanel({
             disabled={uploading || fileError}
             className={`px-5 py-2 rounded-xl text-white text-sm ${
               uploading || fileError
-                ? "bg-sky-300"
-                : "bg-sky-600 hover:bg-sky-500"
+                ? "bg-brand-300"
+                : "bg-brand-600 hover:bg-brand-500"
             }`}
           >
             {uploading ? "กำลังอัปโหลด..." : "อัปโหลด"}

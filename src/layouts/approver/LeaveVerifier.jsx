@@ -6,6 +6,7 @@ import isBetween from "dayjs/plugin/isBetween";
 import { ChevronDown } from "lucide-react";
 import { apiEndpoints } from "../../utils/api";
 import Swal from "sweetalert2";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 dayjs.extend(isBetween);
 
@@ -160,7 +161,16 @@ export default function LeaveVerifier() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       Swal.close();
-      Swal.fire("สำเร็จ", "อนุมัติเรียบร้อยแล้ว", "success");
+      await Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "รับรองคำขอลาเรียบร้อยแล้ว",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true, // ปุ่มกากบาทปิดแบบแมนนวล
+        allowOutsideClick: true, // คลิกพื้นที่ด้านนอกเพื่อปิดได้
+      });
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
@@ -190,7 +200,16 @@ export default function LeaveVerifier() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       Swal.close();
-      Swal.fire("สำเร็จ", "ปฏิเสธเรียบร้อยแล้ว", "success");
+      await Swal.fire({
+        icon: "success",
+        title: "สำเร็จ",
+        text: "ปฏิเสธคำขอลาเรียบร้อยแล้ว",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        showCloseButton: true, // ปุ่มกากบาทปิดแบบแมนนวล
+        allowOutsideClick: true, // คลิกพื้นที่ด้านนอกเพื่อปิดได้
+      });
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
@@ -245,11 +264,7 @@ export default function LeaveVerifier() {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center font-kanit text-gray-500">
-        กำลังโหลดข้อมูลการลา...
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลการลา..." fullScreen={false} />;
   }
 
   return (
@@ -442,21 +457,10 @@ export default function LeaveVerifier() {
                       ) : (
                         <div className="flex flex-col sm:flex-row justify-center gap-2">
                           <button
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
-                              const result = await Swal.fire({
-                                title: "รับรองคำขอลา",
-                                text: "คุณแน่ใจหรือไม่ว่าต้องการรับรองคำขอลานี้",
-                                icon: "warning",
-                                showCancelButton: true,
-                                confirmButtonText: "ใช่, รับรอง",
-                                cancelButtonText: "ยกเลิก",
-                                confirmButtonColor: "#16a34a",
-                                cancelButtonColor: "#d33",
-                              });
-                              if (result.isConfirmed) {
-                                handleApprove(detailId);
-                              }
+                              // อนุมัติ/รับรอง: กดได้ทันที ไม่ต้องถามยืนยันซ้ำ
+                              handleApprove(detailId);
                             }}
                             disabled={loadingApprovals[detailId]}
                             className={`px-4 py-1 rounded text-white ${
@@ -564,7 +568,7 @@ export default function LeaveVerifier() {
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                      currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                      currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                     }`}
                   >
                     {page}

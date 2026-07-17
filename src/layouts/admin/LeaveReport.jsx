@@ -64,10 +64,14 @@ export default function LeaveReportMockup() {
       //   payload,
       //   { responseType: 'blob' } // important! รับเป็นไฟล์ binary
       // );
+      const token = localStorage.getItem('accessToken');
       const response = await axios.post(
         apiEndpoints.exportReport, // เปลี่ยนเป็น endpoint จริง
         payload,
-        { responseType: 'blob' } // important! รับเป็นไฟล์ binary
+        {
+          responseType: 'blob', // important! รับเป็นไฟล์ binary
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       // สร้างลิงก์ดาวน์โหลด
