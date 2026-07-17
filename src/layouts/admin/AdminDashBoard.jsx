@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users,
@@ -8,22 +7,16 @@ import {
   CheckCircle,
   XCircle,
   List,
-  BarChart,
-  FileText,
-  Settings,
-  ClipboardList,
 } from "lucide-react";
 import { FaHistory } from "react-icons/fa";
 import { FaFileCirclePlus } from "react-icons/fa6";
 import { MdAssignmentInd } from "react-icons/md";
 import { BiSolidReport } from "react-icons/bi";
-import getApiUrl from "../../utils/apiUtils";
-import useAuth from "../../hooks/useAuth";
+import { API } from "../../utils/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -36,29 +29,20 @@ export default function AdminDashboard() {
   const [recent, setRecent] = useState([]);
   const [summary, setSummary] = useState([]);
   useEffect(() => {
-    if (!token) {
-      setLoading(false); // 👈 กันค้าง
-      return;
-    }
-
     const fetchStats = async () => {
       setLoading(true);
       try {
+        // สรุปรายประเภทลาเป็นส่วนเสริม — ยังไม่มี endpoint รองรับ (report-route ยังไม่ถูก mount)
+        // จึงกันไว้ไม่ให้ล้มทั้งหน้า แล้วปล่อยให้ตารางสรุปแสดง empty state แทน
         const [usersRes, leavesRes, summaryRes] = await Promise.all([
-          axios.get(getApiUrl("admin/users"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(getApiUrl("admin/leave-requests"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(getApiUrl("admin/report/leave-summary"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          API.get("/admin/users"),
+          API.get("/leave-requests"),
+          API.get("/admin/report/leave-summary").catch(() => null),
         ]);
 
         const users = usersRes.data.data || [];
         const leaves = leavesRes.data.data || [];
-        const s = summaryRes.data.data || [];
+        const s = summaryRes?.data?.data || [];
 
         setStats({
           totalUsers: users.length,
@@ -84,7 +68,7 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
-  }, [token]);
+  }, []);
 
   const formatDate = (iso) =>
     new Date(iso).toLocaleDateString("th-TH", {
