@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiEndpoints } from "../../utils/api";
 import {
@@ -9,10 +8,6 @@ import {
   CheckCircle,
   XCircle,
   List,
-  BarChart,
-  FileText,
-  Settings,
-  ClipboardList,
 } from "lucide-react";
 import { FaHistory } from "react-icons/fa";
 import { FaFileCirclePlus } from "react-icons/fa6";
@@ -37,11 +32,6 @@ export default function AdminDashboard() {
   const [recent, setRecent] = useState([]);
   const [summary, setSummary] = useState([]);
   useEffect(() => {
-    if (!token) {
-      setLoading(false); // 👈 กันค้าง
-      return;
-    }
-
     const fetchStats = async () => {
       setLoading(true);
 
@@ -74,7 +64,7 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
-  }, [token]);
+  }, []);
 
   const formatDate = (iso) =>
     new Date(iso).toLocaleDateString("th-TH", {
