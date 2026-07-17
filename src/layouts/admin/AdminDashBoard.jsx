@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
 import { apiEndpoints } from "../../utils/api";
-=======
->>>>>>> c8e6c0adecc58778088a002cecace2094679cd0e
 import {
   Users,
   Calendar,
@@ -21,7 +18,6 @@ import { FaHistory } from "react-icons/fa";
 import { FaFileCirclePlus } from "react-icons/fa6";
 import { MdAssignmentInd } from "react-icons/md";
 import { BiSolidReport } from "react-icons/bi";
-<<<<<<< HEAD
 import { Link } from "react-router-dom";
 import getApiUrl from "../../utils/apiUtils";
 import useAuth from "../../hooks/useAuth";
@@ -29,15 +25,6 @@ import useAuth from "../../hooks/useAuth";
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
-=======
-import getApiUrl from "../../utils/apiUtils";
-import useAuth from "../../hooks/useAuth";
-import LoadingSpinner from "../../components/LoadingSpinner";
-
-export default function AdminDashboard() {
-  const navigate = useNavigate();
-  const { token } = useAuth();
->>>>>>> c8e6c0adecc58778088a002cecace2094679cd0e
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -59,7 +46,6 @@ export default function AdminDashboard() {
       setLoading(true);
 
       try {
-<<<<<<< HEAD
         const response = await axios.get(
           apiEndpoints.getAdminDashboardSummary,
           {
@@ -80,40 +66,6 @@ export default function AdminDashboard() {
           rejected: data.rejectedRequests,
           cancelled: data.cancelledRequests,
         });
-=======
-        const [usersRes, leavesRes, summaryRes] = await Promise.all([
-          axios.get(getApiUrl("admin/users"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(getApiUrl("admin/leave-requests"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(getApiUrl("admin/report/leave-summary"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        const users = usersRes.data.data || [];
-        const leaves = leavesRes.data.data || [];
-        const s = summaryRes.data.data || [];
-
-        setStats({
-          totalUsers: users.length,
-          totalRequests: leaves.length,
-          pending: leaves.filter((r) => r.status === "PENDING").length,
-          approved: leaves.filter((r) => r.status === "APPROVED").length,
-          rejected: leaves.filter((r) => r.status === "REJECTED").length,
-          cancelled: leaves.filter((r) => r.status === "CANCELLED").length,
-        });
-
-        setRecent(
-          leaves
-            .slice()
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 5),
-        );
-        setSummary(s);
->>>>>>> c8e6c0adecc58778088a002cecace2094679cd0e
       } catch (err) {
         console.error("AdminDashboard fetch error:", err.response || err);
       } finally {
@@ -179,7 +131,6 @@ export default function AdminDashboard() {
   };
 
   function ActionButton({ title, icon, details, onClick }) {
-<<<<<<< HEAD
     return (
       <button
         onClick={onClick}
@@ -222,31 +173,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-=======
-    return (
-      <button
-        onClick={onClick}
-        className="w-full text-left rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition"
-      >
-        {/* Title */}
-        <div className="mb-3 px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm font-semibold">
-          {title}
-        </div>
-
-        {/* Content */}
-        <div className="flex items-center gap-4">
-          {/* Icon */}
-          <div className="w-14 h-14 flex items-center justify-center rounded-xl border bg-slate-50">
-            {icon}
-          </div>
-
-          {/* Details */}
-          <div className="flex-1 text-sm text-slate-600">
-            {details || "รายละเอียด..."}
-          </div>
-        </div>
-      </button>
->>>>>>> c8e6c0adecc58778088a002cecace2094679cd0e
     );
   }
 
@@ -278,7 +204,6 @@ export default function AdminDashboard() {
 
         {/* Stat cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-2">
-<<<<<<< HEAD
           <div
             className="cursor-pointer transition-transform hover:-translate-y-1"
             onClick={() =>
@@ -341,44 +266,6 @@ export default function AdminDashboard() {
               tone="slate"
             />
           </Link>
-=======
-          <Card
-            icon={<Users className="w-6 h-6" />}
-            label="ผู้ใช้งานทั้งหมด"
-            value={stats.totalUsers}
-            tone="indigo"
-          />
-          <Card
-            icon={<List className="w-6 h-6" />}
-            label="คำขอลาทั้งหมด"
-            value={stats.totalRequests}
-            tone="violet"
-          />
-          <Card
-            icon={<Clock className="w-6 h-6" />}
-            label="รออนุมัติ"
-            value={stats.pending}
-            tone="amber"
-          />
-          <Card
-            icon={<CheckCircle className="w-6 h-6" />}
-            label="อนุมัติแล้ว"
-            value={stats.approved}
-            tone="emerald"
-          />
-          <Card
-            icon={<XCircle className="w-6 h-6" />}
-            label="ถูกปฏิเสธ"
-            value={stats.rejected}
-            tone="rose"
-          />
-          <Card
-            icon={<Calendar className="w-6 h-6" />}
-            label="ยกเลิก"
-            value={stats.cancelled}
-            tone="slate"
-          />
->>>>>>> c8e6c0adecc58778088a002cecace2094679cd0e
         </div>
 
         {/* Action Buttons */}
@@ -411,7 +298,6 @@ export default function AdminDashboard() {
 
         {/* Tables */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-<<<<<<< HEAD
           <Section
             title="คำขอลาล่าสุด"
             action={
@@ -428,18 +314,10 @@ export default function AdminDashboard() {
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500">
                     <Th>#</Th>
-=======
-          <Section title="คำขอลาล่าสุด">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-slate-600">
-                  <tr className="border-b border-slate-200">
->>>>>>> c8e6c0adecc58778088a002cecace2094679cd0e
                     <Th>วันที่</Th>
                     <Th>ผู้ขอ</Th>
                     <Th>ประเภทลา</Th>
                     <Th>สถานะ</Th>
-<<<<<<< HEAD
                     <Th></Th>
                   </tr>
                 </thead>
@@ -488,31 +366,6 @@ export default function AdminDashboard() {
                         className="py-10 text-center text-slate-400"
                       >
                         ยังไม่มีคำขอลา
-=======
-                  </tr>
-                </thead>
-                <tbody>
-                  {recent.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="border-b border-slate-100 hover:bg-slate-50/80 transition"
-                    >
-                      <Td>{formatDate(r.createdAt)}</Td>
-                      <Td>
-                        {r.user?.firstName} {r.user?.lastName}
-                      </Td>
-                      <Td>{r.leaveType?.name}</Td>
-                      <Td>{statusPill(r.status)}</Td>
-                    </tr>
-                  ))}
-                  {recent.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="py-6 text-center text-slate-500"
-                      >
-                        ไม่มีคำขอลา
->>>>>>> c8e6c0adecc58778088a002cecace2094679cd0e
                       </td>
                     </tr>
                   )}
