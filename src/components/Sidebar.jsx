@@ -6,6 +6,7 @@ import {
   FaUser,
   FaCalendarAlt,
   FaUsersCog,
+  FaTools,
   FaCog,
   FaTachometerAlt,
   FaChartBar,
@@ -13,19 +14,17 @@ import {
   FaClipboardList,
   FaClipboardCheck,
   FaCheckCircle,
-  FaIdBadge,
   FaIdCard,
-  FaUsers,
   FaFileSignature,
-  FaBuilding,
-  FaUmbrellaBeach,
   FaUserShield,
   FaUserLock,
   FaHistory,
   FaSitemap,
   FaTags,
   FaLayerGroup,
+  FaIdBadge
 } from "react-icons/fa";
+import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { HiOutlineChevronDown } from "react-icons/hi";
 import useAuth from "../hooks/useAuth";
 import logo from "../assets/logo.png";
@@ -36,42 +35,97 @@ const userNav = [
   { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaChartPie />, title: "ยอดวันลาคงเหลือ" },
   { to: "/leave", text: "การลา", icon: <FaClipboardList />, title: "การลา" },
   { to: "/Calendar", text: "ปฏิทิน", icon: <FaCalendarAlt />, title: "ปฏิทิน" },
-  { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser />, title: "โปรไฟล์ผู้ใช้" },
+  {
+    to: "/profile",
+    text: "โปรไฟล์ผู้ใช้",
+    icon: <FaUser />,
+    title: "โปรไฟล์ผู้ใช้",
+  },
 ];
 
 const approverNav1 = [
-  { to: "/approver/dashboard-approver1", text: "แดชบอร์ดหัวหน้าสาขา", icon: <FaTachometerAlt /> },
-  { to: "/approver/leave-request-approver1", text: "อนุมัติระดับหัวหน้าสาขา", icon: <FaCheckCircle /> },
+  {
+    to: "/approver/dashboard-approver1",
+    text: "แดชบอร์ดหัวหน้าสาขา",
+    icon: <FaTachometerAlt />,
+  },
+  {
+    to: "/approver/leave-request-approver1",
+    text: "อนุมัติระดับหัวหน้าสาขา",
+    icon: <FaCheckCircle />,
+  },
 ];
 
-const verifierNav = [{ to: "/approver/leave-request-verifier", text: "ตรวจสอบคำขอการลา", icon: <FaClipboardCheck /> }];
-const approverNav2 = [{ to: "/approver/leave-request-approver2", text: "อนุมัติระดับ 2", icon: <FaCheckCircle /> }];
-const approverNav3 = [{ to: "/approver/leave-request-approver3", text: "อนุมัติระดับ 3", icon: <FaCheckCircle /> }];
-const approverNav4 = [{ to: "/approver/leave-request-approver4", text: "อนุมัติระดับ 4", icon: <FaCheckCircle /> }];
+const verifierNav = [
+  {
+    to: "/approver/leave-request-verifier",
+    text: "ตรวจสอบคำขอการลา",
+    icon: <FaCheckCircle />,
+  },
+];
+const approverNav2 = [
+  {
+    to: "/approver/leave-request-approver2",
+    text: "อนุมัติระดับ 2",
+    icon: <FaCheckCircle />,
+  },
+];
+const approverNav3 = [
+  {
+    to: "/approver/leave-request-approver3",
+    text: "อนุมัติระดับ 3",
+    icon: <FaCheckCircle />,
+  },
+];
+const approverNav4 = [
+  {
+    to: "/approver/leave-request-approver4",
+    text: "อนุมัติระดับ 4",
+    icon: <FaCheckCircle />,
+  },
+];
 
 const adminNav = [
-  { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
-  { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaChartBar /> },
-  { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaFileSignature /> },
-  { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsers /> },
-  { to: "/admin/position-numbers", text: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
-  { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaBuilding /> },
-  { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUmbrellaBeach /> },
-  { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUserShield /> },
-  { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaHistory /> },
+  { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <TbLayoutDashboardFilled /> },
+  // { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
+  // { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaUsersCog /> },
+  // { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
+  // { to: "/admin/position-numbers", text: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
+  // { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
+  // { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
+  // { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
+  // { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
+  { to: "/admin/management", text: "การจัดการ", icon: <FaTools /> },
+  { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 
 const superAdminOnlyNav = [
-  { to: "/admin/organization-manage", text: "จัดการองค์กร", icon: <FaSitemap /> },
-  { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaIdCard /> },
-  { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaTags /> },
-  { to: "/admin/rank-manage", text: "เงื่อนไขวันลา (Rank)", icon: <FaLayerGroup /> },
-  { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUserLock /> },
+  {
+    to: "/admin/organization-manage",
+    text: "จัดการองค์กร",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/personel-manage",
+    text: "จัดการประเภทบุคคล",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/leave-type-manage",
+    text: "จัดการประเภทการลา",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/rank-manage",
+    text: "เงื่อนไขวันลา (Rank)",
+    icon: <FaUsersCog />,
+  },
+  { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUsersCog /> },
 ];
 
-const adminConfigNav = [
-  { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
-];
+// const adminConfigNav = [
+//   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
+// ];
 
 // Context ส่ง isMobile/onClose ลงไปยัง Item ที่อยู่ระดับ module (ไม่ต้องส่ง prop ทุกจุดเรียก)
 const SidebarContext = createContext({ isMobile: false, onClose: () => {} });
@@ -293,10 +347,10 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
   const roles = Array.isArray(user.roles)
     ? user.roles
     : Array.isArray(user.role)
-    ? user.role
-    : Array.isArray(user.roleNames)
-    ? user.roleNames
-    : [];
+      ? user.role
+      : Array.isArray(user.roleNames)
+        ? user.roleNames
+        : [];
 
   // SUPER_ADMIN สามารถเข้าถึงทุกเมนูที่ ADMIN เข้าได้
   const hasRole = (r) => roles.includes(r) || (r === "ADMIN" && roles.includes("SUPER_ADMIN"));
@@ -307,6 +361,108 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
   const isProxyApprover2 = proxyApprovers2.length > 0;
   const isProxyApprover3 = proxyApprovers3.length > 0;
   const isProxyApprover4 = proxyApprovers4.length > 0;
+
+  // Debug admin menu render
+  const shouldShowAdminMenu = hasRole("ADMIN");
+
+  // Check proxy roles
+  useEffect(() => {
+    const checkProxyRoles = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.log("No token found for proxy checking");
+          return;
+        }
+
+        // ดึงข้อมูล proxy approvals ทั้งหมด (ACTIVE และ EXPIRED)
+        const response = await axios.get(`${BASE_URL}/proxy-approval`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const proxyApprovals = response.data.data || [];
+
+        // กรองเฉพาะ proxy ที่มีสถานะ ACTIVE
+        const activeProxies = proxyApprovals.filter(
+          (proxy) => proxy.status === "ACTIVE",
+        );
+
+        // กรองเฉพาะที่ user ปัจจุบันเป็น proxy approver
+        const userAsProxyProxies = activeProxies.filter(
+          (proxy) => proxy.proxyApproverId === user.id,
+        );
+
+        // Debug ทุก proxy ที่ active
+        // activeProxies.forEach((proxy) => {
+        //   console.log(
+        //     `🔍 Proxy: Original=${proxy.originalApproverId}, Proxy=${proxy.proxyApproverId}, Level=${proxy.approverLevel}`
+        //   );
+        // });
+
+        // แสดงรายละเอียด proxy ที่ user เป็น proxy approver
+        // if (userAsProxyProxies.length > 0) {
+        //   console.log('🔍 User is proxy approver for these assignments:');
+        //   userAsProxyProxies.forEach((proxy, index) => {
+        //     console.log(
+        //       `  ${index + 1}. Original: ${proxy.originalApprover?.firstName} ${proxy.originalApprover?.lastName} (ID: ${proxy.originalApproverId}), Level: ${proxy.approverLevel}`
+        //     );
+        //   });
+        // }
+
+        // ถ้าไม่มี proxy ที่ user เป็น proxy approver ก็ clear state ทั้งหมด
+        if (userAsProxyProxies.length === 0) {
+          // console.log('🔍 No proxy assignments for current user as proxy approver - clearing all proxy states');
+          // console.log('🔍 No proxy assignments for current user as proxy approver - clearing all proxy states');
+          setProxyVerifiers([]);
+          setProxyApprovers1([]);
+          setProxyApprovers2([]);
+          setProxyApprovers3([]);
+          setProxyApprovers4([]);
+          return;
+        }
+
+        // จัดกลุ่ม proxy ตามระดับ (ใช้ Set เพื่อกำจัดซ้ำ)
+        const proxyData = {
+          1: new Set(), // APPROVER_1
+          2: new Set(), // VERIFIER
+          3: new Set(), // APPROVER_2
+          4: new Set(), // APPROVER_3
+          5: new Set(), // APPROVER_4
+        };
+
+        userAsProxyProxies.forEach((proxy) => {
+          if (proxyData[proxy.approverLevel]) {
+            // User ปัจจุบันเป็น proxy approver -> แสดง original approver (ที่เราจะทำงานแทน)
+            const displayUser = proxy.originalApprover;
+            // console.log(`🔍 Adding to level ${proxy.approverLevel}:`, displayUser);
+            // console.log(`🔍 Adding to level ${proxy.approverLevel}:`, displayUser);
+            proxyData[proxy.approverLevel].add(displayUser);
+          }
+        });
+
+        // แปลง Set เป็น Array
+        const proxyArrays = {
+          1: Array.from(proxyData[1]), // APPROVER_1
+          2: Array.from(proxyData[2]), // VERIFIER
+          3: Array.from(proxyData[3]), // APPROVER_2
+          4: Array.from(proxyData[4]), // APPROVER_3
+          5: Array.from(proxyData[5]), // APPROVER_4
+        };
+
+        // console.log('🔍 Final proxy arrays:', proxyArrays);
+
+        setProxyVerifiers(proxyArrays[2]); // สำหรับ VERIFIER
+        setProxyApprovers1(proxyArrays[1]); // สำหรับ APPROVER_1
+        setProxyApprovers2(proxyArrays[3]); // สำหรับ APPROVER_2
+        setProxyApprovers3(proxyArrays[4]); // สำหรับ APPROVER_3
+        setProxyApprovers4(proxyArrays[5]); // สำหรับ APPROVER_4
+      } catch (err) {
+        console.error("Error checking proxy roles:", err);
+      }
+    };
+
+    checkProxyRoles();
+  }, [user?.id]);
 
   const showApproval =
     hasRole("APPROVER_1") ||
@@ -335,12 +491,18 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <img src={logo} alt="Logo" className="w-10 h-10 rounded-md shadow-lg" />
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="w-10 h-10 rounded-md shadow-lg"
+                />
                 <div className="flex flex-col leading-tight">
                   <span className="font-kanit text-lg font-semibold tracking-wide whitespace-nowrap">
                     eLeave System
                   </span>
-                  <span className="text-xs text-slate-300 whitespace-nowrap">คณะวิศวกรรมศาสตร์</span>
+                  <span className="text-xs text-slate-300 whitespace-nowrap">
+                    คณะวิศวกรรมศาสตร์
+                  </span>
                 </div>
               </div>
               {isMobile && (
@@ -350,7 +512,12 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                   className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition"
                   aria-label="Close menu"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -367,7 +534,12 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
               {hasRole("USER") && (
                 <Section title="ทั่วไป">
                   {userNav.map((m, i) => (
-                    <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                    <Item
+                      key={`${m.to}-${i}`}
+                      to={m.to}
+                      icon={m.icon}
+                      text={m.text}
+                    />
                   ))}
                 </Section>
               )}
@@ -376,23 +548,48 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                 <Section title="งานอนุมัติ / สารบรรณ">
                   {hasRole("APPROVER_1") &&
                     approverNav1.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("VERIFIER") &&
                     verifierNav.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("APPROVER_2") &&
                     approverNav2.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("APPROVER_3") &&
                     approverNav3.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("APPROVER_4") &&
                     approverNav4.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
 
                   {/* Proxy Menu - รวมทั้งหมดเป็น dropdown เดียว */}
@@ -420,9 +617,13 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         <div className="flex flex-col mt-1 ml-4">
                           {/* Proxy Verifiers */}
                           {proxyVerifiers.map((proxy) => (
-                            <div key={`proxy-verifier-${proxy.id}`} className="mb-2">
+                            <div
+                              key={`proxy-verifier-${proxy.id}`}
+                              className="mb-2"
+                            >
                               <div className="text-xs text-slate-400 mb-1">
-                                ผู้ตรวจสอบ (Proxy: {proxy.firstName} {proxy.lastName})
+                                ผู้ตรวจสอบ (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
                               </div>
                               {verifierNav.map((m) => (
                                 <Item
@@ -437,9 +638,13 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                           ))}
                           {/* Proxy Approvers1 */}
                           {proxyApprovers1.map((proxy) => (
-                            <div key={`proxy-approver1-${proxy.id}`} className="mb-2">
+                            <div
+                              key={`proxy-approver1-${proxy.id}`}
+                              className="mb-2"
+                            >
                               <div className="text-xs text-slate-400 mb-1">
-                                หัวหน้าสาขา (Proxy: {proxy.firstName} {proxy.lastName})
+                                หัวหน้าสาขา (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
                               </div>
                               {approverNav1.map((m) => (
                                 <Item
@@ -454,9 +659,13 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                           ))}
                           {/* Proxy Approvers2 */}
                           {proxyApprovers2.map((proxy) => (
-                            <div key={`proxy-approver2-${proxy.id}`} className="mb-2">
+                            <div
+                              key={`proxy-approver2-${proxy.id}`}
+                              className="mb-2"
+                            >
                               <div className="text-xs text-slate-400 mb-1">
-                                ผู้อนุมัติ2 (Proxy: {proxy.firstName} {proxy.lastName})
+                                ผู้อนุมัติ2 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
                               </div>
                               {approverNav2.map((m) => (
                                 <Item
@@ -471,9 +680,13 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                           ))}
                           {/* Proxy Approvers3 */}
                           {proxyApprovers3.map((proxy) => (
-                            <div key={`proxy-approver3-${proxy.id}`} className="mb-2">
+                            <div
+                              key={`proxy-approver3-${proxy.id}`}
+                              className="mb-2"
+                            >
                               <div className="text-xs text-slate-400 mb-1">
-                                ผู้อนุมัติ3 (Proxy: {proxy.firstName} {proxy.lastName})
+                                ผู้อนุมัติ3 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
                               </div>
                               {approverNav3.map((m) => (
                                 <Item
@@ -488,9 +701,13 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                           ))}
                           {/* Proxy Approvers4 */}
                           {proxyApprovers4.map((proxy) => (
-                            <div key={`proxy-approver4-${proxy.id}`} className="mb-2">
+                            <div
+                              key={`proxy-approver4-${proxy.id}`}
+                              className="mb-2"
+                            >
                               <div className="text-xs text-slate-400 mb-1">
-                                ผู้อนุมัติ4 (Proxy: {proxy.firstName} {proxy.lastName})
+                                ผู้อนุมัติ4 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
                               </div>
                               {approverNav4.map((m) => (
                                 <Item
@@ -520,7 +737,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                       className="flex items-center justify-between px-4 py-2 text-sm text-slate-200 hover:text-white hover:bg-white/10 rounded-xl w-full"
                     >
                       <span className="flex items-center gap-3">
-                        <FaUsersCog className="text-base" />
+                        <FaUserLock className="text-base" />
                         <span>เมนูผู้ดูแล</span>
                       </span>
                       <HiOutlineChevronDown
@@ -532,17 +749,24 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                     {openAdmin && (
                       <div className="flex flex-col mt-1 ml-4">
                         {adminNav.map((m, i) => {
-                          return <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                          return (
+                            <Item
+                              key={`${m.to}-${i}`}
+                              to={m.to}
+                              icon={m.icon}
+                              text={m.text}
+                            />
+                          );
                         })}
                       </div>
                     )}
                   </Section>
 
-                  <Section title="การตั้งค่า">
+                  {/* <Section title="การตั้งค่า">
                     {adminConfigNav.map((m, i) => {
                       return <HighLevelAdminItem key={`cfg-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
                     })}
-                  </Section>
+                  </Section> */}
 
                   {hasRole("SUPER_ADMIN") && (
                     <Section title="ผู้ดูแลระดับสูง">
@@ -552,7 +776,14 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         </div>
                       </div>
                       {superAdminOnlyNav.map((m, i) => {
-                        return <HighLevelAdminItem key={`high-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                        return (
+                          <HighLevelAdminItem
+                            key={`high-${m.to}-${i}`}
+                            to={m.to}
+                            icon={m.icon}
+                            text={m.text}
+                          />
+                        );
                       })}
                     </Section>
                   )}
@@ -571,7 +802,10 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
       </aside>
 
       {isOpen && isMobile && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30" onClick={onClose} />
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+          onClick={onClose}
+        />
       )}
     </SidebarContext.Provider>
   );

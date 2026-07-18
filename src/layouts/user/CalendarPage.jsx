@@ -240,11 +240,12 @@ export default function CalendarPage() {
           </Panel>
         </div>
 
-        <Panel className="p-4 md:p-6">
+        <Panel className="efc-modern p-4 md:p-6">
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
             initialView={isMobile ? "listMonth" : "dayGridMonth"}
+            firstDay={0}
             events={visibleEvents}
             height="auto"
             locale={thLocale}

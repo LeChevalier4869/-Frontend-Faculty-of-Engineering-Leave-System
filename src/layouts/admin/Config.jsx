@@ -281,9 +281,49 @@ export default function ConfigPage() {
 
     if (!result.isConfirmed) return;
 
+    const doReset = (force) =>
+      axios.post(
+        apiEndpoints.resetLeaveBalance,
+        force ? { confirm: true, force: true } : { confirm: true },
+        authHeader()
+      );
+
     try {
       setResetLoading(true);
-      const res = await axios.post(apiEndpoints.resetLeaveBalance, {}, authHeader());
+      let res;
+      try {
+        res = await doReset(false);
+      } catch (err) {
+        // 409 = ปีงบนี้มีการใช้วันลาไปแล้ว → เตือนแรง ๆ แล้วขอยืนยันซ้ำเพื่อ force
+        if (err?.response?.status === 409) {
+          const confirmForce = await Swal.fire({
+            title: "⚠️ ปีงบนี้มีการใช้วันลาไปแล้ว",
+            html: `
+              <div class="text-left">
+                <p class="mb-2 text-rose-600 font-medium">${
+                  err.response.data?.message ||
+                  "การรีเซ็ตจะลบยอดที่ใช้ไป/รออนุมัติทิ้งทั้งหมด"
+                }</p>
+                <p class="text-sm text-slate-600">ดำเนินการต่อเฉพาะเมื่อแน่ใจจริง ๆ เท่านั้น (เช่น ตั้งค่าระบบครั้งแรก)</p>
+              </div>
+            `,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#ef4444",
+            cancelButtonColor: "#64748b",
+            confirmButtonText: "ยืนยันลบและรีเซ็ต",
+            cancelButtonText: "ยกเลิก",
+            reverseButtons: true,
+          });
+          if (!confirmForce.isConfirmed) {
+            setResetLoading(false);
+            return;
+          }
+          res = await doReset(true);
+        } else {
+          throw err;
+        }
+      }
 
       await Swal.fire({
         title: "รีเซ็ตสำเร็จ!",
@@ -304,7 +344,9 @@ export default function ConfigPage() {
       console.error(err);
       Swal.fire({
         title: "เกิดข้อผิดพลาด",
-        text: "ไม่สามารถรีเซ็ตยอดวันลาได้ กรุณาลองใหม่",
+        text:
+          err?.response?.data?.message ||
+          "ไม่สามารถรีเซ็ตยอดวันลาได้ กรุณาลองใหม่",
         icon: "error"
       });
     } finally {

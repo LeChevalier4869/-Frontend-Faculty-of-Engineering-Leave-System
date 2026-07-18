@@ -28,7 +28,15 @@ export default function UserEdit() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
 
-  const currentUserIsSuperAdmin = (currentUser?.roles || currentUser?.role || []).includes("SUPER_ADMIN");
+  const currentUserRoleNames = currentUser?.roles || currentUser?.role || [];
+  const currentUserIsSuperAdmin = currentUserRoleNames.includes("SUPER_ADMIN");
+  // ADMIN และ SUPER_ADMIN จัดการบทบาทได้ (SUPER_ADMIN implies ADMIN)
+  // ข้อจำกัด: เฉพาะ SUPER_ADMIN เท่านั้นที่มอบ/แก้บทบาท SUPER_ADMIN ได้
+  const canManageRoles =
+    currentUserIsSuperAdmin || currentUserRoleNames.includes("ADMIN");
+  // กำลังแก้ไขบัญชีของตัวเองหรือไม่ (ใช้กันถอด SUPER_ADMIN ของตัวเอง = กันล็อกเอาต์)
+  const isEditingSelf =
+    currentUser?.id != null && String(currentUser.id) === String(id);
 
   const initialForm = {
     prefixName: "",
@@ -45,6 +53,7 @@ export default function UserEdit() {
   };
 
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [initialFormData, setInitialFormData] = useState(initialForm);
   const [departments, setDepartments] = useState([]);
@@ -147,6 +156,8 @@ export default function UserEdit() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return; // กันกดปุ่มซ้ำระหว่างกำลังบันทึก
+    setSubmitting(true);
 
     try {
       const token = localStorage.getItem("accessToken");
@@ -203,6 +214,8 @@ export default function UserEdit() {
         err.response?.data?.message || "ไม่สามารถอัปเดตได้",
         "error"
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -262,7 +275,7 @@ export default function UserEdit() {
 
   // ตรวจสอบว่ามีการเปลี่ยนแปลงข้อมูลหรือไม่
   const formChanged = JSON.stringify(formData) !== JSON.stringify(initialFormData);
-  const rolesChanged = currentUserIsSuperAdmin &&
+  const rolesChanged = canManageRoles &&
     (selectedRoles.size !== initialRoles.size || [...selectedRoles].some((r) => !initialRoles.has(r)));
   const hasChanges = formChanged || rolesChanged;
 
@@ -366,7 +379,7 @@ export default function UserEdit() {
               ])}
             </div>
 
-            {currentUserIsSuperAdmin ? (
+            {canManageRoles ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="flex flex-col gap-1">
                   <div className="text-sm font-medium text-slate-800">บทบาท (Roles)</div>
@@ -393,7 +406,15 @@ export default function UserEdit() {
                   {(allRoles.length ? allRoles : [{ name: "USER" }]).map((r) => {
                     const isUserRole = r.name === "USER";
                     const isApprover1Role = r.name === "APPROVER_1";
-                    const isDisabled = isUserRole || isApprover1Role;
+                    // เฉพาะ SUPER_ADMIN เท่านั้นที่มอบ/ถอนบทบาท SUPER_ADMIN ได้
+                    const isSuperAdminRole = r.name === "SUPER_ADMIN";
+                    // ผู้ที่ไม่ใช่ super_admin แตะ SUPER_ADMIN ไม่ได้
+                    const superAdminRoleLock = isSuperAdminRole && !currentUserIsSuperAdmin;
+                    // super_admin ถอด SUPER_ADMIN ของตัวเองไม่ได้ (กันล็อกเอาต์)
+                    const superAdminSelfLock =
+                      isSuperAdminRole && currentUserIsSuperAdmin && isEditingSelf;
+                    const superAdminLocked = superAdminRoleLock || superAdminSelfLock;
+                    const isDisabled = isUserRole || isApprover1Role || superAdminLocked;
                     return (
                       <label
                         key={r.name}
@@ -419,6 +440,12 @@ export default function UserEdit() {
                         {isApprover1Role && (
                           <span className="ml-auto text-[10px] text-amber-600">จัดการที่หน้าแผนก</span>
                         )}
+                        {superAdminRoleLock && (
+                          <span className="ml-auto text-[10px] text-rose-500">เฉพาะ SUPER_ADMIN</span>
+                        )}
+                        {superAdminSelfLock && (
+                          <span className="ml-auto text-[10px] text-rose-500">ถอดของตัวเองไม่ได้</span>
+                        )}
                       </label>
                     );
                   })}
@@ -442,14 +469,38 @@ export default function UserEdit() {
               </button>
               <button
                 type="submit"
-                disabled={!hasChanges}
-                className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition ${
-                  hasChanges
-                    ? "bg-brand-600 hover:bg-brand-500 text-white"
-                    : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                disabled={!hasChanges || submitting}
+                className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition ${
+                  submitting
+                    ? "bg-brand-600 text-white cursor-wait opacity-90"
+                    : hasChanges
+                      ? "bg-brand-600 hover:bg-brand-500 text-white"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
                 }`}
               >
-                บันทึกการเปลี่ยนแปลง
+                {submitting && (
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                )}
+                {submitting ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
               </button>
             </div>
           </form>

@@ -38,26 +38,26 @@ const LeaveVerifier = lazy(() => import("../layouts/approver/LeaveVerifier"));
 const Approver1Dashboard = lazy(() => import("../layouts/approver/Approver1DashBoard"));
 
 /** Admin pages **/
-const DashBoard = lazy(() => import("../layouts/admin/DashBoard"));
-const DepartmentManage = lazy(() => import("../layouts/admin/DepartmentManage"));
-const OrganizationManage = lazy(() => import("../layouts/admin/OrganizationManage"));
-const PersonnelTypeManage = lazy(() => import("../layouts/admin/PersonelTypeManage"));
-const HolidayManage = lazy(() => import("../layouts/admin/HolidayManage"));
-const SettingManage = lazy(() => import("../layouts/admin/SettingManage"));
-const LeaveTypeManage = lazy(() => import("../layouts/admin/LeaveTypeManage"));
-const UserManage = lazy(() => import("../layouts/admin/UserManage"));
-const UserInfo = lazy(() => import("../layouts/admin/UserInfo"));
-const EditUser = lazy(() => import("../layouts/admin/EditUser"));
-const EditProfile = lazy(() => import("../layouts/admin/EditProfile"));
-const AddnewUser = lazy(() => import("../layouts/admin/AddnewUser"));
-const LeaveReport = lazy(() => import("../layouts/admin/LeaveReport"));
-const AddOtherRequest = lazy(() => import("../layouts/admin/AddOtherRequest"));
-const ProxyApprovalManagement = lazy(() => import("../layouts/admin/ProxyApprovalManagement"));
-const AuditLogManagement = lazy(() => import("../layouts/admin/AuditLogManagement"));
-const Config = lazy(() => import("../layouts/admin/Config"));
-const PositionNumberManagement = lazy(() => import("../layouts/admin/PositionNumberManagement"));
-const RoleManagement = lazy(() => import("../layouts/admin/RoleManagement"));
-const RankManage = lazy(() => import("../layouts/admin/RankManage"));
+import AdminDashboard from "../layouts/admin/AdminDashBoard";
+import DepartmentManage from "../layouts/admin/DepartmentManage";
+import OrganizationManage from "../layouts/admin/OrganizationManage";
+import PersonnelTypeManage from "../layouts/admin/PersonelTypeManage";
+import HolidayManage from "../layouts/admin/HolidayManage";
+import SettingManage from "../layouts/admin/SettingManage";
+import LeaveTypeManage from "../layouts/admin/LeaveTypeManage";
+import UserManage from "../layouts/admin/UserManage";
+import UserInfo from "../layouts/admin/UserInfo";
+import EditUser from "../layouts/admin/EditUser";
+import EditProfile from "../layouts/admin/EditProfile";
+import AddnewUser from "../layouts/admin/AddnewUser";
+import LeaveReport from "../layouts/admin/LeaveReport";
+import AuditLogManagement from "../layouts/admin/AuditLogManagement";
+import Config from "../layouts/admin/Config";
+import PositionNumberManagement from "../layouts/admin/PositionNumberManagement";
+import RoleManagement from "../layouts/admin/RoleManagement";
+import RankManage from "../layouts/admin/RankManage";
+import AdminManagementPage from "../layouts/admin/AdminManege";
+import ReportPage from "../layouts/admin/Report";
 
 function AppLayout() {
   const [isMobile, setIsMobile] = useState(false);
@@ -145,7 +145,6 @@ const guestRouter = createBrowserRouter([
       { path: "/login", element: <Login2 /> },
       { path: "/callback", element: <Callback /> },
       { path: "/dashboard", element: <UserDashBoard /> },
-      { path: "/add-other-request-dev", element: <AddOtherRequest /> },
       { path: "/leave-dev", element: <Leave2 /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
@@ -226,7 +225,7 @@ const userRouter = createBrowserRouter([
             path: "dashboard",
             element: (
               <ProtectedRoute requiredRoles={['ADMIN']}>
-                <DashBoard />
+                <AdminDashboard />
               </ProtectedRoute>
             )
           },
@@ -350,20 +349,25 @@ const userRouter = createBrowserRouter([
               </ProtectedRoute>
             )
           },
+          // ย้ายไปเป็นแท็บในหน้า "การจัดการ" แล้ว — คง path เดิมไว้เป็น redirect กัน bookmark เสีย
           {
             path: "add-other-request",
             element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
-                <AddOtherRequest />
-              </ProtectedRoute>
+              <Navigate
+                to="/admin/management"
+                replace
+                state={{ activeTab: "leaveRequests" }}
+              />
             )
           },
           {
             path: "proxy-approval",
             element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
-                <ProxyApprovalManagement />
-              </ProtectedRoute>
+              <Navigate
+                to="/admin/management"
+                replace
+                state={{ activeTab: "proxy" }}
+              />
             )
           },
           {
@@ -387,6 +391,22 @@ const userRouter = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>
                 <RoleManagement />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: "management",
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <AdminManagementPage />
+              </ProtectedRoute>
+            )
+          },
+          {
+            path: "report",
+            element: (
+              <ProtectedRoute requiredRoles={['ADMIN']}>
+                <ReportPage />
               </ProtectedRoute>
             )
           },

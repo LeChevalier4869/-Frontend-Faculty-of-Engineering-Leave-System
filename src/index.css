@@ -7,3 +7,194 @@ html, body, #root {
   min-width: 320px;
   width: 100%;
 }
+
+/* ============================================================
+   Modern FullCalendar theme — scope ด้วย .efc-modern
+   ใช้ร่วมกันทั้งปฏิทินของ user และ admin
+   ============================================================ */
+.efc-modern .fc {
+  --fc-border-color: #eef2f6;
+  --fc-today-bg-color: #fdf3f3; /* brand-50 */
+  --fc-neutral-bg-color: #f8fafc;
+  --fc-page-bg-color: #ffffff;
+  --fc-event-border-color: transparent;
+  font-family: inherit;
+}
+
+/* Toolbar */
+.efc-modern .fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1.25rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.efc-modern .fc .fc-toolbar-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+/* Buttons — pill + brand */
+.efc-modern .fc .fc-button {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.6rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: all 0.15s ease;
+}
+.efc-modern .fc .fc-button:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+.efc-modern .fc .fc-button:focus {
+  box-shadow: 0 0 0 3px rgba(122, 27, 34, 0.15);
+}
+.efc-modern .fc .fc-button-primary:not(:disabled).fc-button-active,
+.efc-modern .fc .fc-button-primary:not(:disabled):active {
+  background: #7a1b22; /* brand-600 */
+  border-color: #7a1b22;
+  color: #ffffff;
+}
+.efc-modern .fc .fc-button .fc-icon {
+  font-size: 1.1rem;
+}
+.efc-modern .fc .fc-button-group > .fc-button {
+  border-radius: 0;
+}
+.efc-modern .fc .fc-button-group > .fc-button:first-child {
+  border-top-left-radius: 0.6rem;
+  border-bottom-left-radius: 0.6rem;
+}
+.efc-modern .fc .fc-button-group > .fc-button:last-child {
+  border-top-right-radius: 0.6rem;
+  border-bottom-right-radius: 0.6rem;
+}
+
+/* Grid frame — โปร่ง ไม่มีกรอบนอกหนา */
+.efc-modern .fc .fc-scrollgrid {
+  border: none;
+}
+.efc-modern .fc .fc-scrollgrid td,
+.efc-modern .fc .fc-scrollgrid th {
+  border-color: var(--fc-border-color);
+}
+.efc-modern .fc .fc-scrollgrid-section > * {
+  border: none;
+}
+
+/* Day-of-week header (อาทิตย์ … เสาร์) */
+.efc-modern .fc .fc-col-header-cell {
+  background: #f8fafc;
+  padding: 0.6rem 0;
+}
+.efc-modern .fc .fc-col-header-cell-cushion {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  padding: 0.25rem 0.4rem;
+}
+/* อาทิตย์ = แดง, เสาร์ = น้ำเงิน (สไตล์ปฏิทินไทย) */
+.efc-modern .fc .fc-col-header-cell.fc-day-sun .fc-col-header-cell-cushion {
+  color: #e11d48;
+}
+.efc-modern .fc .fc-col-header-cell.fc-day-sat .fc-col-header-cell-cushion {
+  color: #2563eb;
+}
+
+/* Day cells */
+.efc-modern .fc .fc-daygrid-day {
+  transition: background 0.15s ease;
+}
+.efc-modern .fc .fc-daygrid-day:hover {
+  background: #f8fafc;
+}
+.efc-modern .fc .fc-daygrid-day-number {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #334155;
+  padding: 0.4rem 0.5rem;
+}
+.efc-modern .fc .fc-day-sun .fc-daygrid-day-number {
+  color: #e11d48;
+}
+.efc-modern .fc .fc-day-sat .fc-daygrid-day-number {
+  color: #2563eb;
+}
+.efc-modern .fc .fc-day-other .fc-daygrid-day-number {
+  color: #cbd5e1;
+}
+
+/* วันนี้ — ไฮไลต์นุ่ม + ตัวเลขเป็นวงกลมแบรนด์ */
+.efc-modern .fc .fc-day-today .fc-daygrid-day-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  margin: 0.25rem;
+  border-radius: 9999px;
+  background: #7a1b22;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* Events — pill ทันสมัย */
+.efc-modern .fc .fc-daygrid-event {
+  border-radius: 0.5rem;
+  padding: 0.1rem 0.4rem;
+  margin: 0.1rem 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  border: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+.efc-modern .fc .fc-daygrid-event .fc-event-title {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.efc-modern .fc .fc-daygrid-event:hover {
+  filter: brightness(0.95);
+}
+.efc-modern .fc .fc-daygrid-block-event .fc-event-time,
+.efc-modern .fc .fc-daygrid-dot-event:hover {
+  background: transparent;
+}
+
+/* "+ more" link */
+.efc-modern .fc .fc-daygrid-more-link {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #7a1b22;
+}
+
+/* List view (มุมมองรายการ) */
+.efc-modern .fc .fc-list {
+  border: none;
+}
+.efc-modern .fc .fc-list-day-cushion {
+  background: #f8fafc;
+}
+.efc-modern .fc .fc-list-event:hover td {
+  background: #fdf3f3;
+}
+
+/* จอเล็ก: ย่อ toolbar */
+@media (max-width: 640px) {
+  .efc-modern .fc .fc-toolbar.fc-header-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .efc-modern .fc .fc-toolbar-title {
+    font-size: 1.05rem;
+    text-align: center;
+  }
+}
