@@ -11,7 +11,6 @@ import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import {
-  Plus,
   ChevronDown,
   PlusCircle,
   X,
@@ -1248,20 +1247,14 @@ export default function AddOtherRequest() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 font-kanit px-4 py-8 md:px-8 rounded-2xl">
+    <div className="font-kanit text-slate-900">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
-              Admin View
-            </span>
-          </div>
           <div className="w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col items-center gap-1 md:items-start">
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
-                จัดการคำขอการลา (Admin)
+                บันทึกคำขอการลาลงระบบ
               </h1>
               <p className="text-sm text-slate-600">
                 บันทึก / ยกเลิกคำขอแทนผู้ใช้ และดูภาพรวมการลาทั้งระบบ
@@ -1716,14 +1709,6 @@ export default function AddOtherRequest() {
           </div>
         )}
       </div>
-
-      <button
-        onClick={() => setModalOpen(true)}
-        className="fixed bottom-8 right-8 rounded-full bg-slate-800 p-4 text-white shadow-xl transition hover:bg-slate-700"
-        title="บันทึกคำขอการลาใหม่"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
 
       {isModalOpen && (
         <LeaveRequestModalAdmin

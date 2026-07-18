@@ -5,12 +5,16 @@ import {
   FaIdBadge,
   FaBuilding,
   FaCalendarAlt,
+  FaFileSignature,
+  FaUserShield,
 } from "react-icons/fa";
 
 import UserManageContent from "../../components/admin/manage/UserManageContent";
 import PositionNumberManageContent from "../../components/admin/manage/PositionNumberManageContent";
 import DepartmentManageContent from "../../components/admin/manage/OrganizationManageContent";
 import HolidayManageContent from "../../components/admin/manage/HolidayManageContent";
+import AddOtherRequest from "./AddOtherRequest";
+import ProxyApprovalManagement from "./ProxyApprovalManagement";
 export default function ManagementPage() {
   const location = useLocation();
 
@@ -23,6 +27,8 @@ export default function ManagementPage() {
     { id: "positions", label: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
     { id: "departments", label: "จัดการแผนก", icon: <FaBuilding /> },
     { id: "holidays", label: "จัดการวันหยุด", icon: <FaCalendarAlt /> },
+    { id: "leaveRequests", label: "บันทึกคำขอการลา", icon: <FaFileSignature /> },
+    { id: "proxy", label: "จัดการการมอบอำนาจ", icon: <FaUserShield /> },
   ];
 
   // =========================
@@ -63,6 +69,12 @@ export default function ManagementPage() {
       case "holidays":
         return <HolidayManagement />;
 
+      case "leaveRequests":
+        return <AddOtherRequest />;
+
+      case "proxy":
+        return <ProxyApprovalManagement />;
+
       default:
         return null;
     }
@@ -95,24 +107,24 @@ export default function ManagementPage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-3xl shadow-sm border overflow-hidden mb-6">
-          <div className="grid grid-cols-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center justify-center gap-3
-                  py-6 text-lg font-semibold transition-all
-                  border-b-4
+                  flex flex-col items-center justify-center gap-1.5
+                  px-2 py-4 text-xs sm:text-sm font-semibold transition-all
+                  border-b-4 text-center leading-tight
 
                   ${
                     activeTab === tab.id
-                      ? "bg-blue-50 text-blue-600 border-blue-500"
-                      : "bg-white text-gray-600 border-transparent hover:bg-gray-50"
+                      ? "bg-brand-50 text-brand-700 border-brand-600"
+                      : "bg-white text-slate-600 border-transparent hover:bg-slate-50"
                   }
                 `}
               >
-                <span className="text-2xl">{tab.icon}</span>
+                <span className="text-xl">{tab.icon}</span>
 
                 {tab.label}
               </button>

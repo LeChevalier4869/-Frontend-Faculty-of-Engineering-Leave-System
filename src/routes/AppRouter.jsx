@@ -39,7 +39,6 @@ const Approver1Dashboard = lazy(() => import("../layouts/approver/Approver1DashB
 
 /** Admin pages **/
 import AdminDashboard from "../layouts/admin/AdminDashBoard";
-import DashBoard from "../layouts/admin/DashBoard";
 import DepartmentManage from "../layouts/admin/DepartmentManage";
 import OrganizationManage from "../layouts/admin/OrganizationManage";
 import PersonnelTypeManage from "../layouts/admin/PersonelTypeManage";
@@ -51,10 +50,7 @@ import UserInfo from "../layouts/admin/UserInfo";
 import EditUser from "../layouts/admin/EditUser";
 import EditProfile from "../layouts/admin/EditProfile";
 import AddnewUser from "../layouts/admin/AddnewUser";
-import LeaveAdmin from "../layouts/admin/LeaveAdmin";
 import LeaveReport from "../layouts/admin/LeaveReport";
-import AddOtherRequest from "../layouts/admin/AddOtherRequest";
-import ProxyApprovalManagement from "../layouts/admin/ProxyApprovalManagement";
 import AuditLogManagement from "../layouts/admin/AuditLogManagement";
 import Config from "../layouts/admin/Config";
 import PositionNumberManagement from "../layouts/admin/PositionNumberManagement";
@@ -149,7 +145,6 @@ const guestRouter = createBrowserRouter([
       { path: "/login", element: <Login2 /> },
       { path: "/callback", element: <Callback /> },
       { path: "/dashboard", element: <UserDashBoard /> },
-      { path: "/add-other-request-dev", element: <AddOtherRequest /> },
       { path: "/leave-dev", element: <Leave2 /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
@@ -354,20 +349,25 @@ const userRouter = createBrowserRouter([
               </ProtectedRoute>
             )
           },
+          // ย้ายไปเป็นแท็บในหน้า "การจัดการ" แล้ว — คง path เดิมไว้เป็น redirect กัน bookmark เสีย
           {
             path: "add-other-request",
             element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
-                <AddOtherRequest />
-              </ProtectedRoute>
+              <Navigate
+                to="/admin/management"
+                replace
+                state={{ activeTab: "leaveRequests" }}
+              />
             )
           },
           {
             path: "proxy-approval",
             element: (
-              <ProtectedRoute requiredRoles={['ADMIN']}>
-                <ProxyApprovalManagement />
-              </ProtectedRoute>
+              <Navigate
+                to="/admin/management"
+                replace
+                state={{ activeTab: "proxy" }}
+              />
             )
           },
           {
