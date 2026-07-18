@@ -200,4 +200,8 @@ export const apiEndpoints = {
   updateRole: (id) => `${BASE_URL}/admin/role/${id}`, // PUT
   deleteRole: (id) => `${BASE_URL}/admin/role/${id}`, // DELETE
   getRoleById: (id) => `${BASE_URL}/admin/role/${id}`, // GET
+
+
+  //Admin Dashboard Summary
+  getAdminDashboardSummary: `${BASE_URL}/admin/dashboard-summary` //GET
 };

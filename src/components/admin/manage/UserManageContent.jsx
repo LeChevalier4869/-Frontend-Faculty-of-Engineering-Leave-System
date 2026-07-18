@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
-import { apiEndpoints } from "../../utils/api";
+import { apiEndpoints } from "../../../utils/api";
 import { FiUser, FiUsers } from "react-icons/fi";
 
 const PAGE_SIZE = 10;
@@ -14,8 +14,14 @@ const DEBOUNCE_MS = 200;
 const MySwal = withReactContent(Swal);
 
 const ROLE_PRIORITY = [
-  "SUPER_ADMIN", "ADMIN", "APPROVER_4", "APPROVER_3",
-  "APPROVER_2", "APPROVER_1", "VERIFIER", "USER",
+  "SUPER_ADMIN",
+  "ADMIN",
+  "APPROVER_4",
+  "APPROVER_3",
+  "APPROVER_2",
+  "APPROVER_1",
+  "VERIFIER",
+  "USER",
 ];
 const ROLE_COLOR = {
   SUPER_ADMIN: "bg-rose-50 text-rose-700 border-rose-200",
@@ -45,9 +51,8 @@ const RoleBadgeCell = ({ userRoles }) => {
   const roleNames = (userRoles || [])
     .map((ur) => ur.role?.name || ur.roleName)
     .filter(Boolean);
-  const display = roleNames.length > 1
-    ? roleNames.filter((r) => r !== "USER")
-    : roleNames;
+  const display =
+    roleNames.length > 1 ? roleNames.filter((r) => r !== "USER") : roleNames;
 
   const highest = getHighestRole(display);
 
@@ -80,38 +85,45 @@ const RoleBadgeCell = ({ userRoles }) => {
         className="group inline-flex items-center gap-1"
       >
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${ROLE_COLOR[highest] || "bg-brand-50 text-brand-700 border-brand-200"}`}
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${ROLE_COLOR[highest] || "bg-sky-50 text-sky-700 border-sky-200"}`}
         >
           {highest}
         </span>
         {display.length > 1 && (
-          <span className="text-[10px] text-slate-400 group-hover:text-brand-500 transition">
+          <span className="text-[10px] text-slate-400 group-hover:text-sky-500 transition">
             +{display.length - 1}
           </span>
         )}
       </button>
 
-      {open && display.length > 1 && ReactDOM.createPortal(
-        <div
-          style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
-          className="min-w-[140px] rounded-xl bg-white border border-slate-200 shadow-lg p-2 flex flex-col gap-1"
-        >
-          {display.map((r) => (
-            <span
-              key={r}
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border w-fit ${ROLE_COLOR[r] || "bg-brand-50 text-brand-700 border-brand-200"}`}
-            >
-              {r}
-            </span>
-          ))}
-        </div>,
-        document.body
-      )}
+      {open &&
+        display.length > 1 &&
+        ReactDOM.createPortal(
+          <div
+            style={{
+              position: "fixed",
+              top: pos.top,
+              left: pos.left,
+              zIndex: 9999,
+            }}
+            className="min-w-[140px] rounded-xl bg-white border border-slate-200 shadow-lg p-2 flex flex-col gap-1"
+          >
+            {display.map((r) => (
+              <span
+                key={r}
+                className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border w-fit ${ROLE_COLOR[r] || "bg-sky-50 text-sky-700 border-sky-200"}`}
+              >
+                {r}
+              </span>
+            ))}
+          </div>,
+          document.body,
+        )}
     </>
   );
 };
 
-function UserManage() {
+function UserManageContent() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -122,7 +134,7 @@ function UserManage() {
   useEffect(() => {
     const id = setTimeout(
       () => setKeyword(searchInput.trim().toLowerCase()),
-      DEBOUNCE_MS
+      DEBOUNCE_MS,
     );
     return () => clearTimeout(id);
   }, [searchInput]);
@@ -131,7 +143,7 @@ function UserManage() {
     const token = localStorage.getItem("accessToken");
     if (!token) {
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => (window.location.href = "/login")
+        () => (window.location.href = "/login"),
       );
       throw new Error("No token");
     }
@@ -142,7 +154,7 @@ function UserManage() {
     if (err.response?.status === 401) {
       localStorage.removeItem("accessToken");
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => (window.location.href = "/login")
+        () => (window.location.href = "/login"),
       );
     } else {
       Swal.fire("Error", err.response?.data?.message || err.message, "error");
@@ -191,26 +203,19 @@ function UserManage() {
     : users.filter((u) =>
         `${u.prefixName ?? ""} ${u.firstName ?? ""} ${u.lastName ?? ""}`
           .toLowerCase()
-          .includes(keyword)
+          .includes(keyword),
       );
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const displayedUsers = filtered.slice(
     (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    currentPage * PAGE_SIZE,
   );
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
+    <div className="font-kanit text-slate-900">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
-              Admin View
-            </span>
-          </div>
           <div className="w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col items-center gap-1 md:items-start">
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
@@ -229,12 +234,14 @@ function UserManage() {
                   setCurrentPage(1);
                 }}
                 placeholder="ค้นหาชื่อ..."
-                className="w-full md:w-64 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                className="w-full md:w-64 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
               />
               <div className="flex items-center gap-3 justify-end">
                 <button
-                  onClick={() => {navigate("/admin/add-user");}}
-                  className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-500 whitespace-nowrap"
+                  onClick={() => {
+                    navigate("/admin/add-user");
+                  }}
+                  className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
                 >
                   + เพิ่มผู้ใช้งาน
                 </button>
@@ -247,24 +254,26 @@ function UserManage() {
         </div>
 
         <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-          {/* Desktop: ตาราง */}
-          <div className="overflow-x-auto hidden md:block">
+          <div className="overflow-x-auto">
             <table className="w-full table-fixed bg-white text-sm text-slate-900 border-collapse">
               <thead className="bg-slate-50 text-slate-700">
                 <tr>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[18%]">
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold w-[5%]">
+                    ลำดับ
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[17%]">
                     ชื่อ-นามสกุล
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[20%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[19%]">
                     อีเมล
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[15%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[14%]">
                     แผนก
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[13%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[12%]">
                     ประเภทบุคลากร
                   </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[12%]">
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[11%]">
                     บทบาท
                   </th>
                   <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold w-[10%]">
@@ -280,7 +289,7 @@ function UserManage() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       กำลังโหลด...
@@ -293,8 +302,11 @@ function UserManage() {
                       onClick={() => navigate(`/admin/user-info/${user.id}`)}
                       className={`cursor-pointer border-t border-slate-100 transition-colors ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-brand-50`}
+                      } hover:bg-sky-50`}
                     >
+                      <td className="px-4 py-3 text-center text-sm font-medium text-slate-500">
+                        {(currentPage - 1) * PAGE_SIZE + idx + 1}
+                      </td>
                       <td className="px-4 py-3 truncate text-sm">
                         {user.prefixName} {user.firstName} {user.lastName}
                       </td>
@@ -307,7 +319,10 @@ function UserManage() {
                       <td className="px-4 py-3 truncate text-sm">
                         {user.personnelType?.name || "-"}
                       </td>
-                      <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
+                      <td
+                        className="px-4 py-3 text-sm"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <RoleBadgeCell userRoles={user.userRoles} />
                       </td>
                       <td className="px-4 py-3 truncate text-sm">
@@ -337,7 +352,7 @@ function UserManage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่พบผู้ใช้งาน
@@ -347,78 +362,14 @@ function UserManage() {
               </tbody>
             </table>
           </div>
-
-          {/* Mobile: การ์ด */}
-          <div className="md:hidden space-y-3">
-            {loading ? (
-              <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-500">
-                กำลังโหลด...
-              </div>
-            ) : displayedUsers.length ? (
-              displayedUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-                >
-                  <div
-                    onClick={() => navigate(`/admin/user-info/${user.id}`)}
-                    className="cursor-pointer"
-                  >
-                    <div className="font-medium text-slate-800">
-                      {user.prefixName} {user.firstName} {user.lastName}
-                    </div>
-                    <div className="text-sm text-slate-500 break-all">
-                      {user.email}
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-600">
-                      <div>
-                        <span className="text-slate-400">แผนก:</span>{" "}
-                        {user.department?.name || "-"}
-                      </div>
-                      <div>
-                        <span className="text-slate-400">ประเภท:</span>{" "}
-                        {user.personnelType?.name || "-"}
-                      </div>
-                      <div>
-                        <span className="text-slate-400">เบอร์:</span>{" "}
-                        {user.phone || "-"}
-                      </div>
-                    </div>
-                    <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                      <RoleBadgeCell userRoles={user.userRoles} />
-                    </div>
-                  </div>
-                  <div
-                    className="mt-3 grid grid-cols-2 gap-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Link
-                      to={`/admin/user/${user.id}`}
-                      className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-white hover:bg-slate-600"
-                    >
-                      แก้ไข
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(user.id)}
-                      className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-3 py-2 text-xs font-medium text-white hover:bg-rose-400"
-                    >
-                      ลบ
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-slate-500">
-                ไม่พบผู้ใช้งาน
-              </div>
-            )}
-          </div>
         </div>
 
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 bg-white rounded-lg px-4 py-3 border border-slate-200">
             <div className="text-sm text-slate-700">
-              แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ
+              แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง{" "}
+              {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก{" "}
+              {filtered.length} รายการ
             </div>
             <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
               <button
@@ -435,23 +386,46 @@ function UserManage() {
                 } else {
                   pages.push(1);
                   if (currentPage <= 4) {
-                    pages.push(2, 3, 4, 5, '...', totalPages);
+                    pages.push(2, 3, 4, 5, "...", totalPages);
                   } else if (currentPage >= totalPages - 3) {
-                    pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    pages.push(
+                      "...",
+                      totalPages - 4,
+                      totalPages - 3,
+                      totalPages - 2,
+                      totalPages - 1,
+                      totalPages,
+                    );
                   } else {
-                    pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                    pages.push(
+                      "...",
+                      currentPage - 1,
+                      currentPage,
+                      currentPage + 1,
+                      "...",
+                      totalPages,
+                    );
                   }
                 }
                 return pages.map((page, idx) => {
-                  if (page === '...') {
-                    return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                  if (page === "...") {
+                    return (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700"
+                      >
+                        ...
+                      </span>
+                    );
                   }
                   return (
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        currentPage === page
+                          ? "z-10 bg-sky-50 border-sky-500 text-sky-600"
+                          : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                       }`}
                     >
                       {page}
@@ -460,7 +434,9 @@ function UserManage() {
                 });
               })()}
               <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage === totalPages}
                 className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -474,4 +450,4 @@ function UserManage() {
   );
 }
 
-export default UserManage;
+export default UserManageContent;
