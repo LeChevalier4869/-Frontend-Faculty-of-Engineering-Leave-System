@@ -1,458 +1,638 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { apiEndpoints } from "../../utils/api";
+/* eslint-disable react/prop-types */
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  Users,
-  Calendar,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  ArrowRight,
+  Ban,
+  CalendarDays,
+  CheckCircle2,
   Clock,
-  CheckCircle,
+  FileText,
+  History,
+  RefreshCw,
+  ShieldCheck,
+  Users,
   XCircle,
-  List,
 } from "lucide-react";
-import { FaHistory } from "react-icons/fa";
-import { FaFileCirclePlus } from "react-icons/fa6";
-import { MdAssignmentInd } from "react-icons/md";
-import { BiSolidReport } from "react-icons/bi";
-import { Link } from "react-router-dom";
-import getApiUrl from "../../utils/apiUtils";
-import useAuth from "../../hooks/useAuth";
+import { API } from "../../utils/api";
+import LoadingSpinner from "../../components/LoadingSpinner";
+
+/**
+ * สีสถานะ — ผ่านการตรวจ contrast (>= 3:1 บนพื้นขาว) แล้ว
+ * คู่ "อนุมัติ/ปฏิเสธ" มีระยะสีต่ำสำหรับผู้มีภาวะตาบอดสีแดง-เขียว
+ * จึงต้องแสดง "ไอคอน + ข้อความ + ตัวเลข" ควบคู่เสมอ ห้ามสื่อด้วยสีอย่างเดียว
+ */
+const STATUS_META = {
+  PENDING: { label: "รออนุมัติ", color: "#d97706", Icon: Clock },
+  APPROVED: { label: "อนุมัติแล้ว", color: "#059669", Icon: CheckCircle2 },
+  REJECTED: { label: "ถูกปฏิเสธ", color: "#e11d48", Icon: XCircle },
+  CANCELLED: { label: "ยกเลิก", color: "#64748b", Icon: Ban },
+};
+const STATUS_ORDER = ["PENDING", "APPROVED", "REJECTED", "CANCELLED"];
+
+const CHART_PRIMARY = "#b23a47"; // brand-500
+const CHART_ACCENT = "#a8842f"; // gold-dark
+
+const TH_MONTHS = [
+  "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+  "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
+];
+
+const AUDIT_ACTION_TH = {
+  CREATE: "สร้าง",
+  UPDATE: "แก้ไข",
+  DELETE: "ลบ",
+  APPROVE: "อนุมัติ",
+  REJECT: "ปฏิเสธ",
+  CANCEL: "ยกเลิก",
+  LOGIN: "เข้าสู่ระบบ",
+};
+
+const formatDate = (iso) =>
+  iso
+    ? new Date(iso).toLocaleDateString("th-TH", {
+        day: "2-digit",
+        month: "short",
+        year: "2-digit",
+      })
+    : "-";
+
+const formatDateTime = (iso) =>
+  iso
+    ? new Date(iso).toLocaleString("th-TH", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "-";
+
+const fullName = (u) =>
+  u ? `${u.prefixName || ""}${u.firstName || ""} ${u.lastName || ""}`.trim() : "-";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("accessToken");
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalRequests: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-    cancelled: 0,
-  });
-  const [recent, setRecent] = useState([]);
-  const [summary, setSummary] = useState([]);
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
 
-      try {
-        const response = await axios.get(
-          apiEndpoints.getAdminDashboardSummary,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+  const [requests, setRequests] = useState([]);
+  const [userCount, setUserCount] = useState(0);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [proxyToday, setProxyToday] = useState(0);
+  const [holidays, setHolidays] = useState([]);
 
-        const data = response.data.data;
+  const loadAll = useCallback(async () => {
+    setError("");
+    // ยิงแยกกันและกันพังทีละตัว — ถ้า endpoint ใดล้ม ส่วนที่เหลือยังแสดงได้
+    const [reqRes, userRes, auditRes, proxyRes, holidayRes] = await Promise.all([
+      API.get("/leave-requests").catch(() => null),
+      API.get("/admin/users").catch(() => null),
+      API.get("/admin/audit-logs", { params: { limit: 6 } }).catch(() => null),
+      API.get("/proxy-approval/today").catch(() => null),
+      API.get("/admin/holiday").catch(() => null),
+    ]);
 
-        // console.log(data);
-        setStats({
-          totalUsers: data.totalUsers,
-          totalRequests: data.totalRequests,
-          pending: data.pendingRequests,
-          approved: data.approvedRequests,
-          rejected: data.rejectedRequests,
-          cancelled: data.cancelledRequests,
-        });
-      } catch (err) {
-        console.error("AdminDashboard fetch error:", err.response || err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!reqRes && !userRes) {
+      setError("ไม่สามารถโหลดข้อมูลแดชบอร์ดได้ กรุณาลองใหม่อีกครั้ง");
+    }
 
-    fetchStats();
+    setRequests(reqRes?.data?.data || []);
+    setUserCount((userRes?.data?.data || []).length);
+    setAuditLogs(auditRes?.data?.data || []);
+    setProxyToday(proxyRes?.data?.pagination?.totalCount ?? (proxyRes?.data?.data || []).length);
+    setHolidays(holidayRes?.data?.data || []);
   }, []);
 
-  const formatDate = (iso) =>
-    new Date(iso).toLocaleDateString("th-TH", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      await loadAll();
+      setLoading(false);
+    })();
+  }, [loadAll]);
 
-  const statusPill = (status) => {
-    const base =
-      "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium";
-    switch (status) {
-      case "PENDING":
-        return (
-          <span
-            className={`${base} bg-amber-50 text-amber-700 border border-amber-200`}
-          >
-            รออนุมัติ
-          </span>
-        );
-      case "APPROVED":
-        return (
-          <span
-            className={`${base} bg-emerald-50 text-emerald-700 border border-emerald-200`}
-          >
-            อนุมัติแล้ว
-          </span>
-        );
-      case "REJECTED":
-        return (
-          <span
-            className={`${base} bg-rose-50 text-rose-700 border border-rose-200`}
-          >
-            ถูกปฏิเสธ
-          </span>
-        );
-      case "CANCELLED":
-        return (
-          <span
-            className={`${base} bg-slate-50 text-slate-700 border border-slate-200`}
-          >
-            ยกเลิก
-          </span>
-        );
-      default:
-        return (
-          <span
-            className={`${base} bg-slate-50 text-slate-700 border border-slate-200`}
-          >
-            {status}
-          </span>
-        );
-    }
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadAll();
+    setRefreshing(false);
   };
 
-  function ActionButton({ title, icon, details, onClick }) {
-    return (
-      <button
-        onClick={onClick}
-        className="w-full text-left rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition"
-      >
-        {/* Title */}
-        <div className="mb-3 px-3 py-2 rounded-lg bg-slate-100 text-slate-800 text-sm font-semibold">
-          {title}
-        </div>
+  // ---------- ข้อมูลสรุป (คำนวณฝั่ง client เพราะ backend ยังไม่มี endpoint สรุป) ----------
+  const statusCounts = useMemo(() => {
+    const base = { PENDING: 0, APPROVED: 0, REJECTED: 0, CANCELLED: 0 };
+    for (const r of requests) if (r.status in base) base[r.status] += 1;
+    return base;
+  }, [requests]);
 
-        {/* Content */}
-        <div className="flex items-center gap-4">
-          {/* Icon */}
-          <div className="w-14 h-14 flex items-center justify-center rounded-xl border bg-slate-50">
-            {icon}
-          </div>
+  const monthlyTrend = useMemo(() => {
+    const now = new Date();
+    const buckets = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      buckets.push({
+        key: `${d.getFullYear()}-${d.getMonth()}`,
+        label: TH_MONTHS[d.getMonth()],
+        จำนวนคำขอ: 0,
+      });
+    }
+    const index = new Map(buckets.map((b) => [b.key, b]));
+    for (const r of requests) {
+      if (!r.createdAt) continue;
+      const d = new Date(r.createdAt);
+      const hit = index.get(`${d.getFullYear()}-${d.getMonth()}`);
+      if (hit) hit.จำนวนคำขอ += 1;
+    }
+    return buckets;
+  }, [requests]);
 
-          {/* Details */}
-          <div className="flex-1 text-sm text-slate-600">
-            {details || "รายละเอียด..."}
-          </div>
-        </div>
-      </button>
-    );
-  }
+  const topLeaveTypes = useMemo(() => {
+    const tally = new Map();
+    for (const r of requests) {
+      const name = r.leaveType?.name || "ไม่ระบุ";
+      tally.set(name, (tally.get(name) || 0) + 1);
+    }
+    return [...tally.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [requests]);
+
+  const recentRequests = useMemo(
+    () =>
+      [...requests]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5),
+    [requests],
+  );
+
+  const upcomingHolidays = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return holidays
+      .filter((h) => h.date && new Date(h.date) >= today)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 4);
+  }, [holidays]);
+
+  const maxTypeCount = topLeaveTypes[0]?.count || 1;
+  const totalRequests = requests.length;
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-white font-kanit text-slate-700 rounded-2xl">
-        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-xl p-6">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.9)]" />
-            </div>
-            <span className="font-medium">กำลังโหลดแดชบอร์ดผู้ดูแลระบบ...</span>
-            <span className="text-xs text-slate-500">
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลภาพรวม
-            </span>
-          </div>
-        </div>
-      </div>
+      <LoadingSpinner
+        message="กำลังโหลดแดชบอร์ดผู้ดูแลระบบ..."
+        fullScreen={false}
+      />
     );
-  }
-
-  if (loading) {
-    return <LoadingSpinner message="กำลังโหลดแดชบอร์ดผู้ดูแลระบบ..." fullScreen={false} />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900 px-4 py-8 md:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-700">
-              Admin Dashboard
-            </span>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* ---------- Header ---------- */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] uppercase tracking-[0.2em] text-brand-700">
+                Admin Dashboard
+              </span>
+            </div>
+            <h1 className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">
+              ภาพรวมระบบการลา
+            </h1>
+            <p className="text-sm text-slate-600">
+              ข้อมูล ณ{" "}
+              {new Date().toLocaleDateString("th-TH", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-slate-900">
-            แดชบอร์ด{" "}
-            <span className="bg-gradient-to-r from-red-500 via-rose-400 to-amber-400 bg-clip-text text-transparent">
-              ผู้ดูแลระบบ
-            </span>
-          </h1>
-          <p className="text-slate-600 text-sm">
-            ภาพรวมการใช้งานระบบ การยื่นลา และสถานะคำขอทั้งหมดในองค์กร
-          </p>
+
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-70"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+            {refreshing ? "กำลังรีเฟรช..." : "รีเฟรชข้อมูล"}
+          </button>
         </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-2">
-          <div
-            className="cursor-pointer transition-transform hover:-translate-y-1"
+        {error && (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        )}
+
+        {/* ---------- KPI ---------- */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatTile
+            icon={<Users className="h-5 w-5" />}
+            label="ผู้ใช้งานทั้งหมด"
+            value={userCount}
+            hint="ดูรายชื่อผู้ใช้งาน"
+            onClick={() =>
+              navigate("/admin/management", { state: { activeTab: "users" } })
+            }
+          />
+          <StatTile
+            icon={<FileText className="h-5 w-5" />}
+            label="คำขอลาทั้งหมด"
+            value={totalRequests}
+            hint="ดูคำขอทั้งหมด"
             onClick={() =>
               navigate("/admin/management", {
-                state: {
-                  activeTab: "users",
-                },
+                state: { activeTab: "leaveRequests" },
               })
             }
+          />
+          <StatTile
+            icon={<Clock className="h-5 w-5" />}
+            label="รออนุมัติ"
+            value={statusCounts.PENDING}
+            accent={statusCounts.PENDING > 0}
+            hint={
+              statusCounts.PENDING > 0 ? "มีรายการรอดำเนินการ" : "ไม่มีรายการค้าง"
+            }
+            onClick={() =>
+              navigate("/admin/management", {
+                state: { activeTab: "leaveRequests" },
+              })
+            }
+          />
+          <StatTile
+            icon={<ShieldCheck className="h-5 w-5" />}
+            label="มอบอำนาจที่ใช้งานวันนี้"
+            value={proxyToday}
+            hint="จัดการการมอบอำนาจ"
+            onClick={() =>
+              navigate("/admin/management", { state: { activeTab: "proxy" } })
+            }
+          />
+        </div>
+
+        {/* ---------- แนวโน้ม + สถานะ ---------- */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <Panel
+            className="xl:col-span-2"
+            title="แนวโน้มคำขอลา 6 เดือนล่าสุด"
+            subtitle="จำนวนคำขอที่ยื่นเข้าระบบในแต่ละเดือน"
           >
-            <Card
-              icon={<Users className="w-6 h-6" />}
-              label="ผู้ใช้งานทั้งหมด"
-              value={stats.totalUsers}
-              tone="indigo"
-            />
-          </div>
+            {totalRequests === 0 ? (
+              <EmptyState text="ยังไม่มีคำขอลาในระบบ" />
+            ) : (
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={monthlyTrend}
+                    margin={{ top: 8, right: 8, bottom: 0, left: -20 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#e2e8f0"
+                    />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "rgba(148,163,184,0.12)" }}
+                      contentStyle={{
+                        borderRadius: 12,
+                        border: "1px solid #e2e8f0",
+                        fontFamily: "Kanit, sans-serif",
+                        fontSize: 13,
+                      }}
+                    />
+                    <Bar
+                      dataKey="จำนวนคำขอ"
+                      fill={CHART_PRIMARY}
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={44}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Panel>
 
-          <Link to="/admin/leave-requests">
-            <Card
-              icon={<List className="w-6 h-6" />}
-              label="คำขอลาทั้งหมด"
-              value={stats.totalRequests}
-              tone="violet"
-            />
-          </Link>
-
-          <Link to="/admin/leave-requests?status=PENDING">
-            <Card
-              icon={<Clock className="w-6 h-6" />}
-              label="รออนุมัติ"
-              value={stats.pending}
-              tone="amber"
-            />
-          </Link>
-
-          <Link to="/admin/leave-requests?status=APPROVED">
-            <Card
-              icon={<CheckCircle className="w-6 h-6" />}
-              label="อนุมัติแล้ว"
-              value={stats.approved}
-              tone="emerald"
-            />
-          </Link>
-
-          <Link to="/admin/leave-requests?status=REJECTED">
-            <Card
-              icon={<XCircle className="w-6 h-6" />}
-              label="ถูกปฏิเสธ"
-              value={stats.rejected}
-              tone="rose"
-            />
-          </Link>
-
-          <Link to="/admin/leave-requests?status=CANCELLED">
-            <Card
-              icon={<Calendar className="w-6 h-6" />}
-              label="ยกเลิก"
-              value={stats.cancelled}
-              tone="slate"
-            />
-          </Link>
+          <Panel
+            title="สถานะคำขอลา"
+            subtitle={`จากทั้งหมด ${totalRequests} รายการ`}
+          >
+            <ul className="space-y-4">
+              {STATUS_ORDER.map((key) => {
+                const { label, color, Icon } = STATUS_META[key];
+                const count = statusCounts[key];
+                const pct = totalRequests
+                  ? Math.round((count / totalRequests) * 100)
+                  : 0;
+                return (
+                  <li key={key}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="inline-flex items-center gap-2 text-slate-700">
+                        <Icon className="h-4 w-4" style={{ color }} />
+                        {label}
+                      </span>
+                      <span className="tabular-nums text-slate-900">
+                        <span className="font-semibold">{count}</span>
+                        <span className="ml-1 text-xs text-slate-500">
+                          ({pct}%)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${pct}%`, backgroundColor: color }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Panel>
         </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-6">
-          <ActionButton
-            title="รายงานสรุปผล"
-            icon={<BiSolidReport className="w-10 h-10 text-slate-600" />}
-            details="ดูภาพรวมจำนวนการลาและสถิติทั้งหมด"
-            onClick={() => navigate("/admin/report")}
-          />
-          <ActionButton
-            title="บันทึกคำขอการลาลงระบบ"
-            icon={<FaFileCirclePlus className="w-10 h-10 text-slate-600" />}
-            details="สำหรับบันทึกคำขอการลาที่ส่งนอกระบบออนไลน์ หรือคำขออื่น ๆ แทนผู้ใช้"
-            onClick={() => navigate("/admin/add-other-request")}
-          />
-          <ActionButton
-            title="จัดการการมอบอำนาจ"
-            icon={<MdAssignmentInd className="w-12 h-12 text-slate-600" />}
-            details="ตั้งค่าการมอบอำนาจสำหรับผู้อนุมัติในระบบ"
-            onClick={() => navigate("/admin/proxy-approval")}
-          />
-          <ActionButton
-            title="บันทึกการทำงาน(Audit Log)"
-            icon={<FaHistory className="w-10 h-10 text-slate-600" />}
-            details="ตรวจสอบประวัติการทำงานทั้งหมดในระบบ"
-            onClick={() => navigate("/admin/audit-logs")}
-          />
-        </div>
-
-        {/* Tables */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <Section
+        {/* ---------- คำขอล่าสุด + ประเภทการลา ---------- */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <Panel
+            className="xl:col-span-2"
             title="คำขอลาล่าสุด"
+            subtitle="5 รายการที่ยื่นเข้าระบบล่าสุด"
             action={
-              <Link
-                to="/admin/leave-requests"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700"
-              >
-                ดูทั้งหมด
-              </Link>
+              <PanelLink
+                to="/admin/management"
+                state={{ activeTab: "leaveRequests" }}
+                label="ดูคำขอทั้งหมด"
+              />
             }
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
-                    <Th>#</Th>
-                    <Th>วันที่</Th>
-                    <Th>ผู้ขอ</Th>
-                    <Th>ประเภทลา</Th>
-                    <Th>สถานะ</Th>
-                    <Th></Th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {recent.map((r, index) => (
-                    <tr
-                      key={r.id}
-                      className="border-b border-slate-100 hover:bg-slate-50 transition"
-                    >
-                      <Td className="font-medium text-slate-500">
-                        {index + 1}
-                      </Td>
-
-                      <Td>{formatDate(r.createdAt)}</Td>
-
-                      <Td>
-                        <div className="font-medium text-slate-800">
-                          {r.user?.firstName} {r.user?.lastName}
-                        </div>
-                      </Td>
-
-                      <Td>
-                        <span className="truncate max-w-[150px] inline-block">
-                          {r.leaveType?.name}
-                        </span>
-                      </Td>
-
-                      <Td>{statusPill(r.status)}</Td>
-
-                      <Td>
-                        <Link
-                          to={`/admin/leave-requests/${r.id}`}
-                          className="text-blue-600 hover:text-blue-700 text-xs font-medium"
-                        >
-                          ดูรายละเอียด
-                        </Link>
-                      </Td>
+            {recentRequests.length === 0 ? (
+              <EmptyState text="ยังไม่มีคำขอลา" />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full table-fixed text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                      <th className="w-[16%] py-2 pr-2 font-semibold">วันที่</th>
+                      <th className="w-[28%] py-2 pr-2 font-semibold">ผู้ขอ</th>
+                      <th className="w-[24%] py-2 pr-2 font-semibold">ประเภท</th>
+                      <th className="w-[14%] py-2 pr-2 font-semibold">จำนวน</th>
+                      <th className="w-[18%] py-2 font-semibold">สถานะ</th>
                     </tr>
-                  ))}
-
-                  {recent.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="py-10 text-center text-slate-400"
+                  </thead>
+                  <tbody>
+                    {recentRequests.map((r) => (
+                      <tr
+                        key={r.id}
+                        className="border-b border-slate-100 last:border-0"
                       >
-                        ยังไม่มีคำขอลา
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Section>
+                        <td className="truncate py-3 pr-2 text-slate-600">
+                          {formatDate(r.createdAt)}
+                        </td>
+                        <td className="truncate py-3 pr-2 font-medium text-slate-800">
+                          {fullName(r.user)}
+                        </td>
+                        <td className="truncate py-3 pr-2 text-slate-600">
+                          {r.leaveType?.name || "-"}
+                        </td>
+                        <td className="truncate py-3 pr-2 text-slate-600">
+                          {r.thisTimeDays ?? r.totalDays ?? "-"} วัน
+                        </td>
+                        <td className="py-3">
+                          <StatusPill status={r.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
 
-          <Section title="สรุปวันลาของผู้ใช้งาน (อนุมัติแล้ว)">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-slate-600">
-                  <tr className="border-b border-slate-200">
-                    <Th>ชื่อผู้ใช้</Th>
-                    <Th>จำนวนวันลา</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.map((s) => (
-                    <tr
-                      key={s.userId}
-                      className="border-b border-slate-100 hover:bg-slate-50/80 transition"
-                    >
-                      <Td>{s.name}</Td>
-                      <Td>{s.totalDays}</Td>
-                    </tr>
-                  ))}
-                  {summary.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={2}
-                        className="py-6 text-center text-slate-500"
-                      >
-                        ไม่มีข้อมูล
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Section>
+          <Panel
+            title="ประเภทการลาที่ใช้มากที่สุด"
+            subtitle="นับจากคำขอทั้งหมดในระบบ"
+            action={
+              <PanelLink to="/admin/leave-report" label="ดูรายงานสรุป" />
+            }
+          >
+            {topLeaveTypes.length === 0 ? (
+              <EmptyState text="ยังไม่มีข้อมูล" />
+            ) : (
+              <ul className="space-y-3.5">
+                {topLeaveTypes.map((t) => (
+                  <li key={t.name}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="truncate pr-2 text-slate-700" title={t.name}>
+                        {t.name}
+                      </span>
+                      <span className="tabular-nums font-semibold text-slate-900">
+                        {t.count}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.round((t.count / maxTypeCount) * 100)}%`,
+                          backgroundColor: CHART_ACCENT,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+        </div>
+
+        {/* ---------- Audit log + วันหยุด ---------- */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <Panel
+            className="xl:col-span-2"
+            title="ความเคลื่อนไหวล่าสุดในระบบ"
+            subtitle="บันทึกการทำงาน (Audit Log) ล่าสุด"
+            action={<PanelLink to="/admin/audit-logs" label="ดูบันทึกทั้งหมด" />}
+          >
+            {auditLogs.length === 0 ? (
+              <EmptyState text="ยังไม่มีบันทึกการทำงาน" />
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {auditLogs.slice(0, 6).map((log) => (
+                  <li key={log.id} className="flex items-start gap-3 py-2.5">
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                      <History className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-slate-800">
+                        <span className="font-medium">
+                          {fullName(log.user) || "ระบบ"}
+                        </span>{" "}
+                        <span className="text-slate-600">
+                          {AUDIT_ACTION_TH[log.action] || log.action}
+                        </span>{" "}
+                        <span className="text-slate-500">{log.entityType}</span>
+                      </p>
+                      <p className="truncate text-xs text-slate-500">
+                        {formatDateTime(log.createdAt)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel
+            title="วันหยุดที่จะถึง"
+            subtitle="ตามปฏิทินวันหยุดของระบบ"
+            action={
+              <PanelLink
+                to="/admin/management"
+                state={{ activeTab: "holidays" }}
+                label="จัดการวันหยุด"
+              />
+            }
+          >
+            {upcomingHolidays.length === 0 ? (
+              <EmptyState text="ไม่มีวันหยุดที่จะถึง" />
+            ) : (
+              <ul className="space-y-3">
+                {upcomingHolidays.map((h) => (
+                  <li key={h.id} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+                      <CalendarDays className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-800">
+                        {h.description || "วันหยุด"}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {formatDate(h.date)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
         </div>
       </div>
     </div>
   );
 }
 
-function Card({ icon, label, value, tone = "indigo" }) {
-  const tones =
-    {
-      indigo: "from-indigo-100 to-indigo-50 border-indigo-200",
-      violet: "from-violet-100 to-violet-50 border-violet-200",
-      amber: "from-amber-100 to-amber-50 border-amber-200",
-      emerald: "from-emerald-100 to-emerald-50 border-emerald-200",
-      rose: "from-rose-100 to-rose-50 border-rose-200",
-      slate: "from-slate-100 to-slate-50 border-slate-200",
-    }[tone] || "from-sky-100 to-sky-50 border-sky-200";
+/* ---------------- ส่วนประกอบย่อย ---------------- */
 
+function StatTile({ icon, label, value, hint, onClick, accent = false }) {
   return (
-    <div className="relative rounded-2xl p-5 bg-white border shadow-sm overflow-hidden">
-      <div
-        className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${tones} opacity-70 pointer-events-none`}
-      />
-      <div className="relative flex items-center gap-4">
-        <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group w-full rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+        accent ? "border-amber-300 ring-1 ring-amber-100" : "border-slate-200"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <span
+          className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+            accent
+              ? "bg-amber-50 text-amber-700"
+              : "bg-slate-100 text-slate-600"
+          }`}
+        >
           {icon}
-        </div>
-        <div>
-          <p className="text-3xl font-semibold leading-tight text-slate-900 tracking-tight">
-            {value}
-          </p>
-          <p className="text-sm text-slate-600">{label}</p>
-        </div>
+        </span>
+        <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500" />
       </div>
-    </div>
+      <p className="mt-3 text-3xl font-semibold tabular-nums tracking-tight text-slate-900">
+        {value}
+      </p>
+      <p className="text-sm text-slate-600">{label}</p>
+      {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+    </button>
   );
 }
 
-function Section({ title, children }) {
+function Panel({ title, subtitle, action, children, className = "" }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm text-slate-900">
-      <header className="px-6 pt-6 pb-2">
-        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+    <section
+      className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}
+    >
+      <header className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold tracking-tight text-slate-900">
+            {title}
+          </h2>
+          {subtitle && (
+            <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
+          )}
+        </div>
+        {action}
       </header>
-      <div className="px-6 pb-6">{children}</div>
+      <div className="px-5 py-4">{children}</div>
     </section>
   );
 }
 
-const Th = ({ children }) => (
-  <th className="py-3 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-    {children}
-  </th>
-);
+function PanelLink({ to, state, label }) {
+  return (
+    <Link
+      to={to}
+      state={state}
+      className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-brand-700 transition hover:bg-brand-50"
+    >
+      {label}
+      <ArrowRight className="h-3.5 w-3.5" />
+    </Link>
+  );
+}
 
-const Td = ({ children }) => (
-  <td className="py-3 px-3 text-sm text-slate-800 whitespace-nowrap">
-    {children}
-  </td>
-);
+function StatusPill({ status }) {
+  const meta = STATUS_META[status];
+  if (!meta) {
+    return <span className="text-xs text-slate-500">{status}</span>;
+  }
+  const { label, color, Icon } = meta;
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
+      style={{ color, borderColor: `${color}55`, backgroundColor: `${color}12` }}
+    >
+      <Icon className="h-3 w-3" />
+      {label}
+    </span>
+  );
+}
+
+function EmptyState({ text }) {
+  return (
+    <div className="py-10 text-center text-sm text-slate-400">{text}</div>
+  );
+}
