@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   FaSearch,
   FaEdit,
@@ -8,25 +8,25 @@ import {
   FaCalendarAlt,
   FaSort,
   FaSortUp,
-  FaSortDown
-} from 'react-icons/fa';
-import PositionNumberService from '../../services/positionNumberService';
-import PositionNumberBadge from "../../components/common/PositionNumberBadge";
-import UpdatePositionNumberModal from "../../components/admin/UpdatePositionNumberModal";
-import PositionNumberHistoryModal from "../../components/admin/PositionNumberHistoryModal";
+  FaSortDown,
+} from "react-icons/fa";
+import PositionNumberService from "../../../services/positionNumberService";
+import PositionNumberBadge from "../../common/PositionNumberBadge";
+import UpdatePositionNumberModal from "../UpdatePositionNumberModal";
+import PositionNumberHistoryModal from "../PositionNumberHistoryModal";
 
-const PositionNumberManagement = () => {
+const PositionNumberManageContent = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    limit: 10
+    limit: 10,
   });
-  const [sortField, setSortField] = useState('firstName');
-  const [sortDirection, setSortDirection] = useState('asc');
+  const [sortField, setSortField] = useState("firstName");
+  const [sortDirection, setSortDirection] = useState("asc");
 
   // Modal states
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -38,21 +38,21 @@ const PositionNumberManagement = () => {
     try {
       setLoading(true);
       const response = await PositionNumberService.getUsersWithPositionNumbers({
-        search: searchTerm
+        search: searchTerm,
       });
 
-      console.log('API Response:', response); // Debug
-      console.log('Users data:', response.data); // Debug
+      console.log("API Response:", response); // Debug
+      console.log("Users data:", response.data); // Debug
 
       const allUsers = response.data || [];
       setUsers(allUsers);
-      setPagination(prev => ({
+      setPagination((prev) => ({
         ...prev,
         totalItems: allUsers.length,
-        totalPages: Math.ceil(allUsers.length / prev.limit)
+        totalPages: Math.ceil(allUsers.length / prev.limit),
       }));
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       // แสดง error message
     } finally {
       setLoading(false);
@@ -64,38 +64,39 @@ const PositionNumberManagement = () => {
     if (e) {
       e.preventDefault();
     }
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
     fetchUsers();
   };
 
   // Handle search on Enter key press
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
 
   // Sort functionality
   const handleSort = (field) => {
-    const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+    const newDirection =
+      sortField === field && sortDirection === "asc" ? "desc" : "asc";
     setSortField(field);
     setSortDirection(newDirection);
   };
 
   // Page change handler
   const handlePageChange = (page) => {
-    setPagination(prev => ({ ...prev, currentPage: page }));
+    setPagination((prev) => ({ ...prev, currentPage: page }));
   };
 
   // Modal handlers
   const handleUpdatePositionNumber = (user) => {
-    console.log('Selected user for update:', user); // Debug
+    console.log("Selected user for update:", user); // Debug
     setSelectedUser(user);
     setShowUpdateModal(true);
   };
 
   const handleViewHistory = (user) => {
-    console.log('Selected user for history:', user); // Debug
+    console.log("Selected user for history:", user); // Debug
     setSelectedUser(user);
     setShowHistoryModal(true);
   };
@@ -110,23 +111,23 @@ const PositionNumberManagement = () => {
     let aValue = a[sortField];
     let bValue = b[sortField];
 
-    if (sortField === 'positionNumber') {
-      aValue = a.positionNumbers?.[0]?.positionNumber || '';
-      bValue = b.positionNumbers?.[0]?.positionNumber || '';
-    } else if (sortField === 'department') {
-      aValue = a.department?.name || '';
-      bValue = b.department?.name || '';
-    } else if (sortField === 'effectiveFrom') {
-      aValue = a.positionNumbers?.[0]?.effectiveFrom || '';
-      bValue = b.positionNumbers?.[0]?.effectiveFrom || '';
+    if (sortField === "positionNumber") {
+      aValue = a.positionNumbers?.[0]?.positionNumber || "";
+      bValue = b.positionNumbers?.[0]?.positionNumber || "";
+    } else if (sortField === "department") {
+      aValue = a.department?.name || "";
+      bValue = b.department?.name || "";
+    } else if (sortField === "effectiveFrom") {
+      aValue = a.positionNumbers?.[0]?.effectiveFrom || "";
+      bValue = b.positionNumbers?.[0]?.effectiveFrom || "";
     }
 
-    if (typeof aValue === 'string') {
+    if (typeof aValue === "string") {
       aValue = aValue.toLowerCase();
       bValue = bValue.toLowerCase();
     }
 
-    if (sortDirection === 'asc') {
+    if (sortDirection === "asc") {
       return aValue > bValue ? 1 : -1;
     } else {
       return aValue < bValue ? 1 : -1;
@@ -141,7 +142,7 @@ const PositionNumberManagement = () => {
   // Get sort icon
   const getSortIcon = (field) => {
     if (sortField !== field) return <FaSort className="text-gray-400" />;
-    return sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />;
+    return sortDirection === "asc" ? <FaSortUp /> : <FaSortDown />;
   };
 
   useEffect(() => {
@@ -149,15 +150,9 @@ const PositionNumberManagement = () => {
   }, [searchTerm]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
+    <div className="font-kanit text-slate-900">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
-              Admin View
-            </span>
-          </div>
           <div className="w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col items-center gap-1 md:items-start">
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
@@ -176,12 +171,12 @@ const PositionNumberManagement = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full md:w-64 rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                  className="w-full md:w-64 rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                 />
               </div>
               <button
                 onClick={handleSearch}
-                className="px-6 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
+                className="px-6 py-2 bg-sky-600 text-white rounded-xl hover:bg-sky-700 transition-colors flex items-center justify-center gap-2"
               >
                 <FaSearch />
                 ค้นหา
@@ -199,59 +194,59 @@ const PositionNumberManagement = () => {
                   <tr>
                     <th
                       className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort('id')}
+                      onClick={() => handleSort("id")}
                     >
                       <div className="flex items-center gap-2">
                         ID
-                        {getSortIcon('id')}
+                        {getSortIcon("id")}
                       </div>
                     </th>
                     <th
                       className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort('firstName')}
+                      onClick={() => handleSort("firstName")}
                     >
                       <div className="flex items-center gap-2">
                         <FaUser />
                         ชื่อ-นามสกุล
-                        {getSortIcon('firstName')}
+                        {getSortIcon("firstName")}
                       </div>
                     </th>
                     <th
                       className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort('email')}
+                      onClick={() => handleSort("email")}
                     >
                       <div className="flex items-center gap-2">
                         อีเมล
-                        {getSortIcon('email')}
+                        {getSortIcon("email")}
                       </div>
                     </th>
                     <th
                       className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort('department')}
+                      onClick={() => handleSort("department")}
                     >
                       <div className="flex items-center gap-2">
                         แผนก
-                        {getSortIcon('department')}
+                        {getSortIcon("department")}
                       </div>
                     </th>
                     <th
                       className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort('positionNumber')}
+                      onClick={() => handleSort("positionNumber")}
                     >
                       <div className="flex items-center gap-2">
                         <FaIdBadge />
                         เลขที่ตำแหน่ง
-                        {getSortIcon('positionNumber')}
+                        {getSortIcon("positionNumber")}
                       </div>
                     </th>
                     <th
                       className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort('effectiveFrom')}
+                      onClick={() => handleSort("effectiveFrom")}
                     >
                       <div className="flex items-center gap-2">
                         <FaCalendarAlt />
                         วันที่ได้รับ
-                        {getSortIcon('effectiveFrom')}
+                        {getSortIcon("effectiveFrom")}
                       </div>
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">
@@ -271,8 +266,13 @@ const PositionNumberManagement = () => {
                     </tr>
                   ) : sortedUsers.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
-                        {searchTerm ? 'ไม่พบข้อมูลที่ค้นหา' : 'ไม่มีข้อมูลผู้ใช้'}
+                      <td
+                        colSpan="7"
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
+                        {searchTerm
+                          ? "ไม่พบข้อมูลที่ค้นหา"
+                          : "ไม่มีข้อมูลผู้ใช้"}
                       </td>
                     </tr>
                   ) : (
@@ -280,16 +280,19 @@ const PositionNumberManagement = () => {
                       {paginatedUsers.map((user, idx) => {
                         const currentPosition = user.positionNumbers?.[0];
                         return (
-                          <tr key={user.id} className={`border-t border-slate-100 transition-colors ${
-                            idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                          } hover:bg-brand-50`}>
+                          <tr
+                            key={user.id}
+                            className={`border-t border-slate-100 transition-colors ${
+                              idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                            } hover:bg-sky-50`}
+                          >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
                               #{user.id}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900">
-                                  {user.fullName || '-'}
+                                  {user.fullName || "-"}
                                 </div>
                               </div>
                             </td>
@@ -297,12 +300,14 @@ const PositionNumberManagement = () => {
                               {user.email}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {user.department?.name || '-'}
+                              {user.department?.name || "-"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               {currentPosition ? (
                                 <PositionNumberBadge
-                                  positionNumber={currentPosition.positionNumber}
+                                  positionNumber={
+                                    currentPosition.positionNumber
+                                  }
                                   effectiveFrom={currentPosition.effectiveFrom}
                                 />
                               ) : (
@@ -310,20 +315,22 @@ const PositionNumberManagement = () => {
                               )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {currentPosition?.effectiveFrom ? (
-                                new Date(currentPosition.effectiveFrom).toLocaleDateString('th-TH', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric'
-                                })
-                              ) : (
-                                '-'
-                              )}
+                              {currentPosition?.effectiveFrom
+                                ? new Date(
+                                    currentPosition.effectiveFrom,
+                                  ).toLocaleDateString("th-TH", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })
+                                : "-"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                               <div className="flex items-center justify-center gap-2">
                                 <button
-                                  onClick={() => handleUpdatePositionNumber(user)}
+                                  onClick={() =>
+                                    handleUpdatePositionNumber(user)
+                                  }
                                   className="text-blue-600 hover:text-blue-800 transition-colors"
                                   title="แก้ไขเลขที่ตำแหน่ง"
                                 >
@@ -342,9 +349,24 @@ const PositionNumberManagement = () => {
                         );
                       })}
                       {/* Fill empty rows to maintain consistent table height */}
-                      {Array.from({ length: Math.max(0, pagination.limit - paginatedUsers.length) }).map((_, idx) => (
-                        <tr key={`empty-${idx}`} className={paginatedUsers.length % 2 === 0 ? "bg-slate-50/70" : "bg-white"}>
-                          <td colSpan="7" className="px-6 py-4 text-center text-slate-300">
+                      {Array.from({
+                        length: Math.max(
+                          0,
+                          pagination.limit - paginatedUsers.length,
+                        ),
+                      }).map((_, idx) => (
+                        <tr
+                          key={`empty-${idx}`}
+                          className={
+                            paginatedUsers.length % 2 === 0
+                              ? "bg-slate-50/70"
+                              : "bg-white"
+                          }
+                        >
+                          <td
+                            colSpan="7"
+                            className="px-6 py-4 text-center text-slate-300"
+                          >
                             <div className="h-6"></div>
                           </td>
                         </tr>
@@ -363,11 +385,19 @@ const PositionNumberManagement = () => {
             {/* Mobile Pagination */}
             <div className="flex flex-col sm:hidden gap-3">
               <div className="text-center text-sm text-slate-700">
-                แสดง <span className="font-medium">{(pagination.currentPage - 1) * pagination.limit + 1}</span> ถึง{' '}
+                แสดง{" "}
                 <span className="font-medium">
-                  {Math.min(pagination.currentPage * pagination.limit, pagination.totalItems)}
-                </span>{' '}
-                จาก <span className="font-medium">{pagination.totalItems}</span> รายการ
+                  {(pagination.currentPage - 1) * pagination.limit + 1}
+                </span>{" "}
+                ถึง{" "}
+                <span className="font-medium">
+                  {Math.min(
+                    pagination.currentPage * pagination.limit,
+                    pagination.totalItems,
+                  )}
+                </span>{" "}
+                จาก <span className="font-medium">{pagination.totalItems}</span>{" "}
+                รายการ
               </div>
               <div className="flex justify-between">
                 <button
@@ -390,11 +420,19 @@ const PositionNumberManagement = () => {
             {/* Desktop Pagination */}
             <div className="hidden sm:flex items-center justify-between">
               <div className="text-sm text-slate-700">
-                แสดง <span className="font-medium">{(pagination.currentPage - 1) * pagination.limit + 1}</span> ถึง{' '}
+                แสดง{" "}
                 <span className="font-medium">
-                  {Math.min(pagination.currentPage * pagination.limit, pagination.totalItems)}
-                </span>{' '}
-                จาก <span className="font-medium">{pagination.totalItems}</span> รายการ
+                  {(pagination.currentPage - 1) * pagination.limit + 1}
+                </span>{" "}
+                ถึง{" "}
+                <span className="font-medium">
+                  {Math.min(
+                    pagination.currentPage * pagination.limit,
+                    pagination.totalItems,
+                  )}
+                </span>{" "}
+                จาก <span className="font-medium">{pagination.totalItems}</span>{" "}
+                รายการ
               </div>
               <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                 <button
@@ -407,21 +445,42 @@ const PositionNumberManagement = () => {
                 {(() => {
                   const pages = [];
                   if (pagination.totalPages <= 7) {
-                    for (let i = 1; i <= pagination.totalPages; i++) pages.push(i);
+                    for (let i = 1; i <= pagination.totalPages; i++)
+                      pages.push(i);
                   } else {
                     pages.push(1);
                     if (pagination.currentPage <= 4) {
-                      pages.push(2, 3, 4, 5, '...', pagination.totalPages);
-                    } else if (pagination.currentPage >= pagination.totalPages - 3) {
-                      pages.push('...', pagination.totalPages - 4, pagination.totalPages - 3, pagination.totalPages - 2, pagination.totalPages - 1, pagination.totalPages);
+                      pages.push(2, 3, 4, 5, "...", pagination.totalPages);
+                    } else if (
+                      pagination.currentPage >=
+                      pagination.totalPages - 3
+                    ) {
+                      pages.push(
+                        "...",
+                        pagination.totalPages - 4,
+                        pagination.totalPages - 3,
+                        pagination.totalPages - 2,
+                        pagination.totalPages - 1,
+                        pagination.totalPages,
+                      );
                     } else {
-                      pages.push('...', pagination.currentPage - 1, pagination.currentPage, pagination.currentPage + 1, '...', pagination.totalPages);
+                      pages.push(
+                        "...",
+                        pagination.currentPage - 1,
+                        pagination.currentPage,
+                        pagination.currentPage + 1,
+                        "...",
+                        pagination.totalPages,
+                      );
                     }
                   }
                   return pages.map((page, idx) => {
-                    if (page === '...') {
+                    if (page === "...") {
                       return (
-                        <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700"
+                        >
                           ...
                         </span>
                       );
@@ -431,7 +490,9 @@ const PositionNumberManagement = () => {
                         key={page}
                         onClick={() => handlePageChange(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          pagination.currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                          pagination.currentPage === page
+                            ? "z-10 bg-sky-50 border-sky-500 text-sky-600"
+                            : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                         }`}
                       >
                         {page}
@@ -471,4 +532,4 @@ const PositionNumberManagement = () => {
   );
 };
 
-export default PositionNumberManagement;
+export default PositionNumberManageContent;

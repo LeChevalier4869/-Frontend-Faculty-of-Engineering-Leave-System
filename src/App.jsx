@@ -1,42 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import useAuth from "./hooks/useAuth";
 import AppRouter from "./routes/AppRouter";
-import logo from "./assets/logo.png"; // โลโก้ใน src/assets/
+import SplashScreen from "./components/SplashScreen";
 
 function App() {
   const { loading } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
+  const startRef = useRef(Date.now());
 
   useEffect(() => {
-    if (!loading) {
-      // เริ่ม fade-out หลัง splash แสดง 2 วินาที
-      const timer1 = setTimeout(() => setFadeOut(true), 1500);
-      // ซ่อน splash 1 วินาทีหลังเริ่ม fade-out
-      const timer2 = setTimeout(() => setShowSplash(false), 3000);
+    if (loading) return; // ยังตรวจสอบ auth อยู่ → คง splash ไว้
 
-      return () => {
-        clearTimeout(timer1)
-        clearTimeout(timer2);
-      };
-    }
+    // แสดง splash อย่างน้อย ~600ms เพื่อความลื่นไหล แล้ว fade ออกทันทีที่โหลดเสร็จ
+    const elapsed = Date.now() - startRef.current;
+    const wait = Math.max(0, 600 - elapsed);
+    const t1 = setTimeout(() => setFadeOut(true), wait);
+    const t2 = setTimeout(() => setShowSplash(false), wait + 450);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [loading]);
 
   if (showSplash) {
-    return (
-      <div
-        className={`flex flex-col items-center justify-center h-screen bg-gray-900 text-white font-kanit
-        ${fadeOut ? "animate-fade-out" : "animate-fade-in"}`}
-      >
-        <img
-          src={logo}
-          alt="Logo"
-          className="w-24 h-24 mb-6 animate-bounce"
-        />
-        <p className="text-3xl font-semibold">กำลังโหลดระบบ...</p>
-      </div>
-    );
+    return <SplashScreen fadeOut={fadeOut} />;
   }
 
   return <AppRouter />;

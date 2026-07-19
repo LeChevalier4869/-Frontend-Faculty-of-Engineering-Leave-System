@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { BASE_URL } from "../../utils/api";
+import { BASE_URL } from "../../../utils/api";
 import { ChevronDown } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
-export default function DepartmentManage() {
+export default function DepartmentManageContent() {
   const [searchParams] = useSearchParams();
   const initialOrgId = searchParams.get("orgId") || "";
 
@@ -31,7 +31,7 @@ export default function DepartmentManage() {
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
         () => {
           window.location.href = "/login";
-        }
+        },
       );
       throw new Error("No token");
     }
@@ -44,7 +44,7 @@ export default function DepartmentManage() {
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
         () => {
           window.location.href = "/login";
-        }
+        },
       );
     } else {
       Swal.fire("Error", err.response?.data?.message || err.message, "error");
@@ -75,7 +75,7 @@ export default function DepartmentManage() {
     try {
       const res = await axios.get(
         `${BASE_URL}/admin/users?organizationId=${organizationId}`,
-        authHeader()
+        authHeader(),
       );
       setFilteredUsers(res.data.data || []);
     } catch (err) {
@@ -113,7 +113,7 @@ export default function DepartmentManage() {
           organizationId: +newOrgId,
           headId: newHeadId ? +newHeadId : null,
         },
-        authHeader()
+        authHeader(),
       );
       Swal.fire("บันทึกสำเร็จ!", "", "success");
       resetForm();
@@ -131,7 +131,11 @@ export default function DepartmentManage() {
     setEditId(dept.id);
     setEditOrgId(dept.organizationId);
     setEditHeadId(dept.headId || "");
-    setInitialEditData({ name: dept.name, organizationId: dept.organizationId, headId: dept.headId || "" });
+    setInitialEditData({
+      name: dept.name,
+      organizationId: dept.organizationId,
+      headId: dept.headId || "",
+    });
     loadUsersByOrganizationId(dept.organizationId);
   };
 
@@ -147,7 +151,7 @@ export default function DepartmentManage() {
           organizationId: +editOrgId,
           headId: editHeadId ? +editHeadId : null,
         },
-        authHeader()
+        authHeader(),
       );
       Swal.fire("อัปเดตสำเร็จ!", "", "success");
       resetForm();
@@ -188,22 +192,16 @@ export default function DepartmentManage() {
   const startIndex = (currentPage - 1) * PAGE_SIZE;
   const displayed = filteredDepartments.slice(
     startIndex,
-    startIndex + PAGE_SIZE
+    startIndex + PAGE_SIZE,
   );
 
   const inputBase =
-    "w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
+    "w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
+    <div className="font-kanit text-slate-900">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
-              Admin View
-            </span>
-          </div>
           <div className="w-full flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col items-center gap-1 md:items-start">
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
@@ -228,7 +226,7 @@ export default function DepartmentManage() {
 
             <div className="relative w-full">
               <select
-                value={editId ? editOrgId ?? "" : newOrgId}
+                value={editId ? (editOrgId ?? "") : newOrgId}
                 onChange={(e) => {
                   const id = e.target.value;
                   if (editId) {
@@ -279,13 +277,23 @@ export default function DepartmentManage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
               onClick={editId ? handleUpdate : handleAdd}
-              disabled={editId && initialEditData && newName === initialEditData.name && String(editOrgId) === String(initialEditData.organizationId) && String(editHeadId) === String(initialEditData.headId)}
+              disabled={
+                editId &&
+                initialEditData &&
+                newName === initialEditData.name &&
+                String(editOrgId) === String(initialEditData.organizationId) &&
+                String(editHeadId) === String(initialEditData.headId)
+              }
               className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium shadow-sm transition ${
-                editId && initialEditData && newName === initialEditData.name && String(editOrgId) === String(initialEditData.organizationId) && String(editHeadId) === String(initialEditData.headId)
+                editId &&
+                initialEditData &&
+                newName === initialEditData.name &&
+                String(editOrgId) === String(initialEditData.organizationId) &&
+                String(editHeadId) === String(initialEditData.headId)
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                   : editId
                     ? "bg-slate-700 hover:bg-slate-600 text-white"
-                    : "bg-brand-600 hover:bg-brand-500 text-white"
+                    : "bg-sky-600 hover:bg-sky-500 text-white"
               }`}
             >
               {editId ? "อัปเดตแผนก" : "เพิ่มแผนก"}
@@ -357,13 +365,13 @@ export default function DepartmentManage() {
                       key={d.id}
                       className={`border-t border-slate-100 transition-colors ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-brand-50`}
+                      } hover:bg-sky-50`}
                     >
                       <td className="px-4 py-2">{startIndex + idx + 1}</td>
                       <td className="px-4 py-2">{d.name}</td>
                       <td className="px-4 py-2">
                         {organizations.find(
-                          (org) => org.id === d.organizationId
+                          (org) => org.id === d.organizationId,
                         )?.name || "-"}
                       </td>
                       <td className="px-4 py-2">
@@ -407,7 +415,9 @@ export default function DepartmentManage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-4 bg-white rounded-lg px-4 py-3 border border-slate-200">
             <div className="text-sm text-slate-700">
-              แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filteredDepartments.length)} จาก {filteredDepartments.length} รายการ
+              แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง{" "}
+              {Math.min(currentPage * PAGE_SIZE, filteredDepartments.length)}{" "}
+              จาก {filteredDepartments.length} รายการ
             </div>
             <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
               <button
@@ -424,23 +434,46 @@ export default function DepartmentManage() {
                 } else {
                   pages.push(1);
                   if (currentPage <= 4) {
-                    pages.push(2, 3, 4, 5, '...', totalPages);
+                    pages.push(2, 3, 4, 5, "...", totalPages);
                   } else if (currentPage >= totalPages - 3) {
-                    pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    pages.push(
+                      "...",
+                      totalPages - 4,
+                      totalPages - 3,
+                      totalPages - 2,
+                      totalPages - 1,
+                      totalPages,
+                    );
                   } else {
-                    pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                    pages.push(
+                      "...",
+                      currentPage - 1,
+                      currentPage,
+                      currentPage + 1,
+                      "...",
+                      totalPages,
+                    );
                   }
                 }
                 return pages.map((page, idx) => {
-                  if (page === '...') {
-                    return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                  if (page === "...") {
+                    return (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700"
+                      >
+                        ...
+                      </span>
+                    );
                   }
                   return (
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        currentPage === page
+                          ? "z-10 bg-sky-50 border-sky-500 text-sky-600"
+                          : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                       }`}
                     >
                       {page}
@@ -449,7 +482,9 @@ export default function DepartmentManage() {
                 });
               })()}
               <button
-                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(p + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
                 className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >

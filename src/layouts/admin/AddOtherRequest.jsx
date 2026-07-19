@@ -10,12 +10,33 @@ import Swal from "sweetalert2";
 import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
-import { Plus, ChevronDown, PlusCircle, X, Clock, Ban, Info, ExternalLink } from "lucide-react";
+import {
+  ChevronDown,
+  PlusCircle,
+  X,
+  Clock,
+  Ban,
+  Info,
+  ExternalLink,
+  LayoutDashboard,
+  ClipboardList,
+  CalendarDays,
+  RotateCcw,
+  CheckCircle2,
+  Hourglass,
+  FileStack,
+  CalendarClock,
+} from "lucide-react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import listPlugin from "@fullcalendar/list";
+import thLocale from "@fullcalendar/core/locales/th";
 import {
   filterLeaveBalancesLatestYear,
   filterLeaveTypesMapBySex,
   isFemaleOnlyLeaveTypeName,
 } from "../../utils/leavePolicy";
+import { expandHolidays, defaultHolidayYears } from "../../utils/holidayUtils";
 import LeaveCancellationModal from "../../components/admin/LeaveCancellationModal";
 
 dayjs.extend(isBetween);
@@ -76,7 +97,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
   const debounceRef = useRef(null);
 
   const inputStyle =
-    "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
   const normalizeUsers = (payload) => {
     const arr = Array.isArray(payload?.data)
@@ -174,7 +195,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
           {base}
         </span>
         {name ? (
-          <span className="inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-[12px] font-medium text-sky-800 ring-1 ring-sky-200">
+          <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-1 text-[12px] font-medium text-brand-800 ring-1 ring-brand-200">
             {name}
           </span>
         ) : (
@@ -529,7 +550,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       <div className="w-[min(92vw,720px)] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl font-kanit flex flex-col min-h-0">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div className="flex flex-col gap-1">
-            <span className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-700">
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-brand-700">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Admin Action
             </span>
@@ -893,7 +914,7 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 disabled:opacity-60"
+              className="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-500 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึกคำขอการลา"}
             </button>
@@ -918,6 +939,9 @@ export default function AddOtherRequest() {
   const [sortOrder, setSortOrder] = useState("desc");
   const [accountNameMap, setAccountNameMap] = useState({});
   const [leaveInformationUrl, setLeaveInformationUrl] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'requests' | 'calendar'
+  const [requestSubTab, setRequestSubTab] = useState("today"); // 'today' | 'all'
+  const [holidays, setHolidays] = useState([]);
 
   const fetchAccountNames = async (rows) => {
     // const token = localStorage.getItem("accessToken");
@@ -980,6 +1004,16 @@ export default function AddOtherRequest() {
     }
   };
 
+  const fetchHolidays = async () => {
+    try {
+      const res = await API.get(apiEndpoints.getHoliday);
+      setHolidays(Array.isArray(res?.data?.data) ? res.data.data : []);
+    } catch (error) {
+      console.error("Error fetching holidays:", error);
+      setHolidays([]);
+    }
+  };
+
   const fetchLeaveInformationUrl = async () => {
     try {
       const res = await API.get(apiEndpoints.getSettingByKey('leave_information'));
@@ -995,54 +1029,12 @@ export default function AddOtherRequest() {
     fetchLeaveRequests();
     fetchLeaveTypes();
     fetchLeaveInformationUrl();
+    fetchHolidays();
   }, []);
 
   const formatDateTime = (iso) =>
     dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
   const formatDate = (iso) => dayjs(iso).locale("th").format("DD/MM/YYYY");
-
-  const filtered = useMemo(() => {
-    const sorted = [...leaveRequest].sort((a, b) => {
-      const dateA = new Date(a.createdAt);
-      const dateB = new Date(b.createdAt);
-      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-    });
-    return sorted.filter((lr) => {
-      const created = dayjs(lr.createdAt).format("YYYY-MM-DD");
-      let byDate = true;
-      if (filterStartDate && filterEndDate) {
-        byDate = dayjs(created).isBetween(
-          filterStartDate,
-          filterEndDate,
-          null,
-          "[]"
-        );
-      } else if (filterStartDate) {
-        byDate = created >= filterStartDate;
-      } else if (filterEndDate) {
-        byDate = created <= filterEndDate;
-      }
-      const byStatus = filterStatus ? lr.status === filterStatus : true;
-      const byType = filterLeaveType
-        ? String(lr.leaveTypeId) === filterLeaveType
-        : true;
-      return byDate && byStatus && byType;
-    });
-  }, [
-    leaveRequest,
-    filterStartDate,
-    filterEndDate,
-    filterStatus,
-    filterLeaveType,
-    sortOrder,
-  ]);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const displayItems = filtered.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
 
   const getFullName = (r) =>
     accountNameMap[r?.accountId] ||
@@ -1058,6 +1050,134 @@ export default function AddOtherRequest() {
       .join(" ") ||
     "-";
 
+  const todayStr = dayjs().format("YYYY-MM-DD");
+
+  const filtered = useMemo(() => {
+    const sorted = [...leaveRequest].sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    });
+    return sorted.filter((lr) => {
+      const created = dayjs(lr.createdAt).format("YYYY-MM-DD");
+
+      // แท็บย่อย "วันนี้" = คำขอที่ยื่นวันนี้ (createdAt = วันนี้)
+      if (requestSubTab === "today" && created !== todayStr) return false;
+
+      let byDate = true;
+      // ช่วงวันที่ใช้เฉพาะแท็บ "ทั้งหมด/ประวัติ"
+      if (requestSubTab === "all") {
+        if (filterStartDate && filterEndDate) {
+          byDate = dayjs(created).isBetween(
+            filterStartDate,
+            filterEndDate,
+            null,
+            "[]"
+          );
+        } else if (filterStartDate) {
+          byDate = created >= filterStartDate;
+        } else if (filterEndDate) {
+          byDate = created <= filterEndDate;
+        }
+      }
+      const byStatus = filterStatus ? lr.status === filterStatus : true;
+      const byType = filterLeaveType
+        ? String(lr.leaveTypeId) === filterLeaveType
+        : true;
+      return byDate && byStatus && byType;
+    });
+  }, [
+    leaveRequest,
+    requestSubTab,
+    todayStr,
+    filterStartDate,
+    filterEndDate,
+    filterStatus,
+    filterLeaveType,
+    sortOrder,
+  ]);
+
+  // สถิติภาพรวมสำหรับแท็บ "ภาพรวม"
+  const stats = useMemo(() => {
+    const result = {
+      total: leaveRequest.length,
+      today: 0,
+      pending: 0,
+      approved: 0,
+      cancelled: 0,
+      onLeaveToday: 0,
+    };
+    leaveRequest.forEach((r) => {
+      const created = dayjs(r.createdAt).format("YYYY-MM-DD");
+      if (created === todayStr) result.today += 1;
+      if (r.status === "PENDING") result.pending += 1;
+      if (r.status === "APPROVED") result.approved += 1;
+      if (r.status === "CANCELLED") result.cancelled += 1;
+      // กำลังลาวันนี้ (อนุมัติแล้ว และวันนี้อยู่ในช่วงวันลา)
+      const s = dayjs(r.startDate).format("YYYY-MM-DD");
+      const e = dayjs(r.endDate).format("YYYY-MM-DD");
+      if (r.status === "APPROVED" && s <= todayStr && todayStr <= e) {
+        result.onLeaveToday += 1;
+      }
+    });
+    return result;
+  }, [leaveRequest, todayStr]);
+
+  // อีเวนต์ปฏิทิน: วันหยุด + คำขอลาทั้งหมด (ไม่รวมที่ยกเลิก/ปฏิเสธ)
+  const calendarEvents = useMemo(() => {
+    const holidayEvents = expandHolidays(holidays, defaultHolidayYears()).map(
+      (h) => ({
+        title: h.description,
+        start: h._date,
+        allDay: true,
+        color: "#ef4444",
+        extendedProps: { kind: "holiday", holidayType: h.holidayType },
+      })
+    );
+
+    const statusColorMap = {
+      APPROVED: "#10b981",
+      PENDING: "#f59e0b",
+      REJECTED: "#f43f5e",
+      CANCELLED: "#94a3b8",
+    };
+
+    const leaveEvents = leaveRequest
+      .filter((r) => r.status !== "CANCELLED" && r.status !== "REJECTED")
+      .map((r) => {
+        const name = getFullName(r);
+        const shortName = String(name).split(" ").slice(0, 2).join(" ");
+        const typeName = leaveTypesMap[r.leaveTypeId] || r?.leaveType?.name || "ลา";
+        return {
+          title: `${shortName} | ${typeName}`,
+          start: dayjs(r.startDate).format("YYYY-MM-DD"),
+          end: dayjs(r.endDate).add(1, "day").format("YYYY-MM-DD"),
+          allDay: true,
+          color: statusColorMap[r.status] || "#3b82f6",
+          extendedProps: {
+            kind: "leave",
+            leaveId: r.id,
+            status: r.status,
+          },
+        };
+      });
+
+    return [...holidayEvents, ...leaveEvents];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [holidays, leaveRequest, leaveTypesMap, accountNameMap]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [requestSubTab]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const displayItems = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
   const resetFilters = () => {
     setFilterStartDate("");
     setFilterEndDate("");
@@ -1069,335 +1189,526 @@ export default function AddOtherRequest() {
 
   if (loading && leaveRequest.length === 0) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-slate-50 text-slate-800 font-kanit rounded-2xl">
-        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_18px_rgba(56,189,248,0.7)]" />
+      <div className="min-h-[70vh] flex items-center justify-center bg-slate-50 text-slate-800 font-kanit rounded-2xl">
+        <div className="rounded-2xl bg-white border border-slate-200 shadow-lg px-8 py-6">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="relative flex h-9 w-9 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-brand-200 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand-500 shadow-[0_0_14px_rgba(122,27,34,0.6)]" />
             </div>
-            <span className="text-slate-800 font-medium">
-              กำลังโหลดข้อมูลการลา...
-            </span>
-            <span className="text-xs text-slate-500 flex items-center gap-1">
-              <Clock className="w-4 h-4 text-sky-500" />
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากระบบ
-            </span>
+            <div>
+              <span className="text-slate-800 font-medium block">กำลังโหลดข้อมูลการลา...</span>
+              <span className="text-xs text-slate-500 flex items-center justify-center gap-1 mt-0.5">
+                <Clock className="w-3.5 h-3.5 text-brand-500" />
+                กรุณารอสักครู่ ระบบกำลังดึงข้อมูล
+              </span>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  const tabs = [
+    { key: "overview", label: "ภาพรวม", icon: LayoutDashboard },
+    { key: "requests", label: "คำขอลา", icon: ClipboardList },
+    { key: "calendar", label: "ปฏิทิน", icon: CalendarDays },
+  ];
+
+  const statCards = [
+    {
+      key: "total",
+      label: "คำขอทั้งหมด",
+      value: stats.total,
+      icon: FileStack,
+      tone: "text-slate-700 bg-slate-100",
+    },
+    {
+      key: "today",
+      label: "ยื่นวันนี้",
+      value: stats.today,
+      icon: CalendarClock,
+      tone: "text-brand-700 bg-brand-50",
+    },
+    {
+      key: "pending",
+      label: "รอดำเนินการ",
+      value: stats.pending,
+      icon: Hourglass,
+      tone: "text-amber-700 bg-amber-50",
+    },
+    {
+      key: "approved",
+      label: "อนุมัติแล้ว",
+      value: stats.approved,
+      icon: CheckCircle2,
+      tone: "text-emerald-700 bg-emerald-50",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 font-kanit px-4 py-8 md:px-8 rounded-2xl">
+    <div className="font-kanit text-slate-900">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col items-center gap-3 text-center mb-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
-              Admin View
-            </span>
-          </div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
-            บันทึกคำขอการลาลงระบบ (Admin)
-          </h1>
-          <p className="text-sm text-slate-600">
-            สำหรับบันทึกคำขอการลาที่ส่งนอกระบบออนไลน์ หรือคำขออื่น ๆ แทนผู้ใช้
-          </p>
-        </div>
-
-        {/* Leave Information Panel */}
-        <div className="rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-5 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
-                <Info className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                ข้อมูลสิทธิประโยชน์และเงื่อนไขการลา
-              </h3>
-              <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-                ตรวจสอบข้อมูลละเอียดเกี่ยวกับสิทธิประโยชน์การลาต่างๆ เงื่อนไขการพิจารณา และวิธีการดำเนินการตามประเภทการลาที่สามารถลาได้
+        {/* Header */}
+        <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start md:text-left">
+          <div className="w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col items-center gap-1 md:items-start">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                บันทึกคำขอการลาลงระบบ
+              </h1>
+              <p className="text-sm text-slate-600">
+                บันทึก / ยกเลิกคำขอแทนผู้ใช้ และดูภาพรวมการลาทั้งระบบ
               </p>
-              <a
-                href={leaveInformationUrl || 'https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-sm hover:shadow-md"
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 md:justify-end">
+              <button
+                onClick={() => setModalOpen(true)}
+                className="flex items-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-500 whitespace-nowrap"
               >
-                <ExternalLink className="w-4 h-4" />
-                ดูข้อมูลการลาฉบับสมบูรณ์
-              </a>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                บันทึกคำขอใหม่
+              </button>
+              <button
+                onClick={() => setCancelModalOpen(true)}
+                className="flex items-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-500 whitespace-nowrap"
+              >
+                <Ban className="mr-2 h-4 w-4" />
+                ยกเลิกคำขอลา
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setModalOpen(true)}
-              className="flex items-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              บันทึกคำขอการลาใหม่
-            </button>
-            <button
-              onClick={() => setCancelModalOpen(true)}
-              className="flex items-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-500 whitespace-nowrap"
-            >
-              <Ban className="mr-2 h-4 w-4" />
-              ยกเลิกคำขอลา
-            </button>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              อนุมัติแล้ว
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              รอดำเนินการ
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-rose-500" />
-              ถูกปฏิเสธ / ยกเลิก
-            </span>
+        {/* Page Tabs */}
+        <div className="bg-white rounded-xl border border-slate-200 p-1">
+          <div className="flex gap-1">
+            {tabs.map((t) => {
+              const Icon = t.icon;
+              const active = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={`flex flex-1 items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    active
+                      ? "bg-brand-600 text-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5">
-          <div className="mb-4 flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-slate-600">จาก</label>
-              <input
-                type="date"
-                value={filterStartDate}
-                onChange={(e) => {
-                  setFilterStartDate(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
-              />
-              <label className="text-xs text-slate-600">ถึง</label>
-              <input
-                type="date"
-                value={filterEndDate}
-                onChange={(e) => {
-                  setFilterEndDate(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
-              />
+        {/* ===================== แท็บ: ภาพรวม ===================== */}
+        {activeTab === "overview" && (
+          <div className="space-y-6">
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {statCards.map((c) => {
+                const Icon = c.icon;
+                return (
+                  <div
+                    key={c.key}
+                    className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 flex items-center gap-3"
+                  >
+                    <span
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl ${c.tone}`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-2xl font-semibold text-slate-900 leading-tight">
+                        {c.value}
+                      </div>
+                      <div className="text-xs text-slate-500 truncate">
+                        {c.label}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            <div className="relative w-40 md:w-48">
-              <select
-                value={filterStatus}
-                onChange={(e) => {
-                  setFilterStatus(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+            {/* กำลังลาวันนี้ */}
+            <div className="rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 p-5 shadow-sm flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500 text-white">
+                <CalendarDays className="h-5 w-5" />
+              </span>
+              <div>
+                <div className="text-sm text-slate-600">บุคลากรที่กำลังลาวันนี้</div>
+                <div className="text-xl font-semibold text-emerald-700">
+                  {stats.onLeaveToday} คน
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveTab("calendar")}
+                className="ml-auto inline-flex items-center gap-2 rounded-lg bg-white/70 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-white transition-colors"
               >
-                <option value="">สถานะทั้งหมด</option>
-                {Object.keys(statusLabels).map((k) => (
-                  <option key={k} value={k}>
-                    {statusLabels[k]}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-                <ChevronDown className="h-4 w-4 text-slate-500" />
+                <CalendarDays className="h-4 w-4" />
+                ดูปฏิทิน
+              </button>
+            </div>
+
+            {/* Leave Information Panel */}
+            <div className="rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
+                    <Info className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                    ข้อมูลสิทธิประโยชน์และเงื่อนไขการลา
+                  </h3>
+                  <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+                    ตรวจสอบข้อมูลละเอียดเกี่ยวกับสิทธิประโยชน์การลาต่างๆ เงื่อนไขการพิจารณา และวิธีการดำเนินการตามประเภทการลาที่สามารถลาได้
+                  </p>
+                  <a
+                    href={leaveInformationUrl || 'https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-sm hover:shadow-md"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    ดูข้อมูลการลาฉบับสมบูรณ์
+                  </a>
+                </div>
               </div>
             </div>
-
-            <div className="relative w-40 md:w-48">
-              <select
-                value={filterLeaveType}
-                onChange={(e) => {
-                  setFilterLeaveType(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
-              >
-                <option value="">ประเภทการลาทั้งหมด</option>
-                {Object.entries(leaveTypesMap).map(([id, name]) => (
-                  <option key={id} value={id}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-                <ChevronDown className="h-4 w-4 text-slate-500" />
-              </div>
-            </div>
-
-            <div className="relative w-40 md:w-48">
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
-              >
-                <option value="desc">เรียงจากใหม่ไปเก่า</option>
-                <option value="asc">เรียงจากเก่าไปใหม่</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-                <ChevronDown className="h-4 w-4 text-slate-500" />
-              </div>
-            </div>
-
-            <button
-              onClick={resetFilters}
-              className="rounded-lg bg-rose-500 px-3 py-1.5 text-xs md:text-sm font-medium text-white transition hover:bg-rose-400"
-            >
-              ล้างตัวกรอง
-            </button>
           </div>
+        )}
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-full text-sm text-slate-900">
-              <thead className="bg-slate-50 text-slate-700">
-                <tr>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
-                    ชื่อ
-                  </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
-                    วันที่ยื่น
-                  </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
-                    ประเภทการลา
-                  </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
-                    วันที่เริ่มต้น
-                  </th>
-                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
-                    วันที่สิ้นสุด
-                  </th>
-                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
-                    สถานะ
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+        {/* ===================== แท็บ: คำขอลา ===================== */}
+        {activeTab === "requests" && (
+          <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5">
+            {/* Sub-tabs: วันนี้ / ทั้งหมด */}
+            <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+              <div className="inline-flex rounded-xl bg-slate-100 p-1">
+                <button
+                  onClick={() => setRequestSubTab("today")}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                    requestSubTab === "today"
+                      ? "bg-white text-brand-700 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  วันนี้
+                </button>
+                <button
+                  onClick={() => setRequestSubTab("all")}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                    requestSubTab === "all"
+                      ? "bg-white text-brand-700 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  ทั้งหมด / ประวัติ
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  อนุมัติแล้ว
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  รอดำเนินการ
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-rose-500" />
+                  ถูกปฏิเสธ / ยกเลิก
+                </span>
+              </div>
+            </div>
+
+            {/* Filter bar (เฉพาะแท็บ "ทั้งหมด") */}
+            {requestSubTab === "all" && (
+              <div className="mb-4 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-slate-600">จาก</label>
+                  <input
+                    type="date"
+                    value={filterStartDate}
+                    onChange={(e) => {
+                      setFilterStartDate(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                  />
+                  <label className="text-xs text-slate-600">ถึง</label>
+                  <input
+                    type="date"
+                    value={filterEndDate}
+                    onChange={(e) => {
+                      setFilterEndDate(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                  />
+                </div>
+
+                <div className="relative w-40 md:w-48">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => {
+                      setFilterStatus(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                  >
+                    <option value="">สถานะทั้งหมด</option>
+                    {Object.keys(statusLabels).map((k) => (
+                      <option key={k} value={k}>
+                        {statusLabels[k]}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+                    <ChevronDown className="h-4 w-4 text-slate-500" />
+                  </div>
+                </div>
+
+                <div className="relative w-40 md:w-48">
+                  <select
+                    value={filterLeaveType}
+                    onChange={(e) => {
+                      setFilterLeaveType(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                  >
+                    <option value="">ประเภทการลาทั้งหมด</option>
+                    {Object.entries(leaveTypesMap).map(([id, name]) => (
+                      <option key={id} value={id}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+                    <ChevronDown className="h-4 w-4 text-slate-500" />
+                  </div>
+                </div>
+
+                <div className="relative w-40 md:w-48">
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-1.5 pr-8 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                  >
+                    <option value="desc">เรียงจากใหม่ไปเก่า</option>
+                    <option value="asc">เรียงจากเก่าไปใหม่</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+                    <ChevronDown className="h-4 w-4 text-slate-500" />
+                  </div>
+                </div>
+
+                <button
+                  onClick={resetFilters}
+                  className="inline-flex items-center gap-1 rounded-lg bg-rose-500 px-3 py-1.5 text-xs md:text-sm font-medium text-white transition hover:bg-rose-400"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  ล้างตัวกรอง
+                </button>
+              </div>
+            )}
+
+            {requestSubTab === "today" && (
+              <div className="mb-4 rounded-lg bg-brand-50 border border-brand-100 px-3 py-2 text-xs text-brand-700">
+                แสดงเฉพาะคำขอที่ยื่นวันนี้ ({dayjs().locale("th").format("DD/MM/YYYY")}) — ทั้งหมด {filtered.length} รายการ
+              </div>
+            )}
+
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="min-w-full text-sm text-slate-900">
+                <thead className="bg-slate-50 text-slate-700">
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-6 text-center text-sm text-slate-500"
-                    >
-                      กำลังโหลดข้อมูลการลา...
-                    </td>
+                    <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                      ชื่อ
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
+                      วันที่ยื่น
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
+                      ประเภทการลา
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
+                      วันที่เริ่มต้น
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
+                      วันที่สิ้นสุด
+                    </th>
+                    <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
+                      สถานะ
+                    </th>
                   </tr>
-                ) : displayItems.length > 0 ? (
-                  displayItems.map((r, idx) => (
-                    <tr
-                      key={r.id}
-                      className={`border-t border-slate-100 whitespace-nowrap hover:bg-sky-50 cursor-pointer transition-colors ${
-                        idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      }`}
-                      onClick={() => navigate(`/leave/${r.id}`)}
-                    >
-                      <td className="px-4 py-3">{getFullName(r)}</td>
-                      <td className="px-4 py-3">
-                        {formatDateTime(r.createdAt)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {leaveTypesMap[r.leaveTypeId] || r?.leaveType?.name || "-"}
-                      </td>
-                      <td className="px-4 py-3">{formatDate(r.startDate)}</td>
-                      <td className="px-4 py-3">{formatDate(r.endDate)}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold ${
-                            statusColors[r.status] ||
-                            "bg-slate-100 text-slate-700 border border-slate-200"
-                          }`}
-                        >
-                          {statusLabels[r.status] || r.status}
-                        </span>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-6 text-center text-sm text-slate-500"
+                      >
+                        กำลังโหลดข้อมูลการลา...
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      className="px-4 py-6 text-center text-slate-500 text-sm"
-                      colSpan={6}
-                    >
-                      ไม่พบข้อมูล
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 bg-white rounded-lg px-4 py-3 border border-slate-200">
-              <div className="text-sm text-slate-700">
-                แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ
-              </div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ก่อนหน้า
-                </button>
-                {(() => {
-                  const pages = [];
-                  if (totalPages <= 7) {
-                    for (let i = 1; i <= totalPages; i++) pages.push(i);
-                  } else {
-                    pages.push(1);
-                    if (currentPage <= 4) {
-                      pages.push(2, 3, 4, 5, '...', totalPages);
-                    } else if (currentPage >= totalPages - 3) {
-                      pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-                    } else {
-                      pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-                    }
-                  }
-                  return pages.map((page, idx) => {
-                    if (page === '...') {
-                      return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
-                    }
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                  ) : displayItems.length > 0 ? (
+                    displayItems.map((r, idx) => (
+                      <tr
+                        key={r.id}
+                        className={`border-t border-slate-100 whitespace-nowrap hover:bg-brand-50 cursor-pointer transition-colors ${
+                          idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
                         }`}
+                        onClick={() => navigate(`/leave/${r.id}`)}
                       >
-                        {page}
-                      </button>
-                    );
-                  });
-                })()}
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ถัดไป
-                </button>
-              </nav>
+                        <td className="px-4 py-3">{getFullName(r)}</td>
+                        <td className="px-4 py-3">
+                          {formatDateTime(r.createdAt)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {leaveTypesMap[r.leaveTypeId] || r?.leaveType?.name || "-"}
+                        </td>
+                        <td className="px-4 py-3">{formatDate(r.startDate)}</td>
+                        <td className="px-4 py-3">{formatDate(r.endDate)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span
+                            className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold ${
+                              statusColors[r.status] ||
+                              "bg-slate-100 text-slate-700 border border-slate-200"
+                            }`}
+                          >
+                            {statusLabels[r.status] || r.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        className="px-4 py-6 text-center text-slate-500 text-sm"
+                        colSpan={6}
+                      >
+                        ไม่พบข้อมูล
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
-      </div>
 
-      <button
-        onClick={() => setModalOpen(true)}
-        className="fixed bottom-8 right-8 rounded-full bg-slate-800 p-4 text-white shadow-xl transition hover:bg-slate-700"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
+            {!loading && totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 bg-white rounded-lg px-4 py-3 border border-slate-200">
+                <div className="text-sm text-slate-700">
+                  แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filtered.length)} จาก {filtered.length} รายการ
+                </div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ก่อนหน้า
+                  </button>
+                  {(() => {
+                    const pages = [];
+                    if (totalPages <= 7) {
+                      for (let i = 1; i <= totalPages; i++) pages.push(i);
+                    } else {
+                      pages.push(1);
+                      if (currentPage <= 4) {
+                        pages.push(2, 3, 4, 5, '...', totalPages);
+                      } else if (currentPage >= totalPages - 3) {
+                        pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                      } else {
+                        pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                      }
+                    }
+                    return pages.map((page, idx) => {
+                      if (page === '...') {
+                        return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                      }
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    });
+                  })()}
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ถัดไป
+                  </button>
+                </nav>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===================== แท็บ: ปฏิทิน ===================== */}
+        {activeTab === "calendar" && (
+          <div className="space-y-4">
+            <div className="efc-modern rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6">
+              <FullCalendar
+                plugins={[dayGridPlugin, listPlugin]}
+                initialView="dayGridMonth"
+                firstDay={0}
+                events={calendarEvents}
+                height="auto"
+                locale={thLocale}
+                headerToolbar={{
+                  left: "prev,next today",
+                  center: "title",
+                  right: "dayGridMonth,listMonth",
+                }}
+                buttonText={{
+                  today: "วันนี้",
+                  month: "เดือน",
+                  list: "รายการ",
+                }}
+                dayMaxEvents={3}
+                eventClick={(info) => {
+                  const p = info.event.extendedProps;
+                  if (p.kind === "leave" && p.leaveId) {
+                    navigate(`/leave/${p.leaveId}`);
+                  }
+                }}
+                eventClassNames="cursor-pointer"
+              />
+            </div>
+
+            {/* Legend */}
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 flex flex-wrap justify-center gap-3 text-sm text-slate-600">
+              <span className="inline-flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: "#ef4444" }} />
+                วันหยุดราชการ
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: "#10b981" }} />
+                ลา (อนุมัติแล้ว)
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
+                ลา (รอดำเนินการ)
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {isModalOpen && (
         <LeaveRequestModalAdmin

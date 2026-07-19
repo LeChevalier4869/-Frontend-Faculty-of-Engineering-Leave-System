@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaFileAlt } from "react-icons/fa";
 import { apiEndpoints, API } from "../../utils/api";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 let approverCache = null;
 let approverCachePromise = null;
@@ -314,11 +315,7 @@ export default function LeaveDetail() {
   // console.log("Debug Leave: ", leave);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center text-gray-500 font-kanit">
-        กำลังโหลด...
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลด..." fullScreen={false} />;
   }
 
   if (!leave) {

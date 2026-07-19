@@ -22,6 +22,8 @@ import {
   filterLeaveBalancesLatestYear,
   formatRemainingDays,
 } from "../../utils/leavePolicy";
+import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function LeaveBalancePage() {
   const { user } = useAuth();
@@ -95,7 +97,7 @@ export default function LeaveBalancePage() {
       <Church className="w-10 h-10 md:w-12 md:h-12 text-purple-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]" />
     ),
     ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: (
-      <Flag className="w-10 h-10 md:w-12 md:h-12 text-sky-500 drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]" />
+      <Flag className="w-10 h-10 md:w-12 md:h-12 text-brand-500 drop-shadow-[0_0_12px_rgba(122,27,34,0.6)]" />
     ),
     "ลาไปศึกษา ฝึกอบรม ปฏิบัติการวิจัย หรือดูงาน": (
       <GraduationCap className="w-10 h-10 md:w-12 md:h-12 text-indigo-500 drop-shadow-[0_0_12px_rgba(79,70,229,0.6)]" />
@@ -123,7 +125,7 @@ export default function LeaveBalancePage() {
     ลากิจส่วนตัว: "ring-slate-200 bg-slate-50",
     ลาพักผ่อน: "ring-amber-200 bg-amber-50",
     ลาอุปสมบท: "ring-purple-200 bg-purple-50",
-    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "ring-sky-200 bg-sky-50",
+    ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล: "ring-brand-200 bg-brand-50",
     "ลาไปศึกษา ฝึกอบรม ปฏิบัติการวิจัย หรือดูงาน":
       "ring-indigo-200 bg-indigo-50",
     "ลาไปช่วยเหลือภริยาที่คลอดบุตร": "ring-rose-200 bg-rose-50",
@@ -134,24 +136,7 @@ export default function LeaveBalancePage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 text-slate-800 font-kanit">
-        <div className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-lg p-6">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_16px_rgba(56,189,248,0.7)]" />
-            </div>
-            <span className="text-slate-800 font-medium">
-              กำลังโหลดข้อมูลสิทธิลาการลา...
-            </span>
-            <span className="text-xs text-slate-500">
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากเซิร์ฟเวอร์
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลสิทธิลาการลา..." fullScreen={false} />;
   }
 
   if (visibleEntitlements.data.length === 0) {
@@ -168,9 +153,9 @@ export default function LeaveBalancePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 font-kanit px-4 py-8 md:px-8 rounded-2xl">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 md:mb-10 text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Leave Balance
             </span>
           </div>
@@ -270,14 +255,14 @@ export default function LeaveBalancePage() {
                         <div className="flex justify-between items-center">
                           <span>ใช้ไปแล้ว:</span>
                           <span className="font-semibold text-slate-900">
-                            {leaveInfo.used} วัน
+                            {formatLeaveDays(leaveInfo.used)}
                           </span>
                         </div>
                         {leaveInfo.pending > 0 && (
                           <div className="flex justify-between items-center">
                             <span>กำลังดำเนินการ:</span>
                             <span className="font-semibold text-amber-600">
-                              {leaveInfo.pending} วัน
+                              {formatLeaveDays(leaveInfo.pending)}
                             </span>
                           </div>
                         )}
@@ -291,26 +276,26 @@ export default function LeaveBalancePage() {
                         <div className="flex justify-between items-center">
                           <span>จำนวนวันทั้งหมด:</span>
                           <span className="font-semibold text-slate-900">
-                            {leaveInfo.total}
+                            {formatLeaveDays(leaveInfo.total)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>ใช้ไปแล้ว:</span>
                           <span className="font-semibold text-rose-600">
-                            {leaveInfo.used}
+                            {formatLeaveDays(leaveInfo.used)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>กำลังดำเนินการ:</span>
                           <span className="font-semibold text-amber-600">
-                            {leaveInfo.pending}
+                            {formatLeaveDays(leaveInfo.pending)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center border-t pt-1">
                           <span className="font-medium">คงเหลือ:</span>
                           <span className={`font-bold ${leaveInfo.hasOverused ? 'text-rose-600' : 'text-emerald-600'}`}>
-                            {leaveInfo.hasOverused 
-                              ? `เกิน ${leaveInfo.overusedDays} วัน`
+                            {leaveInfo.hasOverused
+                              ? `เกิน ${formatLeaveDays(leaveInfo.overusedDays)}`
                               : formatRemainingDays(leaveInfo.remaining).text
                             }
                           </span>

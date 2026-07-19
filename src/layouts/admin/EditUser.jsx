@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { useAuth } from "../../contexts/AuthContext";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
@@ -27,7 +28,15 @@ export default function UserEdit() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
 
-  const currentUserIsSuperAdmin = (currentUser?.roles || currentUser?.role || []).includes("SUPER_ADMIN");
+  const currentUserRoleNames = currentUser?.roles || currentUser?.role || [];
+  const currentUserIsSuperAdmin = currentUserRoleNames.includes("SUPER_ADMIN");
+  // ADMIN และ SUPER_ADMIN จัดการบทบาทได้ (SUPER_ADMIN implies ADMIN)
+  // ข้อจำกัด: เฉพาะ SUPER_ADMIN เท่านั้นที่มอบ/แก้บทบาท SUPER_ADMIN ได้
+  const canManageRoles =
+    currentUserIsSuperAdmin || currentUserRoleNames.includes("ADMIN");
+  // กำลังแก้ไขบัญชีของตัวเองหรือไม่ (ใช้กันถอด SUPER_ADMIN ของตัวเอง = กันล็อกเอาต์)
+  const isEditingSelf =
+    currentUser?.id != null && String(currentUser.id) === String(id);
 
   const initialForm = {
     prefixName: "",
@@ -44,6 +53,7 @@ export default function UserEdit() {
   };
 
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [initialFormData, setInitialFormData] = useState(initialForm);
   const [departments, setDepartments] = useState([]);
@@ -146,6 +156,8 @@ export default function UserEdit() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return; // กันกดปุ่มซ้ำระหว่างกำลังบันทึก
+    setSubmitting(true);
 
     try {
       const token = localStorage.getItem("accessToken");
@@ -202,6 +214,8 @@ export default function UserEdit() {
         err.response?.data?.message || "ไม่สามารถอัปเดตได้",
         "error"
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -216,7 +230,7 @@ export default function UserEdit() {
           value={formData[name]}
           onChange={handleChange}
           required
-          className="w-full appearance-none bg-white border border-slate-300 rounded-xl px-4 py-2 pr-10 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          className="w-full appearance-none bg-white border border-slate-300 rounded-xl px-4 py-2 pr-10 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-400"
         >
           <option value="">-- เลือก{label} --</option>
           {options.map((opt) => (
@@ -247,26 +261,11 @@ export default function UserEdit() {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center font-kanit text-slate-700 px-4 rounded-2xl">
-        <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-sm p-6 text-center">
-          <div className="flex flex-col items-center gap-3 text-sm">
-            <div className="relative flex h-10 w-10 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-sky-500" />
-            </div>
-            <span className="font-medium">กำลังโหลดข้อมูลผู้ใช้งาน...</span>
-            <span className="text-xs text-slate-500">
-              กรุณารอสักครู่ ระบบกำลังดึงข้อมูลจากเซิร์ฟเวอร์
-            </span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="กำลังโหลดข้อมูลผู้ใช้งาน..." fullScreen={false} />;
   }
 
   const inputClass =
-    "w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
 
   const getRoleLabel = (roleName) => {
     const th = ROLE_LABEL_TH[roleName];
@@ -276,7 +275,7 @@ export default function UserEdit() {
 
   // ตรวจสอบว่ามีการเปลี่ยนแปลงข้อมูลหรือไม่
   const formChanged = JSON.stringify(formData) !== JSON.stringify(initialFormData);
-  const rolesChanged = currentUserIsSuperAdmin &&
+  const rolesChanged = canManageRoles &&
     (selectedRoles.size !== initialRoles.size || [...selectedRoles].some((r) => !initialRoles.has(r)));
   const hasChanges = formChanged || rolesChanged;
 
@@ -288,9 +287,9 @@ export default function UserEdit() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
               Admin View
             </span>
           </div>
@@ -380,7 +379,7 @@ export default function UserEdit() {
               ])}
             </div>
 
-            {currentUserIsSuperAdmin ? (
+            {canManageRoles ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="flex flex-col gap-1">
                   <div className="text-sm font-medium text-slate-800">บทบาท (Roles)</div>
@@ -407,7 +406,15 @@ export default function UserEdit() {
                   {(allRoles.length ? allRoles : [{ name: "USER" }]).map((r) => {
                     const isUserRole = r.name === "USER";
                     const isApprover1Role = r.name === "APPROVER_1";
-                    const isDisabled = isUserRole || isApprover1Role;
+                    // เฉพาะ SUPER_ADMIN เท่านั้นที่มอบ/ถอนบทบาท SUPER_ADMIN ได้
+                    const isSuperAdminRole = r.name === "SUPER_ADMIN";
+                    // ผู้ที่ไม่ใช่ super_admin แตะ SUPER_ADMIN ไม่ได้
+                    const superAdminRoleLock = isSuperAdminRole && !currentUserIsSuperAdmin;
+                    // super_admin ถอด SUPER_ADMIN ของตัวเองไม่ได้ (กันล็อกเอาต์)
+                    const superAdminSelfLock =
+                      isSuperAdminRole && currentUserIsSuperAdmin && isEditingSelf;
+                    const superAdminLocked = superAdminRoleLock || superAdminSelfLock;
+                    const isDisabled = isUserRole || isApprover1Role || superAdminLocked;
                     return (
                       <label
                         key={r.name}
@@ -433,6 +440,12 @@ export default function UserEdit() {
                         {isApprover1Role && (
                           <span className="ml-auto text-[10px] text-amber-600">จัดการที่หน้าแผนก</span>
                         )}
+                        {superAdminRoleLock && (
+                          <span className="ml-auto text-[10px] text-rose-500">เฉพาะ SUPER_ADMIN</span>
+                        )}
+                        {superAdminSelfLock && (
+                          <span className="ml-auto text-[10px] text-rose-500">ถอดของตัวเองไม่ได้</span>
+                        )}
                       </label>
                     );
                   })}
@@ -456,14 +469,38 @@ export default function UserEdit() {
               </button>
               <button
                 type="submit"
-                disabled={!hasChanges}
-                className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition ${
-                  hasChanges
-                    ? "bg-sky-600 hover:bg-sky-500 text-white"
-                    : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                disabled={!hasChanges || submitting}
+                className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium shadow-sm transition ${
+                  submitting
+                    ? "bg-brand-600 text-white cursor-wait opacity-90"
+                    : hasChanges
+                      ? "bg-brand-600 hover:bg-brand-500 text-white"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
                 }`}
               >
-                บันทึกการเปลี่ยนแปลง
+                {submitting && (
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                )}
+                {submitting ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
               </button>
             </div>
           </form>

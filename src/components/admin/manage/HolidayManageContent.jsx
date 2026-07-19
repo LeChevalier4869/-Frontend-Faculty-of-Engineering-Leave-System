@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { BASE_URL } from "../../utils/api";
+import { BASE_URL } from "../../../utils/api";
 
 const PAGE_SIZE = 10;
 
-export default function HolidayManage() {
+export default function HolidayManageContent() {
   const [holidays, setHolidays] = useState([]);
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
@@ -20,9 +20,9 @@ export default function HolidayManage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const inputBase =
-    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
+    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
   const selectBase =
-    "appearance-none w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
+    "appearance-none w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
   const selectWrapper = "relative w-full";
 
   const ArrowIcon = () => (
@@ -41,7 +41,7 @@ export default function HolidayManage() {
     const token = localStorage.getItem("accessToken");
     if (!token) {
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => (window.location.href = "/login")
+        () => (window.location.href = "/login"),
       );
       throw new Error("No token");
     }
@@ -52,7 +52,7 @@ export default function HolidayManage() {
     if (err.response?.status === 401) {
       localStorage.removeItem("accessToken");
       Swal.fire("Session หมดอายุ", "กรุณาเข้าสู่ระบบใหม่", "warning").then(
-        () => (window.location.href = "/login")
+        () => (window.location.href = "/login"),
       );
     } else {
       Swal.fire("Error", err.response?.data?.message || err.message, "error");
@@ -92,7 +92,7 @@ export default function HolidayManage() {
       await axios.post(
         `${BASE_URL}/admin/holiday`,
         { date, description, isRecurring, holidayType },
-        authHeader()
+        authHeader(),
       );
       Swal.fire("เพิ่มวันหยุดสำเร็จ", "", "success");
       resetForm();
@@ -111,7 +111,12 @@ export default function HolidayManage() {
     setIsRecurring(h.isRecurring);
     setHolidayType(h.holidayType || "");
     setEditId(id);
-    setInitialEditData({ date: h.date.split("T")[0], description: h.description, isRecurring: h.isRecurring, holidayType: h.holidayType || "" });
+    setInitialEditData({
+      date: h.date.split("T")[0],
+      description: h.description,
+      isRecurring: h.isRecurring,
+      holidayType: h.holidayType || "",
+    });
   };
 
   const handleUpdate = async () => {
@@ -122,7 +127,7 @@ export default function HolidayManage() {
       await axios.put(
         `${BASE_URL}/admin/holiday/${editId}`,
         { date, description, isRecurring, holidayType },
-        authHeader()
+        authHeader(),
       );
       Swal.fire("อัปเดตสำเร็จ", "", "success");
       resetForm();
@@ -156,41 +161,31 @@ export default function HolidayManage() {
   };
 
   const filtered = (
-    filterType
-      ? holidays.filter((h) => h.holidayType === filterType)
-      : holidays
+    filterType ? holidays.filter((h) => h.holidayType === filterType) : holidays
   ).sort((a, b) =>
     sortOrder === "asc"
       ? new Date(a.date) - new Date(b.date)
-      : new Date(b.date) - new Date(a.date)
+      : new Date(b.date) - new Date(a.date),
   );
 
   const filteredByYear = filtered.filter(
-    (h) => new Date(h.date).getFullYear() === selectedYear
+    (h) => new Date(h.date).getFullYear() === selectedYear,
   );
 
   const totalPages = Math.ceil(filteredByYear.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
   const displayed = filteredByYear.slice(startIndex, startIndex + PAGE_SIZE);
 
-  const yearsSet = new Set(
-    holidays.map((h) => new Date(h.date).getFullYear())
-  );
+  const yearsSet = new Set(holidays.map((h) => new Date(h.date).getFullYear()));
   if (yearsSet.size === 0) {
     yearsSet.add(new Date().getFullYear());
   }
   const years = Array.from(yearsSet).sort((a, b) => b - a);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
+    <div className="font-kanit text-slate-900">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
-              Admin View
-            </span>
-          </div>
           <div className="w-full flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col items-center gap-1 md:items-start">
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
@@ -252,18 +247,30 @@ export default function HolidayManage() {
                   type="checkbox"
                   checked={isRecurring}
                   onChange={() => setIsRecurring(!isRecurring)}
-                  className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                  className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                 />
                 <span>ประจำทุกปี</span>
               </label>
               <div className="flex gap-2">
                 <button
                   onClick={editId ? handleUpdate : handleAdd}
-                  disabled={editId && initialEditData && date === initialEditData.date && description === initialEditData.description && isRecurring === initialEditData.isRecurring && holidayType === initialEditData.holidayType}
+                  disabled={
+                    editId &&
+                    initialEditData &&
+                    date === initialEditData.date &&
+                    description === initialEditData.description &&
+                    isRecurring === initialEditData.isRecurring &&
+                    holidayType === initialEditData.holidayType
+                  }
                   className={`inline-flex flex-1 items-center justify-center rounded-xl px-3 py-2 text-xs md:text-sm font-medium shadow-sm transition ${
-                    editId && initialEditData && date === initialEditData.date && description === initialEditData.description && isRecurring === initialEditData.isRecurring && holidayType === initialEditData.holidayType
+                    editId &&
+                    initialEditData &&
+                    date === initialEditData.date &&
+                    description === initialEditData.description &&
+                    isRecurring === initialEditData.isRecurring &&
+                    holidayType === initialEditData.holidayType
                       ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                      : "bg-brand-600 hover:bg-brand-500 text-white"
+                      : "bg-sky-600 hover:bg-sky-500 text-white"
                   }`}
                 >
                   {editId ? "อัปเดตวันหยุด" : "เพิ่มวันหยุด"}
@@ -404,7 +411,7 @@ export default function HolidayManage() {
                       key={h.id}
                       className={`border-t border-slate-100 ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-brand-50 transition-colors`}
+                      } hover:bg-sky-50 transition-colors`}
                     >
                       <td className="px-3 py-2 text-sm">
                         {startIndex + idx + 1}
@@ -454,7 +461,9 @@ export default function HolidayManage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 bg-white rounded-lg px-4 py-3 border border-slate-200">
               <div className="text-sm text-slate-700">
-                แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง {Math.min(currentPage * PAGE_SIZE, filteredByYear.length)} จาก {filteredByYear.length} รายการ
+                แสดง {(currentPage - 1) * PAGE_SIZE + 1} ถึง{" "}
+                {Math.min(currentPage * PAGE_SIZE, filteredByYear.length)} จาก{" "}
+                {filteredByYear.length} รายการ
               </div>
               <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                 <button
@@ -471,23 +480,46 @@ export default function HolidayManage() {
                   } else {
                     pages.push(1);
                     if (currentPage <= 4) {
-                      pages.push(2, 3, 4, 5, '...', totalPages);
+                      pages.push(2, 3, 4, 5, "...", totalPages);
                     } else if (currentPage >= totalPages - 3) {
-                      pages.push('...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                      pages.push(
+                        "...",
+                        totalPages - 4,
+                        totalPages - 3,
+                        totalPages - 2,
+                        totalPages - 1,
+                        totalPages,
+                      );
                     } else {
-                      pages.push('...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                      pages.push(
+                        "...",
+                        currentPage - 1,
+                        currentPage,
+                        currentPage + 1,
+                        "...",
+                        totalPages,
+                      );
                     }
                   }
                   return pages.map((page, idx) => {
-                    if (page === '...') {
-                      return <span key={`ellipsis-${idx}`} className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700">...</span>;
+                    if (page === "...") {
+                      return (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700"
+                        >
+                          ...
+                        </span>
+                      );
                     }
                     return (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                          currentPage === page
+                            ? "z-10 bg-sky-50 border-sky-500 text-sky-600"
+                            : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                         }`}
                       >
                         {page}
@@ -496,7 +528,9 @@ export default function HolidayManage() {
                   });
                 })()}
                 <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

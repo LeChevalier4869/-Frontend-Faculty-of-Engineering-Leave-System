@@ -1,18 +1,30 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, createContext, useContext } from "react";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../utils/api";
 import {
   FaUser,
   FaCalendarAlt,
   FaUsersCog,
+  FaTools,
   FaCog,
   FaTachometerAlt,
   FaChartBar,
+  FaChartPie,
   FaClipboardList,
+  FaClipboardCheck,
   FaCheckCircle,
-  FaIdBadge,
+  FaIdCard,
+  FaFileSignature,
+  FaUserShield,
+  FaUserLock,
+  FaHistory,
+  FaSitemap,
+  FaTags,
+  FaLayerGroup,
+  FaIdBadge
 } from "react-icons/fa";
+import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { HiOutlineChevronDown } from "react-icons/hi";
 import useAuth from "../hooks/useAuth";
 import logo from "../assets/logo.png";
@@ -20,57 +32,229 @@ import PropTypes from "prop-types";
 
 const userNav = [
   { to: "/", text: "แดชบอร์ด", icon: <FaTachometerAlt />, title: "แดชบอร์ด" },
-  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaChartBar />, title: "ยอดวันลาคงเหลือ" },
+  { to: "/leave/balance", text: "ยอดวันลาคงเหลือ", icon: <FaChartPie />, title: "ยอดวันลาคงเหลือ" },
   { to: "/leave", text: "การลา", icon: <FaClipboardList />, title: "การลา" },
   { to: "/Calendar", text: "ปฏิทิน", icon: <FaCalendarAlt />, title: "ปฏิทิน" },
-  { to: "/profile", text: "โปรไฟล์ผู้ใช้", icon: <FaUser />, title: "โปรไฟล์ผู้ใช้" },
+  {
+    to: "/profile",
+    text: "โปรไฟล์ผู้ใช้",
+    icon: <FaUser />,
+    title: "โปรไฟล์ผู้ใช้",
+  },
 ];
 
 const approverNav1 = [
-  { to: "/approver/dashboard-approver1", text: "แดชบอร์ดหัวหน้าสาขา", icon: <FaTachometerAlt /> },
-  { to: "/approver/leave-request-approver1", text: "อนุมัติระดับหัวหน้าสาขา", icon: <FaCheckCircle /> },
+  {
+    to: "/approver/dashboard-approver1",
+    text: "แดชบอร์ดหัวหน้าสาขา",
+    icon: <FaTachometerAlt />,
+  },
+  {
+    to: "/approver/leave-request-approver1",
+    text: "อนุมัติระดับหัวหน้าสาขา",
+    icon: <FaCheckCircle />,
+  },
 ];
 
-const verifierNav = [{ to: "/approver/leave-request-verifier", text: "ตรวจสอบคำขอการลา", icon: <FaCheckCircle /> }];
-const approverNav2 = [{ to: "/approver/leave-request-approver2", text: "อนุมัติระดับ 2", icon: <FaCheckCircle /> }];
-const approverNav3 = [{ to: "/approver/leave-request-approver3", text: "อนุมัติระดับ 3", icon: <FaCheckCircle /> }];
-const approverNav4 = [{ to: "/approver/leave-request-approver4", text: "อนุมัติระดับ 4", icon: <FaCheckCircle /> }];
+const verifierNav = [
+  {
+    to: "/approver/leave-request-verifier",
+    text: "ตรวจสอบคำขอการลา",
+    icon: <FaCheckCircle />,
+  },
+];
+const approverNav2 = [
+  {
+    to: "/approver/leave-request-approver2",
+    text: "อนุมัติระดับ 2",
+    icon: <FaCheckCircle />,
+  },
+];
+const approverNav3 = [
+  {
+    to: "/approver/leave-request-approver3",
+    text: "อนุมัติระดับ 3",
+    icon: <FaCheckCircle />,
+  },
+];
+const approverNav4 = [
+  {
+    to: "/approver/leave-request-approver4",
+    text: "อนุมัติระดับ 4",
+    icon: <FaCheckCircle />,
+  },
+];
 
 const adminNav = [
-  { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <FaUsersCog /> },
-  { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
-  { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaUsersCog /> },
-  { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
-  { to: "/admin/position-numbers", text: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
-  { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
-  { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
-  { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
-  { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
-];
-
-const superAdminOnlyNav = [
-  { to: "/admin/organization-manage", text: "จัดการองค์กร", icon: <FaUsersCog /> },
-  { to: "/admin/personel-manage", text: "จัดการประเภทบุคคล", icon: <FaUsersCog /> },
-  { to: "/admin/leave-type-manage", text: "จัดการประเภทการลา", icon: <FaUsersCog /> },
-  { to: "/admin/rank-manage", text: "เงื่อนไขวันลา (Rank)", icon: <FaUsersCog /> },
-  { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUsersCog /> },
-];
-
-const adminConfigNav = [
+  { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <TbLayoutDashboardFilled /> },
+  // { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
+  // { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaUsersCog /> },
+  // { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
+  // { to: "/admin/position-numbers", text: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
+  // { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
+  // { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
+  // { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
+  // { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
+  { to: "/admin/management", text: "การจัดการ", icon: <FaTools /> },
   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 
+const superAdminOnlyNav = [
+  {
+    to: "/admin/organization-manage",
+    text: "จัดการองค์กร",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/personel-manage",
+    text: "จัดการประเภทบุคคล",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/leave-type-manage",
+    text: "จัดการประเภทการลา",
+    icon: <FaUsersCog />,
+  },
+  {
+    to: "/admin/rank-manage",
+    text: "เงื่อนไขวันลา (Rank)",
+    icon: <FaUsersCog />,
+  },
+  { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUsersCog /> },
+];
+
+// const adminConfigNav = [
+//   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
+// ];
+
+// Context ส่ง isMobile/onClose ลงไปยัง Item ที่อยู่ระดับ module (ไม่ต้องส่ง prop ทุกจุดเรียก)
+const SidebarContext = createContext({ isMobile: false, onClose: () => {} });
+
+// เลื่อน sidebar ขึ้นบนสุดเมื่อเปลี่ยนเมนู
+const scrollSidebarTop = () => {
+  const run = () => {
+    const sidebarElement = document.querySelector("aside");
+    if (sidebarElement) {
+      sidebarElement.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        if (sidebarElement.scrollTop > 0) {
+          sidebarElement.scrollTo({ top: 0, behavior: "auto" });
+        }
+      }, 100);
+    }
+  };
+  run();
+  setTimeout(run, 50);
+};
+
+/*
+ * สำคัญ: Item / HighLevelAdminItem / Section ต้องประกาศที่ระดับ module (ไม่ใช่ภายใน Sidebar)
+ * เพื่อให้ component identity คงที่ตลอด ไม่เช่นนั้นทุกครั้งที่ Sidebar re-render (เช่น location เปลี่ยน
+ * หลังคลิกเมนู) React จะมองเป็น type ใหม่แล้ว unmount+remount ทั้งซับทรี ทำให้คลิกแรกถูก "กิน"
+ * ต้องคลิกซ้ำถึงจะ navigate ได้ (บั๊คเมนู proxy)
+ */
+function Item({ to, icon, text, proxyId, title }) {
+  const location = useLocation();
+  const { isMobile, onClose } = useContext(SidebarContext);
+
+  const currentPath = location.pathname;
+  const currentProxy = new URLSearchParams(location.search).get("proxy");
+  const itemProxy = proxyId ? proxyId.toString() : null;
+
+  const active =
+    currentPath === to &&
+    ((currentProxy === null && itemProxy === null) ||
+      (currentProxy !== null && itemProxy !== null && currentProxy === itemProxy));
+
+  const handleClick = () => {
+    scrollSidebarTop();
+    if (isMobile && typeof onClose === "function") {
+      onClose();
+    }
+  };
+
+  return (
+    <Link
+      to={proxyId ? `${to}?proxy=${proxyId}` : to}
+      onClick={handleClick}
+      title={title || text}
+      className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition ${
+        active
+          ? "bg-white/20 text-white ring-1 ring-white/30"
+          : "text-slate-200 hover:text-white hover:bg-white/10"
+      }`}
+    >
+      <span className="text-base shrink-0">{icon}</span>
+      <span className="truncate">{text}</span>
+    </Link>
+  );
+}
+
+Item.propTypes = {
+  to: PropTypes.string.isRequired,
+  icon: PropTypes.node.isRequired,
+  text: PropTypes.string.isRequired,
+  proxyId: PropTypes.number,
+  title: PropTypes.string,
+};
+
+// Special Item for high-level admin that handles navigation properly
+function HighLevelAdminItem({ to, icon, text, title }) {
+  const location = useLocation();
+  const { isMobile, onClose } = useContext(SidebarContext);
+
+  const currentPath = location.pathname;
+  const active = currentPath === to || currentPath.startsWith(`${to}/`);
+
+  const handleClick = () => {
+    if (isMobile && typeof onClose === "function") {
+      onClose();
+    }
+  };
+
+  return (
+    <Link
+      to={to}
+      onClick={handleClick}
+      title={title || text}
+      className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition w-full text-left ${
+        active
+          ? "bg-white/20 text-white ring-1 ring-white/30"
+          : "text-slate-200 hover:text-white hover:bg-white/10"
+      }`}
+    >
+      <span className="text-base shrink-0">{icon}</span>
+      <span className="truncate">{text}</span>
+    </Link>
+  );
+}
+
+HighLevelAdminItem.propTypes = {
+  to: PropTypes.string.isRequired,
+  icon: PropTypes.node.isRequired,
+  text: PropTypes.string.isRequired,
+  title: PropTypes.string,
+};
+
+function Section({ title, children }) {
+  return (
+    <div className="space-y-2">
+      <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider px-4 mt-2 mb-1">
+        {title}
+      </div>
+      <div className="flex flex-col gap-1">{children}</div>
+    </div>
+  );
+}
+
+Section.propTypes = {
+  title: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+};
+
 export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }) {
   const { user } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
   const [openAdmin, setOpenAdmin] = useState(false);
-
-  // Auto-close dropdown when route changes (commented out to keep dropdowns open)
-  // useEffect(() => {
-  //   setOpenAdmin(false);
-  //   setOpenProxy(false);
-  // }, [location.pathname]);
 
   // Proxy dropdown state
   const [openProxy, setOpenProxy] = useState(false);
@@ -82,122 +266,94 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
   const [proxyApprovers3, setProxyApprovers3] = useState([]);
   const [proxyApprovers4, setProxyApprovers4] = useState([]);
 
-  // Define Item component before using it in useMemo
-  const Item = ({ to, icon, text, proxyId, title }) => {
-    const currentPath = location.pathname;
-    const currentProxy = new URLSearchParams(location.search).get("proxy");
-    const itemProxy = proxyId ? proxyId.toString() : null;
+  // ดึงสิทธิ์ proxy ของผู้ใช้ปัจจุบัน (แยกออกมาเพื่อเรียกซ้ำได้ทั้งจาก effect และ event)
+  const checkProxyRoles = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token || !user?.id) {
+        return;
+      }
 
-    const active =
-      currentPath === to &&
-      ((currentProxy === null && itemProxy === null) ||
-        (currentProxy !== null && itemProxy !== null && currentProxy === itemProxy));
+      // ดึงข้อมูล proxy approvals ทั้งหมด (ACTIVE และ EXPIRED)
+      const response = await axios.get(`${BASE_URL}/proxy-approval`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    const handleClick = () => {
-      // Scroll sidebar to top with multiple attempts for reliability
-      const scrollToTop = () => {
-        const sidebarElement = document.querySelector('aside');
-        if (sidebarElement) {
-          sidebarElement.scrollTo({ top: 0, behavior: 'smooth' });
-          // Fallback: try instant scroll if smooth doesn't work
-          setTimeout(() => {
-            if (sidebarElement.scrollTop > 0) {
-              sidebarElement.scrollTo({ top: 0, behavior: 'auto' });
-            }
-          }, 100);
-        }
+      const proxyApprovals = response.data.data || [];
+
+      // กรองเฉพาะ proxy ที่มีสถานะ ACTIVE
+      const activeProxies = proxyApprovals.filter((proxy) => proxy.status === "ACTIVE");
+
+      // กรองเฉพาะที่ user ปัจจุบันเป็น proxy approver
+      const userAsProxyProxies = activeProxies.filter((proxy) => proxy.proxyApproverId === user.id);
+
+      // ถ้าไม่มี proxy ที่ user เป็น proxy approver ก็ clear state ทั้งหมด
+      if (userAsProxyProxies.length === 0) {
+        setProxyVerifiers([]);
+        setProxyApprovers1([]);
+        setProxyApprovers2([]);
+        setProxyApprovers3([]);
+        setProxyApprovers4([]);
+        return;
+      }
+
+      // จัดกลุ่ม proxy ตามระดับ (ใช้ Set เพื่อกำจัดซ้ำ)
+      const proxyData = {
+        1: new Set(), // APPROVER_1
+        2: new Set(), // VERIFIER
+        3: new Set(), // APPROVER_2
+        4: new Set(), // APPROVER_3
+        5: new Set(), // APPROVER_4
       };
 
-      // Try scrolling immediately and also after a short delay
-      scrollToTop();
-      setTimeout(scrollToTop, 50);
+      userAsProxyProxies.forEach((proxy) => {
+        if (proxyData[proxy.approverLevel]) {
+          // User ปัจจุบันเป็น proxy approver -> แสดง original approver (ที่เราจะทำงานแทน)
+          const displayUser = proxy.originalApprover;
+          proxyData[proxy.approverLevel].add(displayUser);
+        }
+      });
 
-      // Close mobile menu if needed
-      if (isMobile && typeof onClose === "function") {
-        onClose();
-      }
-    };
+      // แปลง Set เป็น Array
+      const proxyArrays = {
+        1: Array.from(proxyData[1]), // APPROVER_1
+        2: Array.from(proxyData[2]), // VERIFIER
+        3: Array.from(proxyData[3]), // APPROVER_2
+        4: Array.from(proxyData[4]), // APPROVER_3
+        5: Array.from(proxyData[5]), // APPROVER_4
+      };
 
-    return (
-      <Link
-        to={proxyId ? `${to}?proxy=${proxyId}` : to}
-        onClick={handleClick}
-        title={title || text}
-        className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition ${
-          active
-            ? "bg-white/20 text-white ring-1 ring-white/30"
-            : "text-slate-200 hover:text-white hover:bg-white/10"
-        }`}
-      >
-        <span className="text-base">{icon}</span>
-        <span className="truncate">{text}</span>
-      </Link>
-    );
-  };
+      setProxyVerifiers(proxyArrays[2]); // สำหรับ VERIFIER
+      setProxyApprovers1(proxyArrays[1]); // สำหรับ APPROVER_1
+      setProxyApprovers2(proxyArrays[3]); // สำหรับ APPROVER_2
+      setProxyApprovers3(proxyArrays[4]); // สำหรับ APPROVER_3
+      setProxyApprovers4(proxyArrays[5]); // สำหรับ APPROVER_4
+    } catch (err) {
+      console.error("Error checking proxy roles:", err);
+    }
+  }, [user?.id]);
 
-  // Special Item for high-level admin that handles navigation properly
-  const HighLevelAdminItem = ({ to, icon, text, title }) => {
-    const currentPath = location.pathname;
-    const active = currentPath === to || currentPath.startsWith(`${to}/`);
-
-    const handleClick = () => {
-      // Close mobile menu if needed
-      if (isMobile && typeof onClose === "function") {
-        onClose();
-      }
-    };
-
-    return (
-      <Link
-        to={to}
-        onClick={handleClick}
-        title={title || text}
-        className={`flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm transition w-full text-left ${
-          active
-            ? "bg-white/20 text-white ring-1 ring-white/30"
-            : "text-slate-200 hover:text-white hover:bg-white/10"
-        }`}
-      >
-        <span className="text-base">{icon}</span>
-        <span className="truncate">{text}</span>
-      </Link>
-    );
-  };
-  const Section = ({ title, children }) => (
-    <div className="space-y-2">
-      <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider px-4 mt-2 mb-1">
-        {title}
-      </div>
-      <div className="flex flex-col gap-1">{children}</div>
-    </div>
-  );
-
-  // PropTypes for components
-  Item.propTypes = {
-    to: PropTypes.string.isRequired,
-    icon: PropTypes.node.isRequired,
-    text: PropTypes.string.isRequired,
-    proxyId: PropTypes.number,
-    title: PropTypes.string,
-  };
-
-  Section.propTypes = {
-    title: PropTypes.string.isRequired,
-    children: PropTypes.node.isRequired,
-  };
+  // รันตอนโหลด + ฟัง event 'proxy-updated' เพื่ออัปเดตเมนูทันทีหลังมอบ/ยกเลิกอำนาจ
+  // (ไม่ต้องให้ผู้ใช้ refresh หน้าเอง)
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    checkProxyRoles();
+    const onProxyUpdated = () => checkProxyRoles();
+    window.addEventListener("proxy-updated", onProxyUpdated);
+    return () => window.removeEventListener("proxy-updated", onProxyUpdated);
+  }, [user?.id, checkProxyRoles]);
 
   // Calculate roles
   const roles = Array.isArray(user.roles)
     ? user.roles
     : Array.isArray(user.role)
-    ? user.role
-    : Array.isArray(user.roleNames)
-    ? user.roleNames
-    : [];
+      ? user.role
+      : Array.isArray(user.roleNames)
+        ? user.roleNames
+        : [];
 
   // SUPER_ADMIN สามารถเข้าถึงทุกเมนูที่ ADMIN เข้าได้
   const hasRole = (r) => roles.includes(r) || (r === "ADMIN" && roles.includes("SUPER_ADMIN"));
-  const isActive = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
 
   // Proxy role flags (menu จะโชว์เมื่อมี proxy อย่างน้อย 1 รายการ)
   const isProxyVerifier = proxyVerifiers.length > 0;
@@ -215,22 +371,26 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
       try {
         const token = localStorage.getItem("accessToken");
         if (!token) {
-          console.log('No token found for proxy checking');
+          console.log("No token found for proxy checking");
           return;
         }
 
         // ดึงข้อมูล proxy approvals ทั้งหมด (ACTIVE และ EXPIRED)
         const response = await axios.get(`${BASE_URL}/proxy-approval`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         const proxyApprovals = response.data.data || [];
 
         // กรองเฉพาะ proxy ที่มีสถานะ ACTIVE
-        const activeProxies = proxyApprovals.filter(proxy => proxy.status === 'ACTIVE');
+        const activeProxies = proxyApprovals.filter(
+          (proxy) => proxy.status === "ACTIVE",
+        );
 
         // กรองเฉพาะที่ user ปัจจุบันเป็น proxy approver
-        const userAsProxyProxies = activeProxies.filter(proxy => proxy.proxyApproverId === user.id);
+        const userAsProxyProxies = activeProxies.filter(
+          (proxy) => proxy.proxyApproverId === user.id,
+        );
 
         // Debug ทุก proxy ที่ active
         // activeProxies.forEach((proxy) => {
@@ -270,7 +430,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
           5: new Set(), // APPROVER_4
         };
 
-        userAsProxyProxies.forEach(proxy => {
+        userAsProxyProxies.forEach((proxy) => {
           if (proxyData[proxy.approverLevel]) {
             // User ปัจจุบันเป็น proxy approver -> แสดง original approver (ที่เราจะทำงานแทน)
             const displayUser = proxy.originalApprover;
@@ -297,7 +457,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
         setProxyApprovers3(proxyArrays[4]); // สำหรับ APPROVER_3
         setProxyApprovers4(proxyArrays[5]); // สำหรับ APPROVER_4
       } catch (err) {
-        console.error('Error checking proxy roles:', err);
+        console.error("Error checking proxy roles:", err);
       }
     };
 
@@ -317,32 +477,32 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
     isProxyVerifier;
 
   return (
-    <>
-      {isMobile && isOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/60"
-          onClick={onClose}
-        />
-      )}
+    <SidebarContext.Provider value={{ isMobile, onClose }}>
       <aside
         className={`fixed top-0 left-0 z-40 h-full w-64 transform transition-transform duration-300 ease-in-out ${
           isMobile && !isOpen ? "-translate-x-full" : ""
         }`}
       >
         <div className="relative h-full">
-          <div className="absolute inset-0 bg-gradient-to-b from-sky-500/20 via-sky-600/10 to-blue-900/20" />
-          <div className="absolute inset-0 backdrop-blur-md bg-slate-900/60 ring-1 ring-white/10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-700/45 via-brand-800/35 to-brand-900/55" />
+          <div className="absolute inset-0 backdrop-blur-md bg-brand-900/70 ring-1 ring-white/10" />
 
           <div className="relative h-full flex flex-col text-white">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <img src={logo} alt="Logo" className="w-10 h-10 rounded-md shadow-lg" />
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="w-10 h-10 rounded-md shadow-lg"
+                />
                 <div className="flex flex-col leading-tight">
                   <span className="font-kanit text-lg font-semibold tracking-wide whitespace-nowrap">
                     eLeave System
                   </span>
-                  <span className="text-xs text-slate-300 whitespace-nowrap">คณะวิศวกรรมศาสตร์</span>
+                  <span className="text-xs text-slate-300 whitespace-nowrap">
+                    คณะวิศวกรรมศาสตร์
+                  </span>
                 </div>
               </div>
               {isMobile && (
@@ -352,7 +512,12 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                   className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition"
                   aria-label="Close menu"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -369,7 +534,12 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
               {hasRole("USER") && (
                 <Section title="ทั่วไป">
                   {userNav.map((m, i) => (
-                    <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                    <Item
+                      key={`${m.to}-${i}`}
+                      to={m.to}
+                      icon={m.icon}
+                      text={m.text}
+                    />
                   ))}
                 </Section>
               )}
@@ -378,34 +548,63 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                 <Section title="งานอนุมัติ / สารบรรณ">
                   {hasRole("APPROVER_1") &&
                     approverNav1.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("VERIFIER") &&
                     verifierNav.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("APPROVER_2") &&
                     approverNav2.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("APPROVER_3") &&
                     approverNav3.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
                   {hasRole("APPROVER_4") &&
                     approverNav4.map((m, i) => (
-                      <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />
+                      <Item
+                        key={`${m.to}-${i}`}
+                        to={m.to}
+                        icon={m.icon}
+                        text={m.text}
+                      />
                     ))}
 
                   {/* Proxy Menu - รวมทั้งหมดเป็น dropdown เดียว */}
-                  {(proxyVerifiers.length > 0 || proxyApprovers1.length > 0 || proxyApprovers2.length > 0 || proxyApprovers3.length > 0 || proxyApprovers4.length > 0) && (
+                  {(proxyVerifiers.length > 0 ||
+                    proxyApprovers1.length > 0 ||
+                    proxyApprovers2.length > 0 ||
+                    proxyApprovers3.length > 0 ||
+                    proxyApprovers4.length > 0) && (
                     <Section title="การมอบอำนาจ (Proxy)">
                       <button
                         onClick={() => setOpenProxy((prev) => !prev)}
                         className="flex items-center justify-between px-4 py-2 text-sm text-slate-200 hover:text-white hover:bg-white/10 rounded-xl w-full"
                       >
                         <span className="flex items-center gap-3">
-                          <FaUsersCog className="text-base" />
+                          <FaUserShield className="text-base shrink-0" />
                           <span>การมอบอำนาจ (Proxy)</span>
                         </span>
                         <HiOutlineChevronDown
@@ -418,46 +617,106 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         <div className="flex flex-col mt-1 ml-4">
                           {/* Proxy Verifiers */}
                           {proxyVerifiers.map((proxy) => (
-                            <div key={`proxy-verifier-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">ผู้ตรวจสอบ (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-verifier-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                ผู้ตรวจสอบ (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {verifierNav.map((m) => (
-                                <Item key={`proxy-verifier-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-verifier-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
                           {/* Proxy Approvers1 */}
                           {proxyApprovers1.map((proxy) => (
-                            <div key={`proxy-approver1-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">หัวหน้าสาขา (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-approver1-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                หัวหน้าสาขา (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {approverNav1.map((m) => (
-                                <Item key={`proxy-approver1-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-approver1-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
                           {/* Proxy Approvers2 */}
                           {proxyApprovers2.map((proxy) => (
-                            <div key={`proxy-approver2-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">ผู้อนุมัติ2 (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-approver2-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                ผู้อนุมัติ2 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {approverNav2.map((m) => (
-                                <Item key={`proxy-approver2-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-approver2-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
                           {/* Proxy Approvers3 */}
                           {proxyApprovers3.map((proxy) => (
-                            <div key={`proxy-approver3-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">ผู้อนุมัติ3 (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-approver3-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                ผู้อนุมัติ3 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {approverNav3.map((m) => (
-                                <Item key={`proxy-approver3-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-approver3-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
                           {/* Proxy Approvers4 */}
                           {proxyApprovers4.map((proxy) => (
-                            <div key={`proxy-approver4-${proxy.id}`} className="mb-2">
-                              <div className="text-xs text-slate-400 mb-1">ผู้อนุมัติ4 (Proxy: {proxy.firstName} {proxy.lastName})</div>
+                            <div
+                              key={`proxy-approver4-${proxy.id}`}
+                              className="mb-2"
+                            >
+                              <div className="text-xs text-slate-400 mb-1">
+                                ผู้อนุมัติ4 (Proxy: {proxy.firstName}{" "}
+                                {proxy.lastName})
+                              </div>
                               {approverNav4.map((m) => (
-                                <Item key={`proxy-approver4-${proxy.id}-${m.to}`} to={m.to} icon={m.icon} text={m.text} proxyId={proxy.id} />
+                                <Item
+                                  key={`proxy-approver4-${proxy.id}-${m.to}`}
+                                  to={m.to}
+                                  icon={m.icon}
+                                  text={m.text}
+                                  proxyId={proxy.id}
+                                />
                               ))}
                             </div>
                           ))}
@@ -478,7 +737,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                       className="flex items-center justify-between px-4 py-2 text-sm text-slate-200 hover:text-white hover:bg-white/10 rounded-xl w-full"
                     >
                       <span className="flex items-center gap-3">
-                        <FaUsersCog className="text-base" />
+                        <FaUserLock className="text-base" />
                         <span>เมนูผู้ดูแล</span>
                       </span>
                       <HiOutlineChevronDown
@@ -490,17 +749,24 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                     {openAdmin && (
                       <div className="flex flex-col mt-1 ml-4">
                         {adminNav.map((m, i) => {
-                          return <Item key={`${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                          return (
+                            <Item
+                              key={`${m.to}-${i}`}
+                              to={m.to}
+                              icon={m.icon}
+                              text={m.text}
+                            />
+                          );
                         })}
                       </div>
                     )}
                   </Section>
 
-                  <Section title="การตั้งค่า">
+                  {/* <Section title="การตั้งค่า">
                     {adminConfigNav.map((m, i) => {
                       return <HighLevelAdminItem key={`cfg-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
                     })}
-                  </Section>
+                  </Section> */}
 
                   {hasRole("SUPER_ADMIN") && (
                     <Section title="ผู้ดูแลระดับสูง">
@@ -510,7 +776,14 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         </div>
                       </div>
                       {superAdminOnlyNav.map((m, i) => {
-                        return <HighLevelAdminItem key={`high-${m.to}-${i}`} to={m.to} icon={m.icon} text={m.text} />;
+                        return (
+                          <HighLevelAdminItem
+                            key={`high-${m.to}-${i}`}
+                            to={m.to}
+                            icon={m.icon}
+                            text={m.text}
+                          />
+                        );
                       })}
                     </Section>
                   )}
@@ -529,9 +802,12 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
       </aside>
 
       {isOpen && isMobile && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30" onClick={onClose} />
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+          onClick={onClose}
+        />
       )}
-    </>
+    </SidebarContext.Provider>
   );
 }
 

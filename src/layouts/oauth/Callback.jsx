@@ -37,7 +37,7 @@ export default function Callback() {
       localStorage.setItem("accessToken", accessToken);
       // localStorage.setItem("refreshToken", refreshToken);
 
-      // ดึงข้อมูล user แล้วเซฟเข้า context เลย
+      // ดึงข้อมูล user เพื่อยืนยันว่า token ใช้ได้จริง ก่อนพาเข้าระบบ
       const fetchUser = async () => {
         try {
           const url = getApiUrl("auth/me");
@@ -48,8 +48,10 @@ export default function Callback() {
           const returned = res.data.data ?? res.data.user ?? res.data;
           setUser(returned);
 
-          
-          navigate("/dashboard");
+          // ใช้ full reload (ไม่ใช่ navigate ของ react-router) เพื่อให้ authed router
+          // ถูกสร้างใหม่โดย sync กับ URL จริง — กันบั๊คเด้งไปหน้ามั่วเพราะ history ของ
+          // router คนละตัวไม่ตรงกัน
+          window.location.replace("/dashboard");
         } catch (err) {
           console.error("fetch user error:", err);
 

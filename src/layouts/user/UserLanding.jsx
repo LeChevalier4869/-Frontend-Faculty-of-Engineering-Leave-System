@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 function UserLanding() {
   const [users, setUsers] = useState([]);
@@ -31,7 +32,7 @@ function UserLanding() {
 
   const formatUserInitial = (name) => name?.charAt(0).toUpperCase() || "?";
 
-  if (loading) return <div className="text-center mt-8">กำลังโหลดข้อมูล...</div>;
+  if (loading) return <LoadingSpinner message="กำลังโหลดข้อมูล..." fullScreen={false} />;
 
   if (error)
     return (
@@ -109,7 +110,7 @@ function UserLanding() {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        currentPage === page ? 'z-10 bg-sky-50 border-sky-500 text-sky-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
+                        currentPage === page ? 'z-10 bg-brand-50 border-brand-500 text-brand-600' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'
                       }`}
                     >
                       {page}
