@@ -231,7 +231,7 @@ export default function ApproverManageContent() {
 
         {/* ---------- ส่วน A: ระดับคณะ ---------- */}
         <section className="space-y-3">
-          <div className="flex items-baseline justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
             <h2 className="text-lg font-semibold">ผู้อนุมัติระดับคณะ</h2>
             <span className="text-xs text-slate-500">
               แต่ละตำแหน่งมีผู้รับผิดชอบได้ 1 คน
@@ -339,7 +339,8 @@ export default function ApproverManageContent() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {/* Desktop: ตาราง */}
+          <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
             <div className="overflow-x-auto">
               <table className="w-full table-fixed border-collapse bg-white text-sm">
                 <thead className="bg-slate-50 text-slate-700">
@@ -435,6 +436,72 @@ export default function ApproverManageContent() {
               </table>
             </div>
           </div>
+
+          {/* Mobile: การ์ด (ตาราง 5 คอลัมน์แคบเกินไปบนจอมือถือ) */}
+          <div className="space-y-3 md:hidden">
+            {visibleDepartments.map((d) => {
+              const staff = staffCount.get(d.id) || 0;
+              const risky = !d.head && staff > 0;
+              return (
+                <div
+                  key={d.id}
+                  className={`rounded-xl border bg-white p-4 shadow-sm ${
+                    risky ? "border-rose-200" : "border-slate-200"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="min-w-0 flex-1 font-medium text-slate-800">
+                      {d.name}
+                    </p>
+                    {risky ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700">
+                        <FaExclamationTriangle className="h-2.5 w-2.5" />
+                        อนุมัติไม่ได้
+                      </span>
+                    ) : d.head ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                        <FaCheckCircle className="h-2.5 w-2.5" />
+                        พร้อม
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <dl className="mt-2 space-y-1 text-sm">
+                    <div className="flex gap-2">
+                      <dt className="shrink-0 text-slate-500">หัวหน้าสาขา:</dt>
+                      <dd className="min-w-0 flex-1 truncate text-slate-800">
+                        {d.head ? fullName(d.head) : "— ยังไม่กำหนด"}
+                      </dd>
+                    </div>
+                    <div className="flex gap-2">
+                      <dt className="shrink-0 text-slate-500">พนักงาน:</dt>
+                      <dd className="tabular-nums text-slate-800">{staff} คน</dd>
+                    </div>
+                  </dl>
+
+                  <button
+                    onClick={() =>
+                      setPicker({
+                        mode: "department",
+                        department: d,
+                        current: d.head,
+                      })
+                    }
+                    disabled={saving}
+                    className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-white transition hover:bg-slate-600 disabled:opacity-60"
+                  >
+                    <FaExchangeAlt className="h-3 w-3" />
+                    {d.head ? "เปลี่ยนหัวหน้าสาขา" : "กำหนดหัวหน้าสาขา"}
+                  </button>
+                </div>
+              );
+            })}
+            {visibleDepartments.length === 0 && (
+              <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+                ไม่พบสาขาที่ค้นหา
+              </div>
+            )}
+          </div>
         </section>
       </div>
 
@@ -450,6 +517,7 @@ export default function ApproverManageContent() {
           preferredDepartmentId={
             picker.mode === "department" ? picker.department.id : null
           }
+          departments={departments}
           saving={saving}
           onPick={handlePick}
           onClose={() => setPicker(null)}
@@ -461,16 +529,47 @@ export default function ApproverManageContent() {
 
 /* ---------------- ตัวเลือกผู้ใช้ ---------------- */
 
+/** บทบาทที่เกี่ยวกับการอนุมัติ — ใช้เตือนว่าคนนี้ถือตำแหน่งอะไรอยู่แล้ว */
+const APPROVER_ROLE_LABEL = {
+  APPROVER_1: "หัวหน้าสาขา",
+  VERIFIER: "ผู้ตรวจสอบ",
+  APPROVER_2: "สารบรรณคณะ",
+  APPROVER_3: "รองคณบดี",
+  APPROVER_4: "คณบดี",
+};
+
+/** สีพื้นของอักษรย่อ — กระจายตาม id ให้คงที่ต่อคน (ไม่ใช่สื่อความหมาย) */
+const AVATAR_TONES = [
+  "bg-brand-50 text-brand-700",
+  "bg-sky-50 text-sky-700",
+  "bg-emerald-50 text-emerald-700",
+  "bg-violet-50 text-violet-700",
+  "bg-amber-50 text-amber-700",
+];
+
+const initial = (u) => (u?.firstName || u?.email || "?").trim().charAt(0);
+
 function UserPickerModal({
   title,
   users,
   current,
   preferredDepartmentId,
+  departments,
   saving,
   onPick,
   onClose,
 }) {
   const [q, setQ] = useState("");
+  const [active, setActive] = useState(0);
+
+  /** map: userId -> ชื่อสาขาที่เป็นหัวหน้าอยู่ (ใช้กันตั้งซ้อน 2 สาขา) */
+  const headOf = useMemo(() => {
+    const m = new Map();
+    for (const d of departments || []) {
+      if (d.head?.id) m.set(d.head.id, d.name);
+    }
+    return m;
+  }, [departments]);
 
   const list = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -479,7 +578,8 @@ function UserPickerModal({
       return (
         fullName(u).toLowerCase().includes(term) ||
         (u.email || "").toLowerCase().includes(term) ||
-        (u.department?.name || "").toLowerCase().includes(term)
+        (u.department?.name || "").toLowerCase().includes(term) ||
+        (u.position || "").toLowerCase().includes(term)
       );
     });
     // คนในสาขานั้นขึ้นก่อน เพื่อให้เลือกหัวหน้าได้ตรงกลุ่ม
@@ -493,76 +593,158 @@ function UserPickerModal({
       .slice(0, 100);
   }, [users, q, preferredDepartmentId]);
 
+  useEffect(() => setActive(0), [q]);
+
+  // คีย์ลัด: ↑ ↓ เลื่อน, Enter เลือก, Esc ปิด
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") return onClose();
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActive((i) => Math.min(i + 1, list.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActive((i) => Math.max(i - 1, 0));
+      } else if (e.key === "Enter") {
+        const u = list[active];
+        if (u && current?.id !== u.id && !saving) onPick(u);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [list, active, current, saving, onPick, onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-      <div className="flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h3 className="text-base font-semibold">{title}</h3>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      {/* ความสูงคงที่ ไม่ยืด-หดตามผลค้นหา เพื่อไม่ให้ modal กระตุกระหว่างพิมพ์ */}
+      <div className="flex h-[70vh] max-h-[560px] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h3 className="truncate pr-2 text-base font-semibold">{title}</h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
           >
             <FaTimes />
           </button>
         </div>
 
-        <div className="border-b border-slate-100 px-5 py-3">
+        <div className="shrink-0 border-b border-slate-100 px-5 py-3">
           <div className="relative">
             <FaSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="ค้นหาชื่อ อีเมล หรือสาขา..."
-              className="w-full rounded-xl border border-slate-300 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              placeholder="ค้นหาชื่อ อีเมล ตำแหน่ง หรือสาขา..."
+              className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
           </div>
         </div>
 
         <ul className="flex-1 divide-y divide-slate-100 overflow-y-auto">
-          {list.map((u) => {
+          {list.map((u, idx) => {
             const isCurrent = current?.id === u.id;
             const inDept =
               preferredDepartmentId != null &&
               (u.department?.id ?? u.departmentId) === preferredDepartmentId;
+            const roles = (u.userRoles || [])
+              .map((ur) => APPROVER_ROLE_LABEL[ur.role?.name])
+              .filter(Boolean);
+            // เตือนเมื่อกำลังเลือกหัวหน้าสาขา แต่คนนี้เป็นหัวหน้าสาขาอื่นอยู่แล้ว
+            const headsOther =
+              preferredDepartmentId != null &&
+              headOf.has(u.id) &&
+              !inDept &&
+              headOf.get(u.id);
+
             return (
               <li key={u.id}>
                 <button
                   onClick={() => !isCurrent && !saving && onPick(u)}
+                  onMouseEnter={() => setActive(idx)}
                   disabled={isCurrent || saving}
-                  className={`flex w-full items-center justify-between gap-3 px-5 py-3 text-left transition ${
+                  className={`flex w-full items-start gap-3 px-5 py-3 text-left transition ${
                     isCurrent
                       ? "cursor-not-allowed bg-slate-50"
-                      : "hover:bg-brand-50"
+                      : idx === active
+                        ? "bg-brand-50"
+                        : "hover:bg-brand-50/60"
                   }`}
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-800">
-                      {fullName(u)}
-                    </p>
+                  <span
+                    className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                      AVATAR_TONES[u.id % AVATAR_TONES.length]
+                    }`}
+                  >
+                    {initial(u)}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-medium text-slate-800">
+                        {fullName(u)}
+                      </p>
+                      {isCurrent && (
+                        <span className="shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[10px] text-slate-600">
+                          ปัจจุบัน
+                        </span>
+                      )}
+                      {!isCurrent && inDept && (
+                        <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700">
+                          ในสาขา
+                        </span>
+                      )}
+                    </div>
+
                     <p className="truncate text-xs text-slate-500">
-                      {u.department?.name || "ไม่ระบุสาขา"} · {u.email}
+                      {u.position || "ไม่ระบุตำแหน่ง"} · {u.department?.name || "ไม่ระบุสาขา"}
                     </p>
+                    <p className="truncate text-[11px] text-slate-400">{u.email}</p>
+
+                    {(roles.length > 0 || headsOther) && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {roles.map((r) => (
+                          <span
+                            key={r}
+                            className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-600"
+                          >
+                            {r}
+                          </span>
+                        ))}
+                        {headsOther && (
+                          <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">
+                            <FaExclamationTriangle className="h-2.5 w-2.5" />
+                            เป็นหัวหน้า {headsOther} อยู่แล้ว
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {isCurrent ? (
-                    <span className="shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[11px] text-slate-600">
-                      ปัจจุบัน
-                    </span>
-                  ) : inDept ? (
-                    <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700">
-                      ในสาขา
-                    </span>
-                  ) : null}
                 </button>
               </li>
             );
           })}
           {list.length === 0 && (
-            <li className="py-8 text-center text-sm text-slate-500">
-              ไม่พบผู้ใช้งานที่ค้นหา
+            <li className="flex h-full flex-col items-center justify-center gap-2 py-10 text-slate-400">
+              <FaSearch className="h-6 w-6" />
+              <p className="text-sm">ไม่พบผู้ใช้งานที่ค้นหา</p>
+              <p className="text-xs">ลองค้นด้วยชื่อ อีเมล หรือชื่อสาขา</p>
             </li>
           )}
         </ul>
+
+        <div className="flex shrink-0 items-center justify-between border-t border-slate-100 bg-slate-50 px-5 py-2.5 text-[11px] text-slate-500">
+          <span>
+            แสดง {list.length} จาก {users.length} คน
+            {list.length === 100 && " (จำกัด 100 รายการแรก)"}
+          </span>
+          <span className="hidden sm:inline">
+            ↑ ↓ เลื่อน · Enter เลือก · Esc ปิด
+          </span>
+        </div>
       </div>
     </div>
   );
