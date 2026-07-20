@@ -6,6 +6,7 @@ import { ChevronDown, Clock } from "lucide-react";
 import Swal from "sweetalert2";
 import PropTypes from "prop-types";
 import { API, apiEndpoints } from "../../utils/api";
+import { scrollMainToTop } from "../../utils/scroll";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 dayjs.extend(isBetween);
@@ -49,11 +50,10 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
   const [expandedComment, setExpandedComment] = useState(null);
 
   // เปลี่ยนหน้าแล้วเลื่อนขึ้นบนสุด (รายการยาว กดหน้าถัดไปแล้วไม่ค้างอยู่ล่างสุด)
+  // ตัว scroll จริงคือ <main> ใน AppLayout ไม่ใช่ window จึงใช้ helper เลื่อน element นั้น
   const goToPage = (page) => {
     setCurrentPage(page);
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    scrollMainToTop();
   };
 
   const fetchLeaveRequests = async () => {
