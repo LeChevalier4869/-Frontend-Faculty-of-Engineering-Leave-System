@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { apiEndpoints } from "../../utils/api";
+import { useGoBack } from "../../utils/useGoBack";
 import { FaUserAlt } from "react-icons/fa";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
@@ -30,6 +31,8 @@ const ROLE_LABEL_TH = {
 export default function UserInfo() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // ปุ่มย้อนกลับ: ถอยไปหน้าก่อน ถ้าไม่มีประวัติให้ไปหน้าจัดการผู้ใช้งาน
+  const goBack = useGoBack("/admin/manage-user");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -131,12 +134,13 @@ export default function UserInfo() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center font-kanit text-slate-900 px-4">
         <div className="w-full max-w-md rounded-2xl bg-white border border-rose-200 shadow-sm p-6 text-center">
           <p className="text-rose-600 font-medium">ไม่พบข้อมูลผู้ใช้งาน</p>
-          <Link
-            to="/admin/manage-user"
+          <button
+            type="button"
+            onClick={goBack}
             className="inline-block mt-4 px-4 py-2 rounded-xl bg-slate-800 text-white text-sm hover:bg-slate-700"
           >
-            ← กลับไปหน้าจัดการผู้ใช้งาน
-          </Link>
+            ← ย้อนกลับ
+          </button>
         </div>
       </div>
     );
@@ -298,12 +302,13 @@ export default function UserInfo() {
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <Link
-              to="/admin/manage-user"
+            <button
+              type="button"
+              onClick={goBack}
               className="inline-block px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium transition"
             >
-              ← กลับไปหน้าจัดการผู้ใช้งาน
-            </Link>
+              ← ย้อนกลับ
+            </button>
             <Link
               to={`/admin/user/${id}`}
               className="inline-block px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition"

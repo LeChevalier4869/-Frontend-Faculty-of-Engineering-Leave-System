@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useGoBack } from "../../utils/useGoBack";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
@@ -26,6 +27,7 @@ const ROLE_LABEL_TH = {
 export default function UserEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin/manage-user");
   const { user: currentUser } = useAuth();
 
   const currentUserRoleNames = currentUser?.roles || currentUser?.role || [];
@@ -462,7 +464,7 @@ export default function UserEdit() {
             <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => navigate("/admin/manage-user")}
+                onClick={goBack}
                 className="px-4 py-2 rounded-xl border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50 transition"
               >
                 ยกเลิก

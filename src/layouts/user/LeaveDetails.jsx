@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useGoBack } from "../../utils/useGoBack";
 import Swal from "sweetalert2";
 import { FaFileAlt } from "react-icons/fa";
 import axios from "axios";
@@ -11,6 +12,8 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 export default function LeaveDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // ปุ่มย้อนกลับ: ถอยไปหน้าก่อน ถ้าเปิดลิงก์ตรง ๆ ให้ไปหน้ารายการลา
+  const goBack = useGoBack("/leave");
   const [leave, setLeave] = useState(null);
   const [lastLeave, setLastLeave] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -529,7 +532,7 @@ export default function LeaveDetail() {
         {/* ---------- ปุ่มดำเนินการ ---------- */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
-            onClick={() => navigate(-1)}
+            onClick={goBack}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
             ← ย้อนกลับ

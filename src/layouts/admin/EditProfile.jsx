@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
+import { useGoBack } from "../../utils/useGoBack";
 import useAuth from "../../hooks/useAuth";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -9,6 +10,7 @@ import { apiEndpoints } from "../../utils/api";
 export default function EditProfile() {
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
+  const goBack = useGoBack("/profile");
 
   /* ---------- StyledSelect ---------- */
   function StyledSelect({ label, name, value, onChange, options }) {
@@ -231,7 +233,7 @@ export default function EditProfile() {
           </div>
 
           <div className="flex justify-end gap-4">
-            <Button text="ยกเลิก" onClick={() => navigate("/profile")} color="gray" />
+            <Button text="ยกเลิก" onClick={goBack} color="gray" />
             <Button text="บันทึก" submit color="brand" loading={isSubmitting} />
           </div>
         </form>
