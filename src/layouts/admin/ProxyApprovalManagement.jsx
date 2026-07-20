@@ -436,14 +436,16 @@ const ProxyApprovalManagement = () => {
 
   const handleProxyUserSearch = (query) => {
     setProxySearchQuery(query);
-    if (!query) {
-      setProxySuggestions([]);
-      return;
-    }
 
     // ใช้เฉพาะผู้ที่รับมอบอำนาจระดับนี้ได้จริง
     // เดิม fallback เป็น allUsers เมื่อ fetch ล้มเหลว ทำให้เสนอชื่อ "ทุกคนในระบบ"
     const availableUsers = proxyUsers;
+
+    if (!query) {
+      // ไม่มีคำค้น (เช่นเพิ่ง focus): โชว์รายชื่อผู้รับมอบที่เลือกได้ทั้งหมด
+      setProxySuggestions(availableUsers.slice(0, 10));
+      return;
+    }
 
     const q = query.toLowerCase().replace(/\s+/g, " ");
     const result = availableUsers
@@ -1235,6 +1237,7 @@ const ProxyApprovalManagement = () => {
                       <input
                         type="text"
                         value={proxySearchQuery}
+                        onFocus={() => handleProxyUserSearch(proxySearchQuery)}
                         onChange={(e) => {
                           const value = e.target.value;
                           setProxySearchQuery(value);
