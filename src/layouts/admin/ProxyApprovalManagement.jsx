@@ -125,18 +125,23 @@ const ProxyApprovalManagement = () => {
   const fetchOriginalApproversForLevel = async (level) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await API.get(`/auth/approvers-for-level/${level}?date=${new Date().toISOString().split('T')[0]}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
 
-      // กรองเฉพาะคนที่ไม่ใช่ proxy (เฉพาะคนที่มี role จริง)
-      const originalApprovers = response.data.data.filter(user =>
-        !user.isProxy &&
-        currentUser
-        // ลบการ filter user.id !== currentUser.id เพราะ backend จัดการให้แล้ว
+      // ระดับ 1 (หัวหน้าสาขา) มีคนละคนในแต่ละสาขา ต้องจำกัดเฉพาะสาขาของผู้ใช้
+      // ไม่งั้นจะได้หัวหน้าสาขาอื่นที่ไม่เกี่ยวข้องกันเลย
+      const scopeDepartmentId =
+        Number(level) === 1 ? currentUser?.departmentId : undefined;
+
+      const response = await API.get(
+        apiEndpoints.getApproversForLevel(
+          level,
+          new Date().toISOString().split("T")[0],
+          scopeDepartmentId
+        ),
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      return originalApprovers;
+      // เอาเฉพาะผู้ที่ถือบทบาทจริง (ไม่ใช่ผู้รับมอบอำนาจ)
+      return (response.data.data || []).filter((user) => !user.isProxy);
     } catch (error) {
       console.error('Error fetching original approvers:', error);
       return [];
@@ -147,16 +152,19 @@ const ProxyApprovalManagement = () => {
   const autoMapOriginalApprover = async (level) => {
     const originalApprovers = await fetchOriginalApproversForLevel(level);
 
-    if (originalApprovers.length > 0) {
-      // เลือก original approver คนแรกที่พบ
-      const firstApprover = originalApprovers[0];
-      pickOriginalUser(firstApprover);
-
-    } else {
-      // ถ้าไม่พบ original approver ให้ล้างค่าที่เลือกไว้
+    if (originalApprovers.length === 0) {
       clearOriginalUser();
-      console.log('🔍 No original approvers found for level:', level);
+      setOriginalSuggestions([]);
+      return;
     }
+
+    // ผู้ใช้ปัจจุบันถือบทบาทนี้อยู่ -> ถือว่ากำลังมอบอำนาจของตัวเอง
+    // (เดิมหยิบ originalApprovers[0] แบบสุ่ม จึงขึ้นชื่อคนอื่นที่เป็นหัวหน้าสาขาอื่น)
+    const self = originalApprovers.find((u) => u.id === currentUser?.id);
+    pickOriginalUser(self || originalApprovers[0]);
+
+    // ถ้ามีหลายคนให้เลือกเองได้ ไม่ต้องเดา
+    setOriginalSuggestions(originalApprovers.length > 1 ? originalApprovers : []);
   };
 
   // เมื่อเปลี่ยน level ให้ดึงข้อมูล proxy ใหม่
@@ -426,8 +434,9 @@ const ProxyApprovalManagement = () => {
       return;
     }
 
-    // ใช้ proxyUsers ที่มีข้อมูลจาก fetchAvailableProxies
-    const availableUsers = proxyUsers.length > 0 ? proxyUsers : allUsers;
+    // ใช้เฉพาะผู้ที่รับมอบอำนาจระดับนี้ได้จริง
+    // เดิม fallback เป็น allUsers เมื่อ fetch ล้มเหลว ทำให้เสนอชื่อ "ทุกคนในระบบ"
+    const availableUsers = proxyUsers;
 
     const q = query.toLowerCase().replace(/\s+/g, " ");
     const result = availableUsers
