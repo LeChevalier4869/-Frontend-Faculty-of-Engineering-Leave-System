@@ -37,6 +37,9 @@ const ProxyApprovalManagement = () => {
   const [proxyLastName, setProxyLastName] = useState('');
   const [originalSuggestions, setOriginalSuggestions] = useState([]);
   const [proxySuggestions, setProxySuggestions] = useState([]);
+  // รายชื่อผู้มีสิทธิ์เป็น "ผู้มอบอำนาจ" ของระดับที่เลือก (สำหรับ autocomplete)
+  // ระดับ 1 (หัวหน้าสาขา) ถูกจำกัดเฉพาะสาขาของผู้ใช้อยู่แล้วใน fetchOriginalApproversForLevel
+  const [originalApproverPool, setOriginalApproverPool] = useState([]);
   const [userRoles, setUserRoles] = useState({});
   const [roleConflict, setRoleConflict] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -148,23 +151,23 @@ const ProxyApprovalManagement = () => {
     }
   };
 
-  // ฟังก์ชันสำหรับ map original approver อัตโนมัติเมื่อเปลี่ยนระดับ
+  // เมื่อเปลี่ยนระดับ: โหลดรายชื่อผู้มีสิทธิ์เป็นผู้มอบอำนาจของระดับนั้นไว้เป็น pool
+  // ให้ค้นหา/เลือกเองได้ และตั้งค่าเริ่มต้นให้อัตโนมัติ (ตัวผู้ใช้เองถ้ามีสิทธิ์ ไม่งั้นคนแรก)
   const autoMapOriginalApprover = async (level) => {
     const originalApprovers = await fetchOriginalApproversForLevel(level);
+    setOriginalApproverPool(originalApprovers);
+    setOriginalSuggestions([]);
+    setOriginalSearchQuery("");
 
     if (originalApprovers.length === 0) {
       clearOriginalUser();
-      setOriginalSuggestions([]);
       return;
     }
 
-    // ผู้ใช้ปัจจุบันถือบทบาทนี้อยู่ -> ถือว่ากำลังมอบอำนาจของตัวเอง
-    // (เดิมหยิบ originalApprovers[0] แบบสุ่ม จึงขึ้นชื่อคนอื่นที่เป็นหัวหน้าสาขาอื่น)
+    // ค่าเริ่มต้น: ผู้ใช้ปัจจุบันถ้าถือบทบาทนี้ (มอบอำนาจของตัวเอง) ไม่งั้นคนแรก
+    // ผู้ใช้เปลี่ยนได้เองผ่านช่องค้นหา (โดยเฉพาะระดับ 1 ที่มีหัวหน้าหลายสาขา)
     const self = originalApprovers.find((u) => u.id === currentUser?.id);
     pickOriginalUser(self || originalApprovers[0]);
-
-    // ถ้ามีหลายคนให้เลือกเองได้ ไม่ต้องเดา
-    setOriginalSuggestions(originalApprovers.length > 1 ? originalApprovers : []);
   };
 
   // เมื่อเปลี่ยน level ให้ดึงข้อมูล proxy ใหม่
@@ -408,14 +411,18 @@ const ProxyApprovalManagement = () => {
   };
 
   const handleOriginalUserSearch = (query) => {
+    // ค้นจาก pool ของระดับที่เลือก (ระดับ 1 จำกัดสาขาแล้ว) ไม่ใช่ทุกคนในระบบ
+    const pool =
+      originalApproverPool.length > 0 ? originalApproverPool : userLand;
+
     if (!query) {
-      setOriginalSuggestions([]);
+      // ไม่มีคำค้น: โชว์ทั้ง pool ให้เลือก (เหมือน dropdown) จำกัด 10 รายการ
+      setOriginalSuggestions(pool.slice(0, 10));
       return;
     }
 
-
     const q = query.toLowerCase().replace(/\s+/g, " ");
-    const result = userLand
+    const result = pool
       .filter((u) => {
         const name = `${u.prefixName} ${u.firstName} ${u.lastName}`
           .toLowerCase()
@@ -1120,7 +1127,10 @@ const ProxyApprovalManagement = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50"
+          onMouseDown={(e) => e.target === e.currentTarget && setShowModal(false)}
+        >
           <div className="w-[min(92vw,720px)] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl font-kanit flex flex-col min-h-0">
             <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2.5">
               <div className="flex flex-col gap-1">
@@ -1144,38 +1154,74 @@ const ProxyApprovalManagement = () => {
               <div className="flex-1 overflow-y-auto px-3 py-2.5 min-h-0">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 relative">
 
-                  {/* Original Approver Display (Auto-mapped) */}
+                  {/* Original Approver — เลือกอัตโนมัติตามระดับ แต่ค้นหา/เปลี่ยนคนได้ */}
                   <div className="col-span-2">
                     <label className="mb-1 block text-sm text-slate-700">
-                      ผู้มอบอำนาจ (Original Approver) <span className="text-emerald-600 text-xs">* จะถูกเลือกอัตโนมัติตามระดับผู้อนุมัติ</span>
+                      ผู้มอบอำนาจ (Original Approver) <span className="text-rose-500">*</span>
+                      <span className="ml-1 text-xs text-slate-400">— ระบบเลือกให้ตามระดับ พิมพ์เพื่อเปลี่ยนคน</span>
                     </label>
-                    {selectedOriginalUser ? (
-                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 border border-emerald-200">
+
+                    {!formData.approverLevel ? (
+                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 border border-amber-200">
+                        กรุณาเลือกระดับผู้อนุมัติก่อน
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={originalSearchQuery}
+                          onFocus={() => handleOriginalUserSearch(originalSearchQuery)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setOriginalSearchQuery(value);
+                            handleOriginalUserSearch(value);
+                          }}
+                          className={inputStyle}
+                          placeholder="พิมพ์เพื่อค้นหาผู้มอบอำนาจ"
+                        />
+
+                        {originalSuggestions.length > 0 && (
+                          <div className="absolute left-0 right-0 top-full z-10 mt-2 max-h-64 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                            {originalSuggestions.map((u) => (
+                              <button
+                                key={u.id}
+                                type="button"
+                                onClick={() => pickOriginalUser(u)}
+                                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="truncate">{formatUserName(u)}</span>
+                                  {u.department?.name && (
+                                    <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                      {u.department.name}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="shrink-0 text-xs text-slate-500">ID: {u.id}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedOriginalUser && (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 border border-emerald-200">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">ผู้มอบอำนาจ: {formatUserName(selectedOriginalUser)} (ID: {selectedOriginalUser.id})</span>
-                          <span className="px-2 py-1 rounded-full bg-emerald-200 text-emerald-800 font-medium">
-                            {getUserRole(selectedOriginalUser.id)}
-                          </span>
+                          {selectedOriginalUser.department?.name && (
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800">
+                              {selectedOriginalUser.department.name}
+                            </span>
+                          )}
                         </div>
                         <button
                           type="button"
-                          onClick={() => {
-                            clearOriginalUser();
-                            // ถ้าต้องการเลือกใหม่ ให้เรียก autoMapOriginalApprover อีกครั้ง
-                            if (formData.approverLevel) {
-                              autoMapOriginalApprover(formData.approverLevel);
-                            }
-                          }}
+                          onClick={clearOriginalUser}
                           className="text-xs text-emerald-700 hover:text-emerald-900 underline underline-offset-2"
                         >
-                          เปลี่ยนคน
+                          เปลี่ยน
                         </button>
-                      </div>
-                    ) : (
-                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 border border-amber-200">
-                        <div className="flex items-center gap-2">
-                          <span>กรุณาเลือกระดับผู้อนุมัติเพื่อให้ระบบเลือกผู้มอบอำนาจโดยอัตโนมัติ</span>
-                        </div>
                       </div>
                     )}
                   </div>
