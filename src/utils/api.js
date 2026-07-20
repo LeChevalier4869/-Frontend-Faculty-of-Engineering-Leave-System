@@ -77,6 +77,14 @@ export const apiEndpoints = {
   // admin manage department
   departmentsAdmin: `${BASE_URL}/admin/departments`,
   departmentByIdAdmin: (id) => `${BASE_URL}/admin/departments/${id}`,
+  assignDepartmentHead: `${BASE_URL}/admin/assign-head`, // POST { departmentId, headId }
+
+  // admin manage approver positions (ผู้อนุมัติระดับคณะ)
+  approverPositions: `${BASE_URL}/admin/approver-positions`, // GET, POST { level, userId }
+  approverPositionByLevel: (level) =>
+    `${BASE_URL}/admin/approver-positions/${level}`, // DELETE
+  approverPositionHistory: (level) =>
+    `${BASE_URL}/admin/approver-positions/${level}/history`, // GET
 
   // admin manage organization
   organizationCreate: `${BASE_URL}/admin/organizations`,

@@ -7,12 +7,14 @@ import {
   FaCalendarAlt,
   FaFileSignature,
   FaUserShield,
+  FaUserCheck,
 } from "react-icons/fa";
 
 import UserManageContent from "../../components/admin/manage/UserManageContent";
 import PositionNumberManageContent from "../../components/admin/manage/PositionNumberManageContent";
 import DepartmentManageContent from "../../components/admin/manage/OrganizationManageContent";
 import HolidayManageContent from "../../components/admin/manage/HolidayManageContent";
+import ApproverManageContent from "../../components/admin/manage/ApproverManageContent";
 import AddOtherRequest from "./AddOtherRequest";
 import ProxyApprovalManagement from "./ProxyApprovalManagement";
 export default function ManagementPage() {
@@ -26,6 +28,7 @@ export default function ManagementPage() {
     { id: "users", label: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
     { id: "positions", label: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
     { id: "departments", label: "จัดการแผนก", icon: <FaBuilding /> },
+    { id: "approvers", label: "จัดการผู้อนุมัติ", icon: <FaUserCheck /> },
     { id: "holidays", label: "จัดการวันหยุด", icon: <FaCalendarAlt /> },
     { id: "leaveRequests", label: "บันทึกคำขอการลา", icon: <FaFileSignature /> },
     { id: "proxy", label: "จัดการการมอบอำนาจ", icon: <FaUserShield /> },
@@ -65,6 +68,9 @@ export default function ManagementPage() {
 
       case "departments":
         return <DepartmentManagement />;
+
+      case "approvers":
+        return <ApproverManageContent />;
 
       case "holidays":
         return <HolidayManagement />;
@@ -107,7 +113,7 @@ export default function ManagementPage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-3xl shadow-sm border overflow-hidden mb-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
