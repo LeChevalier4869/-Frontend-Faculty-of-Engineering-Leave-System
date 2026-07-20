@@ -778,6 +778,7 @@ export default function LeaveDetail() {
 const formatDate = (dateStr) => {
   if (!dateStr) return "-";
   const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "-"; // กันวันที่ไม่ถูกต้อง ไม่ให้ render พัง
   const day = date.getDate();
   const month = date.toLocaleDateString("th-TH", { month: "long" });
   const year = date.getFullYear() + 543;
