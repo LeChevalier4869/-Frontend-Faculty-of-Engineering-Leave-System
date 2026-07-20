@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { FaSearch, FaFilter, FaCalendarAlt, FaUser, FaFileAlt, FaEye, FaDownload, FaTimes, FaSync } from 'react-icons/fa';
+import { FaSearch, FaCalendarAlt, FaFileAlt, FaEye, FaDownload, FaTimes } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { API, apiEndpoints } from '../../utils/api';
+import { API } from '../../utils/api';
 import AuditLogService from '../../services/auditLogService';
 import Swal from 'sweetalert2';
 
@@ -26,16 +26,12 @@ const AuditLogManagement = () => {
     entityId: '',
     ipAddress: ''
   });
-  const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [showUserSuggestions, setShowUserSuggestions] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [users, setUsers] = useState([]);
-  const [entityData, setEntityData] = useState(null);
-  const [showEntityModal, setShowEntityModal] = useState(false);
-  const [entityLoading, setEntityLoading] = useState(false);
 
   // Action translations
   const actionTranslations = {
@@ -44,44 +40,48 @@ const AuditLogManagement = () => {
     'DELETE': 'ลบ',
     'APPROVE': 'อนุมัติ',
     'REJECT': 'ปฏิเสธ',
+    'IMPORT': 'นำเข้าข้อมูล',
+    'SELF_APPROVE': 'ดำเนินการคำขอตนเอง',
+    // Role / approver authority
+    'ROLE_GRANT': 'ให้บทบาท',
+    'ROLE_REVOKE': 'ถอนบทบาท',
+    'ASSIGN_HEAD': 'แต่งตั้งหัวหน้าสาขา',
+    'APPROVER_ASSIGN': 'แต่งตั้งผู้อนุมัติ',
+    'APPROVER_VACATE': 'ปลดผู้อนุมัติ',
     // Leave Request Actions
-    'Create Request': 'สร้างคำขอ',
     'ADMIN_CANCEL_LEAVE_REQUEST': 'แอดมินยกเลิกคำขอลา',
-    'AdminCreateLeave': 'แอดมินสร้างการลา',
-    // Proxy Approval Actions
-    'Create Proxy Approval': 'สร้างการมอบอำนาจ',
-    'Create Daily Proxy Approval': 'สร้างการมอบอำนาจรายวัน',
-    'Update Proxy Approval': 'อัปเดตการมอบอำนาจ',
-    'Delete Proxy Approval': 'ลบการมอบอำนาจ',
+    'LEAVE_REQUEST_REJECTED': 'ปฏิเสธคำขอลา',
+    'LEAVE_BALANCE_MANUAL_RESET': 'รีเซ็ตวันลา',
     // Status Actions
     'ACTIVE': 'ใช้งาน',
     'CANCELLED': 'ยกเลิก',
     'EXPIRED': 'หมดอายุ',
-    // Additional common actions
+    // Session (excluded from logging, kept for old rows)
     'LOGIN': 'เข้าสู่ระบบ',
     'LOGOUT': 'ออกจากระบบ',
-    'VIEW': 'ดูข้อมูล',
-    'EDIT': 'แก้ไข',
-    'CREATE_USER': 'สร้างผู้ใช้',
-    'UPDATE_USER': 'อัปเดตผู้ใช้',
-    'DELETE_USER': 'ลบผู้ใช้',
-    'CREATE_DEPARTMENT': 'สร้างแผนก',
-    'UPDATE_DEPARTMENT': 'อัปเดตแผนก',
-    'DELETE_DEPARTMENT': 'ลบแผนก',
-    'CREATE_ORGANIZATION': 'สร้างองค์กร',
-    'UPDATE_ORGANIZATION': 'อัปเดตองค์กร',
-    'DELETE_ORGANIZATION': 'ลบองค์กร',
-    'CREATE_HOLIDAY': 'สร้างวันหยุด',
-    'UPDATE_HOLIDAY': 'อัปเดตวันหยุด',
-    'DELETE_HOLIDAY': 'ลบวันหยุด',
-    'CREATE_LEAVE_TYPE': 'สร้างประเภทการลา',
-    'UPDATE_LEAVE_TYPE': 'อัปเดตประเภทการลา',
-    'DELETE_LEAVE_TYPE': 'ลบประเภทการลา',
-    // Position Number Actions
-    'UPDATE_POSITION_NUMBER': 'อัปเดตเลขที่ตำแหน่ง',
-    'CREATE_PERSONNEL_TYPE': 'สร้างประเภทบุคคล',
-    'UPDATE_PERSONNEL_TYPE': 'อัปเดตประเภทบุคคล',
-    'DELETE_PERSONNEL_TYPE': 'ลบประเภทบุคคล'
+    // Legacy free-text (คงไว้ให้ log เก่าอ่านออก)
+    'Create Request': 'สร้างคำขอ',
+    'Create Proxy Approval': 'สร้างการมอบอำนาจ',
+    'Create Daily Proxy Approval': 'สร้างการมอบอำนาจรายวัน',
+  };
+
+  // สี + ไอคอน ต่อการกระทำ ใช้ทั้งตารางและ modal ให้สอดคล้องกัน
+  const getActionStyle = (action) => {
+    const base = { create: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      update: 'bg-amber-50 text-amber-700 border-amber-200',
+      delete: 'bg-rose-50 text-rose-700 border-rose-200',
+      approve: 'bg-sky-50 text-sky-700 border-sky-200',
+      reject: 'bg-rose-50 text-rose-700 border-rose-200',
+      grant: 'bg-violet-50 text-violet-700 border-violet-200',
+      neutral: 'bg-slate-100 text-slate-600 border-slate-200' };
+    const a = String(action || '');
+    if (a === 'CREATE' || a === 'IMPORT' || a.startsWith('Create')) return base.create;
+    if (a === 'UPDATE') return base.update;
+    if (a === 'DELETE' || a === 'ROLE_REVOKE' || a === 'APPROVER_VACATE' || a.includes('CANCEL') || a === 'LEAVE_REQUEST_REJECTED') return base.delete;
+    if (a === 'APPROVE' || a === 'SELF_APPROVE') return base.approve;
+    if (a === 'REJECT') return base.reject;
+    if (a === 'ROLE_GRANT' || a === 'ASSIGN_HEAD' || a === 'APPROVER_ASSIGN') return base.grant;
+    return base.neutral;
   };
 
   // Entity type translations
@@ -96,6 +96,7 @@ const AuditLogManagement = () => {
     'Rank': 'ตำแหน่ง',
     'PersonnelType': 'ประเภทบุคคล',
     'ProxyApproval': 'การมอบอำนาจ',
+    'ApproverPosition': 'ตำแหน่งผู้อนุมัติ',
     'AuditLog': 'บันทึกการทำงาน',
     'Setting': 'การตั้งค่า'
   };
@@ -166,11 +167,6 @@ const AuditLogManagement = () => {
     }));
   };
 
-  const applyFilters = () => {
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-    fetchAuditLogs();
-  };
-
   const clearFilters = () => {
     setFilters({
       userName: '',
@@ -221,83 +217,32 @@ const AuditLogManagement = () => {
     setShowDetailModal(true);
   };
 
-  const viewEntityData = async (log) => {
-    if (log?.action === 'UPDATE' && log?.entityData) {
-      try {
-        const parsed = typeof log.entityData === 'string' ? JSON.parse(log.entityData) : log.entityData;
-        const payload = {
-          ...parsed,
-          entityType: log.entityType,
-          entityId: log.entityId,
-          id: log.entityId,
-        };
-
-        setEntityData({
-          data: payload,
-          isDeleted: false,
-          timestamp: log.createdAt,
-        });
-        setShowEntityModal(true);
-        return;
-      } catch (error) {
-        console.error('Failed to parse audit log entityData:', error);
-      }
-    }
-
-    if (!log.entityId || !log.entityType) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'ไม่สามารถดูข้อมูลได้',
-        text: 'ไม่มีข้อมูล entity ที่สามารถดูได้',
-        confirmButtonText: 'ตกลง'
-      });
-      return;
-    }
-
-    setEntityLoading(true);
-    try {
-      const response = await API.get(`${apiEndpoints.auditLogsEntity.replace(':entityType', log.entityType).replace(':entityId', log.entityId)}`);
-      setEntityData(response.data);
-      setShowEntityModal(true);
-    } catch (error) {
-      console.error('Failed to fetch entity data:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'เกิดข้อผิดพลาด',
-        text: 'ไม่สามารถดึงข้อมูล entity ได้',
-        confirmButtonText: 'ตกลง'
-      });
-    } finally {
-      setEntityLoading(false);
-    }
-  };
-
   const exportLogs = async () => {
     try {
       const options = { ...filters };
       const response = await AuditLogService.getAllAuditLogsAll(options);
 
-      // สร้าง CSV content พร้อมสนับสนุนภาษาไทย
-      const csvContent = [
-        ['ID', 'รหัสผู้ใช้', 'ชื่อผู้ใช้', 'การกระทำ', 'ประเภท', 'รหัสเอนทิตี', 'ที่อยู่ IP', 'รายละเอียด', 'รหัสคำขอลา', 'วันที่สร้าง'],
-        ...response.data.map(log => {
-          const translatedAction = actionTranslations[log.action] || log.action || '-';
-          const translatedEntityType = entityTypeTranslations[log.entityType] || log.entityType || '-';
+      // escape ค่าแต่ละช่องให้ปลอดภัย (กัน comma / newline / เครื่องหมายคำพูด ทำคอลัมน์เพี้ยน)
+      const esc = (v) => {
+        const s = String(v ?? '');
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
 
-          return [
-            log.id || '',
-            log.userId || '',
-            `${log.user?.prefixName || ''} ${log.user?.firstName || ''} ${log.user?.lastName || ''}`.trim() || '-',
-            translatedAction,
-            translatedEntityType,
-            log.entityId || '',
-            log.ipAddress || '',
-            log.details || '',
-            log.leaveRequestId || '',
-            format(new Date(log.createdAt), 'yyyy-MM-dd HH:mm:ss')
-          ];
-        })
-      ].map(row => row.join(',')).join('\n');
+      // เก็บทั้งการกระทำภาษาไทย (คนอ่าน) และ code (เครื่องกรอง) + วันเวลาแบบ ISO
+      const csvContent = [
+        ['วันที่เวลา', 'ผู้ทำรายการ', 'อีเมล', 'การกระทำ', 'action_code', 'ประเภทข้อมูล', 'รหัสข้อมูล', 'รายละเอียด', 'ที่อยู่ IP'],
+        ...response.data.map(log => [
+          format(new Date(log.createdAt), 'yyyy-MM-dd HH:mm:ss'),
+          `${log.user?.prefixName || ''}${log.user?.firstName || ''} ${log.user?.lastName || ''}`.trim() || '-',
+          log.user?.email || '',
+          actionTranslations[log.action] || log.action || '-',
+          log.action || '',
+          entityTypeTranslations[log.entityType] || log.entityType || '-',
+          log.entityId || '',
+          log.details || '',
+          log.ipAddress || '',
+        ]),
+      ].map(row => row.map(esc).join(',')).join('\n');
 
       // เพิ่ม UTF-8 BOM เพื่อให้อ่านภาษาไทยใน Excel ได้ถูกต้อง
       const BOM = '\uFEFF';
@@ -312,7 +257,7 @@ const AuditLogManagement = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (error) {
+    } catch {
       Swal.fire({
         icon: 'error',
         title: 'เกิดข้อผิดพลาด',
@@ -320,6 +265,96 @@ const AuditLogManagement = () => {
         confirmButtonText: 'ตกลง'
       });
     }
+  };
+
+  // ย่อ user-agent ให้อ่านง่าย (เบราว์เซอร์ + ระบบปฏิบัติการ) แทนสตริงดิบยาว ๆ
+  const summarizeUserAgent = (ua) => {
+    const s = String(ua || '');
+    const browser =
+      /Edg\//.test(s) ? 'Edge' :
+      /Chrome\//.test(s) ? 'Chrome' :
+      /Firefox\//.test(s) ? 'Firefox' :
+      /Safari\//.test(s) ? 'Safari' : 'เบราว์เซอร์อื่น';
+    const os =
+      /Windows/.test(s) ? 'Windows' :
+      /Mac OS/.test(s) ? 'macOS' :
+      /Android/.test(s) ? 'Android' :
+      /iPhone|iPad/.test(s) ? 'iOS' :
+      /Linux/.test(s) ? 'Linux' : '';
+    return os ? `${browser} · ${os}` : browser;
+  };
+
+  // แสดงค่าที่อ่านง่าย (ไม่ dump object/JSON ดิบ)
+  const formatValue = (v) => {
+    if (v === null || v === undefined || v === '') return '—';
+    if (typeof v === 'boolean') return v ? 'ใช่' : 'ไม่ใช่';
+    if (typeof v === 'object') return Array.isArray(v) ? v.join(', ') : JSON.stringify(v);
+    return String(v);
+  };
+
+  // แปลง entityData ที่บันทึกไว้เป็นตาราง "ก่อน → หลัง" หรือรายการค่า (แทน <pre> JSON)
+  const renderEntitySnapshot = (log) => {
+    if (!log?.entityData) return null;
+    let data;
+    try {
+      data = typeof log.entityData === 'string' ? JSON.parse(log.entityData) : log.entityData;
+    } catch {
+      return null;
+    }
+    if (!data || typeof data !== 'object') return null;
+
+    // กรณีมี before/after (การแก้ไข)
+    if (data.oldData && data.newData) {
+      const keys = [...new Set([...Object.keys(data.oldData), ...Object.keys(data.newData)])]
+        .filter((k) => JSON.stringify(data.oldData[k]) !== JSON.stringify(data.newData[k]));
+      if (keys.length === 0) return null;
+      return (
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-500">การเปลี่ยนแปลง</label>
+          <div className="overflow-hidden rounded-lg border border-slate-200">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-3 py-2 font-semibold">ฟิลด์</th>
+                  <th className="px-3 py-2 font-semibold">เดิม</th>
+                  <th className="px-3 py-2 font-semibold">ใหม่</th>
+                </tr>
+              </thead>
+              <tbody>
+                {keys.map((k) => (
+                  <tr key={k} className="border-t border-slate-100">
+                    <td className="px-3 py-2 font-medium text-slate-700">{k}</td>
+                    <td className="px-3 py-2 text-rose-600 line-through decoration-rose-300">{formatValue(data.oldData[k])}</td>
+                    <td className="px-3 py-2 text-emerald-700">{formatValue(data.newData[k])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // กรณี snapshot ธรรมดา (สร้าง/ลบ) — แสดงเป็นรายการ key -> value
+    const entries = Object.entries(data).filter(
+      ([k]) => !['diff', 'timestamp', 'approverLevel'].includes(k)
+    );
+    if (entries.length === 0) return null;
+    return (
+      <div>
+        <label className="mb-1 block text-xs font-medium text-slate-500">
+          ข้อมูล{log.action === 'DELETE' ? 'ก่อนลบ' : 'ที่บันทึกไว้'}
+        </label>
+        <dl className="grid grid-cols-1 gap-x-4 gap-y-1 rounded-lg border border-slate-200 bg-white p-3 text-sm sm:grid-cols-2">
+          {entries.map(([k, v]) => (
+            <div key={k} className="flex gap-2">
+              <dt className="shrink-0 text-slate-500">{k}:</dt>
+              <dd className="min-w-0 break-words text-slate-800">{formatValue(v)}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    );
   };
 
   return (
@@ -554,11 +589,8 @@ const AuditLogManagement = () => {
                             </div>
                           </td>
                           <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
-                            <span className="inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full bg-blue-100 text-blue-800 truncate max-w-full">
+                            <span className={`inline-block px-1.5 lg:px-2 py-0.5 lg:py-1 text-xs rounded-full border truncate max-w-full ${getActionStyle(log.action)}`}>
                               {actionTranslations[log.action] || log.action}
-                              {!actionTranslations[log.action] && (
-                                <span className="ml-1 text-xs text-red-500">[?]</span>
-                              )}
                             </span>
                           </td>
                           <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-left">
@@ -590,34 +622,17 @@ const AuditLogManagement = () => {
                             {format(new Date(log.createdAt), 'dd/MM HH:mm', { locale: th })}
                           </td>
                           <td className="px-2 sm:px-3 lg:px-4 py-2 lg:py-3 whitespace-nowrap text-xs lg:text-sm text-slate-900 text-center">
-                            <div className="flex items-center justify-center gap-1 lg:gap-2">
-                              <button
-                                onClick={() => viewLogDetail(log)}
-                                className="text-brand-600 hover:text-brand-900 p-1 hover:bg-brand-50 rounded transition-colors"
-                                title="ดูรายละเอียด"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                              </button>
-                              {log.entityId && log.entityType && (
-                                <button
-                                  onClick={() => viewEntityData(log)}
-                                  className="text-emerald-600 hover:text-emerald-900 p-1 hover:bg-emerald-50 rounded transition-colors"
-                                  title="ดูข้อมูล Entity"
-                                  disabled={entityLoading}
-                                >
-                                  {entityLoading ? (
-                                    <div className="animate-spin rounded-full h-3 w-3 lg:h-4 lg:w-4 border-b-2 border-emerald-600"></div>
-                                  ) : (
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                  )}
-                                </button>
-                              )}
-                            </div>
+                            <button
+                              onClick={() => viewLogDetail(log)}
+                              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-50"
+                              title="ดูรายละเอียด"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span className="hidden lg:inline">รายละเอียด</span>
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -679,28 +694,14 @@ const AuditLogManagement = () => {
                             <div className="text-slate-500 text-xs">ID: {log.userId}</div>
                           </div>
                         </div>
-                        <div className="flex gap-1 ml-2 flex-shrink-0">
+                        <div className="ml-2 flex-shrink-0">
                           <button
                             onClick={() => viewLogDetail(log)}
-                            className="text-brand-600 hover:text-brand-900 p-2 active:bg-brand-50 rounded-lg transition-colors"
+                            className="rounded-lg p-2 text-brand-600 transition-colors hover:text-brand-900 active:bg-brand-50"
                             title="ดูรายละเอียด"
                           >
                             <FaEye className="text-sm" />
                           </button>
-                          {log.entityId && log.entityType && (
-                            <button
-                              onClick={() => viewEntityData(log)}
-                              className="text-emerald-600 hover:text-emerald-900 p-2 active:bg-emerald-50 rounded-lg transition-colors"
-                              title="ดูข้อมูล Entity"
-                              disabled={entityLoading}
-                            >
-                              {entityLoading ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
-                              ) : (
-                                <FaFileAlt className="text-sm" />
-                              )}
-                            </button>
-                          )}
                         </div>
                       </div>
 
@@ -895,245 +896,57 @@ const AuditLogManagement = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white rounded-lg p-3 border border-slate-200">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Log ID</label>
-                  <p className="text-sm font-semibold text-slate-900">#{selectedLog.id}</p>
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-slate-200">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">User ID</label>
-                  <p className="text-sm font-semibold text-slate-900">#{selectedLog.userId}</p>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-3 border border-slate-200">
-                <label className="block text-xs font-medium text-slate-600 mb-1">User</label>
-                <p className="text-sm font-semibold text-slate-900">
-                  {selectedLog.user?.prefixName} {selectedLog.user?.firstName} {selectedLog.user?.lastName}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">{selectedLog.user?.email}</p>
-              </div>
-
-              <div className="bg-white rounded-lg p-3 border border-slate-200">
-                <label className="block text-xs font-medium text-slate-600 mb-1">Action</label>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+              {/* ใคร ทำอะไร เมื่อไหร่ */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getActionStyle(selectedLog.action)}`}>
                     {actionTranslations[selectedLog.action] || selectedLog.action}
                   </span>
-                  <span className="text-xs text-slate-500 font-mono">({selectedLog.action})</span>
+                  {selectedLog.entityType && (
+                    <span className="text-sm text-slate-600">
+                      {entityTypeTranslations[selectedLog.entityType] || selectedLog.entityType}
+                      {selectedLog.entityId ? ` #${selectedLog.entityId}` : ''}
+                    </span>
+                  )}
                 </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-3 border border-slate-200">
-                <label className="block text-xs font-medium text-slate-600 mb-1">Details</label>
-                <p className="text-sm text-slate-900 whitespace-pre-wrap bg-slate-50 p-2 rounded border border-slate-200">
-                  {selectedLog.details || '-'}
+                <p className="mt-2 text-sm text-slate-800">
+                  <span className="font-medium">
+                    {`${selectedLog.user?.prefixName || ''}${selectedLog.user?.firstName || ''} ${selectedLog.user?.lastName || ''}`.trim() || 'ระบบ'}
+                  </span>
+                  {selectedLog.user?.email && (
+                    <span className="text-slate-500"> · {selectedLog.user.email}</span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {format(new Date(selectedLog.createdAt), 'dd MMM yyyy, HH:mm:ss น.', { locale: th })}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white rounded-lg p-3 border border-slate-200">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Entity Type</label>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {selectedLog.entityType ? entityTypeTranslations[selectedLog.entityType] || selectedLog.entityType : '-'}
+              {/* รายละเอียด */}
+              {selectedLog.details && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">รายละเอียด</label>
+                  <p className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-800">
+                    {selectedLog.details}
                   </p>
                 </div>
-                <div className="bg-white rounded-lg p-3 border border-slate-200">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Entity ID</label>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {selectedLog.entityId ? `#${selectedLog.entityId}` : '-'}
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-slate-200">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Leave Request ID</label>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {selectedLog.leaveRequestId ? `#${selectedLog.leaveRequestId}` : '-'}
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-slate-200">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Created At</label>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {format(new Date(selectedLog.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: th })}
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-slate-200">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">IP Address</label>
-                  <p className="text-sm font-mono text-slate-900 bg-slate-50 px-2 py-1 rounded border border-slate-200">
-                    {selectedLog.ipAddress || '-'}
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-slate-200">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">User Agent</label>
-                  <p className="text-xs text-slate-900 truncate bg-slate-50 px-2 py-1 rounded border border-slate-200" title={selectedLog.userAgent}>
-                    {selectedLog.userAgent || '-'}
-                  </p>
-                </div>
+              )}
+
+              {/* ก่อน -> หลัง / ข้อมูลที่บันทึกไว้ */}
+              {renderEntitySnapshot(selectedLog)}
+
+              {/* ข้อมูลทางเทคนิค (ย่อ) */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-3 text-[11px] text-slate-400">
+                <span>รหัสบันทึก #{selectedLog.id}</span>
+                {selectedLog.ipAddress && <span>IP: {selectedLog.ipAddress}</span>}
+                {selectedLog.userAgent && <span title={selectedLog.userAgent}>{summarizeUserAgent(selectedLog.userAgent)}</span>}
               </div>
             </div>
 
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-6 py-2.5 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-lg hover:from-slate-700 hover:to-slate-800 transition-all duration-200 shadow-md hover:shadow-lg w-full sm:w-auto font-medium"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Entity Data Modal */}
-      {showEntityModal && entityData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-4 sm:p-6 max-w-3xl w-full mx-4 max-h-screen overflow-y-auto border border-slate-200">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">ข้อมูล Entity</h3>
-                <p className="text-sm text-slate-500">
-                  {entityData.isDeleted ? (
-                    <span className="text-red-600 font-medium">● ถูกลบไปแล้ว (แสดงข้อมูลจาก Audit Log)</span>
-                  ) : (
-                    <span className="text-green-600 font-medium">● ยังอยู่ในระบบ</span>
-                  )}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowEntityModal(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors self-start"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Entity Type Header */}
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <FaFileAlt className="text-blue-600 text-xl" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900">
-                      {entityTypeTranslations[entityData.data?.entityType] || entityData.data?.entityType}
-                    </h4>
-                    <p className="text-sm text-slate-500">ID: {entityData.data?.id || entityData.data?.entityId || 'ไม่ระบุ'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Entity Details */}
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                <h5 className="font-medium text-slate-900 mb-3">รายละเอียดข้อมูล (JSON):</h5>
-
-                {entityData.data?.oldData && entityData.data?.newData ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div>
-                      <h6 className="text-sm font-medium text-red-700 mb-2">ก่อนแก้ (Old)</h6>
-                      <div className="bg-slate-50 p-4 rounded-lg overflow-x-auto border border-slate-200">
-                        <pre className="text-xs text-slate-700 whitespace-pre-wrap break-words">
-                          {JSON.stringify(entityData.data.oldData || {}, null, 2)}
-                        </pre>
-                      </div>
-                    </div>
-                    <div>
-                      <h6 className="text-sm font-medium text-green-700 mb-2">หลังแก้ (New)</h6>
-                      <div className="bg-slate-50 p-4 rounded-lg overflow-x-auto border border-slate-200">
-                        <pre className="text-xs text-slate-700 whitespace-pre-wrap break-words">
-                          {JSON.stringify(entityData.data.newData || {}, null, 2)}
-                        </pre>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                <div className="bg-slate-50 p-4 rounded-lg overflow-x-auto">
-                  <pre className="text-xs text-slate-700 whitespace-pre-wrap break-words">
-                    {JSON.stringify(entityData.data || {}, null, 2)}
-                  </pre>
-                </div>
-                )}
-
-                {/* Show Diff if available */}
-                {entityData.data?.diff && entityData.data.diff.length > 0 && (
-                  <div className="mt-4">
-                    <h6 className="font-medium text-slate-900 mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      การเปลี่ยนแปลง (Changes)
-                    </h6>
-                    <div className="space-y-2">
-                      {entityData.data.diff.map((change, index) => (
-                        <div key={index} className="bg-white border border-slate-200 rounded-lg p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-slate-900">{change.field}</span>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              change.type === 'added' ? 'bg-green-100 text-green-700' :
-                              change.type === 'removed' ? 'bg-red-100 text-red-700' :
-                              'bg-blue-100 text-blue-700'
-                            }`}>
-                              {change.type === 'added' ? 'เพิ่ม' :
-                               change.type === 'removed' ? 'ลบ' : 'เปลี่ยน'}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                            {change.oldValue !== undefined && (
-                              <div>
-                                <span className="text-red-600 font-medium">เก่า:</span>
-                                <div className="bg-red-50 p-2 rounded border border-red-200 mt-1 break-words">
-                                  {typeof change.oldValue === 'object'
-                                    ? JSON.stringify(change.oldValue, null, 2)
-                                    : String(change.oldValue) || '-'
-                                  }
-                                </div>
-                              </div>
-                            )}
-                            {change.newValue !== undefined && (
-                              <div>
-                                <span className="text-green-600 font-medium">ใหม่:</span>
-                                <div className="bg-green-50 p-2 rounded border border-green-200 mt-1 break-words">
-                                  {typeof change.newValue === 'object'
-                                    ? JSON.stringify(change.newValue, null, 2)
-                                    : String(change.newValue) || '-'
-                                  }
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Timestamp */}
-              <div className="text-sm text-slate-500 text-center">
-                <p>ข้อมูลจาก Audit Log เมื่อ: {format(new Date(entityData.timestamp || new Date()), 'dd/MM/yyyy HH:mm:ss', { locale: th })}</p>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(JSON.stringify(entityData.data || {}, null, 2));
-                  Swal.fire({
-                    icon: 'success',
-                    title: 'คัดลอกแล้ว',
-                    text: 'ข้อมูลถูกคัดลอกไปยัง clipboard',
-                    timer: 1500,
-                    showConfirmButton: false
-                  });
-                }}
-                className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors w-full sm:w-auto order-2 sm:order-1"
-              >
-                คัดลอก JSON
-              </button>
-              <button
-                onClick={() => setShowEntityModal(false)}
-                className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors w-full sm:w-auto order-1 sm:order-2"
+                className="w-full rounded-xl bg-slate-700 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-slate-600 sm:w-auto"
               >
                 ปิด
               </button>

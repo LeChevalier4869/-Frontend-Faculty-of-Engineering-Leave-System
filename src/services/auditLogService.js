@@ -42,20 +42,29 @@ const AuditLogService = {
   // ดึงข้อมูล Audit Log ทั้งหมด (ไม่มี pagination)
   getAllAuditLogsAll: async (options = {}) => {
     try {
-      const { 
-        userId, 
-        action, 
-        startDate, 
-        endDate 
+      // ส่ง filter ให้ครบทุกตัว ไม่งั้น export จะได้ข้อมูลเกินกว่าที่กรองบนหน้าจอ
+      const {
+        userId,
+        userName,
+        action,
+        startDate,
+        endDate,
+        entityType,
+        entityId,
+        ipAddress,
       } = options;
-      
+
       const params = new URLSearchParams();
-      
+
       if (userId) params.append('userId', userId);
+      if (userName) params.append('userName', userName);
       if (action) params.append('action', action);
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
-      
+      if (entityType) params.append('entityType', entityType);
+      if (entityId) params.append('entityId', entityId);
+      if (ipAddress) params.append('ipAddress', ipAddress);
+
       const response = await API.get(`${apiEndpoints.auditLogsAll}?${params.toString()}`);
       return response.data;
     } catch (error) {
