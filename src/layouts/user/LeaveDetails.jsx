@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaFileAlt } from "react-icons/fa";
+import axios from "axios";
 import { apiEndpoints, API } from "../../utils/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
@@ -50,7 +51,12 @@ export default function LeaveDetail() {
   // useEffect ที่ 1: โหลดข้อมูล leave ตาม id (ใบปัจจุบัน)
   useEffect(() => {
     const controller = new AbortController();
+
     const loadLeave = async () => {
+      // เริ่มโหลดใหม่ทุกครั้งที่ id เปลี่ยน ไม่งั้นจะค้างสถานะเดิมของใบก่อนหน้า
+      setLoading(true);
+      setLeave(null);
+
       try {
         const res = await API.get(
           apiEndpoints.getLeaveById(id),
@@ -60,10 +66,13 @@ export default function LeaveDetail() {
         setLeave(payload);
         setLoading(false);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error("Error loading leave:", err);
-          setLoading(false);
-        }
+        // axios ยกเลิก request ด้วย CanceledError (code ERR_CANCELED) ไม่ใช่ AbortError
+        // ถ้าเช็คชื่อผิด จะเผลอปิด loading ของ request ที่ถูกยกเลิก
+        // ทำให้หน้าจอขึ้น "ไม่พบข้อมูลการลา" ทั้งที่ request จริงยังโหลดอยู่
+        if (axios.isCancel(err) || err.code === "ERR_CANCELED") return;
+
+        console.error("Error loading leave:", err);
+        setLoading(false);
       }
     };
 
@@ -80,16 +89,21 @@ export default function LeaveDetail() {
     const loadLastLeave = async () => {
       try {
         if (!leave?.userId || !leave?.leaveType?.id || !leave?.startDate) return;
-        const res = await API.get(
+        // endpoint นี้เป็น POST และต้องการ leaveTypeId/beforeDate ใน body
+        // เดิมเรียกเป็น GET เปล่า ๆ จึงได้ 404 เสมอ ทำให้ "ครั้งสุดท้ายเมื่อ" ขึ้น "-" ตลอด
+        const res = await API.post(
           apiEndpoints.getLastLeaveBefore(leave.userId),
+          {
+            leaveTypeId: leave.leaveType.id,
+            beforeDate: leave.startDate,
+          },
           { signal: controller.signal }
         );
         const payload = res?.data?.data ?? res?.data ?? null;
         setLastLeave(payload);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error("Error loading last leave:", err);
-        }
+        if (axios.isCancel(err) || err.code === "ERR_CANCELED") return;
+        console.error("Error loading last leave:", err);
       }
     };
 
