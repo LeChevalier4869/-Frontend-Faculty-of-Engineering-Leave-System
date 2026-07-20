@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import {
+  AlertTriangle,
   ArrowRight,
   Ban,
   CalendarDays,
@@ -20,6 +21,7 @@ import {
   History,
   RefreshCw,
   ShieldCheck,
+  UserCheck,
   Users,
   XCircle,
 } from "lucide-react";
@@ -90,17 +92,20 @@ export default function AdminDashboard() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [proxyToday, setProxyToday] = useState(0);
   const [holidays, setHolidays] = useState([]);
+  const [approvers, setApprovers] = useState([]);
 
   const loadAll = useCallback(async () => {
     setError("");
     // ยิงแยกกันและกันพังทีละตัว — ถ้า endpoint ใดล้ม ส่วนที่เหลือยังแสดงได้
-    const [reqRes, userRes, auditRes, proxyRes, holidayRes] = await Promise.all([
-      API.get("/leave-requests").catch(() => null),
-      API.get("/admin/users").catch(() => null),
-      API.get("/admin/audit-logs", { params: { limit: 6 } }).catch(() => null),
-      API.get("/proxy-approval/today").catch(() => null),
-      API.get("/admin/holiday").catch(() => null),
-    ]);
+    const [reqRes, userRes, auditRes, proxyRes, holidayRes, approverRes] =
+      await Promise.all([
+        API.get("/leave-requests").catch(() => null),
+        API.get("/admin/users").catch(() => null),
+        API.get("/admin/audit-logs", { params: { limit: 6 } }).catch(() => null),
+        API.get("/proxy-approval/today").catch(() => null),
+        API.get("/admin/holiday").catch(() => null),
+        API.get("/admin/approver-positions").catch(() => null),
+      ]);
 
     if (!reqRes && !userRes) {
       setError("ไม่สามารถโหลดข้อมูลแดชบอร์ดได้ กรุณาลองใหม่อีกครั้ง");
@@ -111,6 +116,7 @@ export default function AdminDashboard() {
     setAuditLogs(auditRes?.data?.data || []);
     setProxyToday(proxyRes?.data?.pagination?.totalCount ?? (proxyRes?.data?.data || []).length);
     setHolidays(holidayRes?.data?.data || []);
+    setApprovers(approverRes?.data?.data || []);
   }, []);
 
   useEffect(() => {
@@ -285,6 +291,57 @@ export default function AdminDashboard() {
             }
           />
         </div>
+
+        {/* ---------- ผู้อนุมัติระดับคณะปัจจุบัน ---------- */}
+        <Panel
+          title="ผู้อนุมัติระดับคณะปัจจุบัน"
+          subtitle="ผู้ดำรงตำแหน่งในสายอนุมัติของคณะ (ตามทะเบียนผู้อนุมัติ)"
+          action={
+            <PanelLink
+              to="/admin/management"
+              state={{ activeTab: "approvers" }}
+              label="จัดการผู้อนุมัติ"
+            />
+          }
+        >
+          {approvers.length === 0 ? (
+            <EmptyState text="ยังไม่มีข้อมูลผู้อนุมัติ" />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {approvers.map((a) => (
+                <div
+                  key={a.level}
+                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                      <UserCheck className="h-3.5 w-3.5 text-slate-400" />
+                      {a.label}
+                    </span>
+                    {!a.inSync && (
+                      <span
+                        title="ทะเบียนผู้อนุมัติไม่ตรงกับผู้ถือสิทธิ์จริง ควรตรวจสอบ"
+                        className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700"
+                      >
+                        <AlertTriangle className="h-3 w-3" />
+                        ตรวจสอบ
+                      </span>
+                    )}
+                  </div>
+                  <p
+                    className="mt-2 truncate text-sm font-semibold text-slate-900"
+                    title={a.holder ? fullName(a.holder) : ""}
+                  >
+                    {a.holder ? fullName(a.holder) : "— ยังไม่กำหนด"}
+                  </p>
+                  <p className="truncate text-xs text-slate-400">
+                    {a.holder?.department?.name || a.holder?.email || " "}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
 
         {/* ---------- แนวโน้ม + สถานะ ---------- */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
