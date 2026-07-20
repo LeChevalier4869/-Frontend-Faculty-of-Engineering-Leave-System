@@ -334,8 +334,31 @@ export default function LeaveDetail() {
     }
   };
 
+  // ตำแหน่งในสายอนุมัติยึดตาม "ขั้น" (stepOrder) ไม่ใช่ role ของบุคคล
+  // ผู้ใช้บางคนถือหลาย role (เช่นเป็นทั้งผู้ตรวจสอบและคณบดี) การอ่านจาก role
+  // จึงหยิบมาผิดขั้น แล้วโชว์ตำแหน่งไม่ตรงกับหน้าที่ในขั้นนั้น
+  const POSITION_BY_STEP = {
+    1: "หัวหน้าสาขา", // APPROVER_1
+    2: "ผู้ตรวจสอบ", // VERIFIER
+    4: "สารบรรณคณะ", // APPROVER_2
+    5: "รองคณบดี", // APPROVER_3
+    6: "คณบดี", // APPROVER_4
+  };
+
+  const POSITION_BY_ROLE = {
+    APPROVER_1: "หัวหน้าสาขา",
+    VERIFIER: "ผู้ตรวจสอบ",
+    APPROVER_2: "สารบรรณคณะ",
+    APPROVER_3: "รองคณบดี",
+    APPROVER_4: "คณบดี",
+  };
+
   const getApproverPositionName = (step) => {
-    // ถ้า backend ส่ง roleName มาด้วย (แนะนำที่สุด)
+    // 1) ยึดตามขั้นของสายอนุมัติเป็นหลัก
+    const byStep = POSITION_BY_STEP[Number(step?.stepOrder)];
+    if (byStep) return byStep;
+
+    // 2) เผื่อ stepOrder ไม่มา ค่อย fallback ไปดู role ของผู้อนุมัติ
     const roleName = Array.isArray(step?.approver?.userRoles)
       ? step.approver.userRoles
           .map((ur) => ur?.role)
@@ -344,20 +367,7 @@ export default function LeaveDetail() {
           .filter(Boolean)[0]
       : null;
 
-    switch (roleName) {
-      case "APPROVER_1":
-        return "หัวหน้าสาขา";
-      case "VERIFIER":
-        return "ผู้ตรวจสอบ";
-      case "APPROVER_2":
-        return "สรรบรรณคณะ";
-      case "APPROVER_3":
-        return "รองคณบดี";
-      case "APPROVER_4":
-        return "คณบดี";
-      default:
-        return "-";
-    }
+    return POSITION_BY_ROLE[roleName] || "-";
   };
 
 
@@ -390,10 +400,20 @@ export default function LeaveDetail() {
             <h1 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
               ขอ{leaveType?.name || "ลา"}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              เลขที่ใบลา {documentNumber || "— ยังไม่ออกเลข"}
-              {documentIssuedDate ? ` · ${formatDate(documentIssuedDate)}` : ""}
-            </p>
+            {/* เลขที่ใบลา — เน้นให้เห็นชัด เป็นข้อมูลอ้างอิงหลักของเอกสาร */}
+            <div className="mt-3 inline-flex items-center gap-2.5 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-brand-700/70">
+                เลขที่ใบลา
+              </span>
+              <span className="text-lg font-bold tracking-wide text-brand-700">
+                {documentNumber || "— ยังไม่ออกเลข"}
+              </span>
+              {documentIssuedDate && (
+                <span className="border-l border-brand-200 pl-2.5 text-xs text-slate-500">
+                  {formatDate(documentIssuedDate)}
+                </span>
+              )}
+            </div>
           </div>
           <span className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-sm font-semibold ${statusMeta.cls}`}>
             {statusMeta.label}
