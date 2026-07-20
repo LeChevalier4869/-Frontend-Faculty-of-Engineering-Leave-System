@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import {
   FaUsersCog,
   FaIdBadge,
@@ -20,9 +20,23 @@ import ProxyApprovalManagement from "./ProxyApprovalManagement";
 export default function ManagementPage() {
   const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState(
-    location.state?.activeTab || "users",
-  );
+  // เก็บแท็บที่เลือกไว้ใน URL (?tab=) เพื่อให้คงค้างเมื่อกด back กลับมาจากหน้าอื่น
+  // (เช่น เข้าไปดูรายละเอียดใบลาแล้วย้อนกลับ) และรีเซ็ตเองเมื่อออกไปหน้าเมนูอื่น
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "users";
+
+  // รองรับการลิงก์เข้ามาผ่าน navigate state แบบเดิม -> ย้ายเข้า URL ครั้งเดียว
+  useEffect(() => {
+    if (!searchParams.get("tab") && location.state?.activeTab) {
+      setSearchParams({ tab: location.state.activeTab }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // เปลี่ยนแท็บบน -> ตั้งเฉพาะ tab (ล้างแท็บย่อยด้านใน sub/rsub ให้รีเซ็ต)
+  const setActiveTab = (id) => {
+    setSearchParams({ tab: id }, { replace: true });
+  };
 
   const tabs = [
     { id: "users", label: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
