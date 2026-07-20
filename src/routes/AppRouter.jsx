@@ -35,7 +35,8 @@ const LeaveApprover2 = lazy(() => import("../layouts/approver/LeaveApprover2"));
 const LeaveApprover3 = lazy(() => import("../layouts/approver/LeaveApprover3"));
 const LeaveApprover4 = lazy(() => import("../layouts/approver/LeaveApprover4"));
 const LeaveVerifier = lazy(() => import("../layouts/approver/LeaveVerifier"));
-const Approver1Dashboard = lazy(() => import("../layouts/approver/Approver1DashBoard"));
+const ApproverDashboard = lazy(() => import("../layouts/approver/ApproverDashboard"));
+
 
 /** Admin pages **/
 import AdminDashboard from "../layouts/admin/AdminDashBoard";
@@ -209,10 +210,10 @@ const userRouter = createBrowserRouter([
             )
           },
           {
-            path: "dashboard-approver1",
+            path: "dashboard-approver",
             element: (
-              <ProtectedRoute requiredRoles={['APPROVER_1']} checkProxy={true}>
-                <Approver1Dashboard />
+              <ProtectedRoute requiredRoles={['APPROVER_1','APPROVER_2','APPROVER_3','APPROVER_4',]} checkProxy={true}>
+                <ApproverDashboard />
               </ProtectedRoute>
             )
           },

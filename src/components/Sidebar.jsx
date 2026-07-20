@@ -45,9 +45,9 @@ const userNav = [
 
 const approverNav1 = [
   {
-    to: "/approver/dashboard-approver1",
-    text: "แดชบอร์ดหัวหน้าสาขา",
-    icon: <FaTachometerAlt />,
+    to: "/approver/dashboard-approver",
+    text: "แดชบอร์ดผู้อนุมัติ",
+    icon: <TbLayoutDashboardFilled />,
   },
   {
     to: "/approver/leave-request-approver1",
