@@ -399,6 +399,9 @@ export default function LeaveDetail() {
 
   const hasLastLeave = !!(lastLeave?.startDate || lastLeave?.endDate);
 
+  // แสดง "-" เมื่อไม่มีค่า/เป็นศูนย์ ให้เหมือนตารางสถิติในเอกสารส่งออก
+  const dash = (n) => (n == null || Number(n) === 0 ? "-" : n);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -448,13 +451,48 @@ export default function LeaveDetail() {
         <Section title="รายละเอียดการลา">
           <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
             <Field label="ประเภทการลา" value={leaveType?.name} />
-            <Field label="เรียน" value="คณบดี/ผู้อำนวยการสำนักงานวิทยาเขตขอนแก่น" />
             <Field label="วันที่ลา" value={`${formatDate(startDate)}${formatDate(startDate) !== formatDate(endDate) ? ` ถึง ${formatDate(endDate)}` : ""}`} />
             <Field label="จำนวนวันลา" value={thisTimeDays != null ? `${thisTimeDays} วัน` : "-"} />
             <div className="sm:col-span-2">
               <Field label="เหตุผลการลา" value={reason} />
             </div>
           </div>
+        </Section>
+
+        {/* ---------- สถิติการลา (แบบเดียวกับที่ปรากฏในเอกสารส่งออก) ---------- */}
+        <Section title="สถิติการลาในปีงบประมาณนี้">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+                  <th className="py-2 pr-3 font-medium">ประเภทลา</th>
+                  <th className="px-3 py-2 text-center font-medium">
+                    ลามาแล้ว
+                    <span className="block text-[11px] font-normal text-slate-400">(วันทำการ)</span>
+                  </th>
+                  <th className="px-3 py-2 text-center font-medium">
+                    ลาครั้งนี้
+                    <span className="block text-[11px] font-normal text-slate-400">(วันทำการ)</span>
+                  </th>
+                  <th className="pl-3 py-2 text-center font-medium">
+                    รวมเป็น
+                    <span className="block text-[11px] font-normal text-slate-400">(วันทำการ)</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-slate-100 last:border-0">
+                  <td className="py-2.5 pr-3 font-medium text-slate-800">{leaveType?.name || "-"}</td>
+                  <td className="px-3 py-2.5 text-center tabular-nums text-slate-700">{dash(leavedDays)}</td>
+                  <td className="px-3 py-2.5 text-center tabular-nums text-slate-700">{dash(thisTimeDays)}</td>
+                  <td className="pl-3 py-2.5 text-center font-semibold tabular-nums text-brand-700">{dash(totalDays)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-[11px] text-slate-400">
+            นับเฉพาะวันทำการ · ตรงกับตารางสถิติในเอกสารส่งออก (PDF)
+          </p>
         </Section>
 
         {/* ---------- การลาครั้งก่อน ---------- */}
