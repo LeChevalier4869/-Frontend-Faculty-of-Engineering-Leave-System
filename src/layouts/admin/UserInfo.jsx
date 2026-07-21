@@ -4,7 +4,8 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { apiEndpoints } from "../../utils/api";
 import { useGoBack } from "../../utils/useGoBack";
-import { FaUserAlt } from "react-icons/fa";
+import { FaUserAlt, FaHistory } from "react-icons/fa";
+import AuditTrailModal from "../../components/AuditTrailModal";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import ProfileImage from "../../components/ProfileImage";
@@ -33,6 +34,7 @@ export default function UserInfo() {
   const navigate = useNavigate();
   // ปุ่มย้อนกลับ: ถอยไปหน้าก่อน ถ้าไม่มีประวัติให้ไปหน้าจัดการผู้ใช้งาน
   const goBack = useGoBack("/admin/manage-user");
+  const [showAudit, setShowAudit] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -309,12 +311,22 @@ export default function UserInfo() {
             >
               ← ย้อนกลับ
             </button>
-            <Link
-              to={`/admin/user/${id}`}
-              className="inline-block px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition"
-            >
-              แก้ไขข้อมูลผู้ใช้
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => setShowAudit(true)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition"
+              >
+                <FaHistory className="h-3.5 w-3.5 text-slate-400" />
+                ประวัติการทำงาน
+              </button>
+              <Link
+                to={`/admin/user/${id}`}
+                className="inline-block px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition"
+              >
+                แก้ไขข้อมูลผู้ใช้
+              </Link>
+            </div>
           </div>
         </Panel>
 
@@ -585,6 +597,15 @@ export default function UserInfo() {
           </div>
         </Panel>
       </div>
+
+      {showAudit && (
+        <AuditTrailModal
+          title="ประวัติการทำงานของผู้ใช้"
+          subtitle={`${user.prefixName ?? ""}${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()}
+          url={`/admin/audit-logs/user/${id}`}
+          onClose={() => setShowAudit(false)}
+        />
+      )}
     </div>
   );
 }

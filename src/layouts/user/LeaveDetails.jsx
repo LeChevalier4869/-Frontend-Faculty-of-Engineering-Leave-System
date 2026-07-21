@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
+import useAuth from "../../hooks/useAuth";
+import AuditTrailModal from "../../components/AuditTrailModal";
 import Swal from "sweetalert2";
-import { FaFileAlt } from "react-icons/fa";
+import { FaFileAlt, FaHistory } from "react-icons/fa";
 import axios from "axios";
 import PropTypes from "prop-types";
 import { apiEndpoints, API } from "../../utils/api";
@@ -11,9 +13,16 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function LeaveDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   // ปุ่มย้อนกลับ: ถอยไปหน้าก่อน ถ้าเปิดลิงก์ตรง ๆ ให้ไปหน้ารายการลา
   const goBack = useGoBack("/leave");
+
+  // ประวัติการเปลี่ยนแปลงของใบลา — แสดงปุ่มเฉพาะผู้ดูแลระบบ (endpoint มีข้อมูลภายใน)
+  const { user: authUser } = useAuth() || {};
+  const authRoles = authUser?.roles || authUser?.role || [];
+  const isAdmin =
+    Array.isArray(authRoles) &&
+    (authRoles.includes("ADMIN") || authRoles.includes("SUPER_ADMIN"));
+  const [showAudit, setShowAudit] = useState(false);
   const [leave, setLeave] = useState(null);
   const [lastLeave, setLastLeave] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -531,12 +540,23 @@ export default function LeaveDetail() {
 
         {/* ---------- ปุ่มดำเนินการ ---------- */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            onClick={goBack}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            ← ย้อนกลับ
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button
+              onClick={goBack}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              ← ย้อนกลับ
+            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowAudit(true)}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                <FaHistory className="h-3.5 w-3.5 text-slate-400" />
+                ประวัติใบลา
+              </button>
+            )}
+          </div>
           <div className="flex flex-col items-stretch gap-2 sm:items-end">
             <button
               onClick={canExport ? downloadReport : undefined}
@@ -560,6 +580,15 @@ export default function LeaveDetail() {
           </div>
         </div>
       </div>
+
+      {showAudit && (
+        <AuditTrailModal
+          title="ประวัติการเปลี่ยนแปลงของใบลา"
+          subtitle={documentNumber ? `เลขที่ใบลา ${documentNumber}` : `ใบลา #${id}`}
+          url={`/admin/audit-logs/leave-request/${id}`}
+          onClose={() => setShowAudit(false)}
+        />
+      )}
     </div>
   );
 }
