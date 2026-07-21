@@ -12,6 +12,10 @@ import PeoplePickerModal from '../../components/PeoplePickerModal';
 
 const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
+// ระดับผู้อนุมัติ -> roleId ในตาราง Role
+// (VERIFIER=3, APPROVER_1=4, APPROVER_2=5, APPROVER_3=6, APPROVER_4=7)
+const ROLE_ID_BY_LEVEL = { 1: 4, 2: 3, 3: 5, 4: 6, 5: 7 };
+
 const ProxyApprovalManagement = () => {
   // Tab navigation state
   const [activeTab, setActiveTab] = useState('today'); // 'today', 'history'
@@ -24,7 +28,6 @@ const ProxyApprovalManagement = () => {
   const [editingProxy, setEditingProxy] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [allUsers, setAllUsers] = useState([]); // สำหรับทุกคนในระบบ
-  const [proxyUsers, setProxyUsers] = useState([]); // สำหรับ proxy users ตามระดับ
   const [selectedOriginalUser, setSelectedOriginalUser] = useState(null);
   const [selectedProxyUser, setSeletedProxyUser] = useState(null);
   // ตัวเลือกคนแบบ modal ค้นหา-แล้วเลือก: 'original' | 'proxy' | null
@@ -35,8 +38,7 @@ const ProxyApprovalManagement = () => {
   const [proxyPrefixName, setProxyPrefixName] = useState('');
   const [proxyFirstName, setProxyFirstName] = useState('');
   const [proxyLastName, setProxyLastName] = useState('');
-  // รายชื่อผู้มีสิทธิ์เป็น "ผู้มอบอำนาจ" ของระดับที่เลือก
-  // ระดับ 1 (หัวหน้าสาขา) ถูกจำกัดเฉพาะสาขาของผู้ใช้อยู่แล้วใน fetchOriginalApproversForLevel
+  // ผู้ถือบทบาทของระดับที่เลือก (ใช้เป็นรายชื่อ "ผู้มอบอำนาจ" ให้เลือก — ทุกสาขา)
   const [originalApproverPool, setOriginalApproverPool] = useState([]);
   const [userRoles, setUserRoles] = useState({});
   const [roleConflict, setRoleConflict] = useState(false);
@@ -122,56 +124,28 @@ const ProxyApprovalManagement = () => {
     }
   };
 
-  // ฟังก์ชันสำหรับดึง original approver ตามระดับที่เลือก
-  const fetchOriginalApproversForLevel = async (level) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-
-      // ระดับ 1 (หัวหน้าสาขา) มีคนละคนในแต่ละสาขา ต้องจำกัดเฉพาะสาขาของผู้ใช้
-      // ไม่งั้นจะได้หัวหน้าสาขาอื่นที่ไม่เกี่ยวข้องกันเลย
-      const scopeDepartmentId =
-        Number(level) === 1 ? currentUser?.departmentId : undefined;
-
-      const response = await API.get(
-        apiEndpoints.getApproversForLevel(
-          level,
-          new Date().toISOString().split("T")[0],
-          scopeDepartmentId
-        ),
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      // เอาเฉพาะผู้ที่ถือบทบาทจริง (ไม่ใช่ผู้รับมอบอำนาจ)
-      return (response.data.data || []).filter((user) => !user.isProxy);
-    } catch (error) {
-      console.error('Error fetching original approvers:', error);
-      return [];
-    }
+  // ผู้ที่ "มีสิทธิ์เป็นผู้มอบอำนาจ" ของระดับ = ผู้ถือบทบาทของระดับนั้น (ทุกสาขา)
+  // คำนวณจากรายชื่อทั้งระบบ (allUsers) ตรง ๆ เพื่อไม่ให้ endpoint approvers-for-level
+  // ตัดคนที่บังเอิญถือ proxy อยู่ (isProxy) ออกไป และเห็นหัวหน้าสาขาครบทุกสาขา
+  const originalApproversForLevel = (level) => {
+    const roleId = ROLE_ID_BY_LEVEL[Number(level)];
+    if (!roleId) return [];
+    return allUsers.filter((u) => (u.roles || []).includes(roleId));
   };
 
-  // เมื่อเปลี่ยนระดับ: โหลดรายชื่อผู้มีสิทธิ์เป็นผู้มอบอำนาจของระดับนั้นไว้เป็น pool
-  // ให้ค้นหา/เลือกเองได้ และตั้งค่าเริ่มต้นให้อัตโนมัติ (ตัวผู้ใช้เองถ้ามีสิทธิ์ ไม่งั้นคนแรก)
-  const autoMapOriginalApprover = async (level) => {
-    const originalApprovers = await fetchOriginalApproversForLevel(level);
-    setOriginalApproverPool(originalApprovers);
+  // เมื่อเปลี่ยนระดับ: เตรียม pool ผู้มอบอำนาจ (ผู้ถือบทบาทของระดับนั้น) และตั้งค่าเริ่มต้น
+  // ผู้ใช้เปลี่ยนคนเองได้ผ่าน modal ค้นหา (โดยเฉพาะ APPROVER_1 ที่มีหัวหน้าหลายสาขา)
+  const autoMapOriginalApprover = (level) => {
+    const pool = originalApproversForLevel(level);
+    setOriginalApproverPool(pool);
 
-    if (originalApprovers.length === 0) {
+    if (pool.length === 0) {
       clearOriginalUser();
       return;
     }
-
-    // ค่าเริ่มต้น: ผู้ใช้ปัจจุบันถ้าถือบทบาทนี้ (มอบอำนาจของตัวเอง) ไม่งั้นคนแรก
-    // ผู้ใช้เปลี่ยนได้เองผ่านช่องค้นหา (โดยเฉพาะระดับ 1 ที่มีหัวหน้าหลายสาขา)
-    const self = originalApprovers.find((u) => u.id === currentUser?.id);
-    pickOriginalUser(self || originalApprovers[0]);
+    const self = pool.find((u) => u.id === currentUser?.id);
+    pickOriginalUser(self || pool[0]);
   };
-
-  // เมื่อเปลี่ยน level ให้ดึงข้อมูล proxy ใหม่
-  useEffect(() => {
-    if (formData.approverLevel && currentUser) {
-      fetchAvailableProxies(formData.approverLevel);
-    }
-  }, [formData.approverLevel, currentUser]);
 
   // เมื่อเปลี่ยน tab ให้โหลดข้อมูลใหม่
   useEffect(() => {
@@ -229,30 +203,6 @@ const ProxyApprovalManagement = () => {
       Swal.fire('ข้อผิดพลาด', 'โหลดข้อมูลไม่สำเร็จ', 'error');
     } finally {
       setLoading(false);
-    }
-  };
-
-  // ดึงข้อมูล proxy จาก API ใหม่ที่มี validation อยู่แล้ว
-  const fetchAvailableProxies = async (level) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-
-      // ใช้ endpoint ที่ถูกต้องและไม่ต้องส่ง date
-      const response = await API.get(apiEndpoints.proxyApprovalPotentialApprovers(level), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-
-      // Backend จะ filter ให้แล้ว ไม่ต้อง filter ซ้ำ
-      const fetchedProxyUsers = response.data.data;
-
-
-      // เซ็ตข้อมูลสำหรับ dropdown ของ proxy users
-      setProxyUsers(fetchedProxyUsers);
-
-    } catch (error) {
-      console.error('Error fetching available proxies:', error);
-      setProxyUsers([]); // ล้างข้อมูลเมื่อเกิด error
     }
   };
 
@@ -384,6 +334,8 @@ const ProxyApprovalManagement = () => {
           email: u.email ?? "",
           // ดึง roles จาก UserRole relationship
           roles: userRoles,
+          position: u.position ?? "",
+          department: u.department ?? null,
           personnelTypeId: u.personnelTypeId ?? u.personnelType?.id ?? null,
           personnelType: u.personnelType ?? null,
         };
@@ -1182,7 +1134,7 @@ const ProxyApprovalManagement = () => {
                     <div className="relative">
                       <select
                         value={formData.approverLevel}
-                        onChange={async (e) => {
+                        onChange={(e) => {
                           const selectedValue = e.target.value;
 
                           // ถ้าเลือก placeholder ให้เซ็ตเป็นค่าว่าง
@@ -1196,7 +1148,7 @@ const ProxyApprovalManagement = () => {
 
                           // Auto-map original approver เมื่อเปลี่ยนระดับ
                           if (newLevel) {
-                            await autoMapOriginalApprover(newLevel);
+                            autoMapOriginalApprover(newLevel);
                           }
                         }}
                         className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
@@ -1374,10 +1326,10 @@ const ProxyApprovalManagement = () => {
           title={peoplePicker === "original" ? "เลือกผู้มอบอำนาจ" : "เลือกผู้อนุมัติแทน"}
           subtitle={
             peoplePicker === "original"
-              ? "ผู้ถือสิทธิ์ของระดับที่เลือก (ระดับหัวหน้าสาขาจำกัดเฉพาะสาขาของคุณ)"
-              : "ผู้ที่สามารถรับมอบอำนาจในระดับนี้ได้"
+              ? "ผู้ถือบทบาทของระดับที่เลือก (แสดงทุกสาขา ดูสาขากำกับได้)"
+              : "เลือกได้ทุกคนในระบบ"
           }
-          users={peoplePicker === "original" ? originalApproverPool : proxyUsers}
+          users={peoplePicker === "original" ? originalApproverPool : allUsers}
           currentId={
             peoplePicker === "original"
               ? selectedOriginalUser?.id
@@ -1385,8 +1337,8 @@ const ProxyApprovalManagement = () => {
           }
           emptyText={
             peoplePicker === "original"
-              ? "ไม่มีผู้ถือสิทธิ์ในระดับ/สาขานี้"
-              : "ไม่มีผู้ที่รับมอบอำนาจในระดับนี้ได้"
+              ? "ไม่มีผู้ถือบทบาทในระดับนี้"
+              : "ไม่พบผู้ใช้งาน"
           }
           onPick={(u) => {
             if (peoplePicker === "original") pickOriginalUser(u);
