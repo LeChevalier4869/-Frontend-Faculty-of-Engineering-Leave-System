@@ -44,6 +44,15 @@ const STATUS_ORDER = ["PENDING", "APPROVED", "REJECTED", "CANCELLED"];
 const CHART_PRIMARY = "#b23a47"; // brand-500
 const CHART_ACCENT = "#a8842f"; // gold-dark
 
+// ตำแหน่งในสายอนุมัติตามระดับ (ใช้กับการมอบอำนาจ)
+const LEVEL_ROLE_LABEL = {
+  1: "หัวหน้าสาขา",
+  2: "ผู้ตรวจสอบ",
+  3: "สารบรรณคณะ",
+  4: "รองคณบดี",
+  5: "คณบดี",
+};
+
 const TH_MONTHS = [
   "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
   "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
@@ -91,6 +100,7 @@ export default function AdminDashboard() {
   const [userCount, setUserCount] = useState(0);
   const [auditLogs, setAuditLogs] = useState([]);
   const [proxyToday, setProxyToday] = useState(0);
+  const [proxies, setProxies] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [approvers, setApprovers] = useState([]);
 
@@ -115,6 +125,7 @@ export default function AdminDashboard() {
     setUserCount((userRes?.data?.data || []).length);
     setAuditLogs(auditRes?.data?.data || []);
     setProxyToday(proxyRes?.data?.pagination?.totalCount ?? (proxyRes?.data?.data || []).length);
+    setProxies(proxyRes?.data?.data || []);
     setHolidays(holidayRes?.data?.data || []);
     setApprovers(approverRes?.data?.data || []);
   }, []);
@@ -340,6 +351,59 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+          )}
+        </Panel>
+
+        {/* ---------- ผู้รับมอบอำนาจที่ใช้งานวันนี้ ---------- */}
+        <Panel
+          title="ผู้รับมอบอำนาจที่ใช้งานวันนี้"
+          subtitle={`มีการมอบอำนาจที่ใช้งานอยู่ ${proxyToday} รายการ`}
+          action={
+            <PanelLink
+              to="/admin/management"
+              state={{ activeTab: "proxy" }}
+              label="จัดการการมอบอำนาจ"
+            />
+          }
+        >
+          {proxies.length === 0 ? (
+            <EmptyState text="วันนี้ไม่มีการมอบอำนาจที่ใช้งานอยู่" />
+          ) : (
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {proxies.map((p) => (
+                <li
+                  key={p.id}
+                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
+                >
+                  <div className="flex items-center gap-2 text-sm">
+                    <span
+                      className="min-w-0 truncate font-medium text-slate-800"
+                      title={fullName(p.originalApprover)}
+                    >
+                      {fullName(p.originalApprover)}
+                    </span>
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <span
+                      className="min-w-0 truncate font-medium text-brand-700"
+                      title={fullName(p.proxyApprover)}
+                    >
+                      {fullName(p.proxyApprover)}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5">
+                      <ShieldCheck className="h-3 w-3 text-slate-400" />
+                      {LEVEL_ROLE_LABEL[p.approverLevel] || `ระดับ ${p.approverLevel}`}
+                    </span>
+                    <span>
+                      {p.isDaily
+                        ? `วันนี้ (${formatDate(p.dailyDate)})`
+                        : `${formatDate(p.startDate)} – ${formatDate(p.endDate)}`}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </Panel>
 
