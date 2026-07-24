@@ -62,6 +62,8 @@ export default function ApproverUserDetailModal({ userId, onClose }) {
     isSelfServiceLeaveType(b.leaveType?.name)
   );
   const history = data?.history || [];
+  const historyTotal = data?.historyTotal ?? history.length;
+  const historyTruncated = historyTotal > history.length;
 
   const openLeave = (id) => {
     onClose();
@@ -165,7 +167,12 @@ export default function ApproverUserDetailModal({ userId, onClose }) {
               {/* ประวัติการลา */}
               <div>
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-                  ประวัติการลาทั้งหมด ({history.length})
+                  ประวัติการลา ({historyTotal})
+                  {historyTruncated && (
+                    <span className="ml-1 normal-case text-slate-400">
+                      — แสดง {history.length} รายการล่าสุด
+                    </span>
+                  )}
                 </p>
                 {history.length === 0 ? (
                   <p className="text-sm text-slate-400">ยังไม่มีประวัติการลา</p>
