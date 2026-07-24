@@ -22,7 +22,8 @@ import {
   FaSitemap,
   FaTags,
   FaLayerGroup,
-  FaIdBadge
+  FaIdBadge,
+  FaBook
 } from "react-icons/fa";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { HiOutlineChevronDown } from "react-icons/hi";
@@ -790,6 +791,22 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                 </>
               )}
             </nav>
+
+            {/* คู่มือการใช้งาน — เปิดหน้า public /help ใน tab ใหม่ */}
+            <div className="px-3 pb-2">
+              <a
+                href="/help"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="คู่มือการใช้งาน (เปิดแท็บใหม่)"
+                className="flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm text-slate-200 hover:text-white hover:bg-white/10 transition"
+              >
+                <span className="text-base shrink-0">
+                  <FaBook />
+                </span>
+                <span className="truncate">คู่มือการใช้งาน</span>
+              </a>
+            </div>
 
             {/* Footer */}
             <footer className="p-4 text-center text-xs text-slate-300 border-t border-white/10 whitespace-nowrap">
