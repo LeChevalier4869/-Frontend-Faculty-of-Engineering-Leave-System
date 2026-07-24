@@ -16,6 +16,8 @@ import {
   Clock,
   FileText,
   RefreshCw,
+  Search,
+  UserSearch,
   Users,
   XCircle,
 } from "lucide-react";
@@ -608,17 +610,34 @@ export default function ApproverDashboard() {
 
         {/* ---------- รายชื่อผู้ใช้ในความดูแล ---------- */}
         <Panel
-          title="รายชื่อผู้ใช้ในความดูแล"
-          subtitle={`${users.length} คน — กดเพื่อดูโปรไฟล์ ยอดวันลาคงเหลือ และประวัติการลา`}
+          title="ค้นหาข้อมูลผู้ยื่นลา"
+          subtitle={`ผู้ใช้ในความดูแลของคุณ ${users.length} คน`}
         >
-          <div className="mb-3">
+          {/* คำอธิบายเน้นให้ผู้ใช้รู้ว่ามาดูยอดวันลา/ประวัติของผู้ยื่นลาได้ที่นี่ */}
+          <div className="mb-3 flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3">
+            <UserSearch className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+            <p className="text-sm leading-relaxed text-brand-800">
+              อยากรู้ว่าผู้ยื่นลาแต่ละคน<strong>เหลือวันลากี่วัน</strong> หรือ
+              <strong>เคยลาอะไรมาบ้าง</strong>? พิมพ์ชื่อค้นหาด้านล่าง แล้วกดที่รายชื่อ
+              เพื่อดูโปรไฟล์ ยอดวันลาคงเหลือ และประวัติการลาทั้งหมด
+            </p>
+          </div>
+
+          <div className="relative mb-3">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
-              placeholder="ค้นหาชื่อ อีเมล ตำแหน่ง หรือสาขา..."
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+              placeholder="พิมพ์ชื่อ อีเมล ตำแหน่ง หรือสาขา ของผู้ยื่นลา..."
+              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
             />
           </div>
+
+          {userSearch.trim() && (
+            <p className="mb-2 text-xs text-slate-500">
+              พบ {filteredUsers.length} คนจากคำค้น &ldquo;{userSearch.trim()}&rdquo;
+            </p>
+          )}
           {filteredUsers.length === 0 ? (
             <EmptyState text="ไม่พบผู้ใช้งาน" />
           ) : (
