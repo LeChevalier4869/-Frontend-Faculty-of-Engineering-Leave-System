@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import {
   FaUsersCog,
   FaIdBadge,
@@ -7,25 +7,42 @@ import {
   FaCalendarAlt,
   FaFileSignature,
   FaUserShield,
+  FaUserCheck,
 } from "react-icons/fa";
 
 import UserManageContent from "../../components/admin/manage/UserManageContent";
 import PositionNumberManageContent from "../../components/admin/manage/PositionNumberManageContent";
 import DepartmentManageContent from "../../components/admin/manage/OrganizationManageContent";
 import HolidayManageContent from "../../components/admin/manage/HolidayManageContent";
+import ApproverManageContent from "../../components/admin/manage/ApproverManageContent";
 import AddOtherRequest from "./AddOtherRequest";
 import ProxyApprovalManagement from "./ProxyApprovalManagement";
 export default function ManagementPage() {
   const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState(
-    location.state?.activeTab || "users",
-  );
+  // เก็บแท็บที่เลือกไว้ใน URL (?tab=) เพื่อให้คงค้างเมื่อกด back กลับมาจากหน้าอื่น
+  // (เช่น เข้าไปดูรายละเอียดใบลาแล้วย้อนกลับ) และรีเซ็ตเองเมื่อออกไปหน้าเมนูอื่น
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "users";
+
+  // รองรับการลิงก์เข้ามาผ่าน navigate state แบบเดิม -> ย้ายเข้า URL ครั้งเดียว
+  useEffect(() => {
+    if (!searchParams.get("tab") && location.state?.activeTab) {
+      setSearchParams({ tab: location.state.activeTab }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // เปลี่ยนแท็บบน -> ตั้งเฉพาะ tab (ล้างแท็บย่อยด้านใน sub/rsub ให้รีเซ็ต)
+  const setActiveTab = (id) => {
+    setSearchParams({ tab: id }, { replace: true });
+  };
 
   const tabs = [
     { id: "users", label: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
     { id: "positions", label: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
     { id: "departments", label: "จัดการแผนก", icon: <FaBuilding /> },
+    { id: "approvers", label: "จัดการผู้อนุมัติ", icon: <FaUserCheck /> },
     { id: "holidays", label: "จัดการวันหยุด", icon: <FaCalendarAlt /> },
     { id: "leaveRequests", label: "บันทึกคำขอการลา", icon: <FaFileSignature /> },
     { id: "proxy", label: "จัดการการมอบอำนาจ", icon: <FaUserShield /> },
@@ -65,6 +82,9 @@ export default function ManagementPage() {
 
       case "departments":
         return <DepartmentManagement />;
+
+      case "approvers":
+        return <ApproverManageContent />;
 
       case "holidays":
         return <HolidayManagement />;
@@ -107,7 +127,7 @@ export default function ManagementPage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-3xl shadow-sm border overflow-hidden mb-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

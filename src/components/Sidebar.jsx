@@ -94,8 +94,8 @@ const adminNav = [
   // { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
   // { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
   // { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
-  // { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
   { to: "/admin/management", text: "การจัดการ", icon: <FaTools /> },
+  { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 

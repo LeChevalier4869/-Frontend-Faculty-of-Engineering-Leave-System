@@ -201,7 +201,8 @@ function Sidebar({ isOpen }) {
           </>
         )}
 
-        {user?.role.includes("ADMIN") && renderDropdown("เมนูผู้ดูแล", adminNav)}
+        {(user?.role?.includes("ADMIN") || user?.role?.includes("SUPER_ADMIN")) &&
+          renderDropdown("เมนูผู้ดูแล", adminNav)}
       </nav>
     </aside>
   );

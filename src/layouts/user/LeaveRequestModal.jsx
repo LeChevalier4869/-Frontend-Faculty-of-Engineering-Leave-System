@@ -232,7 +232,10 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-2xl relative font-kanit text-black overflow-y-auto max-h-[95vh]">
         <button
           onClick={onClose}

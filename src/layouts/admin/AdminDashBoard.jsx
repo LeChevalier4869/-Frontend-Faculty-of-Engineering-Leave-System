@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import {
+  AlertTriangle,
   ArrowRight,
   Ban,
   CalendarDays,
@@ -20,6 +21,7 @@ import {
   History,
   RefreshCw,
   ShieldCheck,
+  UserCheck,
   Users,
   XCircle,
 } from "lucide-react";
@@ -41,6 +43,15 @@ const STATUS_ORDER = ["PENDING", "APPROVED", "REJECTED", "CANCELLED"];
 
 const CHART_PRIMARY = "#b23a47"; // brand-500
 const CHART_ACCENT = "#a8842f"; // gold-dark
+
+// ตำแหน่งในสายอนุมัติตามระดับ (ใช้กับการมอบอำนาจ)
+const LEVEL_ROLE_LABEL = {
+  1: "หัวหน้าสาขา",
+  2: "ผู้ตรวจสอบ",
+  3: "สารบรรณคณะ",
+  4: "รองคณบดี",
+  5: "คณบดี",
+};
 
 const TH_MONTHS = [
   "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
@@ -89,18 +100,22 @@ export default function AdminDashboard() {
   const [userCount, setUserCount] = useState(0);
   const [auditLogs, setAuditLogs] = useState([]);
   const [proxyToday, setProxyToday] = useState(0);
+  const [proxies, setProxies] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [approvers, setApprovers] = useState([]);
 
   const loadAll = useCallback(async () => {
     setError("");
     // ยิงแยกกันและกันพังทีละตัว — ถ้า endpoint ใดล้ม ส่วนที่เหลือยังแสดงได้
-    const [reqRes, userRes, auditRes, proxyRes, holidayRes] = await Promise.all([
-      API.get("/leave-requests").catch(() => null),
-      API.get("/admin/users").catch(() => null),
-      API.get("/admin/audit-logs", { params: { limit: 6 } }).catch(() => null),
-      API.get("/proxy-approval/today").catch(() => null),
-      API.get("/admin/holiday").catch(() => null),
-    ]);
+    const [reqRes, userRes, auditRes, proxyRes, holidayRes, approverRes] =
+      await Promise.all([
+        API.get("/leave-requests").catch(() => null),
+        API.get("/admin/users").catch(() => null),
+        API.get("/admin/audit-logs", { params: { limit: 6 } }).catch(() => null),
+        API.get("/proxy-approval/today").catch(() => null),
+        API.get("/admin/holiday").catch(() => null),
+        API.get("/admin/approver-positions").catch(() => null),
+      ]);
 
     if (!reqRes && !userRes) {
       setError("ไม่สามารถโหลดข้อมูลแดชบอร์ดได้ กรุณาลองใหม่อีกครั้ง");
@@ -110,7 +125,9 @@ export default function AdminDashboard() {
     setUserCount((userRes?.data?.data || []).length);
     setAuditLogs(auditRes?.data?.data || []);
     setProxyToday(proxyRes?.data?.pagination?.totalCount ?? (proxyRes?.data?.data || []).length);
+    setProxies(proxyRes?.data?.data || []);
     setHolidays(holidayRes?.data?.data || []);
+    setApprovers(approverRes?.data?.data || []);
   }, []);
 
   useEffect(() => {
@@ -285,6 +302,110 @@ export default function AdminDashboard() {
             }
           />
         </div>
+
+        {/* ---------- ผู้อนุมัติระดับคณะปัจจุบัน ---------- */}
+        <Panel
+          title="ผู้อนุมัติระดับคณะปัจจุบัน"
+          subtitle="ผู้ดำรงตำแหน่งในสายอนุมัติของคณะ (ตามทะเบียนผู้อนุมัติ)"
+          action={
+            <PanelLink
+              to="/admin/management"
+              state={{ activeTab: "approvers" }}
+              label="จัดการผู้อนุมัติ"
+            />
+          }
+        >
+          {approvers.length === 0 ? (
+            <EmptyState text="ยังไม่มีข้อมูลผู้อนุมัติ" />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {approvers.map((a) => (
+                <div
+                  key={a.level}
+                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                      <UserCheck className="h-3.5 w-3.5 text-slate-400" />
+                      {a.label}
+                    </span>
+                    {!a.inSync && (
+                      <span
+                        title="ทะเบียนผู้อนุมัติไม่ตรงกับผู้ถือสิทธิ์จริง ควรตรวจสอบ"
+                        className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700"
+                      >
+                        <AlertTriangle className="h-3 w-3" />
+                        ตรวจสอบ
+                      </span>
+                    )}
+                  </div>
+                  <p
+                    className="mt-2 truncate text-sm font-semibold text-slate-900"
+                    title={a.holder ? fullName(a.holder) : ""}
+                  >
+                    {a.holder ? fullName(a.holder) : "— ยังไม่กำหนด"}
+                  </p>
+                  <p className="truncate text-xs text-slate-400">
+                    {a.holder?.department?.name || a.holder?.email || " "}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+
+        {/* ---------- ผู้รับมอบอำนาจที่ใช้งานวันนี้ ---------- */}
+        <Panel
+          title="ผู้รับมอบอำนาจที่ใช้งานวันนี้"
+          subtitle={`มีการมอบอำนาจที่ใช้งานอยู่ ${proxyToday} รายการ`}
+          action={
+            <PanelLink
+              to="/admin/management"
+              state={{ activeTab: "proxy" }}
+              label="จัดการการมอบอำนาจ"
+            />
+          }
+        >
+          {proxies.length === 0 ? (
+            <EmptyState text="วันนี้ไม่มีการมอบอำนาจที่ใช้งานอยู่" />
+          ) : (
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {proxies.map((p) => (
+                <li
+                  key={p.id}
+                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
+                >
+                  <div className="flex items-center gap-2 text-sm">
+                    <span
+                      className="min-w-0 truncate font-medium text-slate-800"
+                      title={fullName(p.originalApprover)}
+                    >
+                      {fullName(p.originalApprover)}
+                    </span>
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <span
+                      className="min-w-0 truncate font-medium text-brand-700"
+                      title={fullName(p.proxyApprover)}
+                    >
+                      {fullName(p.proxyApprover)}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5">
+                      <ShieldCheck className="h-3 w-3 text-slate-400" />
+                      {LEVEL_ROLE_LABEL[p.approverLevel] || `ระดับ ${p.approverLevel}`}
+                    </span>
+                    <span>
+                      {p.isDaily
+                        ? `วันนี้ (${formatDate(p.dailyDate)})`
+                        : `${formatDate(p.startDate)} – ${formatDate(p.endDate)}`}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
 
         {/* ---------- แนวโน้ม + สถานะ ---------- */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

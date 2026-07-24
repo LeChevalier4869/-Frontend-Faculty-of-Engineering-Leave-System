@@ -42,7 +42,10 @@ export const apiEndpoints = {
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
   getVerifier: `${BASE_URL}/auth/verifier`, // GET
-  getApproversForLevel: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET
+  // departmentId ใช้จำกัดเฉพาะหัวหน้าสาขานั้น (มีผลกับ level 1 เท่านั้น)
+  getApproversForLevel: (level, date, departmentId) =>
+    `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}` +
+    (departmentId ? `&departmentId=${departmentId}` : ""), // GET
   getApproversForLevelProxy: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET (alias for proxy checking)
   updateUserRole: `${BASE_URL}/auth/update-role`,
   updateProfile: `${BASE_URL}/auth/update-picture`,
@@ -77,6 +80,14 @@ export const apiEndpoints = {
   // admin manage department
   departmentsAdmin: `${BASE_URL}/admin/departments`,
   departmentByIdAdmin: (id) => `${BASE_URL}/admin/departments/${id}`,
+  assignDepartmentHead: `${BASE_URL}/admin/assign-head`, // POST { departmentId, headId }
+
+  // admin manage approver positions (ผู้อนุมัติระดับคณะ)
+  approverPositions: `${BASE_URL}/admin/approver-positions`, // GET, POST { level, userId }
+  approverPositionByLevel: (level) =>
+    `${BASE_URL}/admin/approver-positions/${level}`, // DELETE
+  approverPositionHistory: (level) =>
+    `${BASE_URL}/admin/approver-positions/${level}/history`, // GET
 
   // admin manage organization
   organizationCreate: `${BASE_URL}/admin/organizations`,
@@ -166,7 +177,9 @@ export const apiEndpoints = {
   proxyApprovalByProxy: (userId) => `${BASE_URL}/proxy-approval/proxy/${userId}`, // GET
   proxyApprovalActive: (userId, level) => `${BASE_URL}/proxy-approval/active/${userId}/${level}`, // GET
   proxyApprovalCheckPermission: (userId, level) => `${BASE_URL}/proxy-approval/check-permission/${userId}/${level}`, // GET
-  proxyApprovalPotentialApprovers: (level) => `${BASE_URL}/proxy-approval/potential-approvers/${level}`, // GET
+  // backend อ่าน approverLevel จาก query ไม่ใช่ path param (เดิมส่งเป็น path จึง 404 ทุกครั้ง)
+  proxyApprovalPotentialApprovers: (level) =>
+    `${BASE_URL}/proxy-approval/potential-approvers?approverLevel=${level}`, // GET
   proxyApprovalCancel: (id) => `${BASE_URL}/proxy-approval/${id}/cancel`, // PATCH
   proxyApprovalExpire: `${BASE_URL}/proxy-approval/expire`, // PATCH
   proxyApprovalStats: `${BASE_URL}/proxy-approval/stats`, // GET

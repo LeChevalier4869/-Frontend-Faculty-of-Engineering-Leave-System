@@ -196,7 +196,10 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="w-[min(92vw,720px)] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl font-kanit flex flex-col min-h-0">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div className="flex flex-col gap-1">

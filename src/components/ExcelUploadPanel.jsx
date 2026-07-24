@@ -3,7 +3,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { saveAs } from "file-saver";
-import { useNavigate } from "react-router-dom";
+import { useGoBack } from "../utils/useGoBack";
 
 export default function ExcelUploadPanel({
   title,
@@ -15,7 +15,7 @@ export default function ExcelUploadPanel({
   tokenKey = "accessToken",
   onSuccess,
 }) {
-  const navigate = useNavigate();
+  const goBack = useGoBack("/admin/manage-user");
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -134,7 +134,7 @@ export default function ExcelUploadPanel({
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => navigate("/admin/manage-user")}
+            onClick={goBack}
             className="px-5 py-2 rounded-xl font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition text-sm shadow-sm"
           >
             ยกเลิก
