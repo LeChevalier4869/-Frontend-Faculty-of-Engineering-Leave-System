@@ -91,6 +91,7 @@ export default function ApproverDashboard() {
   const [userSearch, setUserSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [queueCounts, setQueueCounts] = useState({});
+  const [holidays, setHolidays] = useState([]);
 
   const { user: authUser } = useAuth() || {};
   const myQueues = useMemo(() => {
@@ -103,9 +104,10 @@ export default function ApproverDashboard() {
     setError("");
     // ยิงแยกกันและกันพังทีละตัว — ถ้า endpoint ใดล้ม ส่วนที่เหลือยังแสดงได้
     // รายชื่อผู้ใช้ดึงจาก endpoint ที่ scope ตามบทบาท (หัวหน้าสาขา=เฉพาะสาขา, ระดับคณะ=ทั้งคณะ)
-    const [reqRes, userRes, ...queueRes] = await Promise.all([
+    const [reqRes, userRes, holidayRes, ...queueRes] = await Promise.all([
       API.get("/approver/oversight/leave-requests").catch(() => null),
       API.get("/approver/oversight/users").catch(() => null),
+      API.get("/admin/holiday").catch(() => null),
       ...myQueues.map((q) => API.get(q.list).catch(() => null)),
     ]);
 
@@ -117,6 +119,7 @@ export default function ApproverDashboard() {
     setRequests(reqRes?.data?.data || []);
     setUsers(oversightUsers);
     setUserCount(oversightUsers.length);
+    setHolidays(holidayRes?.data?.data || []);
 
     // จำนวนงานรอในแต่ละคิวที่ผู้ใช้มีบทบาท (endpoint คืน array ตรง ๆ)
     const counts = {};
@@ -242,8 +245,17 @@ export default function ApproverDashboard() {
         if (cur >= s && cur <= e) counts[d] = (counts[d] || 0) + 1;
       }
     }
-    return { year, month, daysInMonth, startWeekday, counts, today: now.getDate() };
-  }, [requests]);
+    // วันหยุด: recurring จับเฉพาะเดือน+วัน (ข้ามปี), non-recurring ต้องตรงปีด้วย
+    const holidayMap = {};
+    for (const h of holidays) {
+      if (!h.date) continue;
+      const hd = new Date(h.date);
+      if (hd.getMonth() !== month) continue;
+      if (!h.isRecurring && hd.getFullYear() !== year) continue;
+      holidayMap[hd.getDate()] = h.description || "วันหยุด";
+    }
+    return { year, month, daysInMonth, startWeekday, counts, holidayMap, today: now.getDate() };
+  }, [requests, holidays]);
 
   if (loading) {
     return (
@@ -737,7 +749,7 @@ function Panel({ title, subtitle, action, children, className = "" }) {
 const WEEKDAYS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
 
 function MiniCalendar({ cal }) {
-  const { year, month, daysInMonth, startWeekday, counts, today } = cal;
+  const { year, month, daysInMonth, startWeekday, counts, holidayMap = {}, today } = cal;
   const monthLabel = new Date(year, month, 1).toLocaleDateString("th-TH", {
     month: "long",
     year: "numeric",
@@ -761,16 +773,22 @@ function MiniCalendar({ cal }) {
         {cells.map((d, idx) => {
           if (d === null) return <div key={`b${idx}`} />;
           const c = counts[d] || 0;
+          const holiday = holidayMap[d];
           const isToday = d === today;
+          const titleParts = [];
+          if (holiday) titleParts.push(`วันหยุด: ${holiday}`);
+          if (c > 0) titleParts.push(`${c} คนลา`);
           return (
             <div
               key={d}
-              title={c > 0 ? `${c} คนลาในวันนี้` : ""}
+              title={titleParts.join(" · ")}
               className={`relative flex h-9 flex-col items-center justify-center rounded-lg text-sm ${
-                c > 0
-                  ? "bg-brand-50 font-semibold text-brand-700"
-                  : "text-slate-600"
-              } ${isToday ? "ring-2 ring-brand-400" : ""}`}
+                holiday
+                  ? "bg-rose-50 font-semibold text-rose-600"
+                  : c > 0
+                    ? "bg-brand-50 font-semibold text-brand-700"
+                    : "text-slate-600"
+              } ${isToday ? "ring-2 ring-brand-400" : ""} ${holiday || c > 0 ? "cursor-default" : ""}`}
             >
               {d}
               {c > 0 && (
@@ -781,6 +799,21 @@ function MiniCalendar({ cal }) {
             </div>
           );
         })}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded bg-rose-50 ring-1 ring-rose-200" />
+          วันหยุด
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded bg-brand-50 ring-1 ring-brand-200" />
+          มีคนลา
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded ring-2 ring-brand-400" />
+          วันนี้
+        </span>
+        <span className="text-slate-400">— เลื่อนเมาส์ที่วันเพื่อดูรายละเอียด</span>
       </div>
     </div>
   );
