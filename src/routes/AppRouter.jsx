@@ -38,6 +38,9 @@ const LeaveVerifier = lazy(() => import("../layouts/approver/LeaveVerifier"));
 const ApproverDashboard = lazy(() => import("../layouts/approver/ApproverDashboard"));
 
 
+/** Public pages **/
+import HelpManual from "../layouts/help/HelpManual";
+
 /** Admin pages **/
 import AdminDashboard from "../layouts/admin/AdminDashBoard";
 import DepartmentManage from "../layouts/admin/DepartmentManage";
@@ -146,6 +149,7 @@ const guestRouter = createBrowserRouter([
       { path: "/", element: <Login2 /> },
       { path: "/login", element: <Login2 /> },
       { path: "/callback", element: <Callback /> },
+      { path: "/help", element: <HelpManual /> },
       { path: "/dashboard", element: <UserDashBoard /> },
       { path: "/leave-dev", element: <Leave2 /> },
       { path: "*", element: <Navigate to="/" replace /> },
@@ -154,6 +158,8 @@ const guestRouter = createBrowserRouter([
 ]);
 
 const userRouter = createBrowserRouter([
+  // คู่มือ: หน้าสาธารณะ ไม่ผูกกับ AppLayout (มี header ของตัวเอง) ดูได้แม้ล็อกอินอยู่
+  { path: "/help", element: <HelpManual /> },
   {
     element: <AppLayout />,
     children: [
