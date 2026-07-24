@@ -204,10 +204,9 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         title: "บันทึกคำขอลาสำเร็จ",
         confirmButtonColor: "#3b82f6",
       });
-      onSuccess();
+      // ไม่ reload หน้า — onSuccess ปิด modal และดึงรายการใหม่ให้แล้ว (ลื่นเหมือน modal อื่น)
       resetForm();
-      onClose();
-      window.location.reload();
+      onSuccess();
     } catch (err) {
       console.error("Submit Error:", err);
       Swal.fire({
