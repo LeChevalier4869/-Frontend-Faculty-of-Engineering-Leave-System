@@ -192,6 +192,23 @@ export default function AdminDashboard() {
     [requests],
   );
 
+  // อันดับผู้ลาเยอะสุด (ทั้งระบบ) — รวมจำนวนวันและครั้ง (อนุมัติ/รออนุมัติ) เอา 10 อันดับแรก
+  const topLeavers = useMemo(() => {
+    const tally = new Map();
+    for (const r of requests) {
+      if (r.status === "REJECTED" || r.status === "CANCELLED") continue;
+      const u = r.user;
+      if (!u) continue;
+      const cur = tally.get(u.id) || { user: u, days: 0, count: 0 };
+      cur.days += Number(r.thisTimeDays) || 0;
+      cur.count += 1;
+      tally.set(u.id, cur);
+    }
+    return [...tally.values()]
+      .sort((a, b) => b.days - a.days || b.count - a.count)
+      .slice(0, 10);
+  }, [requests]);
+
   const upcomingHolidays = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -592,6 +609,57 @@ export default function AdminDashboard() {
             )}
           </Panel>
         </div>
+
+        {/* ---------- อันดับผู้ลาเยอะสุด (ทั้งระบบ) ---------- */}
+        <Panel
+          title="อันดับผู้ลาเยอะสุด"
+          subtitle="รวมจำนวนวันและครั้งที่ลาทั้งระบบ (อนุมัติ/รออนุมัติ) — กดเพื่อดูข้อมูลผู้ใช้"
+        >
+          {topLeavers.length === 0 ? (
+            <EmptyState text="ยังไม่มีข้อมูลการลา" />
+          ) : (
+            <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              {topLeavers.map((t, i) => (
+                <li key={t.user.id}>
+                  <button
+                    onClick={() => navigate(`/admin/user-info/${t.user.id}`)}
+                    className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left transition hover:bg-slate-50"
+                  >
+                    <span
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                        i === 0
+                          ? "bg-amber-100 text-amber-700"
+                          : i === 1
+                            ? "bg-slate-200 text-slate-600"
+                            : i === 2
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-800">
+                        {fullName(t.user)}
+                      </p>
+                      <p className="truncate text-xs text-slate-400">
+                        {t.user.department?.name || "-"}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-sm font-semibold tabular-nums text-brand-700">
+                        {t.days} วัน
+                      </p>
+                      <p className="text-[11px] tabular-nums text-slate-400">
+                        {t.count} ครั้ง
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
 
         {/* ---------- Audit log + วันหยุด ---------- */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
