@@ -582,7 +582,7 @@ export default function ApproverDashboard() {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <Panel
             title="อันดับผู้ลาเยอะสุด"
-            subtitle="รวมจำนวนวันลา (อนุมัติ/รออนุมัติ)"
+            subtitle="รวมจำนวนวันและครั้งที่ลา (อนุมัติ/รออนุมัติ)"
           >
             {topLeavers.length === 0 ? (
               <EmptyState text="ยังไม่มีข้อมูลการลา" />
@@ -615,9 +615,14 @@ export default function ApproverDashboard() {
                           {t.user.department?.name || "-"}
                         </p>
                       </div>
-                      <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
-                        {t.days} วัน
-                      </span>
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-semibold tabular-nums text-brand-700">
+                          {t.days} วัน
+                        </p>
+                        <p className="text-[11px] tabular-nums text-slate-400">
+                          {t.count} ครั้ง
+                        </p>
+                      </div>
                     </button>
                   </li>
                 ))}
