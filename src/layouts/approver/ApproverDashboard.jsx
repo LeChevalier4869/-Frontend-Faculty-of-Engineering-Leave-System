@@ -19,9 +19,20 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { API } from "../../utils/api";
+import useAuth from "../../hooks/useAuth";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ApproverUserDetailModal from "../../components/approver/ApproverUserDetailModal";
+
+// คิวอนุมัติของแต่ละบทบาท (list = endpoint นับจำนวน, page = หน้าคิว)
+const APPROVER_QUEUES = [
+  { role: "APPROVER_1", label: "หัวหน้าสาขา", list: "/leave-requests/for-approver1", page: "/approver/leave-request-approver1" },
+  { role: "VERIFIER", label: "ผู้ตรวจสอบ", list: "/leave-requests/for-verifier", page: "/approver/leave-request-verifier" },
+  { role: "APPROVER_2", label: "สารบรรณคณะ", list: "/leave-requests/for-approver2", page: "/approver/leave-request-approver2" },
+  { role: "APPROVER_3", label: "รองคณบดี", list: "/leave-requests/for-approver3", page: "/approver/leave-request-approver3" },
+  { role: "APPROVER_4", label: "คณบดี", list: "/leave-requests/for-approver4", page: "/approver/leave-request-approver4" },
+];
 
 /**
  * สีสถานะ — ผ่านการตรวจ contrast (>= 3:1 บนพื้นขาว) แล้ว
@@ -77,14 +88,23 @@ export default function ApproverDashboard() {
   const [users, setUsers] = useState([]);
   const [userSearch, setUserSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [queueCounts, setQueueCounts] = useState({});
+
+  const { user: authUser } = useAuth() || {};
+  const myQueues = useMemo(() => {
+    const r = authUser?.roles || authUser?.role || [];
+    const roles = Array.isArray(r) ? r : [];
+    return APPROVER_QUEUES.filter((q) => roles.includes(q.role));
+  }, [authUser]);
 
   const loadAll = useCallback(async () => {
     setError("");
     // ยิงแยกกันและกันพังทีละตัว — ถ้า endpoint ใดล้ม ส่วนที่เหลือยังแสดงได้
     // รายชื่อผู้ใช้ดึงจาก endpoint ที่ scope ตามบทบาท (หัวหน้าสาขา=เฉพาะสาขา, ระดับคณะ=ทั้งคณะ)
-    const [reqRes, userRes] = await Promise.all([
+    const [reqRes, userRes, ...queueRes] = await Promise.all([
       API.get("/approver/oversight/leave-requests").catch(() => null),
       API.get("/approver/oversight/users").catch(() => null),
+      ...myQueues.map((q) => API.get(q.list).catch(() => null)),
     ]);
 
     if (!reqRes && !userRes) {
@@ -95,7 +115,15 @@ export default function ApproverDashboard() {
     setRequests(reqRes?.data?.data || []);
     setUsers(oversightUsers);
     setUserCount(oversightUsers.length);
-  }, []);
+
+    // จำนวนงานรอในแต่ละคิวที่ผู้ใช้มีบทบาท (endpoint คืน array ตรง ๆ)
+    const counts = {};
+    myQueues.forEach((q, i) => {
+      const d = queueRes[i]?.data;
+      counts[q.role] = Array.isArray(d) ? d.length : 0;
+    });
+    setQueueCounts(counts);
+  }, [myQueues]);
 
   useEffect(() => {
     (async () => {
@@ -297,6 +325,47 @@ export default function ApproverDashboard() {
             value={statusCounts.REJECTED}
           />
         </div>
+
+        {/* ---------- งานรออนุมัติของฉัน (ลิงก์เข้าคิว) ---------- */}
+        {myQueues.length > 0 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-semibold tracking-tight text-slate-900">
+                งานรออนุมัติของฉัน
+              </h2>
+              <span className="text-xs text-slate-500">กดการ์ดเพื่อไปที่คิว</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {myQueues.map((q) => {
+                const n = queueCounts[q.role] || 0;
+                return (
+                  <Link
+                    key={q.role}
+                    to={q.page}
+                    className={`group flex flex-col rounded-xl border p-3 transition hover:shadow-sm ${
+                      n > 0
+                        ? "border-amber-300 bg-amber-50/60"
+                        : "border-slate-200 bg-white hover:bg-slate-50"
+                    }`}
+                  >
+                    <span className="truncate text-xs text-slate-500">{q.label}</span>
+                    <span
+                      className={`mt-1 text-2xl font-semibold tabular-nums ${
+                        n > 0 ? "text-amber-700" : "text-slate-400"
+                      }`}
+                    >
+                      {n}
+                    </span>
+                    <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-brand-700">
+                      ไปที่คิว
+                      <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ---------- แนวโน้ม + สถานะ ---------- */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

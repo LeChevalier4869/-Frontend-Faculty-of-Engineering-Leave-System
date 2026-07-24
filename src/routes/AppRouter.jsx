@@ -213,7 +213,7 @@ const userRouter = createBrowserRouter([
           {
             path: "dashboard-approver",
             element: (
-              <ProtectedRoute requiredRoles={['APPROVER_1','APPROVER_2','APPROVER_3','APPROVER_4',]} checkProxy={true}>
+              <ProtectedRoute requiredRoles={['APPROVER_1','VERIFIER','APPROVER_2','APPROVER_3','APPROVER_4',]} checkProxy={true}>
                 <ApproverDashboard />
               </ProtectedRoute>
             )
