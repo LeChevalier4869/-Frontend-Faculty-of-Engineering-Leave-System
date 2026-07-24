@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { API } from "../../utils/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import ApproverUserDetailModal from "../../components/approver/ApproverUserDetailModal";
 
 /**
  * สีสถานะ — ผ่านการตรวจ contrast (>= 3:1 บนพื้นขาว) แล้ว
@@ -75,22 +76,27 @@ export default function ApproverDashboard() {
   const [error, setError] = useState("");
   const [requests, setRequests] = useState([]);
   const [userCount, setUserCount] = useState(0);
+  const [users, setUsers] = useState([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const loadAll = useCallback(async () => {
     setError("");
     // ยิงแยกกันและกันพังทีละตัว — ถ้า endpoint ใดล้ม ส่วนที่เหลือยังแสดงได้
+    // รายชื่อผู้ใช้ดึงจาก endpoint ที่ scope ตามบทบาท (หัวหน้าสาขา=เฉพาะสาขา, ระดับคณะ=ทั้งคณะ)
     const [reqRes, userRes] = await Promise.all([
       API.get("/leave-requests/department").catch(() => null),
-      API.get("/auth/users-department").catch(() => null),
+      API.get("/approver/oversight/users").catch(() => null),
     ]);
-    console.log(userRes)
 
     if (!reqRes && !userRes) {
       setError("ไม่สามารถโหลดข้อมูลแดชบอร์ดได้ กรุณาลองใหม่อีกครั้ง");
     }
 
+    const oversightUsers = userRes?.data?.data || [];
     setRequests(reqRes?.data?.data || []);
-    setUserCount((userRes?.data?.data || []).length);
+    setUsers(oversightUsers);
+    setUserCount(oversightUsers.length);
   }, []);
 
   useEffect(() => {
@@ -157,6 +163,20 @@ export default function ApproverDashboard() {
 
   const maxTypeCount = topLeaveTypes[0]?.count || 1;
   const totalRequests = requests.length;
+
+  const filteredUsers = useMemo(() => {
+    const q = userSearch.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) => {
+      const name = (u.fullName || "").toLowerCase();
+      return (
+        name.includes(q) ||
+        (u.email || "").toLowerCase().includes(q) ||
+        (u.position || "").toLowerCase().includes(q) ||
+        (u.department?.name || "").toLowerCase().includes(q)
+      );
+    });
+  }, [users, userSearch]);
 
   if (loading) {
     return (
@@ -469,7 +489,56 @@ export default function ApproverDashboard() {
             )}
           </Panel>
         </div>
+
+        {/* ---------- รายชื่อผู้ใช้ในความดูแล ---------- */}
+        <Panel
+          title="รายชื่อผู้ใช้ในความดูแล"
+          subtitle={`${users.length} คน — กดเพื่อดูโปรไฟล์ ยอดวันลาคงเหลือ และประวัติการลา`}
+        >
+          <div className="mb-3">
+            <input
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              placeholder="ค้นหาชื่อ อีเมล ตำแหน่ง หรือสาขา..."
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+            />
+          </div>
+          {filteredUsers.length === 0 ? (
+            <EmptyState text="ไม่พบผู้ใช้งาน" />
+          ) : (
+            <ul className="grid max-h-[440px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+              {filteredUsers.map((u) => (
+                <li key={u.id}>
+                  <button
+                    onClick={() => setSelectedUserId(u.id)}
+                    className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-brand-300 hover:bg-brand-50/40"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700 ring-1 ring-brand-100">
+                      {(u.firstName || "?").charAt(0)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-800">
+                        {u.fullName}
+                      </p>
+                      <p className="truncate text-xs text-slate-500">
+                        {u.position || "ไม่ระบุตำแหน่ง"} · {u.department?.name || "ไม่ระบุสาขา"}
+                      </p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-slate-300" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
       </div>
+
+      {selectedUserId != null && (
+        <ApproverUserDetailModal
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
+      )}
     </div>
   );
 }
