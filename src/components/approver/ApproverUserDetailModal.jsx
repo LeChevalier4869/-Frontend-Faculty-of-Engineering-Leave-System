@@ -65,6 +65,13 @@ export default function ApproverUserDetailModal({ userId, onClose }) {
   const historyTotal = data?.historyTotal ?? history.length;
   const historyTruncated = historyTotal > history.length;
 
+  // จำนวนครั้งที่ลาจริง (ไม่นับที่ถูกปฏิเสธ/ยกเลิก) แยกตามประเภท — ใช้เสริม "กี่ครั้ง"
+  const timesByType = {};
+  for (const h of history) {
+    if (h.status === "REJECTED" || h.status === "CANCELLED") continue;
+    timesByType[h.leaveTypeId] = (timesByType[h.leaveTypeId] || 0) + 1;
+  }
+
   const openLeave = (id) => {
     onClose();
     navigate(`/leave/${id}`);
@@ -155,7 +162,8 @@ export default function ApproverUserDetailModal({ userId, onClose }) {
                             {rd.text}
                           </p>
                           <p className="text-[11px] text-slate-400">
-                            ใช้ไป {b.usedDays ?? 0} · รออนุมัติ {b.pendingDays ?? 0}
+                            ลาไป {b.usedDays ?? 0} วัน ({timesByType[b.leaveTypeId] || 0} ครั้ง)
+                            {b.pendingDays > 0 && ` · รอ ${b.pendingDays}`}
                           </p>
                         </div>
                       );

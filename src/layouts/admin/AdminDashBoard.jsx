@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { API } from "../../utils/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import ApproverUserDetailModal from "../../components/approver/ApproverUserDetailModal";
 
 /**
  * สีสถานะ — ผ่านการตรวจ contrast (>= 3:1 บนพื้นขาว) แล้ว
@@ -103,6 +104,7 @@ export default function AdminDashboard() {
   const [proxies, setProxies] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [approvers, setApprovers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const loadAll = useCallback(async () => {
     setError("");
@@ -622,7 +624,7 @@ export default function AdminDashboard() {
               {topLeavers.map((t, i) => (
                 <li key={t.user.id}>
                   <button
-                    onClick={() => navigate(`/admin/user-info/${t.user.id}`)}
+                    onClick={() => setSelectedUserId(t.user.id)}
                     className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left transition hover:bg-slate-50"
                   >
                     <span
@@ -733,6 +735,13 @@ export default function AdminDashboard() {
           </Panel>
         </div>
       </div>
+
+      {selectedUserId != null && (
+        <ApproverUserDetailModal
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
+      )}
     </div>
   );
 }
