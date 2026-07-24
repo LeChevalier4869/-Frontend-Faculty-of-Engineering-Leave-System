@@ -89,6 +89,7 @@ export default function ApproverDashboard() {
   const [userCount, setUserCount] = useState(0);
   const [users, setUsers] = useState([]);
   const [userSearch, setUserSearch] = useState("");
+  const [deptFilter, setDeptFilter] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [queueCounts, setQueueCounts] = useState({});
   const [holidays, setHolidays] = useState([]);
@@ -195,10 +196,23 @@ export default function ApproverDashboard() {
   const maxTypeCount = topLeaveTypes[0]?.count || 1;
   const totalRequests = requests.length;
 
+  // แผนกที่มีในรายชื่อ (ใช้ทำตัวกรอง — จะมีหลายแผนกเฉพาะผู้อนุมัติระดับคณะ)
+  const departmentOptions = useMemo(() => {
+    const map = new Map();
+    for (const u of users) {
+      const d = u.department;
+      if (d?.id != null && !map.has(d.id)) map.set(d.id, d.name);
+    }
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => (a.name || "").localeCompare(b.name || "", "th"));
+  }, [users]);
+
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase();
-    if (!q) return users;
     return users.filter((u) => {
+      if (deptFilter && String(u.department?.id) !== String(deptFilter)) return false;
+      if (!q) return true;
       const name = (u.fullName || "").toLowerCase();
       return (
         name.includes(q) ||
@@ -207,7 +221,7 @@ export default function ApproverDashboard() {
         (u.department?.name || "").toLowerCase().includes(q)
       );
     });
-  }, [users, userSearch]);
+  }, [users, userSearch, deptFilter]);
 
   // อันดับผู้ลาเยอะสุด — รวมจำนวนวันลา (เฉพาะที่อนุมัติ/รออนุมัติ) ต่อคน เอา 5 อันดับแรก
   const topLeavers = useMemo(() => {
@@ -635,19 +649,39 @@ export default function ApproverDashboard() {
             </p>
           </div>
 
-          <div className="relative mb-3">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              value={userSearch}
-              onChange={(e) => setUserSearch(e.target.value)}
-              placeholder="พิมพ์ชื่อ อีเมล ตำแหน่ง หรือสาขา ของผู้ยื่นลา..."
-              className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
-            />
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                placeholder="พิมพ์ชื่อ อีเมล ตำแหน่ง หรือสาขา ของผู้ยื่นลา..."
+                className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300"
+              />
+            </div>
+            {/* ตัวกรองแผนก — แสดงเฉพาะเมื่อดูแลหลายแผนก (ผู้อนุมัติระดับคณะ) */}
+            {departmentOptions.length > 1 && (
+              <select
+                value={deptFilter}
+                onChange={(e) => setDeptFilter(e.target.value)}
+                className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-300 sm:w-56"
+              >
+                <option value="">ทุกแผนก</option>
+                {departmentOptions.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
-          {userSearch.trim() && (
+          {(userSearch.trim() || deptFilter) && (
             <p className="mb-2 text-xs text-slate-500">
-              พบ {filteredUsers.length} คนจากคำค้น &ldquo;{userSearch.trim()}&rdquo;
+              พบ {filteredUsers.length} คน
+              {deptFilter &&
+                ` ในแผนก ${departmentOptions.find((d) => String(d.id) === String(deptFilter))?.name || ""}`}
+              {userSearch.trim() && ` จากคำค้น "${userSearch.trim()}"`}
             </p>
           )}
           {filteredUsers.length === 0 ? (
