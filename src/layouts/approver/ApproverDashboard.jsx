@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import {
   Bar,
   BarChart,
@@ -70,7 +69,6 @@ const fullName = (u) =>
     : "-";
 
 export default function ApproverDashboard() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -85,7 +83,7 @@ export default function ApproverDashboard() {
     // ยิงแยกกันและกันพังทีละตัว — ถ้า endpoint ใดล้ม ส่วนที่เหลือยังแสดงได้
     // รายชื่อผู้ใช้ดึงจาก endpoint ที่ scope ตามบทบาท (หัวหน้าสาขา=เฉพาะสาขา, ระดับคณะ=ทั้งคณะ)
     const [reqRes, userRes] = await Promise.all([
-      API.get("/leave-requests/department").catch(() => null),
+      API.get("/approver/oversight/leave-requests").catch(() => null),
       API.get("/approver/oversight/users").catch(() => null),
     ]);
 
@@ -178,6 +176,45 @@ export default function ApproverDashboard() {
     });
   }, [users, userSearch]);
 
+  // อันดับผู้ลาเยอะสุด — รวมจำนวนวันลา (เฉพาะที่อนุมัติ/รออนุมัติ) ต่อคน เอา 5 อันดับแรก
+  const topLeavers = useMemo(() => {
+    const tally = new Map();
+    for (const r of requests) {
+      if (r.status === "REJECTED" || r.status === "CANCELLED") continue;
+      const u = r.user;
+      if (!u) continue;
+      const cur = tally.get(u.id) || { user: u, days: 0, count: 0 };
+      cur.days += Number(r.thisTimeDays) || 0;
+      cur.count += 1;
+      tally.set(u.id, cur);
+    }
+    return [...tally.values()]
+      .sort((a, b) => b.days - a.days || b.count - a.count)
+      .slice(0, 5);
+  }, [requests]);
+
+  // ปฏิทินการลาเดือนนี้ — นับจำนวนคนที่ลาในแต่ละวัน (เฉพาะอนุมัติ/รออนุมัติ)
+  const leaveCalendar = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startWeekday = new Date(year, month, 1).getDay();
+    const counts = {};
+    const dayOnly = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    for (const r of requests) {
+      if (r.status === "REJECTED" || r.status === "CANCELLED") continue;
+      if (!r.startDate || !r.endDate) continue;
+      const s = dayOnly(new Date(r.startDate));
+      const e = dayOnly(new Date(r.endDate));
+      for (let d = 1; d <= daysInMonth; d++) {
+        const cur = new Date(year, month, d);
+        if (cur >= s && cur <= e) counts[d] = (counts[d] || 0) + 1;
+      }
+    }
+    return { year, month, daysInMonth, startWeekday, counts, today: now.getDate() };
+  }, [requests]);
+
   if (loading) {
     return (
       <LoadingSpinner
@@ -234,68 +271,30 @@ export default function ApproverDashboard() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatTile
             icon={<Users className="h-5 w-5" />}
-            label="ผู้ใช้งานทั้งหมด"
+            label="ผู้ใช้ในความดูแล"
             value={userCount}
-            hint="ดูรายชื่อผู้ใช้งาน"
-            onClick={() =>
-              navigate("/admin/management", { state: { activeTab: "users" } })
-            }
           />
           <StatTile
             icon={<FileText className="h-5 w-5" />}
             label="คำขอลาทั้งหมด"
             value={totalRequests}
-            hint="ดูคำขอทั้งหมด"
-            onClick={() =>
-              navigate("/admin/management", {
-                state: { activeTab: "leaveRequests" },
-              })
-            }
           />
           <StatTile
             icon={<Clock className="h-5 w-5" />}
             label="รออนุมัติ"
             value={statusCounts.PENDING}
-            hint={
-              statusCounts.PENDING > 0
-                ? "มีรายการรอดำเนินการ"
-                : "ไม่มีรายการค้าง"
-            }
-            onClick={() =>
-              navigate("/admin/management", {
-                state: { activeTab: "leaveRequests" },
-              })
-            }
+            accent={statusCounts.PENDING > 0}
+            hint={statusCounts.PENDING > 0 ? "มีรายการรอดำเนินการ" : "ไม่มีรายการค้าง"}
           />
           <StatTile
             icon={<CheckCircle2 className="h-5 w-5" />}
             label="อนุมัติแล้ว"
             value={statusCounts.APPROVED}
-            hint={
-              statusCounts.APPROVED > 0
-                ? "รายการที่อนุมัติแล้ว"
-                : "ยังไม่มีรายการที่อนุมัติ"
-            }
-            onClick={() =>
-              navigate("/admin/management", {
-                state: { activeTab: "leaveRequests" },
-              })
-            }
           />
           <StatTile
             icon={<XCircle className="h-5 w-5" />}
             label="ถูกปฏิเสธ"
             value={statusCounts.REJECTED}
-            hint={
-              statusCounts.REJECTED > 0
-                ? "รายการที่ถูกปฏิเสธ"
-                : "ยังไม่มีรายการที่ถูกปฏิเสธ"
-            }
-            onClick={() =>
-              navigate("/admin/management", {
-                state: { activeTab: "leaveRequests" },
-              })
-            }
           />
         </div>
 
@@ -396,14 +395,7 @@ export default function ApproverDashboard() {
           <Panel
             className="xl:col-span-2"
             title="คำขอลาล่าสุด"
-            subtitle="5 รายการที่ยื่นเข้าระบบล่าสุด"
-            action={
-              <PanelLink
-                to="/admin/management"
-                state={{ activeTab: "leaveRequests" }}
-                label="ดูคำขอทั้งหมด"
-              />
-            }
+            subtitle="5 รายการล่าสุดในความดูแลของคุณ"
           >
             {recentRequests.length === 0 ? (
               <EmptyState text="ยังไม่มีคำขอลา" />
@@ -454,8 +446,7 @@ export default function ApproverDashboard() {
 
           <Panel
             title="ประเภทการลาที่ใช้มากที่สุด"
-            subtitle="นับจากคำขอทั้งหมดในระบบ"
-            action={<PanelLink to="/admin/leave-report" label="ดูรายงานสรุป" />}
+            subtitle="นับจากคำขอในความดูแลของคุณ"
           >
             {topLeaveTypes.length === 0 ? (
               <EmptyState text="ยังไม่มีข้อมูล" />
@@ -487,6 +478,62 @@ export default function ApproverDashboard() {
                 ))}
               </ul>
             )}
+          </Panel>
+        </div>
+
+        {/* ---------- อันดับผู้ลา + ปฏิทินการลา ---------- */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <Panel
+            title="อันดับผู้ลาเยอะสุด"
+            subtitle="รวมจำนวนวันลา (อนุมัติ/รออนุมัติ)"
+          >
+            {topLeavers.length === 0 ? (
+              <EmptyState text="ยังไม่มีข้อมูลการลา" />
+            ) : (
+              <ul className="space-y-1.5">
+                {topLeavers.map((t, i) => (
+                  <li key={t.user.id}>
+                    <button
+                      onClick={() => setSelectedUserId(t.user.id)}
+                      className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left transition hover:bg-slate-50"
+                    >
+                      <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                          i === 0
+                            ? "bg-amber-100 text-amber-700"
+                            : i === 1
+                              ? "bg-slate-200 text-slate-600"
+                              : i === 2
+                                ? "bg-orange-100 text-orange-700"
+                                : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-slate-800">
+                          {fullName(t.user)}
+                        </p>
+                        <p className="truncate text-xs text-slate-400">
+                          {t.user.department?.name || "-"}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
+                        {t.days} วัน
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel
+            className="xl:col-span-2"
+            title="ปฏิทินการลาเดือนนี้"
+            subtitle="จำนวนคนที่ลาในแต่ละวัน"
+          >
+            <MiniCalendar cal={leaveCalendar} />
           </Panel>
         </div>
 
@@ -546,13 +593,14 @@ export default function ApproverDashboard() {
 /* ---------------- ส่วนประกอบย่อย ---------------- */
 
 function StatTile({ icon, label, value, hint, onClick, accent = false }) {
+  const clickable = typeof onClick === "function";
+  const Wrapper = clickable ? "button" : "div";
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group w-full rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
-        accent ? "border-amber-300 ring-1 ring-amber-100" : "border-slate-200"
-      }`}
+    <Wrapper
+      {...(clickable ? { type: "button", onClick } : {})}
+      className={`group w-full rounded-2xl border bg-white p-5 text-left shadow-sm transition ${
+        clickable ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md" : ""
+      } ${accent ? "border-amber-300 ring-1 ring-amber-100" : "border-slate-200"}`}
     >
       <div className="flex items-center justify-between">
         <span
@@ -564,14 +612,16 @@ function StatTile({ icon, label, value, hint, onClick, accent = false }) {
         >
           {icon}
         </span>
-        <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500" />
+        {clickable && (
+          <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500" />
+        )}
       </div>
       <p className="mt-3 text-3xl font-semibold tabular-nums tracking-tight text-slate-900">
         {value}
       </p>
       <p className="text-sm text-slate-600">{label}</p>
       {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
-    </button>
+    </Wrapper>
   );
 }
 
@@ -596,16 +646,55 @@ function Panel({ title, subtitle, action, children, className = "" }) {
   );
 }
 
-function PanelLink({ to, state, label }) {
+const WEEKDAYS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+
+function MiniCalendar({ cal }) {
+  const { year, month, daysInMonth, startWeekday, counts, today } = cal;
+  const monthLabel = new Date(year, month, 1).toLocaleDateString("th-TH", {
+    month: "long",
+    year: "numeric",
+  });
+  const cells = [];
+  for (let i = 0; i < startWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
   return (
-    <Link
-      to={to}
-      state={state}
-      className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-brand-700 transition hover:bg-brand-50"
-    >
-      {label}
-      <ArrowRight className="h-3.5 w-3.5" />
-    </Link>
+    <div>
+      <p className="mb-2 text-center text-sm font-medium text-slate-700">{monthLabel}</p>
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {WEEKDAYS.map((w, i) => (
+          <div
+            key={w}
+            className={`py-1 text-[11px] font-medium ${i === 0 || i === 6 ? "text-rose-400" : "text-slate-400"}`}
+          >
+            {w}
+          </div>
+        ))}
+        {cells.map((d, idx) => {
+          if (d === null) return <div key={`b${idx}`} />;
+          const c = counts[d] || 0;
+          const isToday = d === today;
+          return (
+            <div
+              key={d}
+              title={c > 0 ? `${c} คนลาในวันนี้` : ""}
+              className={`relative flex h-9 flex-col items-center justify-center rounded-lg text-sm ${
+                c > 0
+                  ? "bg-brand-50 font-semibold text-brand-700"
+                  : "text-slate-600"
+              } ${isToday ? "ring-2 ring-brand-400" : ""}`}
+            >
+              {d}
+              {c > 0 && (
+                <span className="absolute -top-1 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[9px] font-semibold text-white">
+                  {c}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
