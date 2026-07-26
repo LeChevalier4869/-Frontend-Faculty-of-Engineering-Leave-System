@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+/* eslint-disable react/prop-types */
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -38,6 +39,9 @@ import {
   formatRemainingDays,
 } from "../../utils/leavePolicy";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import PeriodFilter from "../../components/PeriodFilter";
+import { filterByPeriod, DEFAULT_PERIOD } from "../../utils/periodRange";
+import MiniCalendar, { buildLeaveCalendar } from "../../components/MiniCalendar";
 
 const COLORS = {
   APPROVED: "#22c55e",
@@ -149,13 +153,9 @@ export default function UserDashboard() {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    remainingLeave: 0,
-    approved: 0,
-    pending: 0,
-    rejected: 0,
-  });
-  const [recent, setRecent] = useState([]);
+  const [myLeaves, setMyLeaves] = useState([]);
+  const [rawHolidays, setRawHolidays] = useState([]);
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [upcoming, setUpcoming] = useState([]);
   const [entitlements, setEntitlements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -168,34 +168,10 @@ export default function UserDashboard() {
       setLoading(true);
       try {
         const token = localStorage.getItem("accessToken");
-        const [summaryRes, leavesRes] = await Promise.all([
-          axios.get(getApiUrl("leave-balances/leave-summary"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(getApiUrl("leave-requests/my-requests"), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        const summary = summaryRes.data ?? {};
-        const leaves = Array.isArray(leavesRes.data) ? leavesRes.data : [];
-
-        const approved = leaves.filter((r) => r.status === "APPROVED").length;
-        const pending = leaves.filter((r) => r.status === "PENDING").length;
-        const rejected = leaves.filter((r) => r.status === "REJECTED").length;
-
-        const remainingDisplay = formatRemainingDays(summary.remainingDays || 0);
-        setStats({
-          approved,
-          pending,
-          rejected,
-          remainingLeave: remainingDisplay.text,
+        const leavesRes = await axios.get(getApiUrl("leave-requests/my-requests"), {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        const sorted = leaves
-          .slice()
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setRecent(sorted.slice(0, 5));
+        setMyLeaves(Array.isArray(leavesRes.data) ? leavesRes.data : []);
       } catch (e) {
         console.error(e);
       } finally {
@@ -277,6 +253,8 @@ export default function UserDashboard() {
           API.get(apiEndpoints.leaveRequestApprovedMe),
         ]);
 
+        setRawHolidays(holidayRes.data.data || []);
+
         const holidays = expandHolidays(
           holidayRes.data.data || [],
           defaultHolidayYears()
@@ -307,14 +285,47 @@ export default function UserDashboard() {
     fetchUpcoming();
   }, []);
 
+  // ---------- ข้อมูลตามช่วงเวลาที่เลือก (KPI/กราฟ) ----------
+  const periodMyLeaves = useMemo(
+    () => filterByPeriod(myLeaves, period),
+    [myLeaves, period],
+  );
+  const stats = useMemo(
+    () => ({
+      approved: periodMyLeaves.filter((r) => r.status === "APPROVED").length,
+      pending: periodMyLeaves.filter((r) => r.status === "PENDING").length,
+      rejected: periodMyLeaves.filter((r) => r.status === "REJECTED").length,
+    }),
+    [periodMyLeaves],
+  );
+  // ประวัติล่าสุด: แสดงภาพรวม (ไม่กรองช่วง) เหมือน dashboard อื่น
+  const recent = useMemo(
+    () =>
+      [...myLeaves]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5),
+    [myLeaves],
+  );
+  // ปฏิทินเดือนนี้: แสดงวันลาของคุณ + วันหยุด (คงเป็นภาพรวมเดือนปัจจุบัน)
+  const calendar = useMemo(
+    () => buildLeaveCalendar(leaveRequest, rawHolidays),
+    [leaveRequest, rawHolidays],
+  );
+
   const pieData = [
     { name: statusLabels.APPROVED, key: "APPROVED", value: stats.approved },
     { name: statusLabels.PENDING, key: "PENDING", value: stats.pending },
     { name: statusLabels.REJECTED, key: "REJECTED", value: stats.rejected },
   ];
 
-  const approvedLeaveRequests = leaveRequest.filter(leave => leave.status === 'APPROVED');
-  
+  const periodLeaveRequest = useMemo(
+    () => filterByPeriod(leaveRequest, period),
+    [leaveRequest, period],
+  );
+  const approvedLeaveRequests = periodLeaveRequest.filter(
+    (leave) => leave.status === "APPROVED",
+  );
+
   const leaveTypeStats = approvedLeaveRequests.reduce((acc, leave) => {
     const type = leave.leaveType?.name;
     if (!type) return acc;
@@ -396,6 +407,19 @@ export default function UserDashboard() {
             </button>
           </div>
         </div>
+
+        {/* ตัวกรองช่วงเวลา — มีผลกับสถิติ/กราฟด้านล่าง (ปฏิทินและประวัติล่าสุดยังเป็นภาพรวม) */}
+        <Panel className="p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight text-slate-900">
+              ช่วงเวลาข้อมูลสรุป
+            </h2>
+            <p className="text-xs text-slate-500">
+              เลือกช่วงเพื่อดูสถิติและกราฟการลาของคุณเฉพาะช่วงนั้น
+            </p>
+          </div>
+          <PeriodFilter value={period} onChange={setPeriod} className="sm:items-end" />
+        </Panel>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           <StatCard
@@ -582,6 +606,30 @@ export default function UserDashboard() {
           </div>
         </Panel>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Panel className="p-5">
+          <SectionHeader
+            eyebrow="Calendar"
+            title="ปฏิทินการลาเดือนนี้"
+            description="ไฮไลต์วันลาของคุณและวันหยุดในเดือนปัจจุบัน"
+            right={
+              <button
+                onClick={() => navigate("/Calendar")}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-brand-700 bg-brand-50 border border-brand-200 hover:bg-brand-100 transition"
+              >
+                <CalendarDays className="w-4 h-4" />
+                ดูทั้งหมด
+              </button>
+            }
+          />
+          <MiniCalendar
+            cal={calendar}
+            countBadge={false}
+            leaveLegendLabel="วันลาของคุณ"
+            leaveTooltip={() => "วันลาของคุณ"}
+          />
+        </Panel>
+
         <Panel className="overflow-hidden">
           <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-3">
             <SectionHeader
@@ -637,6 +685,7 @@ export default function UserDashboard() {
             )}
           </div>
         </Panel>
+        </div>
 
         <Panel className="overflow-hidden">
           <div className="px-4 pt-4 pb-3">
