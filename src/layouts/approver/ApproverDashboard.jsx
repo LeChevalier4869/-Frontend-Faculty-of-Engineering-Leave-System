@@ -26,6 +26,8 @@ import { API } from "../../utils/api";
 import useAuth from "../../hooks/useAuth";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ApproverUserDetailModal from "../../components/approver/ApproverUserDetailModal";
+import PeriodFilter from "../../components/PeriodFilter";
+import { filterByPeriod, DEFAULT_PERIOD } from "../../utils/periodRange";
 
 // คิวอนุมัติของแต่ละบทบาท (list = endpoint นับจำนวน, page = หน้าคิว)
 const APPROVER_QUEUES = [
@@ -93,6 +95,7 @@ export default function ApproverDashboard() {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [queueCounts, setQueueCounts] = useState({});
   const [holidays, setHolidays] = useState([]);
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
 
   const { user: authUser } = useAuth() || {};
   const myQueues = useMemo(() => {
@@ -146,11 +149,17 @@ export default function ApproverDashboard() {
   };
 
   // ---------- ข้อมูลสรุป (คำนวณฝั่ง client เพราะ backend ยังไม่มี endpoint สรุป) ----------
+  // คำขอที่อยู่ในช่วงเวลาที่เลือก (กรองด้วยวันเริ่มลา) — ใช้กับ KPI/อันดับ/ประเภทที่ลาบ่อย
+  const periodRequests = useMemo(
+    () => filterByPeriod(requests, period),
+    [requests, period],
+  );
+
   const statusCounts = useMemo(() => {
     const base = { PENDING: 0, APPROVED: 0, REJECTED: 0, CANCELLED: 0 };
-    for (const r of requests) if (r.status in base) base[r.status] += 1;
+    for (const r of periodRequests) if (r.status in base) base[r.status] += 1;
     return base;
-  }, [requests]);
+  }, [periodRequests]);
 
   const monthlyTrend = useMemo(() => {
     const now = new Date();
@@ -175,7 +184,7 @@ export default function ApproverDashboard() {
 
   const topLeaveTypes = useMemo(() => {
     const tally = new Map();
-    for (const r of requests) {
+    for (const r of periodRequests) {
       const name = r.leaveType?.name || "ไม่ระบุ";
       tally.set(name, (tally.get(name) || 0) + 1);
     }
@@ -183,7 +192,7 @@ export default function ApproverDashboard() {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
-  }, [requests]);
+  }, [periodRequests]);
 
   const recentRequests = useMemo(
     () =>
@@ -194,7 +203,7 @@ export default function ApproverDashboard() {
   );
 
   const maxTypeCount = topLeaveTypes[0]?.count || 1;
-  const totalRequests = requests.length;
+  const totalRequests = periodRequests.length;
 
   // แผนกที่มีในรายชื่อ (ใช้ทำตัวกรอง — จะมีหลายแผนกเฉพาะผู้อนุมัติระดับคณะ)
   const departmentOptions = useMemo(() => {
@@ -226,7 +235,7 @@ export default function ApproverDashboard() {
   // อันดับผู้ลาเยอะสุด — รวมจำนวนวันลา (เฉพาะที่อนุมัติ/รออนุมัติ) ต่อคน เอา 5 อันดับแรก
   const topLeavers = useMemo(() => {
     const tally = new Map();
-    for (const r of requests) {
+    for (const r of periodRequests) {
       if (r.status === "REJECTED" || r.status === "CANCELLED") continue;
       const u = r.user;
       if (!u) continue;
@@ -238,7 +247,7 @@ export default function ApproverDashboard() {
     return [...tally.values()]
       .sort((a, b) => b.days - a.days || b.count - a.count)
       .slice(0, 5);
-  }, [requests]);
+  }, [periodRequests]);
 
   // ปฏิทินการลาเดือนนี้ — นับจำนวนคนที่ลาในแต่ละวัน (เฉพาะอนุมัติ/รออนุมัติ)
   const leaveCalendar = useMemo(() => {
@@ -322,6 +331,19 @@ export default function ApproverDashboard() {
             {error}
           </div>
         )}
+
+        {/* ---------- ตัวกรองช่วงเวลา (มีผลกับ KPI/อันดับ/ประเภทที่ลาบ่อย) ---------- */}
+        <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight text-slate-900">
+              ช่วงเวลาข้อมูลสรุป
+            </h2>
+            <p className="text-xs text-slate-500">
+              เลือกช่วงเพื่อดูสถิติการลา อันดับ และประเภทที่ลาบ่อยเฉพาะช่วงนั้น
+            </p>
+          </div>
+          <PeriodFilter value={period} onChange={setPeriod} className="sm:items-end" />
+        </div>
 
         {/* ---------- KPI ---------- */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
