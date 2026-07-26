@@ -1,6 +1,8 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Link } from "react-router-dom";
+import useAuth from "../../hooks/useAuth";
+import ProfileImage from "../../components/ProfileImage";
 
 /* ---------- ส่วนประกอบเนื้อหา (แทน markdown เพื่อไม่เพิ่ม dependency) ---------- */
 const H2 = ({ children }) => (
@@ -62,6 +64,39 @@ const Feature = ({ icon, title, children }) => (
     </div>
   </div>
 );
+
+/* ---------- แผนภาพสายอนุมัติ (ไล่ซ้าย→ขวาบนจอใหญ่, บน→ล่างบนมือถือ) ---------- */
+const APPROVAL_FLOW = [
+  { n: 1, role: "หัวหน้าสาขา", sub: "APPROVER_1", note: "อนุมัติขั้นแรก (เฉพาะสาขา)" },
+  { n: 2, role: "ผู้ตรวจสอบ", sub: "VERIFIER", note: "ออกเลขที่ใบลา" },
+  { n: 3, role: "สารบรรณคณะ", sub: "APPROVER_2", note: null },
+  { n: 4, role: "รองคณบดี", sub: "APPROVER_3", note: null },
+  { n: 5, role: "คณบดี", sub: "APPROVER_4", note: "อนุมัติขั้นสุดท้าย" },
+];
+const ApprovalFlow = () => (
+  <div className="my-4 flex flex-col items-stretch gap-1 sm:flex-row sm:items-center sm:gap-0 sm:overflow-x-auto sm:pb-1">
+    {APPROVAL_FLOW.map((s, i) => (
+      <Fragment key={s.n}>
+        <div className="rounded-xl border border-brand-200 bg-brand-50/50 p-2.5 text-center sm:min-w-0 sm:flex-1">
+          <div className="mx-auto mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">
+            {s.n}
+          </div>
+          <div className="text-sm font-semibold text-slate-800">{s.role}</div>
+          <div className="font-mono text-[10px] text-brand-700">{s.sub}</div>
+          {s.note && (
+            <div className="mt-1 text-[11px] leading-tight text-slate-500">{s.note}</div>
+          )}
+        </div>
+        {i < APPROVAL_FLOW.length - 1 && (
+          <div className="flex items-center justify-center text-lg text-brand-400 sm:px-1">
+            <span className="sm:hidden">↓</span>
+            <span className="hidden sm:inline">→</span>
+          </div>
+        )}
+      </Fragment>
+    ))}
+  </div>
+);
 /* ---------- เนื้อหาแต่ละหมวด ---------- */
 function Overview() {
   return (
@@ -81,9 +116,8 @@ function Overview() {
         <li><Code>SUPER_ADMIN</Code> — ผู้ดูแลขั้นสูง (มีสิทธิ์ ADMIN ทั้งหมด + ข้อมูลที่อ่อนไหว)</li>
       </Ul>
       <H3>สายอนุมัติ</H3>
-      <P>
-        หัวหน้าสาขา → ผู้ตรวจสอบ (ออกเลขที่ใบลา) → สารบรรณคณะ → รองคณบดี → คณบดี
-      </P>
+      <P>เอกสารจะไหลตามลำดับต่อไปนี้ หากขั้นใดปฏิเสธ คำขอจะหยุดและแจ้งเหตุผลกลับ</P>
+      <ApprovalFlow />
     </div>
   );
 }
@@ -99,7 +133,11 @@ function Installation() {
 
       <H3>สิ่งที่ต้องเตรียม</H3>
       <Ul>
-        <li>Node.js และฐานข้อมูล MySQL</li>
+        <li>Node.js</li>
+        <li>
+          ฐานข้อมูล <strong>MySQL 8.0 ขึ้นไป</strong> หรือ <strong>MariaDB 10.5 ขึ้นไป</strong>
+          {" "}— สคริปต์ migration ใช้คำสั่งที่ MySQL 5.7 / MariaDB 10.4 หรือเก่ากว่า<strong>ไม่รองรับ</strong>
+        </li>
         <li>ไฟล์ <Code>.env</Code> ของ backend: <Code>DATABASE_URL</Code>, JWT secrets,
           Google OAuth (<Code>GOOGLE_CLIENT_ID/SECRET</Code>) และ (ถ้าจะ bootstrap ผ่าน seed)
           <Code>BOOTSTRAP_SUPER_ADMIN_EMAIL</Code></li>
@@ -223,6 +261,7 @@ function ApproverGuide() {
         <li><Code>APPROVER_3</Code> — รองคณบดี</li>
         <li><Code>APPROVER_4</Code> — คณบดี (ขั้นสุดท้าย)</li>
       </Ul>
+      <ApprovalFlow />
 
       <H3>เมนูและความสามารถ</H3>
       <Feature icon="🗂️" title="แดชบอร์ดผู้อนุมัติ">
@@ -320,6 +359,12 @@ export default function HelpManual() {
   const [active, setActive] = useState("overview");
   const current = SECTIONS.find((s) => s.key === active) || SECTIONS[0];
 
+  // ถ้าผู้ใช้ล็อกอินอยู่แล้ว ให้แสดงโปรไฟล์ (คลิกกลับเข้าระบบ) แทนปุ่ม "เข้าสู่ระบบ"
+  const { user } = useAuth();
+  const isAuthed = !!(user?.id && localStorage.getItem("accessToken"));
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+  const googleAvatar = user?.accounts?.find((a) => a.provider === "google")?.profilePictureUrl;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900">
       {/* Header */}
@@ -329,12 +374,33 @@ export default function HelpManual() {
             <span className="text-brand-600">📖</span>
             <span className="text-lg font-semibold tracking-tight">คู่มือการใช้งานระบบ eLeave</span>
           </div>
-          <Link
-            to="/"
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            เข้าสู่ระบบ
-          </Link>
+          {isAuthed ? (
+            <Link
+              to="/"
+              title="กลับสู่ระบบ"
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-3 shadow-sm transition hover:bg-slate-50"
+            >
+              <ProfileImage
+                profilePicturePath={user?.profilePicturePath}
+                googleProfilePictureUrl={googleAvatar}
+                size="small"
+                className="rounded-lg bg-gradient-to-br from-brand-600 to-brand-800"
+              />
+              <div className="hidden text-left leading-tight sm:block">
+                <div className="max-w-[10rem] truncate text-sm font-medium text-slate-800">
+                  {fullName || user?.email}
+                </div>
+                <div className="text-[11px] text-slate-500">กลับสู่ระบบ</div>
+              </div>
+            </Link>
+          ) : (
+            <Link
+              to="/"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              เข้าสู่ระบบ
+            </Link>
+          )}
         </div>
       </header>
 
