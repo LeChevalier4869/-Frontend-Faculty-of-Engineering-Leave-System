@@ -104,6 +104,26 @@ const EMPLOYEES = [
   "นางวรรณา ศรีสุข",
 ];
 
+const PERSONNEL_TYPES = [
+  "ข้าราชการ",
+  "พนักงานมหาวิทยาลัย",
+  "ลูกจ้างประจำ",
+  "ลูกจ้างชั่วคราว",
+  "ข้าราชการพลเรือนในสถาบันอุดมศึกษา",
+];
+
+// ข้อมูลสรุปรายรอบประเมิน — นับเป็น "ครั้ง/วัน" ต่อรอบ ไม่ใช่รายวันแบบตารางเช็คชื่อ
+const CYCLE_ROWS = [
+  { name: "นาย สมชาย ใจดี", positionNo: "", sick: { times: 0, days: 0 }, personal: { times: 0, days: 0 }, annual: { times: 0, days: 0 }, late: 0, absent: 0, other: "", note: "" },
+  { name: "นางสาว พิมพ์ใจ รุ่งเรือง", positionNo: "", sick: { times: 1, days: 2 }, personal: { times: 0, days: 0 }, annual: { times: 0, days: 0 }, late: 0, absent: 0, other: "", note: "" },
+  { name: "นาย วีระ ศักดิ์สิทธิ์", positionNo: "", sick: { times: 0, days: 0 }, personal: { times: 0, days: 0 }, annual: { times: 0, days: 0 }, late: 0, absent: 0, other: "", note: "" },
+  { name: "นาง สุนีย์ แสงทอง", positionNo: "", sick: { times: 0, days: 0 }, personal: { times: 2, days: 2 }, annual: { times: 0, days: 0 }, late: 0, absent: 0, other: "", note: "" },
+  { name: "นาย อนุชา พงษ์ไพร", positionNo: "", sick: { times: 0, days: 0 }, personal: { times: 0, days: 0 }, annual: { times: 0, days: 0 }, late: 0, absent: 0, other: "", note: "" },
+  { name: "นางสาว กมลวรรณ ทองสุข", positionNo: "", sick: { times: 0, days: 0 }, personal: { times: 0, days: 0 }, annual: { times: 1, days: 3 }, late: 2, absent: 0, other: "", note: "" },
+  { name: "นาย ธีรพงษ์ มั่นคง", positionNo: "", sick: { times: 0, days: 0 }, personal: { times: 0, days: 0 }, annual: { times: 0, days: 0 }, late: 0, absent: 1, other: "", note: "" },
+  { name: "นาง วรรณา ศรีสุข", positionNo: "", sick: { times: 0, days: 0 }, personal: { times: 0, days: 0 }, annual: { times: 0, days: 0 }, late: 0, absent: 0, other: "", note: "" },
+];
+
 function daysInMonth(monthIndex, buddhistYear) {
   return new Date(buddhistYear - 543, monthIndex + 1, 0).getDate();
 }
@@ -124,10 +144,24 @@ export default function AttendanceReport() {
   const [department, setDepartment] = useState(DEPARTMENTS[0]);
   const [monthIndex, setMonthIndex] = useState(6);
   const [year, setYear] = useState(2569);
+  const [cycleNumber, setCycleNumber] = useState(11);
+  const [cycleStart, setCycleStart] = useState("1 เมษายน 2568");
+  const [cycleEnd, setCycleEnd] = useState("1 พฤษภาคม 2568");
+  const [fiscalYear, setFiscalYear] = useState(2568);
+  const [fiscalStart, setFiscalStart] = useState("1 เมษายน 2568");
+  const [fiscalEnd, setFiscalEnd] = useState("1 พฤษภาคม 2568");
+  const [personnelType, setPersonnelType] = useState(PERSONNEL_TYPES[2]);
   const [applied, setApplied] = useState({
     department: DEPARTMENTS[0],
     monthIndex: 6,
     year: 2569,
+    cycleNumber: 11,
+    cycleStart: "1 เมษายน 2568",
+    cycleEnd: "1 พฤษภาคม 2568",
+    fiscalYear: 2568,
+    fiscalStart: "1 เมษายน 2568",
+    fiscalEnd: "1 พฤษภาคม 2568",
+    personnelType: PERSONNEL_TYPES[2],
   });
   const [activeSymbolKey, setActiveSymbolKey] = useState(null); // key ของ LEAVE_META หรือ "WEEKEND"
 
@@ -149,14 +183,46 @@ export default function AttendanceReport() {
     });
   }, [dayList, applied]);
 
-  const handleApply = () => setApplied({ department, monthIndex, year });
+  const handleApply = () =>
+    setApplied({
+      department,
+      monthIndex,
+      year,
+      cycleNumber,
+      cycleStart,
+      cycleEnd,
+      fiscalYear,
+      fiscalStart,
+      fiscalEnd,
+      personnelType,
+    });
   const handleReset = () => {
     setReportType("monthly");
     setDepartment(DEPARTMENTS[0]);
     setMonthIndex(6);
     setYear(2569);
-    setApplied({ department: DEPARTMENTS[0], monthIndex: 6, year: 2569 });
+    setCycleNumber(11);
+    setCycleStart("1 เมษายน 2568");
+    setCycleEnd("1 พฤษภาคม 2568");
+    setFiscalYear(2568);
+    setFiscalStart("1 เมษายน 2568");
+    setFiscalEnd("1 พฤษภาคม 2568");
+    setPersonnelType(PERSONNEL_TYPES[2]);
+    setApplied({
+      department: DEPARTMENTS[0],
+      monthIndex: 6,
+      year: 2569,
+      cycleNumber: 11,
+      cycleStart: "1 เมษายน 2568",
+      cycleEnd: "1 พฤษภาคม 2568",
+      fiscalYear: 2568,
+      fiscalStart: "1 เมษายน 2568",
+      fiscalEnd: "1 พฤษภาคม 2568",
+      personnelType: PERSONNEL_TYPES[2],
+    });
   };
+
+  const isSummaryTable = reportType === "cycle" || reportType === "fiscal";
 
   return (
     <div
@@ -234,27 +300,117 @@ export default function AttendanceReport() {
                 </label>
                 <SelectField value={department} onChange={setDepartment} options={DEPARTMENTS} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                  เดือน
-                </label>
-                <SelectField
-                  value={monthIndex}
-                  onChange={(v) => setMonthIndex(Number(v))}
-                  options={MONTHS}
-                  optionValues={MONTHS.map((_, i) => i)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                  ปี
-                </label>
-                <SelectField
-                  value={year}
-                  onChange={(v) => setYear(Number(v))}
-                  options={YEARS}
-                />
-              </div>
+
+              {reportType === "cycle" ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      รอบประเมิน ครั้งที่
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={cycleNumber}
+                      onChange={(e) => setCycleNumber(Number(e.target.value))}
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      ประเภทบุคลากร
+                    </label>
+                    <SelectField value={personnelType} onChange={setPersonnelType} options={PERSONNEL_TYPES} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      ระหว่างวันที่
+                    </label>
+                    <input
+                      type="text"
+                      value={cycleStart}
+                      onChange={(e) => setCycleStart(e.target.value)}
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      ถึงวันที่
+                    </label>
+                    <input
+                      type="text"
+                      value={cycleEnd}
+                      onChange={(e) => setCycleEnd(e.target.value)}
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400"
+                    />
+                  </div>
+                </>
+              ) : reportType === "fiscal" ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      ปีงบประมาณ พ.ศ.
+                    </label>
+                    <input
+                      type="number"
+                      value={fiscalYear}
+                      onChange={(e) => setFiscalYear(Number(e.target.value))}
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      ประเภทบุคลากร
+                    </label>
+                    <SelectField value={personnelType} onChange={setPersonnelType} options={PERSONNEL_TYPES} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      ระหว่างวันที่
+                    </label>
+                    <input
+                      type="text"
+                      value={fiscalStart}
+                      onChange={(e) => setFiscalStart(e.target.value)}
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      ถึงวันที่
+                    </label>
+                    <input
+                      type="text"
+                      value={fiscalEnd}
+                      onChange={(e) => setFiscalEnd(e.target.value)}
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      เดือน
+                    </label>
+                    <SelectField
+                      value={monthIndex}
+                      onChange={(v) => setMonthIndex(Number(v))}
+                      options={MONTHS}
+                      optionValues={MONTHS.map((_, i) => i)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                      ปี
+                    </label>
+                    <SelectField
+                      value={year}
+                      onChange={(v) => setYear(Number(v))}
+                      options={YEARS}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-1">
@@ -279,87 +435,161 @@ export default function AttendanceReport() {
 
         {/* ---------- ตารางรายงาน ---------- */}
         <Panel
-          title="รายงานสรุปการลาและการมาปฏิบัติราชการของบุคลากร"
+          title={
+            isSummaryTable
+              ? "รายงานสรุปการลาและการลงเวลาปฏิบัติราชการของบุคลากร"
+              : "รายงานสรุปการลาและการมาปฏิบัติราชการของบุคลากร"
+          }
           subtitle={`มหาวิทยาลัยเทคโนโลยีอีสาน วิทยาเขตขอนแก่น · สังกัด ${applied.department}`}
         >
-          <div className="overflow-x-auto -mx-5 px-5">
-            <table className="border-collapse text-center text-sm">
-              <thead>
-                <tr className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
-                  <ReportTh className="sticky left-0 z-20 bg-slate-50" style={{ minWidth: 44 }}>
-                    ลำดับ
-                  </ReportTh>
-                  <ReportTh className="sticky z-20 text-left bg-slate-50" style={{ minWidth: 168, left: 44 }}>
-                    ชื่อ-สกุล
-                  </ReportTh>
-                  {dayList.map((d) => (
-                    <ReportTh key={d} style={{ minWidth: 30 }}>{d}</ReportTh>
-                  ))}
-                  <ReportTh style={{ minWidth: 64 }}>รวมวันมา</ReportTh>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, i) => (
-                  <tr key={row.name} className={i % 2 === 1 ? "bg-slate-50/60" : "bg-white"}>
-                    <td
-                      className="border border-slate-100 px-2 py-1.5 sticky z-10"
-                      style={{ left: 0, background: i % 2 === 1 ? "#f8fafc" : "white" }}
-                    >
-                      {i + 1}
-                    </td>
-                    <td
-                      className="border border-slate-100 px-3 py-1.5 text-left whitespace-nowrap font-medium text-slate-800 sticky z-10"
-                      style={{ left: 44, background: i % 2 === 1 ? "#f8fafc" : "white" }}
-                    >
-                      {row.name}
-                    </td>
-                    {row.cells.map((c) => (
-                      <td
-                        key={c.day}
-                        onClick={() =>
-                          setActiveSymbolKey(c.weekend ? "WEEKEND" : SYMBOL_TO_KEY[c.symbol])
-                        }
-                        className="border border-slate-100 px-1 py-1.5 text-[13px] font-medium cursor-pointer hover:bg-slate-50 transition-colors"
-                        style={{
-                          color: c.weekend ? "#94a3b8" : LEAVE_META[SYMBOL_TO_KEY[c.symbol]].color,
-                          background: c.weekend ? "#f8fafc" : "transparent",
-                        }}
-                      >
-                        {c.symbol}
-                      </td>
-                    ))}
-                    <td className="border border-slate-100 px-2 py-1.5 font-semibold bg-slate-50">
-                      {row.tally.PRESENT}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {reportType === "cycle" ? (
+            <p className="text-center text-sm text-slate-600 pb-4 mb-4 border-b border-dashed border-slate-100">
+              ประจำรอบการประเมิน ครั้งที่ {applied.cycleNumber} ระหว่างวันที่ {applied.cycleStart} – {applied.cycleEnd}
+              <br />
+              ประเภทบุคลากร {applied.personnelType}
+            </p>
+          ) : reportType === "fiscal" ? (
+            <p className="text-center text-sm text-slate-600 pb-4 mb-4 border-b border-dashed border-slate-100">
+              ประจำปีงบประมาณ พ.ศ. {applied.fiscalYear} ระหว่างวันที่ {applied.fiscalStart} – {applied.fiscalEnd}
+              <br />
+              ประเภทบุคลากร {applied.personnelType}
+            </p>
+          ) : (
+            <p className="text-center text-sm text-slate-600 pb-4 mb-4 border-b border-dashed border-slate-100">
+              ประจำเดือน {MONTHS[applied.monthIndex]} {applied.year}
+            </p>
+          )}
 
-          {/* Legend */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 pt-4 mt-2 border-t border-slate-100">
-            {LEAVE_ORDER.map((k) => {
-              const meta = LEAVE_META[k];
-              return (
+          {isSummaryTable ? (
+            <div className="overflow-x-auto -mx-5 px-5">
+              <table className="border-collapse text-center text-sm">
+                <thead>
+                  <tr className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
+                    <ReportTh rowSpan={2} style={{ minWidth: 44 }}>ลำดับ</ReportTh>
+                    <ReportTh rowSpan={2} style={{ minWidth: 100 }}>เลขที่ตำแหน่ง</ReportTh>
+                    <ReportTh rowSpan={2} className="text-left" style={{ minWidth: 168 }}>ชื่อ-สกุล</ReportTh>
+                    <ReportTh colSpan={2} style={{ minWidth: 90 }}>ลาป่วย</ReportTh>
+                    <ReportTh colSpan={2} style={{ minWidth: 90 }}>ลากิจ</ReportTh>
+                    <ReportTh colSpan={2} style={{ minWidth: 90 }}>ลาพักผ่อน</ReportTh>
+                    <ReportTh rowSpan={2} style={{ minWidth: 80 }}>มาสาย(ครั้ง)</ReportTh>
+                    <ReportTh rowSpan={2} style={{ minWidth: 90 }}>ขาดราชการ(วัน)</ReportTh>
+                    <ReportTh rowSpan={2} style={{ minWidth: 160 }}>การลาประเภทอื่น ๆ (โปรดระบุ)</ReportTh>
+                    <ReportTh rowSpan={2} style={{ minWidth: 100 }}>หมายเหตุ</ReportTh>
+                  </tr>
+                  <tr className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
+                    <ReportTh style={{ minWidth: 45 }}>ครั้ง</ReportTh>
+                    <ReportTh style={{ minWidth: 45 }}>วัน</ReportTh>
+                    <ReportTh style={{ minWidth: 45 }}>ครั้ง</ReportTh>
+                    <ReportTh style={{ minWidth: 45 }}>วัน</ReportTh>
+                    <ReportTh style={{ minWidth: 45 }}>ครั้ง</ReportTh>
+                    <ReportTh style={{ minWidth: 45 }}>วัน</ReportTh>
+                  </tr>
+                </thead>
+                <tbody>
+                  {CYCLE_ROWS.map((r, i) => (
+                    <tr key={r.name} className={i % 2 === 1 ? "bg-slate-50/60" : "bg-white"}>
+                      <td className="border border-slate-100 px-2 py-1.5">{i + 1}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.positionNo || "-"}</td>
+                      <td className="border border-slate-100 px-3 py-1.5 text-left whitespace-nowrap font-medium text-slate-800">
+                        {r.name}
+                      </td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.sick.times || "-"}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.sick.days || "-"}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.personal.times || "-"}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.personal.days || "-"}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.annual.times || "-"}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.annual.days || "-"}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.late || "-"}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.absent || "-"}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.other || "-"}</td>
+                      <td className="border border-slate-100 px-2 py-1.5">{r.note || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto -mx-5 px-5">
+                <table className="border-collapse text-center text-sm">
+                  <thead>
+                    <tr className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                      <ReportTh className="sticky left-0 z-20 bg-slate-50" style={{ minWidth: 44 }}>
+                        ลำดับ
+                      </ReportTh>
+                      <ReportTh className="sticky z-20 text-left bg-slate-50" style={{ minWidth: 168, left: 44 }}>
+                        ชื่อ-สกุล
+                      </ReportTh>
+                      {dayList.map((d) => (
+                        <ReportTh key={d} style={{ minWidth: 30 }}>{d}</ReportTh>
+                      ))}
+                      <ReportTh style={{ minWidth: 64 }}>รวมวันมา</ReportTh>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, i) => (
+                      <tr key={row.name} className={i % 2 === 1 ? "bg-slate-50/60" : "bg-white"}>
+                        <td
+                          className="border border-slate-100 px-2 py-1.5 sticky z-10"
+                          style={{ left: 0, background: i % 2 === 1 ? "#f8fafc" : "white" }}
+                        >
+                          {i + 1}
+                        </td>
+                        <td
+                          className="border border-slate-100 px-3 py-1.5 text-left whitespace-nowrap font-medium text-slate-800 sticky z-10"
+                          style={{ left: 44, background: i % 2 === 1 ? "#f8fafc" : "white" }}
+                        >
+                          {row.name}
+                        </td>
+                        {row.cells.map((c) => (
+                          <td
+                            key={c.day}
+                            onClick={() =>
+                              setActiveSymbolKey(c.weekend ? "WEEKEND" : SYMBOL_TO_KEY[c.symbol])
+                            }
+                            className="border border-slate-100 px-1 py-1.5 text-[13px] font-medium cursor-pointer hover:bg-slate-50 transition-colors"
+                            style={{
+                              color: c.weekend ? "#94a3b8" : LEAVE_META[SYMBOL_TO_KEY[c.symbol]].color,
+                              background: c.weekend ? "#f8fafc" : "transparent",
+                            }}
+                          >
+                            {c.symbol}
+                          </td>
+                        ))}
+                        <td className="border border-slate-100 px-2 py-1.5 font-semibold bg-slate-50">
+                          {row.tally.PRESENT}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Legend */}
+              <div className="flex flex-wrap gap-x-6 gap-y-2 pt-4 mt-2 border-t border-slate-100">
+                {LEAVE_ORDER.map((k) => {
+                  const meta = LEAVE_META[k];
+                  return (
+                    <button
+                      key={k}
+                      onClick={() => setActiveSymbolKey(k)}
+                      className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                      <meta.Icon className="h-3.5 w-3.5" style={{ color: meta.color }} />
+                      <span className="font-semibold" style={{ color: meta.color }}>{meta.symbol}</span>
+                      = {meta.label}
+                    </button>
+                  );
+                })}
                 <button
-                  key={k}
-                  onClick={() => setActiveSymbolKey(k)}
-                  className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                  onClick={() => setActiveSymbolKey("WEEKEND")}
+                  className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition-colors"
                 >
-                  <meta.Icon className="h-3.5 w-3.5" style={{ color: meta.color }} />
-                  <span className="font-semibold" style={{ color: meta.color }}>{meta.symbol}</span>
-                  = {meta.label}
+                  <span className="font-semibold">-</span> = วันหยุดราชการ
                 </button>
-              );
-            })}
-            <button
-              onClick={() => setActiveSymbolKey("WEEKEND")}
-              className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition-colors"
-            >
-              <span className="font-semibold">-</span> = วันหยุดราชการ
-            </button>
-          </div>
+              </div>
+            </>
+          )}
         </Panel>
       </div>
 
@@ -434,11 +664,13 @@ function Panel({ title, subtitle, action, children, className = "" }) {
   );
 }
 
-function ReportTh({ children, className = "", style = {} }) {
+function ReportTh({ children, className = "", style = {}, rowSpan, colSpan }) {
   return (
     <th
       className={"border border-slate-100 px-2 py-2 font-semibold whitespace-nowrap " + className}
       style={style}
+      rowSpan={rowSpan}
+      colSpan={colSpan}
     >
       {children}
     </th>
