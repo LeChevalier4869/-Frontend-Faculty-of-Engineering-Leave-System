@@ -392,13 +392,18 @@ export default function ApproverDashboard() {
                   <Link
                     key={q.role}
                     to={q.page}
-                    className={`group flex flex-col rounded-xl border p-3 transition hover:shadow-sm ${
-                      n > 0
-                        ? "border-amber-300 bg-amber-50/60"
-                        : "border-slate-200 bg-white hover:bg-slate-50"
+                    className={`group relative flex flex-col rounded-xl border border-slate-200 p-3 transition hover:shadow-sm ${
+                      n > 0 ? "bg-amber-50/60" : "bg-white hover:bg-slate-50"
                     }`}
                   >
-                    <span className="truncate text-xs text-slate-500">{q.label}</span>
+                    {n > 0 && (
+                      <span
+                        className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-white"
+                        title="มีรายการรออนุมัติ"
+                        aria-label="มีรายการรออนุมัติ"
+                      />
+                    )}
+                    <span className="truncate pr-4 text-xs text-slate-500">{q.label}</span>
                     <span
                       className={`mt-1 text-2xl font-semibold tabular-nums ${
                         n > 0 ? "text-amber-700" : "text-slate-400"
