@@ -169,6 +169,7 @@ export const apiEndpoints = {
 
   //PDF
   generatePdf: `${BASE_URL}/api/download-report`, // POST
+  reportDataforMonth : `${BASE_URL}/api/data-month-report`, //GET
 
   // Proxy Approval
   proxyApproval: `${BASE_URL}/proxy-approval`, // CRUD
