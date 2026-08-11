@@ -7,7 +7,6 @@ import SelectField from "./elements/SelectField";
 
 import {
   REPORT_TYPES,
-  DEPARTMENTS,
   MONTHS,
   YEARS,
   PERSONNEL_TYPES,
@@ -17,8 +16,9 @@ export default function ReportFilter({
   reportType,
   setReportType,
 
-  department,
-  setDepartment,
+  organization,
+  setOrganization,
+  organizations,
 
   monthIndex,
   setMonthIndex,
@@ -58,7 +58,6 @@ export default function ReportFilter({
       subtitle="เลือกช่วงเวลาและหน่วยงานที่ต้องการแสดงผล"
     >
       <div className="space-y-5">
-
         {/* ประเภทรายงาน */}
         <div>
           <label className="block text-sm font-medium text-slate-600 mb-2">
@@ -72,17 +71,13 @@ export default function ReportFilter({
                 onClick={() => setReportType(type.key)}
                 className={
                   "px-4 py-2 text-sm font-medium transition-colors " +
-                  (index !== 0
-                    ? "border-l border-slate-300 "
-                    : "") +
+                  (index !== 0 ? "border-l border-slate-300 " : "") +
                   (reportType === type.key
                     ? "text-white"
                     : "bg-white text-slate-600 hover:bg-slate-50")
                 }
                 style={
-                  reportType === type.key
-                    ? { backgroundColor: brandColor }
-                    : {}
+                  reportType === type.key ? { backgroundColor: brandColor } : {}
                 }
               >
                 {type.label}
@@ -91,25 +86,22 @@ export default function ReportFilter({
           </div>
         </div>
 
-
         <div className="h-px bg-slate-100" />
 
-
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-
           {/* หน่วยงาน */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-slate-600 mb-1.5">
-              หน่วยงาน
+              คณะ
             </label>
 
             <SelectField
-              value={department}
-              onChange={setDepartment}
-              options={DEPARTMENTS}
+              value={organization}
+              onChange={(v) => setOrganization(Number(v))}
+              options={organizations.map((org) => org.name)}
+              optionValues={organizations.map((org) => org.id)}
             />
           </div>
-
 
           {/* รอบประเมิน */}
           {reportType === "cycle" && (
@@ -123,13 +115,10 @@ export default function ReportFilter({
                   type="number"
                   min={1}
                   value={cycleNumber}
-                  onChange={(e) =>
-                    setCycleNumber(Number(e.target.value))
-                  }
+                  onChange={(e) => setCycleNumber(Number(e.target.value))}
                   className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"
                 />
               </div>
-
 
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">
@@ -143,7 +132,6 @@ export default function ReportFilter({
                 />
               </div>
 
-
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">
                   ระหว่างวันที่
@@ -155,7 +143,6 @@ export default function ReportFilter({
                   className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"
                 />
               </div>
-
 
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">
@@ -171,7 +158,6 @@ export default function ReportFilter({
             </>
           )}
 
-
           {/* ปีงบประมาณ */}
           {reportType === "fiscal" && (
             <>
@@ -183,13 +169,10 @@ export default function ReportFilter({
                 <input
                   type="number"
                   value={fiscalYear}
-                  onChange={(e) =>
-                    setFiscalYear(Number(e.target.value))
-                  }
+                  onChange={(e) => setFiscalYear(Number(e.target.value))}
                   className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"
                 />
               </div>
-
 
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">
@@ -203,7 +186,6 @@ export default function ReportFilter({
                 />
               </div>
 
-
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">
                   ระหว่างวันที่
@@ -215,7 +197,6 @@ export default function ReportFilter({
                   className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"
                 />
               </div>
-
 
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">
@@ -230,7 +211,6 @@ export default function ReportFilter({
               </div>
             </>
           )}
-
 
           {/* ประจำเดือน */}
           {reportType === "monthly" && (
@@ -248,7 +228,6 @@ export default function ReportFilter({
                 />
               </div>
 
-
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">
                   ปี
@@ -262,13 +241,10 @@ export default function ReportFilter({
               </div>
             </>
           )}
-
         </div>
-
 
         {/* ปุ่ม */}
         <div className="flex justify-end gap-3 pt-1">
-
           <button
             onClick={onReset}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
@@ -276,7 +252,6 @@ export default function ReportFilter({
             <RotateCcw className="h-4 w-4" />
             ล้างข้อมูล
           </button>
-
 
           <button
             onClick={onApply}
@@ -288,9 +263,7 @@ export default function ReportFilter({
             <Search className="h-4 w-4" />
             แสดงรายงาน
           </button>
-
         </div>
-
       </div>
     </Panel>
   );

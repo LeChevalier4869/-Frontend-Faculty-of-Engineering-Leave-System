@@ -1,6 +1,12 @@
 /* eslint-disable react/prop-types */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { API, apiEndpoints } from "../../utils/api";
 import { FileDown, RotateCcw, Search } from "lucide-react";
+import {
+  getMonthlyReport,
+  getOrganizations,
+} from "../../services/reportService";
+import { SYMBOL_TO_KEY, ATTENDANCE_SYMBOL } from "../../constants/leaveMeta";
 import ReportHeader from "../../components/admin/report/ReportHeader";
 import ReportFilter from "../../components/admin/report/ReportFilter";
 import ReportDescription from "../../components/admin/report/ReportDescription";
@@ -10,10 +16,8 @@ import SelectField from "../../components/admin/report/elements/SelectField";
 import SymbolMeaningModal from "../../components/admin/report/elements/SymbolMeaningModal";
 import MonthlyReportTable from "../../components/admin/report/tables/MonthlyReportTable";
 import SummaryReportTable from "../../components/admin/report/tables/SummaryReportTable";
-import { SYMBOL_TO_KEY } from "../../constants/leaveMeta";
 import {
   REPORT_TYPES,
-  DEPARTMENTS,
   MONTHS,
   YEARS,
   EMPLOYEES,
@@ -30,7 +34,8 @@ const GOLD = "#a8842f";
 
 export default function AttendanceReport() {
   const [reportType, setReportType] = useState("monthly");
-  const [department, setDepartment] = useState(DEPARTMENTS[0]);
+  const [organizations, setOrganizations] = useState([]);
+  const [organization, setOrganization] = useState("");
   const [monthIndex, setMonthIndex] = useState(6);
   const [year, setYear] = useState(2569);
   const [cycleNumber, setCycleNumber] = useState(11);
@@ -40,8 +45,10 @@ export default function AttendanceReport() {
   const [fiscalStart, setFiscalStart] = useState("1 เมษายน 2568");
   const [fiscalEnd, setFiscalEnd] = useState("1 พฤษภาคม 2568");
   const [personnelType, setPersonnelType] = useState(PERSONNEL_TYPES[2]);
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [applied, setApplied] = useState({
-    department: DEPARTMENTS[0],
+    organization: "",
     monthIndex: 6,
     year: 2569,
     cycleNumber: 11,
@@ -54,6 +61,31 @@ export default function AttendanceReport() {
   });
   const [activeSymbolKey, setActiveSymbolKey] = useState(null); // key ของ LEAVE_META หรือ "WEEKEND"
 
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const result = await getOrganizations();
+
+        setOrganizations(result);
+
+        if (result.length > 0) {
+          const firstOrganizationId = result[0].id;
+
+          setOrganization(firstOrganizationId);
+
+          setApplied((prev) => ({
+            ...prev,
+            organization: firstOrganizationId,
+          }));
+        }
+      } catch (error) {
+        console.error("โหลด organizations ไม่สำเร็จ:", error);
+      }
+    };
+
+    fetchOrganizations();
+  }, []);
+
   const totalDays = useMemo(
     () => daysInMonth(applied.monthIndex, applied.year),
     [applied],
@@ -64,38 +96,151 @@ export default function AttendanceReport() {
   );
 
   const rows = useMemo(() => {
+    // รายงานประจำเดือน ใช้ข้อมูลจาก API
+    if (reportType === "monthly" && reportData) {
+      // รวมบุคลากรทุกประเภท
+      const employees = Object.values(reportData.report).flat();
+
+      return employees.map((emp) => {
+        const cells = dayList.map((day) => {
+          const isWeekend = [0, 6].includes(
+            weekdayOf(applied.monthIndex, applied.year, day),
+          );
+
+          if (isWeekend) {
+            return {
+              day,
+              symbol: "-",
+              weekend: true,
+            };
+          }
+
+          // ถ้าไม่มีข้อมูลการลา ถือว่ามาปฏิบัติงาน
+          const leaveType = emp.attendance?.[day];
+
+          return {
+            day,
+            symbol: ATTENDANCE_SYMBOL[leaveType] ?? "✓",
+            weekend: false,
+          };
+        });
+
+        const tally = {
+          PRESENT: 0,
+          ANNUAL: 0,
+          SICK: 0,
+          PERSONAL: 0,
+          ABSENT: 0,
+        };
+
+        cells.forEach((cell) => {
+          if (cell.weekend) return;
+
+          const key = SYMBOL_TO_KEY[cell.symbol];
+
+          if (key) {
+            tally[key]++;
+          }
+        });
+
+        return {
+          userId: emp.userId,
+          name: emp.name,
+          totalWorkDays: emp.totalWorkDays,
+          cells,
+          tally,
+        };
+      });
+    }
+
+    // Cycle / Fiscal ยังใช้ Mock เดิม
     return EMPLOYEES.map((name, empIdx) => {
       const cells = dayList.map((day) => {
         const isWeekend = [0, 6].includes(
           weekdayOf(applied.monthIndex, applied.year, day),
         );
-        if (isWeekend) return { day, symbol: "-", weekend: true };
-        return { day, symbol: symbolFor(empIdx, day), weekend: false };
-      });
-      const tally = { PRESENT: 0, ANNUAL: 0, SICK: 0, PERSONAL: 0, ABSENT: 0 };
-      cells.forEach((c) => {
-        if (!c.weekend) tally[SYMBOL_TO_KEY[c.symbol]] += 1;
-      });
-      return { name, cells, tally };
-    });
-  }, [dayList, applied]);
 
-  const handleApply = () =>
-    setApplied({
-      department,
-      monthIndex,
-      year,
-      cycleNumber,
-      cycleStart,
-      cycleEnd,
-      fiscalYear,
-      fiscalStart,
-      fiscalEnd,
-      personnelType,
+        if (isWeekend) {
+          return {
+            day,
+            symbol: "-",
+            weekend: true,
+          };
+        }
+
+        return {
+          day,
+          symbol: symbolFor(empIdx, day),
+          weekend: false,
+        };
+      });
+
+      const tally = {
+        PRESENT: 0,
+        ANNUAL: 0,
+        SICK: 0,
+        PERSONAL: 0,
+        ABSENT: 0,
+      };
+
+      cells.forEach((cell) => {
+        if (cell.weekend) return;
+
+        const key = SYMBOL_TO_KEY[cell.symbol];
+
+        if (key) {
+          tally[key]++;
+        }
+      });
+
+      return {
+        name,
+        cells,
+        tally,
+      };
     });
+  }, [reportData, reportType, dayList, applied]);
+  const handleApply = async () => {
+    try {
+      setLoading(true);
+      if (reportType === "monthly") {
+        const result = await getMonthlyReport({
+          organizationId: organization,
+          month: monthIndex + 1,
+          year: year - 543,
+        });
+        console.log("Filter:", {
+          organizationId: organization,
+          month: monthIndex + 1,
+          year: year - 543,
+        });
+        setReportData(result);
+      }
+      setApplied({
+        organization,
+        monthIndex,
+        year,
+        cycleNumber,
+        cycleStart,
+        cycleEnd,
+        fiscalYear,
+        fiscalStart,
+        fiscalEnd,
+        personnelType,
+      });
+    } catch (error) {
+      console.error("โหลดรายงานไม่สำเร็จ:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleReset = () => {
     setReportType("monthly");
-    setDepartment(DEPARTMENTS[0]);
+    if (organizations.length > 0) {
+      setOrganization(organizations[0].id);
+    } else {
+      setOrganization("");
+    }
     setMonthIndex(6);
     setYear(2569);
     setCycleNumber(11);
@@ -105,8 +250,9 @@ export default function AttendanceReport() {
     setFiscalStart("1 เมษายน 2568");
     setFiscalEnd("1 พฤษภาคม 2568");
     setPersonnelType(PERSONNEL_TYPES[2]);
+    setReportData(null);
     setApplied({
-      department: DEPARTMENTS[0],
+      organization: organizations.length > 0 ? organizations[0].id : "",
       monthIndex: 6,
       year: 2569,
       cycleNumber: 11,
@@ -131,7 +277,7 @@ export default function AttendanceReport() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* ---------- Header ---------- */}
         <ReportHeader
-          department={applied.department}
+          organization={applied.organization}
           month={MONTHS[applied.monthIndex]}
           year={applied.year}
           brandColor={BRAND}
@@ -141,8 +287,9 @@ export default function AttendanceReport() {
         <ReportFilter
           reportType={reportType}
           setReportType={setReportType}
-          department={department}
-          setDepartment={setDepartment}
+          organization={organization}
+          setOrganization={setOrganization}
+          organizations={organizations}
           monthIndex={monthIndex}
           setMonthIndex={setMonthIndex}
           year={year}

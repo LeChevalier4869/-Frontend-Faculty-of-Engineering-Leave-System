@@ -1,7 +1,11 @@
 /* eslint-disable react/prop-types */
 import ReportTh from "../elements/ReportTh";
 // TODO: ปรับ path ให้ตรงกับตำแหน่งจริงที่เก็บไฟล์ leaveMeta.js
-import { LEAVE_META, LEAVE_ORDER, SYMBOL_TO_KEY } from "../../../../constants/leaveMeta";
+import {
+  LEAVE_META,
+  LEAVE_ORDER,
+  SYMBOL_TO_KEY,
+} from "../../../../constants/leaveMeta";
 
 /**
  * ตารางเช็คชื่อรายวันของรายงาน "ประจำเดือน" พร้อม legend ท้ายตาราง
@@ -42,7 +46,7 @@ export default function MonthlyReportTable({ dayList, rows, onSymbolClick }) {
           <tbody>
             {rows.map((row, i) => (
               <tr
-                key={row.name}
+                key={row.userId ?? `${row.name}-${i}`}
                 className={i % 2 === 1 ? "bg-slate-50/60" : "bg-white"}
               >
                 <td
@@ -66,14 +70,21 @@ export default function MonthlyReportTable({ dayList, rows, onSymbolClick }) {
                 {row.cells.map((c) => (
                   <td
                     key={c.day}
-                    onClick={() =>
-                      onSymbolClick(c.weekend ? "WEEKEND" : SYMBOL_TO_KEY[c.symbol])
-                    }
+                    onClick={() => {
+                      const key = c.weekend
+                        ? "WEEKEND"
+                        : SYMBOL_TO_KEY[c.symbol];
+
+                      if (key) {
+                        onSymbolClick(key);
+                      }
+                    }}
                     className="border border-slate-100 px-1 py-1.5 text-[13px] font-medium cursor-pointer hover:bg-slate-50 transition-colors"
                     style={{
                       color: c.weekend
                         ? "#94a3b8"
-                        : LEAVE_META[SYMBOL_TO_KEY[c.symbol]].color,
+                        : (LEAVE_META[SYMBOL_TO_KEY[c.symbol]]?.color ??
+                          "#334155"),
                       background: c.weekend ? "#f8fafc" : "transparent",
                     }}
                   >
@@ -99,7 +110,10 @@ export default function MonthlyReportTable({ dayList, rows, onSymbolClick }) {
               onClick={() => onSymbolClick(k)}
               className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors"
             >
-              <meta.Icon className="h-3.5 w-3.5" style={{ color: meta.color }} />
+              <meta.Icon
+                className="h-3.5 w-3.5"
+                style={{ color: meta.color }}
+              />
               <span className="font-semibold" style={{ color: meta.color }}>
                 {meta.symbol}
               </span>

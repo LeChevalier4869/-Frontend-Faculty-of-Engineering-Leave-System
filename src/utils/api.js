@@ -91,6 +91,7 @@ export const apiEndpoints = {
 
   // admin manage organization
   organizationCreate: `${BASE_URL}/admin/organizations`,
+  organizationsList: `${BASE_URL}/admin/organizations`, //GET
   organizationUpdate: (id) => `${BASE_URL}/admin/organizations/${id}`,
 
   // leave balance
@@ -169,7 +170,7 @@ export const apiEndpoints = {
 
   //PDF
   generatePdf: `${BASE_URL}/api/download-report`, // POST
-  reportDataforMonth : `${BASE_URL}/api/data-month-report`, //GET
+  reportDataforMonth : `${BASE_URL}/api/report/data-month`, //GET
 
   // Proxy Approval
   proxyApproval: `${BASE_URL}/proxy-approval`, // CRUD
