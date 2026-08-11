@@ -172,6 +172,16 @@ export const apiEndpoints = {
   generatePdf: `${BASE_URL}/api/download-report`, // POST
   reportDataforMonth : `${BASE_URL}/api/report/data-month`, //GET
 
+  // ---- รายงานสรุปการลา (preview + export) ----
+  reportSummaryData: `${BASE_URL}/api/report/data`, // POST { organizationId, startDate, endDate } → รอบประเมิน
+  reportFiscalData: `${BASE_URL}/api/report/fiscal-data`, // GET ?organizationId= → รอบปีงบ (backend derive ช่วงวันที่)
+  exportRoundReportPdf: `${BASE_URL}/api/export-round-report-pdf`, // POST
+  exportRoundReportWord: `${BASE_URL}/api/export-round-report-word`, // POST
+  exportYearReportPdf: `${BASE_URL}/api/export-year-report-pdf`, // POST
+  exportYearReportWord: `${BASE_URL}/api/export-year-report-word`, // POST
+  exportMonthReportPdf: `${BASE_URL}/api/export-month-report-pdf`, // POST
+  exportMonthReportWord: `${BASE_URL}/api/export-month-report-word`, // POST
+
   // Proxy Approval
   proxyApproval: `${BASE_URL}/proxy-approval`, // CRUD
   proxyApprovalById: (id) => `${BASE_URL}/proxy-approval/${id}`, // GET/PUT

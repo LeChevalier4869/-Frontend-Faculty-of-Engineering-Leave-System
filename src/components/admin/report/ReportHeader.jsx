@@ -1,13 +1,6 @@
 /* eslint-disable react/prop-types */
 
-import { FileDown } from "lucide-react";
-
-export default function ReportHeader({
-  department,
-  month,
-  year,
-  brandColor = "#b23a47",
-}) {
+export default function ReportHeader({ subtitle, brandColor = "#b23a47" }) {
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
@@ -29,21 +22,13 @@ export default function ReportHeader({
         </div>
 
         <h1 className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight">
-          รายงานประจำเดือน
+          รายงานสรุปการลา
         </h1>
 
         <p className="text-sm text-slate-600">
-          {department} · {month} {year}
+          {subtitle || "สรุปและออกรายงานการลาของบุคลากร — ดูตัวอย่างก่อนดาวน์โหลด PDF/Word"}
         </p>
       </div>
-
-      <button
-        onClick={() => window.print()}
-        className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-      >
-        <FileDown className="h-4 w-4" />
-        Export PDF
-      </button>
     </div>
   );
 }

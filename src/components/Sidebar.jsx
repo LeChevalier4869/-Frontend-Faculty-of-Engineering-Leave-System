@@ -88,6 +88,7 @@ const approverNav4 = [
 
 const adminNav = [
   { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <TbLayoutDashboardFilled /> },
+  { to: "/admin/leave-report", text: "รายงานสรุปการลา", icon: <FaChartBar /> },
   // { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
   // { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaUsersCog /> },
   // { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },

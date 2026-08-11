@@ -1,221 +1,216 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useMemo, useState } from "react";
-import { API, apiEndpoints } from "../../utils/api";
-import { FileDown, RotateCcw, Search } from "lucide-react";
+import Swal from "sweetalert2";
+import { FileDown, FileText } from "lucide-react";
 import {
   getMonthlyReport,
+  getSummaryReport,
+  getFiscalReport,
   getOrganizations,
+  downloadReport,
 } from "../../services/reportService";
 import { SYMBOL_TO_KEY, ATTENDANCE_SYMBOL } from "../../constants/leaveMeta";
 import ReportHeader from "../../components/admin/report/ReportHeader";
 import ReportFilter from "../../components/admin/report/ReportFilter";
 import ReportDescription from "../../components/admin/report/ReportDescription";
 import Panel from "../../components/admin/report/elements/Panel";
-import ReportTh from "../../components/admin/report/elements/ReportTh";
-import SelectField from "../../components/admin/report/elements/SelectField";
 import SymbolMeaningModal from "../../components/admin/report/elements/SymbolMeaningModal";
 import MonthlyReportTable from "../../components/admin/report/tables/MonthlyReportTable";
 import SummaryReportTable from "../../components/admin/report/tables/SummaryReportTable";
-import {
-  REPORT_TYPES,
-  MONTHS,
-  YEARS,
-  EMPLOYEES,
-  PERSONNEL_TYPES,
-  SUMMARY_ROWS,
-} from "../../constants/reportMockData";
-import { daysInMonth, weekdayOf, symbolFor } from "../../utils/reportUtils";
+import { YEARS } from "../../constants/reportMockData";
+import { daysInMonth, weekdayOf } from "../../utils/reportUtils";
+
 const FONTS = `
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap');
 `;
 
 const BRAND = "#b23a47";
-const GOLD = "#a8842f";
+
+const nowMonthIndex = new Date().getMonth();
+const nowYearBE = new Date().getFullYear() + 543;
+const DEFAULT_YEAR = YEARS.includes(nowYearBE) ? nowYearBE : YEARS[YEARS.length - 1];
+
+// leaveSummary[key] → { times, days } (undefined → ให้ตารางแสดง "-")
+const pickType = (ls, key) => {
+  const s = ls?.[key];
+  return { times: s?.count, days: s?.days };
+};
+const toSummaryRows = (users) =>
+  users.map((u) => ({
+    name: u.name,
+    positionNo: u.positionNo,
+    sick: pickType(u.leaveSummary, "ลาป่วย"),
+    personal: pickType(u.leaveSummary, "ลากิจส่วนตัว"),
+    annual: pickType(u.leaveSummary, "ลาพักผ่อน"),
+    late: "-",
+    absent: "-",
+    other: "",
+    note: "",
+  }));
+
+/* ปุ่มดาวน์โหลด PDF / Word — แบบเด่น (filled) */
+function DownloadButton({ icon: Icon, label, busy, disabled, onClick, colorClass }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || busy}
+      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-md ring-1 ring-black/5 transition hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:brightness-100 ${colorClass}`}
+    >
+      {busy ? (
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+      ) : (
+        <Icon className="h-4 w-4" />
+      )}
+      {busy ? "กำลังสร้าง..." : label}
+    </button>
+  );
+}
 
 export default function AttendanceReport() {
-  const [hasApplied, setHasApplied] = useState(false);
   const [reportType, setReportType] = useState("monthly");
+  const [appliedType, setAppliedType] = useState("monthly");
   const [organizations, setOrganizations] = useState([]);
   const [organization, setOrganization] = useState("");
-  const [monthIndex, setMonthIndex] = useState(6);
-  const [year, setYear] = useState(2569);
-  const [cycleNumber, setCycleNumber] = useState(11);
-  const [cycleStart, setCycleStart] = useState("1 เมษายน 2568");
-  const [cycleEnd, setCycleEnd] = useState("1 พฤษภาคม 2568");
-  const [fiscalYear, setFiscalYear] = useState(2568);
-  const [fiscalStart, setFiscalStart] = useState("1 เมษายน 2568");
-  const [fiscalEnd, setFiscalEnd] = useState("1 พฤษภาคม 2568");
-  const [personnelType, setPersonnelType] = useState(PERSONNEL_TYPES[2]);
-  const [reportData, setReportData] = useState(null);
+
+  const [monthIndex, setMonthIndex] = useState(nowMonthIndex);
+  const [year, setYear] = useState(DEFAULT_YEAR);
+
+  const [cycleNumber, setCycleNumber] = useState(1);
+  const [cycleStart, setCycleStart] = useState("");
+  const [cycleEnd, setCycleEnd] = useState("");
+
+  const [reportData, setReportData] = useState(null); // monthly
+  const [summaryData, setSummaryData] = useState(null); // cycle/fiscal grouped
+
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(null); // "pdf" | "word" | null
+  const [hasApplied, setHasApplied] = useState(false);
+  const [activeSymbolKey, setActiveSymbolKey] = useState(null);
+
   const [applied, setApplied] = useState({
     organization: "",
-    monthIndex: 6,
-    year: 2569,
-    cycleNumber: 11,
-    cycleStart: "1 เมษายน 2568",
-    cycleEnd: "1 พฤษภาคม 2568",
-    fiscalYear: 2568,
-    fiscalStart: "1 เมษายน 2568",
-    fiscalEnd: "1 พฤษภาคม 2568",
-    personnelType: PERSONNEL_TYPES[2],
+    monthIndex: nowMonthIndex,
+    year: DEFAULT_YEAR,
+    cycleNumber: 1,
+    cycleStart: "",
+    cycleEnd: "",
+    fiscalStart: "",
+    fiscalEnd: "",
   });
-  const [activeSymbolKey, setActiveSymbolKey] = useState(null); // key ของ LEAVE_META หรือ "WEEKEND"
 
   useEffect(() => {
-    const fetchOrganizations = async () => {
+    (async () => {
       try {
         const result = await getOrganizations();
-
         setOrganizations(result);
-
         if (result.length > 0) {
-          const firstOrganizationId = result[0].id;
-
-          setOrganization(firstOrganizationId);
-
-          setApplied((prev) => ({
-            ...prev,
-            organization: firstOrganizationId,
-          }));
+          setOrganization(result[0].id);
+          setApplied((prev) => ({ ...prev, organization: result[0].id }));
         }
       } catch (error) {
         console.error("โหลด organizations ไม่สำเร็จ:", error);
       }
-    };
-
-    fetchOrganizations();
+    })();
   }, []);
 
   const totalDays = useMemo(
     () => daysInMonth(applied.monthIndex, applied.year),
-    [applied],
+    [applied.monthIndex, applied.year],
   );
   const dayList = useMemo(
     () => Array.from({ length: totalDays }, (_, i) => i + 1),
     [totalDays],
   );
 
-  const rows = useMemo(() => {
-    // รายงานประจำเดือน ใช้ข้อมูลจาก API
-    if (reportType === "monthly" && reportData) {
-      // รวมบุคลากรทุกประเภท
-      const employees = Object.values(reportData.report).flat();
-
-      return employees.map((emp) => {
-        const cells = dayList.map((day) => {
-          const isWeekend = [0, 6].includes(
-            weekdayOf(applied.monthIndex, applied.year, day),
-          );
-
-          if (isWeekend) {
-            return {
-              day,
-              symbol: "-",
-              weekend: true,
-            };
-          }
-
-          // ถ้าไม่มีข้อมูลการลา ถือว่ามาปฏิบัติงาน
-          const leaveType = emp.attendance?.[day];
-
-          return {
-            day,
-            symbol: ATTENDANCE_SYMBOL[leaveType] ?? "✓",
-            weekend: false,
-          };
-        });
-
-        const tally = {
-          PRESENT: 0,
-          ANNUAL: 0,
-          SICK: 0,
-          PERSONAL: 0,
-          ABSENT: 0,
-        };
-
-        cells.forEach((cell) => {
-          if (cell.weekend) return;
-
-          const key = SYMBOL_TO_KEY[cell.symbol];
-
-          if (key) {
-            tally[key]++;
-          }
-        });
-
-        return {
-          userId: emp.userId,
-          name: emp.name,
-          totalWorkDays: emp.totalWorkDays,
-          cells,
-          tally,
-        };
-      });
-    }
-
-    // Cycle / Fiscal ยังใช้ Mock เดิม
-    return EMPLOYEES.map((name, empIdx) => {
+  // ---- ตารางรายเดือน (ลงเวลารายวัน) แยกตามประเภทบุคลากร เหมือนในใบรายงาน ----
+  const monthlyGroups = useMemo(() => {
+    if (!reportData) return [];
+    const toRow = (emp) => {
       const cells = dayList.map((day) => {
         const isWeekend = [0, 6].includes(
           weekdayOf(applied.monthIndex, applied.year, day),
         );
-
-        if (isWeekend) {
-          return {
-            day,
-            symbol: "-",
-            weekend: true,
-          };
-        }
-
-        return {
-          day,
-          symbol: symbolFor(empIdx, day),
-          weekend: false,
-        };
+        if (isWeekend) return { day, symbol: "-", weekend: true };
+        const leaveType = emp.attendance?.[day];
+        return { day, symbol: ATTENDANCE_SYMBOL[leaveType] ?? "✓", weekend: false };
       });
-
-      const tally = {
-        PRESENT: 0,
-        ANNUAL: 0,
-        SICK: 0,
-        PERSONAL: 0,
-        ABSENT: 0,
-      };
-
+      const tally = { PRESENT: 0, ANNUAL: 0, SICK: 0, PERSONAL: 0, ABSENT: 0 };
       cells.forEach((cell) => {
         if (cell.weekend) return;
-
         const key = SYMBOL_TO_KEY[cell.symbol];
-
-        if (key) {
-          tally[key]++;
-        }
+        if (key && tally[key] != null) tally[key]++;
       });
+      return { userId: emp.userId, name: emp.name, totalWorkDays: emp.totalWorkDays, cells, tally };
+    };
+    return Object.entries(reportData.report)
+      .filter(([, emps]) => Array.isArray(emps) && emps.length)
+      .map(([type, emps]) => ({ type, rows: emps.map(toRow) }));
+  }, [reportData, dayList, applied.monthIndex, applied.year]);
 
-      return {
-        name,
-        cells,
-        tally,
-      };
-    });
-  }, [reportData, reportType, dayList, applied]);
+  // ---- ตารางสรุป (รอบประเมิน/ปีงบ) แยกตามประเภทบุคลากร ----
+  const summaryGroups = useMemo(() => {
+    if (!summaryData) return [];
+    return Object.entries(summaryData)
+      .filter(([, users]) => Array.isArray(users) && users.length)
+      .map(([type, users]) => ({ type, rows: toSummaryRows(users) }));
+  }, [summaryData]);
+
+  const isSummary = appliedType === "cycle" || appliedType === "fiscal";
+
+  const handleReportTypeChange = (t) => {
+    setReportType(t);
+    setHasApplied(false);
+    setReportData(null);
+    setSummaryData(null);
+  };
+
   const handleApply = async () => {
+    if (!organization) {
+      Swal.fire("ข้อมูลไม่ครบ", "กรุณาเลือกคณะ", "warning");
+      return;
+    }
+    if (reportType === "cycle") {
+      if (!cycleStart || !cycleEnd) {
+        Swal.fire("ข้อมูลไม่ครบ", "กรุณาเลือกช่วงวันที่", "warning");
+        return;
+      }
+      if (new Date(cycleStart) > new Date(cycleEnd)) {
+        Swal.fire("ช่วงวันที่ไม่ถูกต้อง", "วันเริ่มต้องไม่หลังวันสิ้นสุด", "warning");
+        return;
+      }
+      if (!cycleNumber) {
+        Swal.fire("ข้อมูลไม่ครบ", "กรุณาระบุรอบประเมิน ครั้งที่", "warning");
+        return;
+      }
+    }
+
     try {
       setLoading(true);
+      // ปีงบ: ช่วงวันที่มาจาก backend (setting) — เก็บไว้แสดงหัวรายงาน
+      let fiscalStart = "";
+      let fiscalEnd = "";
       if (reportType === "monthly") {
         const result = await getMonthlyReport({
           organizationId: organization,
           month: monthIndex + 1,
           year: year - 543,
         });
-        console.log("Filter:", {
-          organizationId: organization,
-          month: monthIndex + 1,
-          year: year - 543,
-        });
         setReportData(result);
+        setSummaryData(null);
+      } else if (reportType === "cycle") {
+        const rows = await getSummaryReport({
+          organizationId: organization,
+          startDate: cycleStart,
+          endDate: cycleEnd,
+        });
+        setSummaryData(rows || {});
+        setReportData(null);
+      } else {
+        const res = await getFiscalReport({ organizationId: organization });
+        fiscalStart = res.startDate;
+        fiscalEnd = res.endDate;
+        setSummaryData(res.rows || {});
+        setReportData(null);
       }
       setApplied({
         organization,
@@ -224,51 +219,90 @@ export default function AttendanceReport() {
         cycleNumber,
         cycleStart,
         cycleEnd,
-        fiscalYear,
         fiscalStart,
         fiscalEnd,
-        personnelType,
       });
+      setAppliedType(reportType);
       setHasApplied(true);
-    } catch (error) {
-      console.error("โหลดรายงานไม่สำเร็จ:", error);
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "เกิดข้อผิดพลาด";
+      Swal.fire("โหลดรายงานไม่สำเร็จ", msg, "error");
+      setHasApplied(false);
     } finally {
       setLoading(false);
     }
   };
+
   const handleReset = () => {
     setReportType("monthly");
-    if (organizations.length > 0) {
-      setOrganization(organizations[0].id);
-    } else {
-      setOrganization("");
-    }
-    setMonthIndex(6);
-    setYear(2569);
-    setCycleNumber(11);
-    setCycleStart("1 เมษายน 2568");
-    setCycleEnd("1 พฤษภาคม 2568");
-    setFiscalYear(2568);
-    setFiscalStart("1 เมษายน 2568");
-    setFiscalEnd("1 พฤษภาคม 2568");
-    setPersonnelType(PERSONNEL_TYPES[2]);
+    setOrganization(organizations[0]?.id ?? "");
+    setMonthIndex(nowMonthIndex);
+    setYear(DEFAULT_YEAR);
+    setCycleNumber(1);
+    setCycleStart("");
+    setCycleEnd("");
     setReportData(null);
+    setSummaryData(null);
     setHasApplied(false);
-    setApplied({
-      organization: organizations.length > 0 ? organizations[0].id : "",
-      monthIndex: 6,
-      year: 2569,
-      cycleNumber: 11,
-      cycleStart: "1 เมษายน 2568",
-      cycleEnd: "1 พฤษภาคม 2568",
-      fiscalYear: 2568,
-      fiscalStart: "1 เมษายน 2568",
-      fiscalEnd: "1 พฤษภาคม 2568",
-      personnelType: PERSONNEL_TYPES[2],
-    });
   };
 
-  const isSummaryTable = reportType === "cycle" || reportType === "fiscal";
+  const buildPayload = () => {
+    if (appliedType === "cycle")
+      return {
+        organizationId: applied.organization,
+        countReport: applied.cycleNumber,
+        startDate: applied.cycleStart,
+        endDate: applied.cycleEnd,
+      };
+    if (appliedType === "fiscal")
+      return { organizationId: applied.organization };
+    return {
+      organizationId: applied.organization,
+      month: applied.monthIndex + 1,
+      year: applied.year - 543,
+    };
+  };
+
+  const handleDownload = async (format) => {
+    try {
+      setDownloading(format);
+      await downloadReport({ reportType: appliedType, format, payload: buildPayload() });
+    } catch (err) {
+      Swal.fire("ดาวน์โหลดไม่สำเร็จ", err.message, "error");
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const downloadActions = (
+    <div className="flex items-center gap-2.5">
+      <span className="hidden text-sm font-medium text-slate-500 sm:inline">
+        ดาวน์โหลด:
+      </span>
+      <DownloadButton
+        icon={FileDown}
+        label="PDF"
+        colorClass="bg-rose-600"
+        busy={downloading === "pdf"}
+        disabled={!!downloading}
+        onClick={() => handleDownload("pdf")}
+      />
+      <DownloadButton
+        icon={FileText}
+        label="Word"
+        colorClass="bg-sky-600"
+        busy={downloading === "word"}
+        disabled={!!downloading}
+        onClick={() => handleDownload("word")}
+      />
+    </div>
+  );
+
+  const orgName = organizations.find((o) => o.id === applied.organization)?.name || "";
 
   return (
     <div
@@ -278,17 +312,11 @@ export default function AttendanceReport() {
       <style>{FONTS}</style>
 
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* ---------- Header ---------- */}
-        <ReportHeader
-          organization={applied.organization}
-          month={MONTHS[applied.monthIndex]}
-          year={applied.year}
-          brandColor={BRAND}
-        />
-        {/* ---------- ตัวกรอง ---------- */}
+        <ReportHeader brandColor={BRAND} />
+
         <ReportFilter
           reportType={reportType}
-          setReportType={setReportType}
+          setReportType={handleReportTypeChange}
           organization={organization}
           setOrganization={setOrganization}
           organizations={organizations}
@@ -302,39 +330,67 @@ export default function AttendanceReport() {
           setCycleStart={setCycleStart}
           cycleEnd={cycleEnd}
           setCycleEnd={setCycleEnd}
-          fiscalYear={fiscalYear}
-          setFiscalYear={setFiscalYear}
-          fiscalStart={fiscalStart}
-          setFiscalStart={setFiscalStart}
-          fiscalEnd={fiscalEnd}
-          setFiscalEnd={setFiscalEnd}
-          personnelType={personnelType}
-          setPersonnelType={setPersonnelType}
           onApply={handleApply}
           onReset={handleReset}
+          applying={loading}
           brandColor={BRAND}
         />
-        {/* ---------- ตารางรายงาน ---------- */}{" "}
+
         {hasApplied && (
           <Panel
             title={
-              isSummaryTable
+              isSummary
                 ? "รายงานสรุปการลาและการลงเวลาปฏิบัติราชการของบุคลากร"
                 : "รายงานสรุปการลาและการมาปฏิบัติราชการของบุคลากร"
             }
-            subtitle={`มหาวิทยาลัยเทคโนโลยีอีสาน วิทยาเขตขอนแก่น · สังกัด ${applied.organization}`}
+            subtitle={`มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น${orgName ? ` · สังกัด ${orgName}` : ""}`}
+            action={downloadActions}
           >
-            {" "}
-            <ReportDescription reportType={reportType} applied={applied} />{" "}
-            {isSummaryTable ? (
-              <SummaryReportTable rows={SUMMARY_ROWS} />
+            <ReportDescription reportType={appliedType} applied={applied} />
+
+            {isSummary ? (
+              summaryGroups.length ? (
+                <div className="space-y-8">
+                  {summaryGroups.map((g) => (
+                    <div key={g.type}>
+                      <h3 className="mb-2 text-sm font-semibold text-slate-700">
+                        ประเภทบุคลากร: {g.type}{" "}
+                        <span className="font-normal text-slate-400">
+                          ({g.rows.length} คน)
+                        </span>
+                      </h3>
+                      <SummaryReportTable rows={g.rows} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-10 text-center text-sm text-slate-400">
+                  ไม่พบข้อมูลการลาในช่วงเวลาที่เลือก
+                </div>
+              )
+            ) : monthlyGroups.length ? (
+              <div className="space-y-8">
+                {monthlyGroups.map((g) => (
+                  <div key={g.type}>
+                    <h3 className="mb-2 text-sm font-semibold text-slate-700">
+                      ประเภทบุคลากร: {g.type}{" "}
+                      <span className="font-normal text-slate-400">
+                        ({g.rows.length} คน)
+                      </span>
+                    </h3>
+                    <MonthlyReportTable
+                      dayList={dayList}
+                      rows={g.rows}
+                      onSymbolClick={(key) => setActiveSymbolKey(key)}
+                    />
+                  </div>
+                ))}
+              </div>
             ) : (
-              <MonthlyReportTable
-                dayList={dayList}
-                rows={rows}
-                onSymbolClick={(key) => setActiveSymbolKey(key)}
-              />
-            )}{" "}
+              <div className="py-10 text-center text-sm text-slate-400">
+                ไม่พบข้อมูลบุคลากรในช่วงเวลาที่เลือก
+              </div>
+            )}
           </Panel>
         )}
       </div>

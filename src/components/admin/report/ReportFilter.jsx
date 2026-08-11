@@ -5,12 +5,7 @@ import { RotateCcw, Search } from "lucide-react";
 import Panel from "./elements/Panel";
 import SelectField from "./elements/SelectField";
 
-import {
-  REPORT_TYPES,
-  MONTHS,
-  YEARS,
-  PERSONNEL_TYPES,
-} from "../../../constants/reportMockData";
+import { REPORT_TYPES, MONTHS, YEARS } from "../../../constants/reportMockData";
 
 export default function ReportFilter({
   reportType,
@@ -35,20 +30,10 @@ export default function ReportFilter({
   cycleEnd,
   setCycleEnd,
 
-  fiscalYear,
-  setFiscalYear,
-
-  fiscalStart,
-  setFiscalStart,
-
-  fiscalEnd,
-  setFiscalEnd,
-
-  personnelType,
-  setPersonnelType,
-
   onApply,
   onReset,
+
+  applying,
 
   brandColor,
 }) {
@@ -122,22 +107,11 @@ export default function ReportFilter({
 
               <div>
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                  ประเภทบุคลากร
-                </label>
-
-                <SelectField
-                  value={personnelType}
-                  onChange={setPersonnelType}
-                  options={PERSONNEL_TYPES}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                  ระหว่างวันที่
+                  ตั้งแต่วันที่
                 </label>
 
                 <input
+                  type="date"
                   value={cycleStart}
                   onChange={(e) => setCycleStart(e.target.value)}
                   className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"
@@ -150,7 +124,9 @@ export default function ReportFilter({
                 </label>
 
                 <input
+                  type="date"
                   value={cycleEnd}
+                  min={cycleStart || undefined}
                   onChange={(e) => setCycleEnd(e.target.value)}
                   className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"
                 />
@@ -158,58 +134,14 @@ export default function ReportFilter({
             </>
           )}
 
-          {/* ปีงบประมาณ */}
+          {/* ปีงบประมาณ — ช่วงวันที่ใช้ปีงบประมาณปัจจุบันจากการตั้งค่าระบบอัตโนมัติ */}
           {reportType === "fiscal" && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                  ปีงบประมาณ พ.ศ.
-                </label>
-
-                <input
-                  type="number"
-                  value={fiscalYear}
-                  onChange={(e) => setFiscalYear(Number(e.target.value))}
-                  className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                  ประเภทบุคลากร
-                </label>
-
-                <SelectField
-                  value={personnelType}
-                  onChange={setPersonnelType}
-                  options={PERSONNEL_TYPES}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                  ระหว่างวันที่
-                </label>
-
-                <input
-                  value={fiscalStart}
-                  onChange={(e) => setFiscalStart(e.target.value)}
-                  className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">
-                  ถึงวันที่
-                </label>
-
-                <input
-                  value={fiscalEnd}
-                  onChange={(e) => setFiscalEnd(e.target.value)}
-                  className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"
-                />
-              </div>
-            </>
+            <div className="sm:col-span-2 md:col-span-2 flex items-center">
+              <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                ช่วงวันที่อ้างอิงปีงบประมาณปัจจุบันจากการตั้งค่าระบบโดยอัตโนมัติ
+                — เลือกเฉพาะคณะ
+              </p>
+            </div>
           )}
 
           {/* ประจำเดือน */}
@@ -247,7 +179,8 @@ export default function ReportFilter({
         <div className="flex justify-end gap-3 pt-1">
           <button
             onClick={onReset}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            disabled={applying}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
           >
             <RotateCcw className="h-4 w-4" />
             ล้างข้อมูล
@@ -255,13 +188,14 @@ export default function ReportFilter({
 
           <button
             onClick={onApply}
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-medium text-white shadow-sm"
+            disabled={applying}
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-medium text-white shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
             style={{
               backgroundColor: brandColor,
             }}
           >
             <Search className="h-4 w-4" />
-            แสดงรายงาน
+            {applying ? "กำลังโหลด..." : "แสดงรายงาน"}
           </button>
         </div>
       </div>

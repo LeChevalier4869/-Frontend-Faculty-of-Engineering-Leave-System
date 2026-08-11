@@ -138,6 +138,17 @@ function AppLayout() {
   );
 }
 
+// ระหว่างที่มี token แต่ AuthContext ยังโหลด user ไม่เสร็จ อย่าเพิ่งเด้งกลับหน้าแรก
+// (ไม่งั้น refresh บนหน้า protected ใดๆ จะหลุดไป "/" ก่อน router จะสลับเป็น authed)
+function GuestFallback() {
+  const { loading } = useAuth();
+  const hasToken = localStorage.getItem("accessToken");
+  if (hasToken && loading) {
+    return <LoadingSpinner message="กำลังเข้าสู่ระบบ..." />;
+  }
+  return <Navigate to="/" replace />;
+}
+
 const guestRouter = createBrowserRouter([
   {
     element: (
@@ -152,7 +163,7 @@ const guestRouter = createBrowserRouter([
       { path: "/help", element: <HelpManual /> },
       { path: "/dashboard", element: <UserDashBoard /> },
       { path: "/leave-dev", element: <Leave2 /> },
-      { path: "*", element: <Navigate to="/" replace /> },
+      { path: "*", element: <GuestFallback /> },
     ],
   },
 ]);
@@ -160,6 +171,7 @@ const guestRouter = createBrowserRouter([
 const userRouter = createBrowserRouter([
   // คู่มือ: หน้าสาธารณะ ไม่ผูกกับ AppLayout (มี header ของตัวเอง) ดูได้แม้ล็อกอินอยู่
   { path: "/help", element: <HelpManual /> },
+
   {
     element: <AppLayout />,
     children: [
