@@ -33,6 +33,7 @@ const BRAND = "#b23a47";
 const GOLD = "#a8842f";
 
 export default function AttendanceReport() {
+  const [hasApplied, setHasApplied] = useState(false);
   const [reportType, setReportType] = useState("monthly");
   const [organizations, setOrganizations] = useState([]);
   const [organization, setOrganization] = useState("");
@@ -228,6 +229,7 @@ export default function AttendanceReport() {
         fiscalEnd,
         personnelType,
       });
+      setHasApplied(true);
     } catch (error) {
       console.error("โหลดรายงานไม่สำเร็จ:", error);
     } finally {
@@ -251,6 +253,7 @@ export default function AttendanceReport() {
     setFiscalEnd("1 พฤษภาคม 2568");
     setPersonnelType(PERSONNEL_TYPES[2]);
     setReportData(null);
+    setHasApplied(false);
     setApplied({
       organization: organizations.length > 0 ? organizations[0].id : "",
       monthIndex: 6,
@@ -282,7 +285,6 @@ export default function AttendanceReport() {
           year={applied.year}
           brandColor={BRAND}
         />
-
         {/* ---------- ตัวกรอง ---------- */}
         <ReportFilter
           reportType={reportType}
@@ -312,28 +314,29 @@ export default function AttendanceReport() {
           onReset={handleReset}
           brandColor={BRAND}
         />
-
-        {/* ---------- ตารางรายงาน ---------- */}
-        <Panel
-          title={
-            isSummaryTable
-              ? "รายงานสรุปการลาและการลงเวลาปฏิบัติราชการของบุคลากร"
-              : "รายงานสรุปการลาและการมาปฏิบัติราชการของบุคลากร"
-          }
-          subtitle={`มหาวิทยาลัยเทคโนโลยีอีสาน วิทยาเขตขอนแก่น · สังกัด ${applied.department}`}
-        >
-          <ReportDescription reportType={reportType} applied={applied} />
-
-          {isSummaryTable ? (
-            <SummaryReportTable rows={SUMMARY_ROWS} />
-          ) : (
-            <MonthlyReportTable
-              dayList={dayList}
-              rows={rows}
-              onSymbolClick={(key) => setActiveSymbolKey(key)}
-            />
-          )}
-        </Panel>
+        {/* ---------- ตารางรายงาน ---------- */}{" "}
+        {hasApplied && (
+          <Panel
+            title={
+              isSummaryTable
+                ? "รายงานสรุปการลาและการลงเวลาปฏิบัติราชการของบุคลากร"
+                : "รายงานสรุปการลาและการมาปฏิบัติราชการของบุคลากร"
+            }
+            subtitle={`มหาวิทยาลัยเทคโนโลยีอีสาน วิทยาเขตขอนแก่น · สังกัด ${applied.organization}`}
+          >
+            {" "}
+            <ReportDescription reportType={reportType} applied={applied} />{" "}
+            {isSummaryTable ? (
+              <SummaryReportTable rows={SUMMARY_ROWS} />
+            ) : (
+              <MonthlyReportTable
+                dayList={dayList}
+                rows={rows}
+                onSymbolClick={(key) => setActiveSymbolKey(key)}
+              />
+            )}{" "}
+          </Panel>
+        )}
       </div>
 
       <SymbolMeaningModal
