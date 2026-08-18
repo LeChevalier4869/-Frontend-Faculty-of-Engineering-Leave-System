@@ -17,6 +17,7 @@ import Panel from "../../components/admin/report/elements/Panel";
 import SymbolMeaningModal from "../../components/admin/report/elements/SymbolMeaningModal";
 import MonthlyReportTable from "../../components/admin/report/tables/MonthlyReportTable";
 import SummaryReportTable from "../../components/admin/report/tables/SummaryReportTable";
+import MonthlyReportLegend from "../../components/admin/report/tables/MonthlyReportLegend";
 import { YEARS } from "../../constants/reportMockData";
 import { daysInMonth, weekdayOf } from "../../utils/reportUtils";
 
@@ -28,7 +29,9 @@ const BRAND = "#b23a47";
 
 const nowMonthIndex = new Date().getMonth();
 const nowYearBE = new Date().getFullYear() + 543;
-const DEFAULT_YEAR = YEARS.includes(nowYearBE) ? nowYearBE : YEARS[YEARS.length - 1];
+const DEFAULT_YEAR = YEARS.includes(nowYearBE)
+  ? nowYearBE
+  : YEARS[YEARS.length - 1];
 
 // leaveSummary[key] → { times, days } (undefined → ให้ตารางแสดง "-")
 const pickType = (ls, key) => {
@@ -49,7 +52,14 @@ const toSummaryRows = (users) =>
   }));
 
 /* ปุ่มดาวน์โหลด PDF / Word — แบบเด่น (filled) */
-function DownloadButton({ icon: Icon, label, busy, disabled, onClick, colorClass }) {
+function DownloadButton({
+  icon: Icon,
+  label,
+  busy,
+  disabled,
+  onClick,
+  colorClass,
+}) {
   return (
     <button
       onClick={onClick}
@@ -86,6 +96,9 @@ export default function AttendanceReport() {
   const [downloading, setDownloading] = useState(null); // "pdf" | "word" | null
   const [hasApplied, setHasApplied] = useState(false);
   const [activeSymbolKey, setActiveSymbolKey] = useState(null);
+  const onSymbolClick = (key) => {
+    setActiveSymbolKey(key);
+  };
 
   const [applied, setApplied] = useState({
     organization: "",
@@ -125,32 +138,94 @@ export default function AttendanceReport() {
   // ---- ตารางรายเดือน (ลงเวลารายวัน) แยกตามประเภทบุคลากร เหมือนในใบรายงาน ----
   const monthlyGroups = useMemo(() => {
     if (!reportData) return [];
+
     const ceYear = applied.year - 543;
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
     const toRow = (emp) => {
       const cells = dayList.map((day) => {
         const isWeekend = [0, 6].includes(
           weekdayOf(applied.monthIndex, applied.year, day),
         );
-        if (isWeekend) return { day, symbol: "-", weekend: true };
+
+        // เสาร์-อาทิตย์
+        if (isWeekend) {
+          return {
+            day,
+            symbol: "-",
+            weekend: true,
+          };
+        }
+
+        const currentDate = new Date(ceYear, applied.monthIndex, day);
+        currentDate.setHours(0, 0, 0, 0);
+
+        // วันนี้และอนาคต = ยังไม่แสดงข้อมูล
+        if (currentDate >= today) {
+          return {
+            day,
+            symbol: "",
+            weekend: false,
+            future: true,
+          };
+        }
+
+        // วันที่ผ่านมาแล้ว และมีการลา
         const leaveSym = ATTENDANCE_SYMBOL[emp.attendance?.[day]];
-        if (leaveSym) return { day, symbol: leaveSym, weekend: false };
-        // ไม่มีลา = มาทำงาน แต่ ✓ แสดงเฉพาะวันที่ถึงวันนี้ (อนาคตยังไม่รู้ → เว้นว่าง)
-        const isFuture = new Date(ceYear, applied.monthIndex, day) > today;
-        return { day, symbol: isFuture ? "" : "✓", weekend: false, future: isFuture };
+
+        if (leaveSym) {
+          return {
+            day,
+            symbol: leaveSym,
+            weekend: false,
+            future: false,
+          };
+        }
+
+        // วันที่ผ่านมาแล้ว ไม่มีลา = มาทำงาน
+        return {
+          day,
+          symbol: "✓",
+          weekend: false,
+          future: false,
+        };
       });
-      const tally = { PRESENT: 0, ANNUAL: 0, SICK: 0, PERSONAL: 0, ABSENT: 0 };
+
+      const tally = {
+        PRESENT: 0,
+        ANNUAL: 0,
+        SICK: 0,
+        PERSONAL: 0,
+        ABSENT: 0,
+      };
+
       cells.forEach((cell) => {
-        if (cell.weekend) return;
+        if (cell.weekend || cell.future) return;
+
         const key = SYMBOL_TO_KEY[cell.symbol];
-        if (key && tally[key] != null) tally[key]++;
+
+        if (key && tally[key] != null) {
+          tally[key]++;
+        }
       });
-      return { userId: emp.userId, name: emp.name, totalWorkDays: emp.totalWorkDays, cells, tally };
+
+      return {
+        userId: emp.userId,
+        name: emp.name,
+        totalWorkDays: emp.totalWorkDays,
+        cells,
+        tally,
+      };
     };
+
     return Object.entries(reportData.report)
       .filter(([, emps]) => Array.isArray(emps) && emps.length)
-      .map(([type, emps]) => ({ type, rows: emps.map(toRow) }));
+      .map(([type, emps]) => ({
+        type,
+        rows: emps.map(toRow),
+      }));
   }, [reportData, dayList, applied.monthIndex, applied.year]);
 
   // ---- ตารางสรุป (รอบประเมิน/ปีงบ) แยกตามประเภทบุคลากร ----
@@ -181,7 +256,11 @@ export default function AttendanceReport() {
         return;
       }
       if (new Date(cycleStart) > new Date(cycleEnd)) {
-        Swal.fire("ช่วงวันที่ไม่ถูกต้อง", "วันเริ่มต้องไม่หลังวันสิ้นสุด", "warning");
+        Swal.fire(
+          "ช่วงวันที่ไม่ถูกต้อง",
+          "วันเริ่มต้องไม่หลังวันสิ้นสุด",
+          "warning",
+        );
         return;
       }
       if (!cycleNumber) {
@@ -276,7 +355,11 @@ export default function AttendanceReport() {
   const handleDownload = async (format) => {
     try {
       setDownloading(format);
-      await downloadReport({ reportType: appliedType, format, payload: buildPayload() });
+      await downloadReport({
+        reportType: appliedType,
+        format,
+        payload: buildPayload(),
+      });
     } catch (err) {
       Swal.fire("ดาวน์โหลดไม่สำเร็จ", err.message, "error");
     } finally {
@@ -308,7 +391,8 @@ export default function AttendanceReport() {
     </div>
   );
 
-  const orgName = organizations.find((o) => o.id === applied.organization)?.name || "";
+  const orgName =
+    organizations.find((o) => o.id === applied.organization)?.name || "";
 
   return (
     <div
@@ -365,6 +449,7 @@ export default function AttendanceReport() {
                           ({g.rows.length} คน)
                         </span>
                       </h3>
+
                       <SummaryReportTable rows={g.rows} />
                     </div>
                   ))}
@@ -376,21 +461,21 @@ export default function AttendanceReport() {
               )
             ) : monthlyGroups.length ? (
               <div className="space-y-8">
-                {monthlyGroups.map((g) => (
-                  <div key={g.type}>
-                    <h3 className="mb-2 text-sm font-semibold text-slate-700">
-                      ประเภทบุคลากร: {g.type}{" "}
-                      <span className="font-normal text-slate-400">
-                        ({g.rows.length} คน)
-                      </span>
+                {monthlyGroups.map((group) => (
+                  <div key={group.type}>
+                    <h3 className="mb-2 font-semibold">
+                      ประเภทบุคลากร: {group.type}  ({group.rows.length} คน)
                     </h3>
                     <MonthlyReportTable
                       dayList={dayList}
-                      rows={g.rows}
-                      onSymbolClick={(key) => setActiveSymbolKey(key)}
+                      rows={group.rows}
+                      onSymbolClick={onSymbolClick}
                     />
                   </div>
                 ))}
+
+                {/* Legend แสดงครั้งเดียวท้ายตารางทั้งหมด */}
+                <MonthlyReportLegend onSymbolClick={onSymbolClick} />
               </div>
             ) : (
               <div className="py-10 text-center text-sm text-slate-400">
