@@ -26,11 +26,6 @@ const Code = ({ children }) => (
     {children}
   </code>
 );
-const CodeBlock = ({ children }) => (
-  <pre className="mb-3 overflow-x-auto rounded-xl bg-slate-900 px-4 py-3 text-[13px] leading-relaxed text-slate-100">
-    <code>{children}</code>
-  </pre>
-);
 const Callout = ({ tone = "info", children }) => {
   const cls =
     tone === "warn"
@@ -122,66 +117,67 @@ function Overview() {
   );
 }
 
-function Installation() {
+function FirstUse() {
   return (
     <div>
-      <H2>การติดตั้งระบบครั้งแรก</H2>
+      <H2>การใช้งานระบบครั้งแรก</H2>
       <P>
-        เมื่อ deploy โปรเจกต์และขึ้นฐานข้อมูลใหม่ ฐานข้อมูลจะยัง<strong>ไม่มีผู้ใช้</strong>
-        และบทบาทผู้อนุมัติจะว่าง จึงต้องตั้งค่าเริ่มต้นตามลำดับต่อไปนี้ก่อนใช้งานจริง
+        หลังติดตั้งระบบและผู้ดูแลเข้าสู่ระบบได้แล้ว ยังต้องตั้งค่าเริ่มต้นอีกเล็กน้อยก่อนเปิดใช้งานจริง
+        — นำเข้าผู้ใช้และมอบบทบาทผู้อนุมัติ ซึ่ง<strong>ทำผ่านหน้าเว็บทั้งหมด</strong> ไม่ต้องใช้คำสั่ง
       </P>
 
-      <H3>สิ่งที่ต้องเตรียม</H3>
-      <Ul>
-        <li>Node.js</li>
-        <li>
-          ฐานข้อมูล <strong>MySQL 8.0 ขึ้นไป</strong> หรือ <strong>MariaDB 10.5 ขึ้นไป</strong>
-          {" "}— สคริปต์ migration ใช้คำสั่งที่ MySQL 5.7 / MariaDB 10.4 หรือเก่ากว่า<strong>ไม่รองรับ</strong>
-        </li>
-        <li>ไฟล์ <Code>.env</Code> ของ backend: <Code>DATABASE_URL</Code>, JWT secrets,
-          Google OAuth (<Code>GOOGLE_CLIENT_ID/SECRET</Code>) และ (ถ้าจะ bootstrap ผ่าน seed)
-          <Code>BOOTSTRAP_SUPER_ADMIN_EMAIL</Code></li>
-      </Ul>
       <Callout tone="info">
-        ระบบเข้าสู่ระบบด้วย <strong>Google OAuth เท่านั้น</strong> ผู้ดูแลคนแรกต้องใช้
-        อีเมล Google จริง (เช่น <Code>@rmuti.ac.th</Code>) — เมื่อมี user row อีเมลนี้อยู่แล้ว
-        ระบบจะผูกบัญชี Google ให้อัตโนมัติตอน login ครั้งแรก
+        📦 <strong>การติดตั้งระบบ</strong> (ลงเซิร์ฟเวอร์และฐานข้อมูลครั้งแรก) เป็นงานฝั่งผู้ดูแลไอที
+        ดูขั้นตอนแบบละเอียด (Native / Docker) ได้ที่{" "}
+        <a
+          href="https://lechevalier4869.github.io/ELeave-install-docs/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-brand-700 underline underline-offset-2"
+        >
+          เว็บคู่มือติดตั้งระบบ
+        </a>{" "}
+        (แยกต่างหาก เปิดดูได้แม้ระบบยังไม่รัน)
       </Callout>
 
-      <H3>ลำดับการติดตั้ง</H3>
-      <Step n={1} title="สร้างโครงฐานข้อมูล + ข้อมูลหลัก (roles, ranks, แผนก, ประเภทการลา ฯลฯ)">
-        <P>รันที่โฟลเดอร์ <Code>backend</Code>:</P>
-        <CodeBlock>npm run setup</CodeBlock>
+      <H3>ลำดับการตั้งค่าเริ่มต้น</H3>
+      <Step n={1} title="เข้าสู่ระบบด้วยบัญชีผู้ดูแล">
         <P>
-          (เท่ากับ <Code>prisma migrate deploy</Code> + <Code>prisma generate</Code> + seed)
-          seed เป็น idempotent รันซ้ำได้ และ<strong>ไม่</strong>สร้างข้อมูล user/ยอดวันลา/คำขอลา
+          ผู้ดูแลคนแรกกด <strong>เข้าสู่ระบบด้วย Google</strong> ด้วยอีเมลที่ตั้งไว้ตอนติดตั้ง
+          → เข้าสู่แดชบอร์ดผู้ดูแล (ระบบล็อกอินด้วย Google เท่านั้น)
         </P>
       </Step>
-      <Step n={2} title="สร้างผู้ดูแลคนแรก (SUPER_ADMIN)">
-        <CodeBlock>{`npm run create-super-admin -- --email admin@rmuti.ac.th
-# ระบุชื่อได้: -- --email a@rmuti.ac.th --first สมชาย --last ใจดี --prefix นาย
-# ดูผลก่อนเขียนจริง: -- --email a@rmuti.ac.th --dry-run`}</CodeBlock>
+      <Step n={2} title="นำเข้าผู้ใช้จากไฟล์ Excel">
         <P>
-          จะสร้าง user ให้ (ถ้ายังไม่มี) และผูกบทบาท USER + ADMIN + SUPER_ADMIN — idempotent
+          ไปที่ <strong>การจัดการ → จัดการผู้ใช้งาน</strong> → ดาวน์โหลดเทมเพลต Excel → กรอกข้อมูล → นำเข้า
+        </P>
+        <Ul>
+          <li>คอลัมน์ <strong>เลขที่ตำแหน่ง</strong> จำเป็นทุกคน</li>
+          <li>
+            คอลัมน์ยอดคงเหลือ (ลาป่วย/ลากิจ/ลาพักผ่อน) ใส่หรือไม่ก็ได้ — ถ้าไม่ใส่
+            ระบบตั้งยอดเริ่มต้นตามสิทธิ์ (เงื่อนไขวันลา/อายุงาน) ให้อัตโนมัติ
+          </li>
+        </Ul>
+        <P>ระบบแจ้งผลรายแถว หากผิด (เช่น สาขาสะกดผิด) จะแนะนำชื่อที่ใกล้เคียงให้</P>
+      </Step>
+      <Step n={3} title="มอบบทบาทผู้อนุมัติ">
+        <P>
+          ที่แท็บ <strong>จัดการผู้อนุมัติ</strong> กำหนด <Code>VERIFIER</Code>,{" "}
+          <Code>APPROVER_1</Code> (หัวหน้าสาขาของแต่ละแผนก) และ <Code>APPROVER_2/3/4</Code>
+          ให้ผู้ใช้ที่เกี่ยวข้อง
         </P>
       </Step>
-      <Step n={3} title="เข้าสู่ระบบ แล้วนำเข้าผู้ใช้ผ่าน Excel">
+      <Step n={4} title="ตรวจเงื่อนไขวันลา (Rank)">
         <P>
-          ผู้ดูแลกดปุ่ม <strong>Login with Google</strong> ด้วยอีเมลที่ตั้งไว้ →
-          ไปที่หน้าจัดการ → <strong>นำเข้าผู้ใช้จากไฟล์ Excel</strong>
-        </P>
-      </Step>
-      <Step n={4} title="มอบหมายบทบาทผู้อนุมัติให้ผู้ใช้ที่นำเข้า">
-        <P>
-          กำหนด <Code>VERIFIER</Code>, <Code>APPROVER_1</Code> (หัวหน้าสาขาของแต่ละแผนก),
-          <Code>APPROVER_2/3/4</Code> ให้ผู้ใช้ที่เกี่ยวข้อง (ผ่านหน้าจัดการผู้อนุมัติ/แก้ไขผู้ใช้)
+          ตรวจ/ปรับกติกาจำนวนวันลาของแต่ละประเภทบุคลากรที่เมนูผู้ดูแลระดับสูง →{" "}
+          <strong>เงื่อนไขวันลา (Rank)</strong> — ปกติข้อมูลตั้งต้นถูกใส่ให้แล้วตอนติดตั้ง
         </P>
       </Step>
 
       <Callout tone="warn">
-        ขั้นที่ 4 <strong>จำเป็นเสมอ</strong>: ถ้ายังไม่มีผู้ตรวจสอบ (VERIFIER) การยื่นลาจะล้มเหลว
-        (ระบบต้องมีผู้ตรวจสอบเพื่อออกเลขที่ใบลา) และถ้าไม่มีผู้อนุมัติ งานอนุมัติจะเดินต่อไม่ได้ —
-        บทบาทเหล่านี้เป็น &ldquo;คนเฉพาะองค์กร&rdquo; จึง seed แทนล่วงหน้าไม่ได้
+        <strong>จำเป็นเสมอ:</strong> ต้องมีผู้ตรวจสอบ (<Code>VERIFIER</Code>) อย่างน้อย 1 คน
+        ไม่งั้น<strong>การยื่นลาจะล้มเหลว</strong> (ระบบต้องมีผู้ตรวจสอบเพื่อออกเลขที่ใบลา)
+        และต้องมีผู้อนุมัติครบสายเพื่อให้คำขอเดินจนจบ
       </Callout>
     </div>
   );
@@ -349,7 +345,7 @@ function AdminGuide() {
 
 const SECTIONS = [
   { key: "overview", label: "ภาพรวมระบบ", render: () => <Overview /> },
-  { key: "install", label: "การติดตั้งครั้งแรก", render: () => <Installation /> },
+  { key: "first-use", label: "การใช้งานครั้งแรก", render: () => <FirstUse /> },
   { key: "user", label: "คู่มือผู้ใช้ทั่วไป", render: () => <UserGuide /> },
   { key: "approver", label: "คู่มือผู้อนุมัติ", render: () => <ApproverGuide /> },
   { key: "admin", label: "คู่มือผู้ดูแลระบบ", render: () => <AdminGuide /> },

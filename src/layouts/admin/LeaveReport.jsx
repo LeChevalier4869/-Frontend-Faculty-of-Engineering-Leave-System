@@ -125,14 +125,20 @@ export default function AttendanceReport() {
   // ---- ตารางรายเดือน (ลงเวลารายวัน) แยกตามประเภทบุคลากร เหมือนในใบรายงาน ----
   const monthlyGroups = useMemo(() => {
     if (!reportData) return [];
+    const ceYear = applied.year - 543;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const toRow = (emp) => {
       const cells = dayList.map((day) => {
         const isWeekend = [0, 6].includes(
           weekdayOf(applied.monthIndex, applied.year, day),
         );
         if (isWeekend) return { day, symbol: "-", weekend: true };
-        const leaveType = emp.attendance?.[day];
-        return { day, symbol: ATTENDANCE_SYMBOL[leaveType] ?? "✓", weekend: false };
+        const leaveSym = ATTENDANCE_SYMBOL[emp.attendance?.[day]];
+        if (leaveSym) return { day, symbol: leaveSym, weekend: false };
+        // ไม่มีลา = มาทำงาน แต่ ✓ แสดงเฉพาะวันที่ถึงวันนี้ (อนาคตยังไม่รู้ → เว้นว่าง)
+        const isFuture = new Date(ceYear, applied.monthIndex, day) > today;
+        return { day, symbol: isFuture ? "" : "✓", weekend: false, future: isFuture };
       });
       const tally = { PRESENT: 0, ANNUAL: 0, SICK: 0, PERSONAL: 0, ABSENT: 0 };
       cells.forEach((cell) => {
