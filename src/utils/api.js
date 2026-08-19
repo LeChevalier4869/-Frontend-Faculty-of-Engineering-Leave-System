@@ -174,7 +174,8 @@ export const apiEndpoints = {
 
   // ---- รายงานสรุปการลา (preview + export) ----
   reportSummaryData: `${BASE_URL}/api/report/data`, // POST { organizationId, startDate, endDate } → รอบประเมิน
-  reportFiscalData: `${BASE_URL}/api/report/fiscal-data`, // GET ?organizationId= → รอบปีงบ (backend derive ช่วงวันที่)
+  reportFiscalData: `${BASE_URL}/api/report/fiscal-data`, // GET ?organizationId=&fiscalYear= → รอบปีงบ
+  reportFiscalYears: `${BASE_URL}/api/report/fiscal-years`, // GET → ปีงบที่มีข้อมูล (พ.ศ.)
   exportRoundReportPdf: `${BASE_URL}/api/export-round-report-pdf`, // POST
   exportRoundReportWord: `${BASE_URL}/api/export-round-report-word`, // POST
   exportYearReportPdf: `${BASE_URL}/api/export-year-report-pdf`, // POST

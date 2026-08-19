@@ -1,9 +1,11 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { apiEndpoints } from "../../utils/api";
-import { FaCog, FaSync, FaCalendarAlt, FaExclamationTriangle } from "react-icons/fa";
+import { FaCog, FaSync, FaCalendarAlt, FaExclamationTriangle, FaLock } from "react-icons/fa";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import useAuth from "../../hooks/useAuth";
 
 const Panel = ({ className = "", children }) => (
   <div
@@ -14,11 +16,14 @@ const Panel = ({ className = "", children }) => (
 );
 
 export default function ConfigPage() {
-  // Role checking for superadmin access
-  const isSuperAdmin = () => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user.roles?.includes('SUPER_ADMIN') || false;
-  };
+  // ตรวจสิทธิ์ super_admin จาก auth context (เชื่อถือได้กว่าอ่าน localStorage)
+  const { user } = useAuth();
+  const roles = Array.isArray(user?.roles)
+    ? user.roles
+    : Array.isArray(user?.role)
+      ? user.role
+      : [];
+  const isSuper = roles.includes("SUPER_ADMIN");
 
   const [contacts, setContacts] = useState({
     AdminName: "",
@@ -655,17 +660,6 @@ export default function ConfigPage() {
           </div>
         </Panel>
 
-        {/* Extra section placeholder */}
-        <Panel className="p-6 sm:p-8">
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-900 mb-4">
-            ตั้งค่าอื่น ๆ (เช่น ฟอร์ม, รายงาน)
-          </h2>
-          <p className="text-sm text-slate-500 italic">
-            ยังไม่มีข้อมูลในส่วนนี้ คุณสามารถเพิ่มฟอร์ม ปุ่ม
-            หรือการตั้งค่าอื่น ๆ เพิ่มเติมได้ภายหลัง
-          </p>
-        </Panel>
-
         {/* Leave Balance Reset Section */}
         <Panel className="p-6 sm:p-8 border-amber-200 bg-gradient-to-br from-amber-50 to-white">
           <div className="flex items-center gap-3 mb-6">
@@ -766,7 +760,8 @@ export default function ConfigPage() {
               </div>
             </div>
 
-            {/* Delete Leave Balance by Year */}
+            {/* Delete Leave Balance by Year — SUPER_ADMIN เท่านั้น */}
+            {isSuper && (
             <div className="bg-white rounded-xl p-4 border border-red-200">
               <div className="flex items-center gap-2 mb-3">
                 <FaExclamationTriangle className="text-red-600" />
@@ -836,9 +831,22 @@ export default function ConfigPage() {
                 </button>
               </div>
             </div>
+            )}
+
+            {/* ผู้ใช้ที่ไม่ใช่ super_admin — แจ้งว่ารีเซ็ต/ลบต้องใช้สิทธิ์สูง */}
+            {!isSuper && (
+              <div className="md:col-span-2 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                <FaLock className="mt-0.5 shrink-0 text-slate-400" />
+                <span>
+                  การ<strong>รีเซ็ต</strong>และ<strong>ลบยอดวันลา</strong>เป็นการกระทำที่กระทบข้อมูลทั้งระบบ
+                  สงวนสิทธิ์เฉพาะ <strong>ผู้ดูแลระดับสูง (SUPER_ADMIN)</strong> เท่านั้น
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Reset Button with Warning */}
+          {/* Reset Button with Warning — SUPER_ADMIN เท่านั้น */}
+          {isSuper && (
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
@@ -886,6 +894,7 @@ export default function ConfigPage() {
               </div>
             </div>
           </div>
+          )}
         </Panel>
       </div>
     </div>

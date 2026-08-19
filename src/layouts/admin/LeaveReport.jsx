@@ -6,6 +6,7 @@ import {
   getMonthlyReport,
   getSummaryReport,
   getFiscalReport,
+  getFiscalYears,
   getOrganizations,
   downloadReport,
 } from "../../services/reportService";
@@ -32,6 +33,12 @@ const nowYearBE = new Date().getFullYear() + 543;
 const DEFAULT_YEAR = YEARS.includes(nowYearBE)
   ? nowYearBE
   : YEARS[YEARS.length - 1];
+
+// ปีงบประมาณปัจจุบัน (พ.ศ.): เดือน ต.ค. (index 9) ขึ้นไป = ปีงบถัดไป
+const nowFiscalYearBE =
+  (new Date().getMonth() >= 9
+    ? new Date().getFullYear() + 1
+    : new Date().getFullYear()) + 543;
 
 // leaveSummary[key] → { times, days } (undefined → ให้ตารางแสดง "-")
 const pickType = (ls, key) => {
@@ -89,6 +96,9 @@ export default function AttendanceReport() {
   const [cycleStart, setCycleStart] = useState("");
   const [cycleEnd, setCycleEnd] = useState("");
 
+  const [fiscalYear, setFiscalYear] = useState(nowFiscalYearBE); // พ.ศ.
+  const [fiscalYearOptions, setFiscalYearOptions] = useState([nowFiscalYearBE]);
+
   const [reportData, setReportData] = useState(null); // monthly
   const [summaryData, setSummaryData] = useState(null); // cycle/fiscal grouped
 
@@ -107,6 +117,7 @@ export default function AttendanceReport() {
     cycleNumber: 1,
     cycleStart: "",
     cycleEnd: "",
+    fiscalYear: nowFiscalYearBE,
     fiscalStart: "",
     fiscalEnd: "",
   });
@@ -114,11 +125,18 @@ export default function AttendanceReport() {
   useEffect(() => {
     (async () => {
       try {
-        const result = await getOrganizations();
+        const [result, years] = await Promise.all([
+          getOrganizations(),
+          getFiscalYears().catch(() => []),
+        ]);
         setOrganizations(result);
         if (result.length > 0) {
           setOrganization(result[0].id);
           setApplied((prev) => ({ ...prev, organization: result[0].id }));
+        }
+        if (years.length > 0) {
+          setFiscalYearOptions(years);
+          setFiscalYear(years[0]); // ปีล่าสุด (มีข้อมูล) เป็นค่าเริ่มต้น
         }
       } catch (error) {
         console.error("โหลด organizations ไม่สำเร็จ:", error);
@@ -291,7 +309,10 @@ export default function AttendanceReport() {
         setSummaryData(rows || {});
         setReportData(null);
       } else {
-        const res = await getFiscalReport({ organizationId: organization });
+        const res = await getFiscalReport({
+          organizationId: organization,
+          fiscalYear: fiscalYear - 543, // ส่งเป็น ค.ศ.
+        });
         fiscalStart = res.startDate;
         fiscalEnd = res.endDate;
         setSummaryData(res.rows || {});
@@ -304,6 +325,7 @@ export default function AttendanceReport() {
         cycleNumber,
         cycleStart,
         cycleEnd,
+        fiscalYear,
         fiscalStart,
         fiscalEnd,
       });
@@ -323,13 +345,14 @@ export default function AttendanceReport() {
   };
 
   const handleReset = () => {
-    setReportType("monthly");
+    // คงอยู่ tab เดิม (ไม่เด้งกลับ monthly) — แค่ล้างข้อมูล/ฟิลเตอร์
     setOrganization(organizations[0]?.id ?? "");
     setMonthIndex(nowMonthIndex);
     setYear(DEFAULT_YEAR);
     setCycleNumber(1);
     setCycleStart("");
     setCycleEnd("");
+    setFiscalYear(nowFiscalYearBE);
     setReportData(null);
     setSummaryData(null);
     setHasApplied(false);
@@ -344,7 +367,10 @@ export default function AttendanceReport() {
         endDate: applied.cycleEnd,
       };
     if (appliedType === "fiscal")
-      return { organizationId: applied.organization };
+      return {
+        organizationId: applied.organization,
+        fiscalYear: applied.fiscalYear - 543, // ค.ศ.
+      };
     return {
       organizationId: applied.organization,
       month: applied.monthIndex + 1,
@@ -420,6 +446,9 @@ export default function AttendanceReport() {
           setCycleStart={setCycleStart}
           cycleEnd={cycleEnd}
           setCycleEnd={setCycleEnd}
+          fiscalYear={fiscalYear}
+          setFiscalYear={setFiscalYear}
+          fiscalYearOptions={fiscalYearOptions}
           onApply={handleApply}
           onReset={handleReset}
           applying={loading}

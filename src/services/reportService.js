@@ -20,11 +20,17 @@ export const getSummaryReport = async ({ organizationId, startDate, endDate }) =
 };
 
 // รอบปีงบประมาณ — ช่วงวันที่ derive จาก setting ฝั่ง backend (ส่งแค่ organizationId)
-export const getFiscalReport = async ({ organizationId }) => {
+export const getFiscalReport = async ({ organizationId, fiscalYear }) => {
   const { data } = await API.get(apiEndpoints.reportFiscalData, {
-    params: { organizationId },
+    params: { organizationId, fiscalYear }, // fiscalYear = ค.ศ. (เว้นว่าง = ปีงบปัจจุบัน)
   });
   return data; // { rows, startDate, endDate, fiscalYearBE }
+};
+
+// ปีงบที่มีข้อมูลจริง (+ ปีปัจจุบัน) เป็น พ.ศ. เรียงมากไปน้อย
+export const getFiscalYears = async () => {
+  const { data } = await API.get(apiEndpoints.reportFiscalYears);
+  return data.years || [];
 };
 
 export const getOrganizations = async () => {

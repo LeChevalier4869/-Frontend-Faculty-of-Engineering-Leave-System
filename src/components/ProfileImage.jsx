@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { FaUserAlt } from "react-icons/fa";
 import axios from "axios";
@@ -79,6 +80,10 @@ const ProfileImage = ({ profilePicturePath, googleProfilePictureUrl, size = "med
     <img
       src={imageUrl}
       alt="Profile"
+      // Google (lh3.googleusercontent.com) มักตอบ 403 ถ้าส่ง referrer → ต้อง no-referrer
+      referrerPolicy="no-referrer"
+      // ถ้าโหลดรูปไม่ขึ้น (403/ลิงก์เสีย) ให้ตกไปแสดงไอคอนดีฟอลต์แทนรูปแตก
+      onError={() => setImageUrl(null)}
       className={`${sizeClasses[size]} rounded-full object-cover border border-slate-200 shadow ${className}`}
     />
   );

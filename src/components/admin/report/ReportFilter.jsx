@@ -30,6 +30,10 @@ export default function ReportFilter({
   cycleEnd,
   setCycleEnd,
 
+  fiscalYear,
+  setFiscalYear,
+  fiscalYearOptions,
+
   onApply,
   onReset,
 
@@ -134,13 +138,18 @@ export default function ReportFilter({
             </>
           )}
 
-          {/* ปีงบประมาณ — ช่วงวันที่ใช้ปีงบประมาณปัจจุบันจากการตั้งค่าระบบอัตโนมัติ */}
+          {/* ปีงบประมาณ — เลือกปีงบเพื่อดูย้อนหลังได้ */}
           {reportType === "fiscal" && (
-            <div className="sm:col-span-2 md:col-span-2 flex items-center">
-              <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                ช่วงวันที่อ้างอิงปีงบประมาณปัจจุบันจากการตั้งค่าระบบโดยอัตโนมัติ
-                — เลือกเฉพาะคณะ
-              </p>
+            <div>
+              <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                ปีงบประมาณ (พ.ศ.)
+              </label>
+
+              <SelectField
+                value={fiscalYear}
+                onChange={(v) => setFiscalYear(Number(v))}
+                options={fiscalYearOptions}
+              />
             </div>
           )}
 
