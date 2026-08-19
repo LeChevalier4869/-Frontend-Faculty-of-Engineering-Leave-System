@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useGoBack } from "../../utils/useGoBack";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { apiEndpoints } from "../../utils/api";
 import useAuth from "../../hooks/useAuth";
@@ -10,6 +11,7 @@ import { filterLeaveTypesBySex } from "../../utils/leavePolicy";
 
 function AddLeave2() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/leave");
   const { user } = useAuth();
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -264,7 +266,7 @@ function AddLeave2() {
           <div className="flex justify-end gap-4">
             <button
               type="button"
-              onClick={() => navigate("/leave")}
+              onClick={goBack}
               className="px-6 py-2 rounded-lg bg-gray-200 text-black hover:bg-gray-300"
             >
               ยกเลิก

@@ -3,7 +3,7 @@ import axios from "axios";
 import getApiUrl from "../../utils/apiUtils";
 import { useNavigate } from "react-router-dom";
 import { apiEndpoints } from "../../utils/api";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { Clock } from "lucide-react";
 import LoadingSpinner from "../../components/LoadingSpinner";
 

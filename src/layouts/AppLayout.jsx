@@ -54,7 +54,8 @@ function AppLayout() {
             onMenuClick={toggleSidebar} 
             isMobile={isMobile}
           />
-          <main className={clsx("flex-1 overflow-auto p-4", mainShift)}>
+          {/* id ให้หน้าอื่นเลื่อนพื้นที่เนื้อหาขึ้นบนสุดได้ (main คือตัว scroll ไม่ใช่ window) */}
+          <main id="main-scroll" className={clsx("flex-1 overflow-auto p-4", mainShift)}>
             <Outlet />
           </main>
         </div>

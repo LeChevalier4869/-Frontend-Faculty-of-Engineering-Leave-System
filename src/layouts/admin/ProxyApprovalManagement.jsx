@@ -8,8 +8,13 @@ import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUser, FaCheckCircle } from 'r
 import { X, ChevronDown, AlertTriangle } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import PeoplePickerModal from '../../components/PeoplePickerModal';
 
 const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
+
+// ระดับผู้อนุมัติ -> roleId ในตาราง Role
+// (VERIFIER=3, APPROVER_1=4, APPROVER_2=5, APPROVER_3=6, APPROVER_4=7)
+const ROLE_ID_BY_LEVEL = { 1: 4, 2: 3, 3: 5, 4: 6, 5: 7 };
 
 const ProxyApprovalManagement = () => {
   // Tab navigation state
@@ -21,22 +26,20 @@ const ProxyApprovalManagement = () => {
   const [isSubmitting, setIsSubmitting] = useState(false); // สถานะกำลังบันทึกฟอร์ม
   const [showModal, setShowModal] = useState(false);
   const [editingProxy, setEditingProxy] = useState(null);
-  const [userLand, setUserLand] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [allUsers, setAllUsers] = useState([]); // สำหรับทุกคนในระบบ
-  const [proxyUsers, setProxyUsers] = useState([]); // สำหรับ proxy users ตามระดับ
   const [selectedOriginalUser, setSelectedOriginalUser] = useState(null);
   const [selectedProxyUser, setSeletedProxyUser] = useState(null);
-  const [originalSearchQuery, setOriginalSearchQuery] = useState('');
-  const [proxySearchQuery, setProxySearchQuery] = useState('');
+  // ตัวเลือกคนแบบ modal ค้นหา-แล้วเลือก: 'original' | 'proxy' | null
+  const [peoplePicker, setPeoplePicker] = useState(null);
   const [originalPrefixName, setOriginalPrefixName] = useState('');
   const [originalFirstName, setOriginalFirstName] = useState('');
   const [originalLastName, setOriginalLastName] = useState('');
   const [proxyPrefixName, setProxyPrefixName] = useState('');
   const [proxyFirstName, setProxyFirstName] = useState('');
   const [proxyLastName, setProxyLastName] = useState('');
-  const [originalSuggestions, setOriginalSuggestions] = useState([]);
-  const [proxySuggestions, setProxySuggestions] = useState([]);
+  // ผู้ถือบทบาทของระดับที่เลือก (ใช้เป็นรายชื่อ "ผู้มอบอำนาจ" ให้เลือก — ทุกสาขา)
+  const [originalApproverPool, setOriginalApproverPool] = useState([]);
   const [userRoles, setUserRoles] = useState({});
   const [roleConflict, setRoleConflict] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -121,50 +124,28 @@ const ProxyApprovalManagement = () => {
     }
   };
 
-  // ฟังก์ชันสำหรับดึง original approver ตามระดับที่เลือก
-  const fetchOriginalApproversForLevel = async (level) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const response = await API.get(`/auth/approvers-for-level/${level}?date=${new Date().toISOString().split('T')[0]}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // กรองเฉพาะคนที่ไม่ใช่ proxy (เฉพาะคนที่มี role จริง)
-      const originalApprovers = response.data.data.filter(user =>
-        !user.isProxy &&
-        currentUser
-        // ลบการ filter user.id !== currentUser.id เพราะ backend จัดการให้แล้ว
-      );
-
-      return originalApprovers;
-    } catch (error) {
-      console.error('Error fetching original approvers:', error);
-      return [];
-    }
+  // ผู้ที่ "มีสิทธิ์เป็นผู้มอบอำนาจ" ของระดับ = ผู้ถือบทบาทของระดับนั้น (ทุกสาขา)
+  // คำนวณจากรายชื่อทั้งระบบ (allUsers) ตรง ๆ เพื่อไม่ให้ endpoint approvers-for-level
+  // ตัดคนที่บังเอิญถือ proxy อยู่ (isProxy) ออกไป และเห็นหัวหน้าสาขาครบทุกสาขา
+  const originalApproversForLevel = (level) => {
+    const roleId = ROLE_ID_BY_LEVEL[Number(level)];
+    if (!roleId) return [];
+    return allUsers.filter((u) => (u.roles || []).includes(roleId));
   };
 
-  // ฟังก์ชันสำหรับ map original approver อัตโนมัติเมื่อเปลี่ยนระดับ
-  const autoMapOriginalApprover = async (level) => {
-    const originalApprovers = await fetchOriginalApproversForLevel(level);
+  // เมื่อเปลี่ยนระดับ: เตรียม pool ผู้มอบอำนาจ (ผู้ถือบทบาทของระดับนั้น) และตั้งค่าเริ่มต้น
+  // ผู้ใช้เปลี่ยนคนเองได้ผ่าน modal ค้นหา (โดยเฉพาะ APPROVER_1 ที่มีหัวหน้าหลายสาขา)
+  const autoMapOriginalApprover = (level) => {
+    const pool = originalApproversForLevel(level);
+    setOriginalApproverPool(pool);
 
-    if (originalApprovers.length > 0) {
-      // เลือก original approver คนแรกที่พบ
-      const firstApprover = originalApprovers[0];
-      pickOriginalUser(firstApprover);
-
-    } else {
-      // ถ้าไม่พบ original approver ให้ล้างค่าที่เลือกไว้
+    if (pool.length === 0) {
       clearOriginalUser();
-      console.log('🔍 No original approvers found for level:', level);
+      return;
     }
+    const self = pool.find((u) => u.id === currentUser?.id);
+    pickOriginalUser(self || pool[0]);
   };
-
-  // เมื่อเปลี่ยน level ให้ดึงข้อมูล proxy ใหม่
-  useEffect(() => {
-    if (formData.approverLevel && currentUser) {
-      fetchAvailableProxies(formData.approverLevel);
-    }
-  }, [formData.approverLevel, currentUser]);
 
   // เมื่อเปลี่ยน tab ให้โหลดข้อมูลใหม่
   useEffect(() => {
@@ -225,30 +206,6 @@ const ProxyApprovalManagement = () => {
     }
   };
 
-  // ดึงข้อมูล proxy จาก API ใหม่ที่มี validation อยู่แล้ว
-  const fetchAvailableProxies = async (level) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-
-      // ใช้ endpoint ที่ถูกต้องและไม่ต้องส่ง date
-      const response = await API.get(apiEndpoints.proxyApprovalPotentialApprovers(level), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-
-      // Backend จะ filter ให้แล้ว ไม่ต้อง filter ซ้ำ
-      const fetchedProxyUsers = response.data.data;
-
-
-      // เซ็ตข้อมูลสำหรับ dropdown ของ proxy users
-      setProxyUsers(fetchedProxyUsers);
-
-    } catch (error) {
-      console.error('Error fetching available proxies:', error);
-      setProxyUsers([]); // ล้างข้อมูลเมื่อเกิด error
-    }
-  };
-
   const fetchUserLand = async () => {
     try {
       const res = await API.get(apiEndpoints.userLanding);
@@ -265,7 +222,6 @@ const ProxyApprovalManagement = () => {
       // สำหรับ proxy approvers ให้เลือกได้ทุกคน (รวม user ทั่วไปด้วย)
       const allUsers = normalizeUsers(res?.data);
 
-      setUserLand(originalApprovers);
       setAllUsers(allUsers); // เก็บผู้ใช้ทั้งหมดสำหรับ proxy selection
 
       // สร้าง role mapping สำหรับ original approvers
@@ -289,7 +245,6 @@ const ProxyApprovalManagement = () => {
 
     } catch (err) {
       console.error("Error fetching user land:", err);
-      setUserLand([]);
       setAllUsers([]);
     }
   };
@@ -379,6 +334,8 @@ const ProxyApprovalManagement = () => {
           email: u.email ?? "",
           // ดึง roles จาก UserRole relationship
           roles: userRoles,
+          position: u.position ?? "",
+          department: u.department ?? null,
           personnelTypeId: u.personnelTypeId ?? u.personnelType?.id ?? null,
           personnelType: u.personnelType ?? null,
         };
@@ -399,56 +356,11 @@ const ProxyApprovalManagement = () => {
     return "";
   };
 
-  const handleOriginalUserSearch = (query) => {
-    if (!query) {
-      setOriginalSuggestions([]);
-      return;
-    }
-
-
-    const q = query.toLowerCase().replace(/\s+/g, " ");
-    const result = userLand
-      .filter((u) => {
-        const name = `${u.prefixName} ${u.firstName} ${u.lastName}`
-          .toLowerCase()
-          .replace(/\s+/g, " ");
-        return name.includes(q);
-      })
-      .slice(0, 10);
-
-    setOriginalSuggestions(result);
-  };
-
-  const handleProxyUserSearch = (query) => {
-    setProxySearchQuery(query);
-    if (!query) {
-      setProxySuggestions([]);
-      return;
-    }
-
-    // ใช้ proxyUsers ที่มีข้อมูลจาก fetchAvailableProxies
-    const availableUsers = proxyUsers.length > 0 ? proxyUsers : allUsers;
-
-    const q = query.toLowerCase().replace(/\s+/g, " ");
-    const result = availableUsers
-      .filter((u) => {
-        const name = `${u.prefixName} ${u.firstName} ${u.lastName}`
-          .toLowerCase()
-          .replace(/\s+/g, " ");
-        return name.includes(q);
-      })
-      .slice(0, 10);
-
-    setProxySuggestions(result);
-  };
-
   const pickOriginalUser = (u) => {
     setOriginalPrefixName(u.prefixName || "");
     setOriginalFirstName(u.firstName || "");
     setOriginalLastName(u.lastName || "");
     setSelectedOriginalUser(u);
-    setOriginalSearchQuery(formatUserName(u));
-    setOriginalSuggestions([]);
     // ใช้ functional update เพื่อป้องกัน stale state
     setFormData(prevFormData => ({ ...prevFormData, originalApproverId: u.id }));
   };
@@ -458,8 +370,6 @@ const ProxyApprovalManagement = () => {
     setProxyFirstName(u.firstName || "");
     setProxyLastName(u.lastName || "");
     setSeletedProxyUser(u);
-    setProxySearchQuery(formatUserName(u));
-    setProxySuggestions([]);
     setFormData({ ...formData, proxyApproverId: u.id });
   };
 
@@ -468,19 +378,7 @@ const ProxyApprovalManagement = () => {
     setOriginalFirstName("");
     setOriginalLastName("");
     setSelectedOriginalUser(null);
-    setOriginalSearchQuery("");
-    setOriginalSuggestions([]);
     setFormData({ ...formData, originalApproverId: "" });
-  };
-
-  const clearProxyUser = () => {
-    setProxyPrefixName("");
-    setProxyFirstName("");
-    setProxyLastName("");
-    setSeletedProxyUser(null);
-    setProxySearchQuery("");
-    setProxySuggestions([]);
-    setFormData({ ...formData, proxyApproverId: "" });
   };
 
   const handleEdit = (proxy) => {
@@ -502,7 +400,6 @@ const ProxyApprovalManagement = () => {
       setOriginalFirstName(proxy.originalApprover.firstName || '');
       setOriginalLastName(proxy.originalApprover.lastName || '');
       setSelectedOriginalUser(proxy.originalApprover);
-      setOriginalSearchQuery(formatUserName(proxy.originalApprover));
     }
 
     if (proxy.proxyApprover) {
@@ -510,7 +407,6 @@ const ProxyApprovalManagement = () => {
       setProxyFirstName(proxy.proxyApprover.firstName || '');
       setProxyLastName(proxy.proxyApprover.lastName || '');
       setSeletedProxyUser(proxy.proxyApprover);
-      setProxySearchQuery(formatUserName(proxy.proxyApprover));
     }
 
     setShowModal(true);
@@ -584,14 +480,11 @@ const ProxyApprovalManagement = () => {
     setOriginalFirstName('');
     setOriginalLastName('');
     setSelectedOriginalUser(null);
-    setOriginalSearchQuery('');
-    setOriginalSuggestions([]);
     setProxyPrefixName('');
     setProxyFirstName('');
     setProxyLastName('');
     setSeletedProxyUser(null);
-    setProxySearchQuery('');
-    setProxySuggestions([]);
+    setPeoplePicker(null);
     setRoleConflict(false);
   };
 
@@ -1111,7 +1004,10 @@ const ProxyApprovalManagement = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50"
+          onMouseDown={(e) => e.target === e.currentTarget && setShowModal(false)}
+        >
           <div className="w-[min(92vw,720px)] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl font-kanit flex flex-col min-h-0">
             <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2.5">
               <div className="flex flex-col gap-1">
@@ -1135,99 +1031,83 @@ const ProxyApprovalManagement = () => {
               <div className="flex-1 overflow-y-auto px-3 py-2.5 min-h-0">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 relative">
 
-                  {/* Original Approver Display (Auto-mapped) */}
+                  {/* Original Approver — เลือกอัตโนมัติตามระดับ กดเพื่อค้นหา/เปลี่ยนคน */}
                   <div className="col-span-2">
                     <label className="mb-1 block text-sm text-slate-700">
-                      ผู้มอบอำนาจ (Original Approver) <span className="text-emerald-600 text-xs">* จะถูกเลือกอัตโนมัติตามระดับผู้อนุมัติ</span>
+                      ผู้มอบอำนาจ (Original Approver) <span className="text-rose-500">*</span>
+                      <span className="ml-1 text-xs text-slate-400">— ระบบเลือกให้ตามระดับ กดเพื่อเปลี่ยนคน</span>
                     </label>
-                    {selectedOriginalUser ? (
-                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 border border-emerald-200">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">ผู้มอบอำนาจ: {formatUserName(selectedOriginalUser)} (ID: {selectedOriginalUser.id})</span>
-                          <span className="px-2 py-1 rounded-full bg-emerald-200 text-emerald-800 font-medium">
-                            {getUserRole(selectedOriginalUser.id)}
-                          </span>
+
+                    {!formData.approverLevel ? (
+                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 border border-amber-200">
+                        กรุณาเลือกระดับผู้อนุมัติก่อน
+                      </div>
+                    ) : selectedOriginalUser ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="truncate font-medium">{formatUserName(selectedOriginalUser)}</span>
+                          {selectedOriginalUser.department?.name && (
+                            <span className="shrink-0 rounded-full bg-emerald-200 px-2 py-0.5 text-xs text-emerald-800">
+                              {selectedOriginalUser.department.name}
+                            </span>
+                          )}
                         </div>
                         <button
                           type="button"
-                          onClick={() => {
-                            clearOriginalUser();
-                            // ถ้าต้องการเลือกใหม่ ให้เรียก autoMapOriginalApprover อีกครั้ง
-                            if (formData.approverLevel) {
-                              autoMapOriginalApprover(formData.approverLevel);
-                            }
-                          }}
-                          className="text-xs text-emerald-700 hover:text-emerald-900 underline underline-offset-2"
+                          onClick={() => setPeoplePicker("original")}
+                          className="shrink-0 text-xs text-emerald-700 underline underline-offset-2 hover:text-emerald-900"
                         >
-                          เปลี่ยนคน
+                          เปลี่ยน
                         </button>
                       </div>
                     ) : (
-                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 border border-amber-200">
-                        <div className="flex items-center gap-2">
-                          <span>กรุณาเลือกระดับผู้อนุมัติเพื่อให้ระบบเลือกผู้มอบอำนาจโดยอัตโนมัติ</span>
-                        </div>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPeoplePicker("original")}
+                        className="flex w-full items-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-500 transition hover:border-brand-400 hover:text-brand-600"
+                      >
+                        <FaUser className="h-3.5 w-3.5" />
+                        เลือกผู้มอบอำนาจ
+                      </button>
                     )}
                   </div>
 
-                  {/* Proxy Approver Selection */}
+                  {/* Proxy Approver — modal ค้นหา-แล้วเลือก */}
                   <div className="col-span-2">
                     <label className="mb-1 block text-sm text-slate-700">
                       ผู้อนุมัติแทน <span className="text-rose-500">*</span>
+                      <span className="ml-1 text-xs text-slate-400">— กดเพื่อค้นหาและเลือก</span>
                     </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={proxySearchQuery}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setProxySearchQuery(value);
-                          handleProxyUserSearch(value);
-                        }}
-                        className={inputStyle}
-                        placeholder="พิมพ์เพื่อค้นหาผู้อนุมัติแทน"
-                        required
-                      />
 
-                      {proxySuggestions.length > 0 && (
-                        <div className="absolute left-0 right-0 top-full z-10 mt-2 max-h-64 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-                          {proxySuggestions.map((u) => (
-                            <button
-                              key={u.id}
-                              type="button"
-                              onClick={() => pickProxyUser(u)}
-                              className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-slate-50 transition-colors"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span>{formatUserName(u)}</span>
-                                <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                                  {getProxyUserRole(u.id)}
-                                </span>
-                              </div>
-                              <span className="text-xs text-slate-500">ID: {u.id}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {selectedProxyUser && (
-                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-                        <div className="flex items-center gap-2">
-                          <span>ผู้อนุมัติแทน: {formatUserName(selectedProxyUser)} (ID: {selectedProxyUser.id})</span>
-                          <span className="px-2 py-1 rounded-full bg-emerald-200 text-emerald-800">
+                    {!formData.approverLevel ? (
+                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 border border-amber-200">
+                        กรุณาเลือกระดับผู้อนุมัติก่อน
+                      </div>
+                    ) : selectedProxyUser ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="truncate font-medium">{formatUserName(selectedProxyUser)}</span>
+                          <span className="shrink-0 rounded-full bg-emerald-200 px-2 py-0.5 text-xs text-emerald-800">
                             {getProxyUserRole(selectedProxyUser.id)}
                           </span>
                         </div>
                         <button
                           type="button"
-                          onClick={clearProxyUser}
-                          className="text-xs text-emerald-700 hover:text-emerald-900 underline underline-offset-2"
+                          onClick={() => setPeoplePicker("proxy")}
+                          className="shrink-0 text-xs text-emerald-700 underline underline-offset-2 hover:text-emerald-900"
                         >
                           เปลี่ยน
                         </button>
                       </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setPeoplePicker("proxy")}
+                        className="flex w-full items-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-500 transition hover:border-brand-400 hover:text-brand-600"
+                      >
+                        <FaUser className="h-3.5 w-3.5" />
+                        เลือกผู้อนุมัติแทน
+                      </button>
                     )}
                   </div>
 
@@ -1254,7 +1134,7 @@ const ProxyApprovalManagement = () => {
                     <div className="relative">
                       <select
                         value={formData.approverLevel}
-                        onChange={async (e) => {
+                        onChange={(e) => {
                           const selectedValue = e.target.value;
 
                           // ถ้าเลือก placeholder ให้เซ็ตเป็นค่าว่าง
@@ -1268,7 +1148,7 @@ const ProxyApprovalManagement = () => {
 
                           // Auto-map original approver เมื่อเปลี่ยนระดับ
                           if (newLevel) {
-                            await autoMapOriginalApprover(newLevel);
+                            autoMapOriginalApprover(newLevel);
                           }
                         }}
                         className="w-full appearance-none rounded-lg border border-slate-300 bg-white text-slate-900 px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
@@ -1439,6 +1319,34 @@ const ProxyApprovalManagement = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {peoplePicker && (
+        <PeoplePickerModal
+          title={peoplePicker === "original" ? "เลือกผู้มอบอำนาจ" : "เลือกผู้อนุมัติแทน"}
+          subtitle={
+            peoplePicker === "original"
+              ? "ผู้ถือบทบาทของระดับที่เลือก (แสดงทุกสาขา ดูสาขากำกับได้)"
+              : "เลือกได้ทุกคนในระบบ"
+          }
+          users={peoplePicker === "original" ? originalApproverPool : allUsers}
+          currentId={
+            peoplePicker === "original"
+              ? selectedOriginalUser?.id
+              : selectedProxyUser?.id
+          }
+          emptyText={
+            peoplePicker === "original"
+              ? "ไม่มีผู้ถือบทบาทในระดับนี้"
+              : "ไม่พบผู้ใช้งาน"
+          }
+          onPick={(u) => {
+            if (peoplePicker === "original") pickOriginalUser(u);
+            else pickProxyUser(u);
+            setPeoplePicker(null);
+          }}
+          onClose={() => setPeoplePicker(null)}
+        />
       )}
       </div>
     </div>

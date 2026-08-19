@@ -6,9 +6,9 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { th } from "date-fns/locale";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { API, apiEndpoints } from "../../utils/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import {
   ChevronDown,
@@ -546,7 +546,10 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="w-[min(92vw,720px)] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 shadow-2xl font-kanit flex flex-col min-h-0">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div className="flex flex-col gap-1">
@@ -939,8 +942,24 @@ export default function AddOtherRequest() {
   const [sortOrder, setSortOrder] = useState("desc");
   const [accountNameMap, setAccountNameMap] = useState({});
   const [leaveInformationUrl, setLeaveInformationUrl] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'requests' | 'calendar'
-  const [requestSubTab, setRequestSubTab] = useState("today"); // 'today' | 'all'
+  // แท็บย่อยเก็บใน URL (?sub= / ?rsub=) เพื่อให้คงค้างเมื่อกด back กลับมา
+  // (เข้าไปดูรายละเอียดใบลาแล้วย้อนกลับ ต้องอยู่แท็บย่อยเดิม) โดยคง ?tab= ของแท็บบนไว้
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("sub") || "overview"; // 'overview' | 'requests' | 'calendar'
+  const requestSubTab = searchParams.get("rsub") || "today"; // 'today' | 'all'
+
+  const setActiveTab = (value) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("sub", value);
+    if (value !== "requests") next.delete("rsub"); // ออกจากแท็บ "คำขอ" ล้างแท็บย่อยรอง
+    setSearchParams(next, { replace: true });
+  };
+
+  const setRequestSubTab = (value) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("rsub", value);
+    setSearchParams(next, { replace: true });
+  };
   const [holidays, setHolidays] = useState([]);
 
   const fetchAccountNames = async (rows) => {

@@ -9,7 +9,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { th } from "date-fns/locale";
 import { apiEndpoints } from "../../utils/api";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import useAuth from "../../hooks/useAuth";
 import {
@@ -204,10 +204,9 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         title: "บันทึกคำขอลาสำเร็จ",
         confirmButtonColor: "#3b82f6",
       });
-      onSuccess();
+      // ไม่ reload หน้า — onSuccess ปิด modal และดึงรายการใหม่ให้แล้ว (ลื่นเหมือน modal อื่น)
       resetForm();
-      onClose();
-      window.location.reload();
+      onSuccess();
     } catch (err) {
       console.error("Submit Error:", err);
       Swal.fire({
@@ -232,7 +231,10 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-2xl relative font-kanit text-black overflow-y-auto max-h-[95vh]">
         <button
           onClick={onClose}

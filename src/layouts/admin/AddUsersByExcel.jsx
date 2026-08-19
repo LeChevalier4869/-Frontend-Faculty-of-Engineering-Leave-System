@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
+import { useGoBack } from "../../utils/useGoBack";
+import Swal from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";
@@ -34,7 +34,7 @@ Panel.defaultProps = {
 };
 
 export default function AddUsersByExcel() {
-  const navigate = useNavigate();
+  const goBack = useGoBack("/admin/manage-user");
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -179,7 +179,7 @@ export default function AddUsersByExcel() {
               <div className="flex flex-wrap gap-2 justify-end">
                 <button
                   type="button"
-                  onClick={() => navigate("/admin/manage-user")}
+                  onClick={goBack}
                   className="px-5 py-2 rounded-xl font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition text-sm shadow-sm"
                 >
                   ยกเลิก

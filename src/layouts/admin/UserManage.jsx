@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";

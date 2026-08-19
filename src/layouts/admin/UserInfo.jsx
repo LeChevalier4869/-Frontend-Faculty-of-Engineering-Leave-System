@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { apiEndpoints } from "../../utils/api";
-import { FaUserAlt } from "react-icons/fa";
+import { useGoBack } from "../../utils/useGoBack";
+import { FaUserAlt, FaHistory } from "react-icons/fa";
+import AuditTrailModal from "../../components/AuditTrailModal";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import ProfileImage from "../../components/ProfileImage";
@@ -30,6 +32,9 @@ const ROLE_LABEL_TH = {
 export default function UserInfo() {
   const { id } = useParams();
   const navigate = useNavigate();
+  // ปุ่มย้อนกลับ: ถอยไปหน้าก่อน ถ้าไม่มีประวัติให้ไปหน้าจัดการผู้ใช้งาน
+  const goBack = useGoBack("/admin/manage-user");
+  const [showAudit, setShowAudit] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -131,12 +136,13 @@ export default function UserInfo() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center font-kanit text-slate-900 px-4">
         <div className="w-full max-w-md rounded-2xl bg-white border border-rose-200 shadow-sm p-6 text-center">
           <p className="text-rose-600 font-medium">ไม่พบข้อมูลผู้ใช้งาน</p>
-          <Link
-            to="/admin/manage-user"
+          <button
+            type="button"
+            onClick={goBack}
             className="inline-block mt-4 px-4 py-2 rounded-xl bg-slate-800 text-white text-sm hover:bg-slate-700"
           >
-            ← กลับไปหน้าจัดการผู้ใช้งาน
-          </Link>
+            ← ย้อนกลับ
+          </button>
         </div>
       </div>
     );
@@ -157,6 +163,21 @@ export default function UserInfo() {
   const nonDeductibleBalances = currentBalances.filter(
     (b) => b.leaveType?.isNonDeductible === true
   );
+
+  // จำนวนครั้งที่ลาจริง (ไม่นับที่ถูกปฏิเสธ/ยกเลิก) แยกตามประเภท เฉพาะปีงบประมาณล่าสุด
+  // เพื่อให้ "กี่ครั้ง" สอดคล้องกับยอด "ใช้ไป (วัน)" ของปีเดียวกัน
+  const fiscalYearOf = (d) => {
+    const x = new Date(d);
+    if (Number.isNaN(x.getTime())) return null;
+    return x.getMonth() >= 9 ? x.getFullYear() + 1 : x.getFullYear();
+  };
+  const timesByType = {};
+  for (const lr of leaveRequests) {
+    const st = (lr.status || "").toUpperCase();
+    if (st === "REJECTED" || st === "CANCELLED") continue;
+    if (latestYear && fiscalYearOf(lr.startDate) !== latestYear) continue;
+    timesByType[lr.leaveTypeId] = (timesByType[lr.leaveTypeId] || 0) + 1;
+  }
   // เรียงให้ประเภทหักวันลาปกติขึ้นก่อน แล้วประเภทไม่หักวันลาไว้ล่างสุด
   const userRanks = [...(user.userRanks || [])].sort((a, b) => {
     const an = a.rank?.leaveType?.isNonDeductible ? 1 : 0;
@@ -298,18 +319,29 @@ export default function UserInfo() {
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <Link
-              to="/admin/manage-user"
+            <button
+              type="button"
+              onClick={goBack}
               className="inline-block px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium transition"
             >
-              ← กลับไปหน้าจัดการผู้ใช้งาน
-            </Link>
-            <Link
-              to={`/admin/user/${id}`}
-              className="inline-block px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition"
-            >
-              แก้ไขข้อมูลผู้ใช้
-            </Link>
+              ← ย้อนกลับ
+            </button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => setShowAudit(true)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition"
+              >
+                <FaHistory className="h-3.5 w-3.5 text-slate-400" />
+                ประวัติการทำงาน
+              </button>
+              <Link
+                to={`/admin/user/${id}`}
+                className="inline-block px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition"
+              >
+                แก้ไขข้อมูลผู้ใช้
+              </Link>
+            </div>
           </div>
         </Panel>
 
@@ -344,6 +376,9 @@ export default function UserInfo() {
                     ใช้ไป
                   </th>
                   <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ครั้งที่ลา
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
                     รออนุมัติ
                   </th>
                   <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
@@ -367,6 +402,9 @@ export default function UserInfo() {
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {formatLeaveDays(b.usedDays)}
                       </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap text-slate-600">
+                        {timesByType[b.leaveTypeId] || 0} ครั้ง
+                      </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap text-amber-600">
                         {formatLeaveDays(b.pendingDays)}
                       </td>
@@ -378,7 +416,7 @@ export default function UserInfo() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="5"
+                      colSpan="6"
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่มีข้อมูล
@@ -410,7 +448,8 @@ export default function UserInfo() {
                     ลาไปแล้ว{" "}
                     <span className="font-semibold text-slate-800">
                       {formatLeaveDays(b.usedDays)}
-                    </span>
+                    </span>{" "}
+                    ({timesByType[b.leaveTypeId] || 0} ครั้ง)
                   </span>
                 </div>
               ))}
@@ -580,6 +619,15 @@ export default function UserInfo() {
           </div>
         </Panel>
       </div>
+
+      {showAudit && (
+        <AuditTrailModal
+          title="ประวัติการทำงานของผู้ใช้"
+          subtitle={`${user.prefixName ?? ""}${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()}
+          url={`/admin/audit-logs/user/${id}`}
+          onClose={() => setShowAudit(false)}
+        />
+      )}
     </div>
   );
 }

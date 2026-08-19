@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import {
+  AlertTriangle,
   ArrowRight,
   Ban,
   CalendarDays,
@@ -20,11 +21,15 @@ import {
   History,
   RefreshCw,
   ShieldCheck,
+  UserCheck,
   Users,
   XCircle,
 } from "lucide-react";
 import { API } from "../../utils/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import ApproverUserDetailModal from "../../components/approver/ApproverUserDetailModal";
+import PeriodFilter from "../../components/PeriodFilter";
+import { filterByPeriod, DEFAULT_PERIOD } from "../../utils/periodRange";
 
 /**
  * สีสถานะ — ผ่านการตรวจ contrast (>= 3:1 บนพื้นขาว) แล้ว
@@ -41,6 +46,15 @@ const STATUS_ORDER = ["PENDING", "APPROVED", "REJECTED", "CANCELLED"];
 
 const CHART_PRIMARY = "#b23a47"; // brand-500
 const CHART_ACCENT = "#a8842f"; // gold-dark
+
+// ตำแหน่งในสายอนุมัติตามระดับ (ใช้กับการมอบอำนาจ)
+const LEVEL_ROLE_LABEL = {
+  1: "หัวหน้าสาขา",
+  2: "ผู้ตรวจสอบ",
+  3: "สารบรรณคณะ",
+  4: "รองคณบดี",
+  5: "คณบดี",
+};
 
 const TH_MONTHS = [
   "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
@@ -89,18 +103,24 @@ export default function AdminDashboard() {
   const [userCount, setUserCount] = useState(0);
   const [auditLogs, setAuditLogs] = useState([]);
   const [proxyToday, setProxyToday] = useState(0);
+  const [proxies, setProxies] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [approvers, setApprovers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
 
   const loadAll = useCallback(async () => {
     setError("");
     // ยิงแยกกันและกันพังทีละตัว — ถ้า endpoint ใดล้ม ส่วนที่เหลือยังแสดงได้
-    const [reqRes, userRes, auditRes, proxyRes, holidayRes] = await Promise.all([
-      API.get("/leave-requests").catch(() => null),
-      API.get("/admin/users").catch(() => null),
-      API.get("/admin/audit-logs", { params: { limit: 6 } }).catch(() => null),
-      API.get("/proxy-approval/today").catch(() => null),
-      API.get("/admin/holiday").catch(() => null),
-    ]);
+    const [reqRes, userRes, auditRes, proxyRes, holidayRes, approverRes] =
+      await Promise.all([
+        API.get("/leave-requests").catch(() => null),
+        API.get("/admin/users").catch(() => null),
+        API.get("/admin/audit-logs", { params: { limit: 6 } }).catch(() => null),
+        API.get("/proxy-approval/today").catch(() => null),
+        API.get("/admin/holiday").catch(() => null),
+        API.get("/admin/approver-positions").catch(() => null),
+      ]);
 
     if (!reqRes && !userRes) {
       setError("ไม่สามารถโหลดข้อมูลแดชบอร์ดได้ กรุณาลองใหม่อีกครั้ง");
@@ -110,7 +130,9 @@ export default function AdminDashboard() {
     setUserCount((userRes?.data?.data || []).length);
     setAuditLogs(auditRes?.data?.data || []);
     setProxyToday(proxyRes?.data?.pagination?.totalCount ?? (proxyRes?.data?.data || []).length);
+    setProxies(proxyRes?.data?.data || []);
     setHolidays(holidayRes?.data?.data || []);
+    setApprovers(approverRes?.data?.data || []);
   }, []);
 
   useEffect(() => {
@@ -128,11 +150,17 @@ export default function AdminDashboard() {
   };
 
   // ---------- ข้อมูลสรุป (คำนวณฝั่ง client เพราะ backend ยังไม่มี endpoint สรุป) ----------
+  // คำขอที่อยู่ในช่วงเวลาที่เลือก (กรองด้วยวันเริ่มลา) — ใช้กับ KPI/อันดับ/ประเภทที่ลาบ่อย
+  const periodRequests = useMemo(
+    () => filterByPeriod(requests, period),
+    [requests, period],
+  );
+
   const statusCounts = useMemo(() => {
     const base = { PENDING: 0, APPROVED: 0, REJECTED: 0, CANCELLED: 0 };
-    for (const r of requests) if (r.status in base) base[r.status] += 1;
+    for (const r of periodRequests) if (r.status in base) base[r.status] += 1;
     return base;
-  }, [requests]);
+  }, [periodRequests]);
 
   const monthlyTrend = useMemo(() => {
     const now = new Date();
@@ -157,7 +185,7 @@ export default function AdminDashboard() {
 
   const topLeaveTypes = useMemo(() => {
     const tally = new Map();
-    for (const r of requests) {
+    for (const r of periodRequests) {
       const name = r.leaveType?.name || "ไม่ระบุ";
       tally.set(name, (tally.get(name) || 0) + 1);
     }
@@ -165,7 +193,7 @@ export default function AdminDashboard() {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
-  }, [requests]);
+  }, [periodRequests]);
 
   const recentRequests = useMemo(
     () =>
@@ -174,6 +202,23 @@ export default function AdminDashboard() {
         .slice(0, 5),
     [requests],
   );
+
+  // อันดับผู้ลาเยอะสุด (ทั้งระบบ) — รวมจำนวนวันและครั้ง (อนุมัติ/รออนุมัติ) เอา 10 อันดับแรก
+  const topLeavers = useMemo(() => {
+    const tally = new Map();
+    for (const r of periodRequests) {
+      if (r.status === "REJECTED" || r.status === "CANCELLED") continue;
+      const u = r.user;
+      if (!u) continue;
+      const cur = tally.get(u.id) || { user: u, days: 0, count: 0 };
+      cur.days += Number(r.thisTimeDays) || 0;
+      cur.count += 1;
+      tally.set(u.id, cur);
+    }
+    return [...tally.values()]
+      .sort((a, b) => b.days - a.days || b.count - a.count)
+      .slice(0, 10);
+  }, [periodRequests]);
 
   const upcomingHolidays = useMemo(() => {
     const today = new Date();
@@ -185,7 +230,7 @@ export default function AdminDashboard() {
   }, [holidays]);
 
   const maxTypeCount = topLeaveTypes[0]?.count || 1;
-  const totalRequests = requests.length;
+  const totalRequests = periodRequests.length;
 
   if (loading) {
     return (
@@ -239,6 +284,19 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* ---------- ตัวกรองช่วงเวลา (มีผลกับ KPI/อันดับ/ประเภทที่ลาบ่อย) ---------- */}
+        <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight text-slate-900">
+              ช่วงเวลาข้อมูลสรุป
+            </h2>
+            <p className="text-xs text-slate-500">
+              เลือกช่วงเพื่อดูสถิติการลา อันดับ และประเภทที่ลาบ่อยเฉพาะช่วงนั้น
+            </p>
+          </div>
+          <PeriodFilter value={period} onChange={setPeriod} className="sm:items-end" />
+        </div>
+
         {/* ---------- KPI ---------- */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile
@@ -285,6 +343,110 @@ export default function AdminDashboard() {
             }
           />
         </div>
+
+        {/* ---------- ผู้อนุมัติระดับคณะปัจจุบัน ---------- */}
+        <Panel
+          title="ผู้อนุมัติระดับคณะปัจจุบัน"
+          subtitle="ผู้ดำรงตำแหน่งในสายอนุมัติของคณะ (ตามทะเบียนผู้อนุมัติ)"
+          action={
+            <PanelLink
+              to="/admin/management"
+              state={{ activeTab: "approvers" }}
+              label="จัดการผู้อนุมัติ"
+            />
+          }
+        >
+          {approvers.length === 0 ? (
+            <EmptyState text="ยังไม่มีข้อมูลผู้อนุมัติ" />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {approvers.map((a) => (
+                <div
+                  key={a.level}
+                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                      <UserCheck className="h-3.5 w-3.5 text-slate-400" />
+                      {a.label}
+                    </span>
+                    {!a.inSync && (
+                      <span
+                        title="ทะเบียนผู้อนุมัติไม่ตรงกับผู้ถือสิทธิ์จริง ควรตรวจสอบ"
+                        className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700"
+                      >
+                        <AlertTriangle className="h-3 w-3" />
+                        ตรวจสอบ
+                      </span>
+                    )}
+                  </div>
+                  <p
+                    className="mt-2 truncate text-sm font-semibold text-slate-900"
+                    title={a.holder ? fullName(a.holder) : ""}
+                  >
+                    {a.holder ? fullName(a.holder) : "— ยังไม่กำหนด"}
+                  </p>
+                  <p className="truncate text-xs text-slate-400">
+                    {a.holder?.department?.name || a.holder?.email || " "}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+
+        {/* ---------- ผู้รับมอบอำนาจที่ใช้งานวันนี้ ---------- */}
+        <Panel
+          title="ผู้รับมอบอำนาจที่ใช้งานวันนี้"
+          subtitle={`มีการมอบอำนาจที่ใช้งานอยู่ ${proxyToday} รายการ`}
+          action={
+            <PanelLink
+              to="/admin/management"
+              state={{ activeTab: "proxy" }}
+              label="จัดการการมอบอำนาจ"
+            />
+          }
+        >
+          {proxies.length === 0 ? (
+            <EmptyState text="วันนี้ไม่มีการมอบอำนาจที่ใช้งานอยู่" />
+          ) : (
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {proxies.map((p) => (
+                <li
+                  key={p.id}
+                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
+                >
+                  <div className="flex items-center gap-2 text-sm">
+                    <span
+                      className="min-w-0 truncate font-medium text-slate-800"
+                      title={fullName(p.originalApprover)}
+                    >
+                      {fullName(p.originalApprover)}
+                    </span>
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <span
+                      className="min-w-0 truncate font-medium text-brand-700"
+                      title={fullName(p.proxyApprover)}
+                    >
+                      {fullName(p.proxyApprover)}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5">
+                      <ShieldCheck className="h-3 w-3 text-slate-400" />
+                      {LEVEL_ROLE_LABEL[p.approverLevel] || `ระดับ ${p.approverLevel}`}
+                    </span>
+                    <span>
+                      {p.isDaily
+                        ? `วันนี้ (${formatDate(p.dailyDate)})`
+                        : `${formatDate(p.startDate)} – ${formatDate(p.endDate)}`}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
 
         {/* ---------- แนวโน้ม + สถานะ ---------- */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -472,6 +634,57 @@ export default function AdminDashboard() {
           </Panel>
         </div>
 
+        {/* ---------- อันดับผู้ลาเยอะสุด (ทั้งระบบ) ---------- */}
+        <Panel
+          title="อันดับผู้ลาเยอะสุด"
+          subtitle="รวมจำนวนวันและครั้งที่ลาทั้งระบบ (อนุมัติ/รออนุมัติ) — กดเพื่อดูข้อมูลผู้ใช้"
+        >
+          {topLeavers.length === 0 ? (
+            <EmptyState text="ยังไม่มีข้อมูลการลา" />
+          ) : (
+            <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              {topLeavers.map((t, i) => (
+                <li key={t.user.id}>
+                  <button
+                    onClick={() => setSelectedUserId(t.user.id)}
+                    className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left transition hover:bg-slate-50"
+                  >
+                    <span
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                        i === 0
+                          ? "bg-amber-100 text-amber-700"
+                          : i === 1
+                            ? "bg-slate-200 text-slate-600"
+                            : i === 2
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-800">
+                        {fullName(t.user)}
+                      </p>
+                      <p className="truncate text-xs text-slate-400">
+                        {t.user.department?.name || "-"}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-sm font-semibold tabular-nums text-brand-700">
+                        {t.days} วัน
+                      </p>
+                      <p className="text-[11px] tabular-nums text-slate-400">
+                        {t.count} ครั้ง
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+
         {/* ---------- Audit log + วันหยุด ---------- */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <Panel
@@ -544,6 +757,13 @@ export default function AdminDashboard() {
           </Panel>
         </div>
       </div>
+
+      {selectedUserId != null && (
+        <ApproverUserDetailModal
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
+      )}
     </div>
   );
 }

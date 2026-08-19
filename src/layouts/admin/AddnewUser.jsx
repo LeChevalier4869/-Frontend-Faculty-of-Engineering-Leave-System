@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useGoBack } from "../../utils/useGoBack";
 import { HiOutlineChevronDown } from "react-icons/hi";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import ExcelUploadPanel from "../../components/ExcelUploadPanel";
@@ -42,6 +43,7 @@ Panel.defaultProps = {
 
 export default function AddUser() {
   const navigate = useNavigate();
+  const goBack = useGoBack("/admin/manage-user");
   const [formData, setFormData] = useState(initialForm);
   const [selectedFile, setSelectedFile] = useState(null);
   const [departments, setDepartments] = useState([]);
@@ -353,7 +355,7 @@ export default function AddUser() {
             <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
-                onClick={() => navigate("/admin/manage-user")}
+                onClick={goBack}
                 className="px-5 py-2 rounded-xl border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm"
               >
                 ยกเลิก

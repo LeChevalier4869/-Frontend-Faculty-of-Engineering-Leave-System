@@ -24,16 +24,27 @@ export function isFemaleOnlyLeaveTypeName(name) {
   return false;
 }
 
-export function filterLeaveTypesBySex(leaveTypes, sex) {
-  const normalized = normalizeSex(sex);
-  const list = Array.isArray(leaveTypes) ? leaveTypes : [];
-  if (!normalized) return list;
+// ประเภทการลาที่ผู้ใช้ยื่นเองในระบบได้ (นอกเหนือจากนี้ต้องยื่นผ่านช่องทางอื่น)
+// เทียบด้วย "ชื่อ" เพื่อไม่ผูกกับ id ที่อาจต่างกันในแต่ละฐานข้อมูล
+const SELF_SERVICE_LEAVE_NAMES = ["ลาป่วย", "ลากิจส่วนตัว", "ลาพักผ่อน"];
 
+export function isSelfServiceLeaveType(name) {
+  const n = String(name || "").trim();
+  return SELF_SERVICE_LEAVE_NAMES.some((allowed) => n === allowed);
+}
+
+export function filterLeaveTypesBySex(leaveTypes, sex) {
+  const list = Array.isArray(leaveTypes) ? leaveTypes : [];
+
+  // จำกัดให้ยื่นเองได้เฉพาะ ลาป่วย / ลากิจส่วนตัว / ลาพักผ่อน
+  const selfService = list.filter((t) => isSelfServiceLeaveType(t?.name));
+
+  const normalized = normalizeSex(sex);
   if (normalized === "MALE") {
-    return list.filter((t) => !isFemaleOnlyLeaveTypeName(t?.name));
+    return selfService.filter((t) => !isFemaleOnlyLeaveTypeName(t?.name));
   }
 
-  return list;
+  return selfService;
 }
 
 export function filterLeaveBalancesBySex(balances, sex) {

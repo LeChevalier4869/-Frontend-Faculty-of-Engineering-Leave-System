@@ -5,7 +5,6 @@ import {
   FaHistory,
   FaIdBadge,
   FaUser,
-  FaCalendarAlt,
   FaSort,
   FaSortUp,
   FaSortDown,
@@ -185,197 +184,108 @@ const PositionNumberManageContent = () => {
           </div>
         </div>
 
-        {/* Users Table */}
+        {/* Users Table — กระชับ: ตัด ID ภายในออก รวมชื่อ+อีเมล ลด padding */}
         <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-          <div className="min-h-[600px]">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 sticky top-0 z-10">
+          <div className="overflow-x-auto">
+            <table className="w-full table-fixed text-sm">
+              <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
+                <tr>
+                  <th
+                    className="w-[38%] px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.16em] cursor-pointer hover:bg-slate-100"
+                    onClick={() => handleSort("firstName")}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <FaUser className="text-slate-400" /> ผู้ใช้งาน {getSortIcon("firstName")}
+                    </div>
+                  </th>
+                  <th
+                    className="w-[22%] px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.16em] cursor-pointer hover:bg-slate-100"
+                    onClick={() => handleSort("department")}
+                  >
+                    <div className="flex items-center gap-1.5">แผนก {getSortIcon("department")}</div>
+                  </th>
+                  <th
+                    className="w-[24%] px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.16em] cursor-pointer hover:bg-slate-100"
+                    onClick={() => handleSort("positionNumber")}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <FaIdBadge className="text-slate-400" /> เลขที่ตำแหน่ง {getSortIcon("positionNumber")}
+                    </div>
+                  </th>
+                  <th className="w-[16%] px-4 py-2.5 text-center text-[11px] font-semibold uppercase tracking-[0.16em]">
+                    จัดการ
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {loading ? (
                   <tr>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort("id")}
-                    >
-                      <div className="flex items-center gap-2">
-                        ID
-                        {getSortIcon("id")}
+                    <td colSpan="4" className="px-4 py-6 text-center text-sm text-slate-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-600"></div>
+                        กำลังโหลด...
                       </div>
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort("firstName")}
-                    >
-                      <div className="flex items-center gap-2">
-                        <FaUser />
-                        ชื่อ-นามสกุล
-                        {getSortIcon("firstName")}
-                      </div>
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort("email")}
-                    >
-                      <div className="flex items-center gap-2">
-                        อีเมล
-                        {getSortIcon("email")}
-                      </div>
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort("department")}
-                    >
-                      <div className="flex items-center gap-2">
-                        แผนก
-                        {getSortIcon("department")}
-                      </div>
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort("positionNumber")}
-                    >
-                      <div className="flex items-center gap-2">
-                        <FaIdBadge />
-                        เลขที่ตำแหน่ง
-                        {getSortIcon("positionNumber")}
-                      </div>
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort("effectiveFrom")}
-                    >
-                      <div className="flex items-center gap-2">
-                        <FaCalendarAlt />
-                        วันที่ได้รับ
-                        {getSortIcon("effectiveFrom")}
-                      </div>
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                      จัดการ
-                    </th>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-slate-200">
-                  {loading ? (
-                    <tr>
-                      <td colSpan="7" className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                          <span className="ml-2">กำลังโหลด...</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : sortedUsers.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="7"
-                        className="px-6 py-4 text-center text-gray-500"
+                ) : sortedUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="px-4 py-6 text-center text-sm text-slate-500">
+                      {searchTerm ? "ไม่พบข้อมูลที่ค้นหา" : "ไม่มีข้อมูลผู้ใช้"}
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedUsers.map((user, idx) => {
+                    const currentPosition = user.positionNumbers?.[0];
+                    return (
+                      <tr
+                        key={user.id}
+                        className={`border-t border-slate-100 transition-colors ${
+                          idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
+                        } hover:bg-brand-50/40`}
                       >
-                        {searchTerm
-                          ? "ไม่พบข้อมูลที่ค้นหา"
-                          : "ไม่มีข้อมูลผู้ใช้"}
-                      </td>
-                    </tr>
-                  ) : (
-                    <>
-                      {paginatedUsers.map((user, idx) => {
-                        const currentPosition = user.positionNumbers?.[0];
-                        return (
-                          <tr
-                            key={user.id}
-                            className={`border-t border-slate-100 transition-colors ${
-                              idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                            } hover:bg-sky-50`}
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
-                              #{user.id}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {user.fullName || "-"}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {user.email}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {user.department?.name || "-"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {currentPosition ? (
-                                <PositionNumberBadge
-                                  positionNumber={
-                                    currentPosition.positionNumber
-                                  }
-                                  effectiveFrom={currentPosition.effectiveFrom}
-                                />
-                              ) : (
-                                <span className="text-gray-400">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {currentPosition?.effectiveFrom
-                                ? new Date(
-                                    currentPosition.effectiveFrom,
-                                  ).toLocaleDateString("th-TH", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  })
-                                : "-"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                <button
-                                  onClick={() =>
-                                    handleUpdatePositionNumber(user)
-                                  }
-                                  className="text-blue-600 hover:text-blue-800 transition-colors"
-                                  title="แก้ไขเลขที่ตำแหน่ง"
-                                >
-                                  <FaEdit />
-                                </button>
-                                <button
-                                  onClick={() => handleViewHistory(user)}
-                                  className="text-green-600 hover:text-green-800 transition-colors"
-                                  title="ดูประวัติ"
-                                >
-                                  <FaHistory />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {/* Fill empty rows to maintain consistent table height */}
-                      {Array.from({
-                        length: Math.max(
-                          0,
-                          pagination.limit - paginatedUsers.length,
-                        ),
-                      }).map((_, idx) => (
-                        <tr
-                          key={`empty-${idx}`}
-                          className={
-                            paginatedUsers.length % 2 === 0
-                              ? "bg-slate-50/70"
-                              : "bg-white"
-                          }
-                        >
-                          <td
-                            colSpan="7"
-                            className="px-6 py-4 text-center text-slate-300"
-                          >
-                            <div className="h-6"></div>
-                          </td>
-                        </tr>
-                      ))}
-                    </>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        <td className="px-4 py-2.5">
+                          <div className="truncate font-medium text-slate-900">
+                            {user.fullName || "-"}
+                          </div>
+                          <div className="truncate text-xs text-slate-400">{user.email}</div>
+                        </td>
+                        <td className="truncate px-4 py-2.5 text-slate-600">
+                          {user.department?.name || "-"}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {currentPosition ? (
+                            <PositionNumberBadge
+                              positionNumber={currentPosition.positionNumber}
+                              effectiveFrom={currentPosition.effectiveFrom}
+                            />
+                          ) : (
+                            <span className="text-slate-400">— ยังไม่กำหนด</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => handleUpdatePositionNumber(user)}
+                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-brand-50 hover:text-brand-700"
+                              title="แก้ไขเลขที่ตำแหน่ง"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              onClick={() => handleViewHistory(user)}
+                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+                              title="ดูประวัติ"
+                            >
+                              <FaHistory />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 

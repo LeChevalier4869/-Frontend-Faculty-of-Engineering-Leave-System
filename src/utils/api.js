@@ -42,7 +42,10 @@ export const apiEndpoints = {
   getMe: `${BASE_URL}/auth/me`, // GET
   userLanding: `${BASE_URL}/auth/landing`, // GET
   getVerifier: `${BASE_URL}/auth/verifier`, // GET
-  getApproversForLevel: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET
+  // departmentId ใช้จำกัดเฉพาะหัวหน้าสาขานั้น (มีผลกับ level 1 เท่านั้น)
+  getApproversForLevel: (level, date, departmentId) =>
+    `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}` +
+    (departmentId ? `&departmentId=${departmentId}` : ""), // GET
   getApproversForLevelProxy: (level, date) => `${BASE_URL}/auth/approvers-for-level/${level}?date=${date}`, // GET (alias for proxy checking)
   updateUserRole: `${BASE_URL}/auth/update-role`,
   updateProfile: `${BASE_URL}/auth/update-picture`,
@@ -77,9 +80,18 @@ export const apiEndpoints = {
   // admin manage department
   departmentsAdmin: `${BASE_URL}/admin/departments`,
   departmentByIdAdmin: (id) => `${BASE_URL}/admin/departments/${id}`,
+  assignDepartmentHead: `${BASE_URL}/admin/assign-head`, // POST { departmentId, headId }
+
+  // admin manage approver positions (ผู้อนุมัติระดับคณะ)
+  approverPositions: `${BASE_URL}/admin/approver-positions`, // GET, POST { level, userId }
+  approverPositionByLevel: (level) =>
+    `${BASE_URL}/admin/approver-positions/${level}`, // DELETE
+  approverPositionHistory: (level) =>
+    `${BASE_URL}/admin/approver-positions/${level}/history`, // GET
 
   // admin manage organization
   organizationCreate: `${BASE_URL}/admin/organizations`,
+  organizationsList: `${BASE_URL}/admin/organizations`, //GET
   organizationUpdate: (id) => `${BASE_URL}/admin/organizations/${id}`,
 
   // leave balance
@@ -158,6 +170,18 @@ export const apiEndpoints = {
 
   //PDF
   generatePdf: `${BASE_URL}/api/download-report`, // POST
+  reportDataforMonth : `${BASE_URL}/api/report/data-month`, //GET
+
+  // ---- รายงานสรุปการลา (preview + export) ----
+  reportSummaryData: `${BASE_URL}/api/report/data`, // POST { organizationId, startDate, endDate } → รอบประเมิน
+  reportFiscalData: `${BASE_URL}/api/report/fiscal-data`, // GET ?organizationId=&fiscalYear= → รอบปีงบ
+  reportFiscalYears: `${BASE_URL}/api/report/fiscal-years`, // GET → ปีงบที่มีข้อมูล (พ.ศ.)
+  exportRoundReportPdf: `${BASE_URL}/api/export-round-report-pdf`, // POST
+  exportRoundReportWord: `${BASE_URL}/api/export-round-report-word`, // POST
+  exportYearReportPdf: `${BASE_URL}/api/export-year-report-pdf`, // POST
+  exportYearReportWord: `${BASE_URL}/api/export-year-report-word`, // POST
+  exportMonthReportPdf: `${BASE_URL}/api/export-month-report-pdf`, // POST
+  exportMonthReportWord: `${BASE_URL}/api/export-month-report-word`, // POST
 
   // Proxy Approval
   proxyApproval: `${BASE_URL}/proxy-approval`, // CRUD
@@ -166,7 +190,9 @@ export const apiEndpoints = {
   proxyApprovalByProxy: (userId) => `${BASE_URL}/proxy-approval/proxy/${userId}`, // GET
   proxyApprovalActive: (userId, level) => `${BASE_URL}/proxy-approval/active/${userId}/${level}`, // GET
   proxyApprovalCheckPermission: (userId, level) => `${BASE_URL}/proxy-approval/check-permission/${userId}/${level}`, // GET
-  proxyApprovalPotentialApprovers: (level) => `${BASE_URL}/proxy-approval/potential-approvers/${level}`, // GET
+  // backend อ่าน approverLevel จาก query ไม่ใช่ path param (เดิมส่งเป็น path จึง 404 ทุกครั้ง)
+  proxyApprovalPotentialApprovers: (level) =>
+    `${BASE_URL}/proxy-approval/potential-approvers?approverLevel=${level}`, // GET
   proxyApprovalCancel: (id) => `${BASE_URL}/proxy-approval/${id}/cancel`, // PATCH
   proxyApprovalExpire: `${BASE_URL}/proxy-approval/expire`, // PATCH
   proxyApprovalStats: `${BASE_URL}/proxy-approval/stats`, // GET

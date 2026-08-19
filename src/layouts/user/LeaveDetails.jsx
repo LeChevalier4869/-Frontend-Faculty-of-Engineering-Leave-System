@@ -1,21 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import { FaFileAlt } from "react-icons/fa";
+import { useParams } from "react-router-dom";
+import { useGoBack } from "../../utils/useGoBack";
+import useAuth from "../../hooks/useAuth";
+import AuditTrailModal from "../../components/AuditTrailModal";
+import Swal from "../../utils/alert";
+import { FaFileAlt, FaHistory } from "react-icons/fa";
+import axios from "axios";
+import PropTypes from "prop-types";
 import { apiEndpoints, API } from "../../utils/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
-let approverCache = null;
-let approverCachePromise = null;
 
 export default function LeaveDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  // ปุ่มย้อนกลับ: ถอยไปหน้าก่อน ถ้าเปิดลิงก์ตรง ๆ ให้ไปหน้ารายการลา
+  const goBack = useGoBack("/leave");
+
+  // ประวัติการเปลี่ยนแปลงของใบลา — แสดงปุ่มเฉพาะผู้ดูแลระบบ (endpoint มีข้อมูลภายใน)
+  const { user: authUser } = useAuth() || {};
+  const authRoles = authUser?.roles || authUser?.role || [];
+  const isAdmin =
+    Array.isArray(authRoles) &&
+    (authRoles.includes("ADMIN") || authRoles.includes("SUPER_ADMIN"));
+  const [showAudit, setShowAudit] = useState(false);
   const [leave, setLeave] = useState(null);
   const [lastLeave, setLastLeave] = useState(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
-  const [approver, setApprover] = useState([]);
 
   const {
     user,
@@ -42,15 +53,15 @@ export default function LeaveDetail() {
     return steps;
   }, [approvalSteps]);
 
-  const departmentId = leave?.user?.department?.id ?? null;
-  const departmentHeadId = leave?.user?.department?.headId ?? null;
-  const verifierId = leave?.verifierId ?? null;
-  const hodOrganizationId = leave?.headOfDepartment?.department?.organizationId ?? null;
-
   // useEffect ที่ 1: โหลดข้อมูล leave ตาม id (ใบปัจจุบัน)
   useEffect(() => {
     const controller = new AbortController();
+
     const loadLeave = async () => {
+      // เริ่มโหลดใหม่ทุกครั้งที่ id เปลี่ยน ไม่งั้นจะค้างสถานะเดิมของใบก่อนหน้า
+      setLoading(true);
+      setLeave(null);
+
       try {
         const res = await API.get(
           apiEndpoints.getLeaveById(id),
@@ -60,10 +71,13 @@ export default function LeaveDetail() {
         setLeave(payload);
         setLoading(false);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error("Error loading leave:", err);
-          setLoading(false);
-        }
+        // axios ยกเลิก request ด้วย CanceledError (code ERR_CANCELED) ไม่ใช่ AbortError
+        // ถ้าเช็คชื่อผิด จะเผลอปิด loading ของ request ที่ถูกยกเลิก
+        // ทำให้หน้าจอขึ้น "ไม่พบข้อมูลการลา" ทั้งที่ request จริงยังโหลดอยู่
+        if (axios.isCancel(err) || err.code === "ERR_CANCELED") return;
+
+        console.error("Error loading leave:", err);
+        setLoading(false);
       }
     };
 
@@ -80,16 +94,21 @@ export default function LeaveDetail() {
     const loadLastLeave = async () => {
       try {
         if (!leave?.userId || !leave?.leaveType?.id || !leave?.startDate) return;
-        const res = await API.get(
+        // endpoint นี้เป็น POST และต้องการ leaveTypeId/beforeDate ใน body
+        // เดิมเรียกเป็น GET เปล่า ๆ จึงได้ 404 เสมอ ทำให้ "ครั้งสุดท้ายเมื่อ" ขึ้น "-" ตลอด
+        const res = await API.post(
           apiEndpoints.getLastLeaveBefore(leave.userId),
+          {
+            leaveTypeId: leave.leaveType.id,
+            beforeDate: leave.startDate,
+          },
           { signal: controller.signal }
         );
         const payload = res?.data?.data ?? res?.data ?? null;
         setLastLeave(payload);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error("Error loading last leave:", err);
-        }
+        if (axios.isCancel(err) || err.code === "ERR_CANCELED") return;
+        console.error("Error loading last leave:", err);
       }
     };
 
@@ -99,66 +118,6 @@ export default function LeaveDetail() {
       controller.abort();
     };
   }, [leave?.userId, leave?.leaveType?.id, leave?.startDate]);
-
-  // useEffect ที่ 3: approver
-  useEffect(() => {
-    let mounted = true;
-    const fetchApprover = async () => {
-      try {
-        if (approverCache) {
-          if (mounted) setApprover(approverCache);
-          return;
-        }
-
-        if (!approverCachePromise) {
-          approverCachePromise = API.get(apiEndpoints.getAllApprover).then(
-            (res) => res?.data?.data ?? res?.data ?? null
-          );
-        }
-
-        const result = await approverCachePromise;
-        approverCache = result;
-        if (mounted) setApprover(result);
-      } catch (err) {
-        Swal.fire(
-          "ผิดพลาด",
-          err.response?.data?.message || err.message,
-          "error"
-        );
-      }
-    };
-
-    fetchApprover();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  //--------------------------------------------------------
-  //------------------------ Approver ----------------------
-  //--------------------------------------------------------
-
-  const approverByRole = useMemo(() => {
-    const byRole = {
-      APPROVER_1: [],
-      APPROVER_2: [],
-      APPROVER_3: [],
-      APPROVER_4: [],
-      VERIFIER: [],
-    };
-
-    for (const a of approver || []) {
-      if (!Array.isArray(a?.userRoles)) continue;
-      for (const ur of a.userRoles) {
-        const roleName = ur?.role?.name;
-        if (roleName && byRole[roleName]) byRole[roleName].push(a);
-      }
-    }
-
-    return byRole;
-  }, [approver]);
-
   // Head of Department Case
   // const approver1 = useMemo(() => {
   //   const list = approverByRole.APPROVER_1;
@@ -387,8 +346,31 @@ export default function LeaveDetail() {
     }
   };
 
+  // ตำแหน่งในสายอนุมัติยึดตาม "ขั้น" (stepOrder) ไม่ใช่ role ของบุคคล
+  // ผู้ใช้บางคนถือหลาย role (เช่นเป็นทั้งผู้ตรวจสอบและคณบดี) การอ่านจาก role
+  // จึงหยิบมาผิดขั้น แล้วโชว์ตำแหน่งไม่ตรงกับหน้าที่ในขั้นนั้น
+  const POSITION_BY_STEP = {
+    1: "หัวหน้าสาขา", // APPROVER_1
+    2: "ผู้ตรวจสอบ", // VERIFIER
+    4: "สารบรรณคณะ", // APPROVER_2
+    5: "รองคณบดี", // APPROVER_3
+    6: "คณบดี", // APPROVER_4
+  };
+
+  const POSITION_BY_ROLE = {
+    APPROVER_1: "หัวหน้าสาขา",
+    VERIFIER: "ผู้ตรวจสอบ",
+    APPROVER_2: "สารบรรณคณะ",
+    APPROVER_3: "รองคณบดี",
+    APPROVER_4: "คณบดี",
+  };
+
   const getApproverPositionName = (step) => {
-    // ถ้า backend ส่ง roleName มาด้วย (แนะนำที่สุด)
+    // 1) ยึดตามขั้นของสายอนุมัติเป็นหลัก
+    const byStep = POSITION_BY_STEP[Number(step?.stepOrder)];
+    if (byStep) return byStep;
+
+    // 2) เผื่อ stepOrder ไม่มา ค่อย fallback ไปดู role ของผู้อนุมัติ
     const roleName = Array.isArray(step?.approver?.userRoles)
       ? step.approver.userRoles
           .map((ur) => ur?.role)
@@ -397,373 +379,293 @@ export default function LeaveDetail() {
           .filter(Boolean)[0]
       : null;
 
-    switch (roleName) {
-      case "APPROVER_1":
-        return "หัวหน้าสาขา";
-      case "VERIFIER":
-        return "ผู้ตรวจสอบ";
-      case "APPROVER_2":
-        return "สรรบรรณคณะ";
-      case "APPROVER_3":
-        return "รองคณบดี";
-      case "APPROVER_4":
-        return "คณบดี";
-      default:
-        return "-";
-    }
+    return POSITION_BY_ROLE[roleName] || "-";
   };
 
 
+  const statusMeta = {
+    APPROVED: { label: "อนุมัติแล้ว", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    REJECTED: { label: "ไม่อนุมัติ", cls: "bg-rose-50 text-rose-700 border-rose-200" },
+    CANCELLED: { label: "ยกเลิกแล้ว", cls: "bg-slate-100 text-slate-600 border-slate-200" },
+    PENDING: { label: "รออนุมัติ", cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  }[status] || { label: status, cls: "bg-slate-100 text-slate-600 border-slate-200" };
+
+  const stepStatusMeta = (s) =>
+    ({
+      APPROVED: { label: "อนุมัติ", cls: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
+      REJECTED: { label: "ปฏิเสธ", cls: "bg-rose-50 text-rose-700 border-rose-200", dot: "bg-rose-500" },
+      PENDING: { label: "รอดำเนินการ", cls: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-400" },
+    }[s] || { label: s || "-", cls: "bg-slate-100 text-slate-600 border-slate-200", dot: "bg-slate-300" });
+
+  const hasLastLeave = !!(lastLeave?.startDate || lastLeave?.endDate);
+
+  // แสดง "-" เมื่อไม่มีค่า/เป็นศูนย์ ให้เหมือนตารางสถิติในเอกสารส่งออก
+  const dash = (n) => (n == null || Number(n) === 0 ? "-" : n);
+
   return (
-    <div className="min-h-screen bg-white px-6 py-10 font-kanit text-black">
-      <div className="max-w-5xl mx-auto bg-gray-50 p-6 rounded-xl shadow">
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <FaFileAlt className="text-gray-700 text-3xl" />
-          <h1 className="text-3xl font-bold">รายละเอียดใบลา</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* ---------- Header ---------- */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1">
+              <FaFileAlt className="text-brand-600" />
+              <span className="text-[11px] uppercase tracking-[0.2em] text-brand-700">Leave Detail</span>
+            </div>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
+              ขอ{leaveType?.name || "ลา"}
+            </h1>
+            {/* เลขที่ใบลา — เน้นให้เห็นชัด เป็นข้อมูลอ้างอิงหลักของเอกสาร */}
+            <div className="mt-3 inline-flex items-center gap-2.5 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-brand-700/70">
+                เลขที่ใบลา
+              </span>
+              <span className="text-lg font-bold tracking-wide text-brand-700">
+                {documentNumber || "— ยังไม่ออกเลข"}
+              </span>
+              {documentIssuedDate && (
+                <span className="border-l border-brand-200 pl-2.5 text-xs text-slate-500">
+                  {formatDate(documentIssuedDate)}
+                </span>
+              )}
+            </div>
+          </div>
+          <span className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-sm font-semibold ${statusMeta.cls}`}>
+            {statusMeta.label}
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="md:col-span-2 flex justify-end">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                เลขที่ใบลา:
-              </label>
-              <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 text-center w-40">
-                {documentNumber || "-"}
-              </p>
-            </div>
+        {/* ---------- ผู้ยื่นคำขอ ---------- */}
+        <Section title="ผู้ยื่นคำขอ">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+            <Field label="ชื่อ-นามสกุล" value={`${user?.prefixName || ""}${user?.firstName || ""} ${user?.lastName || ""}`.trim()} />
+            <Field label="ตำแหน่ง" value={user?.position} />
+            <Field label="สังกัด" value={user?.department?.organization?.name} />
+            <Field label="ประเภทบุคลากร" value={user?.personnelType?.name} />
+            <Field label="เบอร์โทรศัพท์" value={user?.phone} />
+            <Field label="ช่องทางติดต่อ" value={contact} />
           </div>
-          <div className="md:col-span-2 flex justify-end">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                วัน/เดือน/ปี:
-              </label>
-              <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 text-center w-60">
-                {formatDate(documentIssuedDate) || "-"}
-              </p>
-            </div>
-          </div>
-          <div className="md:col-span-2 flex justify-start">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                เรื่อง:
-              </label>
-              <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800">
-                ขอ{leaveType?.name || "-"}
-              </p>
-            </div>
-          </div>
-          <div className="md:col-span-2 flex justify-start">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                เรียน:
-              </label>
-              <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800">
-                คณบดี/ผู้อำนวยการสำนักงานวิทยาเขตขอนแก่น
-              </p>
-            </div>
-          </div>
-          <div className="md:col-span-2 pl-8">
-            <div className="flex items-center gap-8 w-full">
-              <div className="flex items-center gap-2 w-1/2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ข้าพเจ้า
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {`${user?.prefixName}${user?.firstName} ${user?.lastName}`}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 w-1/2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ตำแหน่ง
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {user.position || "-"}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="md:col-span-2 pl-8">
-            <div className="flex items-center gap-8 w-full">
-              <div className="flex items-center gap-2 w-1/2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  สังกัด
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {`${user.department?.organization?.name || "-"}`}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 w-1/2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ประเภท
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {user.personnelType?.name || "-"}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="md:col-span-2 pl-8">
-            <div className="flex items-center gap-8 w-full">
-              <div className="flex items-center gap-2 w-1/2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ขออนุญาต
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {`${leaveType?.name || "-"}`}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 w-1/2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  เนื่องจาก
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {reason || "-"}
-                </p>
-              </div>
-            </div>
-          </div>
+        </Section>
 
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-8 w-full">
-              <div className="flex items-center gap-2 w-1/2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ตั้งแต่
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {formatDate(startDate)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 w-1/2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ถึง
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {formatDate(endDate)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 w-1/6">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  มีกำหนด
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 text-center w-full">
-                  {thisTimeDays}
-                </p>
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  วัน
-                </label>
-              </div>
+        {/* ---------- รายละเอียดการลา ---------- */}
+        <Section title="รายละเอียดการลา">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+            <Field label="ประเภทการลา" value={leaveType?.name} />
+            <Field label="วันที่ลา" value={`${formatDate(startDate)}${formatDate(startDate) !== formatDate(endDate) ? ` ถึง ${formatDate(endDate)}` : ""}`} />
+            <Field label="จำนวนวันลา" value={thisTimeDays != null ? `${thisTimeDays} วัน` : "-"} />
+            <div className="sm:col-span-2">
+              <Field label="เหตุผลการลา" value={reason} />
             </div>
           </div>
+        </Section>
 
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-8 w-full">
-              <div className="flex items-center gap-2 flex-[1.2]">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ข้าพเจ้าได้
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 text-center w-full">
-                  {leaveType?.name}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-[2]">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ครั้งสุดท้ายเมื่อ
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {lastLeave?.startDate ? formatDate(lastLeave.startDate) : "-"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-[2]">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ถึง
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {lastLeave?.endDate ? formatDate(lastLeave.endDate) : "-"}
-                </p>
-              </div>
-            </div>
+        {/* ---------- สถิติการลา (แบบเดียวกับที่ปรากฏในเอกสารส่งออก) ---------- */}
+        <Section title="สถิติการลาในปีงบประมาณนี้">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+                  <th className="py-2 pr-3 font-medium">ประเภทลา</th>
+                  <th className="px-3 py-2 text-center font-medium">
+                    ลามาแล้ว
+                    <span className="block text-[11px] font-normal text-slate-400">(วันทำการ)</span>
+                  </th>
+                  <th className="px-3 py-2 text-center font-medium">
+                    ลาครั้งนี้
+                    <span className="block text-[11px] font-normal text-slate-400">(วันทำการ)</span>
+                  </th>
+                  <th className="pl-3 py-2 text-center font-medium">
+                    รวมเป็น
+                    <span className="block text-[11px] font-normal text-slate-400">(วันทำการ)</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-slate-100 last:border-0">
+                  <td className="py-2.5 pr-3 font-medium text-slate-800">{leaveType?.name || "-"}</td>
+                  <td className="px-3 py-2.5 text-center tabular-nums text-slate-700">{dash(leavedDays)}</td>
+                  <td className="px-3 py-2.5 text-center tabular-nums text-slate-700">{dash(thisTimeDays)}</td>
+                  <td className="pl-3 py-2.5 text-center font-semibold tabular-nums text-brand-700">{dash(totalDays)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+          <p className="mt-2 text-[11px] text-slate-400">
+            นับเฉพาะวันทำการ · ตรงกับตารางสถิติในเอกสารส่งออก (PDF)
+          </p>
+        </Section>
 
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-4 w-full">
-              <div className="flex items-center gap-2 flex-[0.8]">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  มีกำหนด
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {lastLeave?.thisTimeDays ? lastLeave.thisTimeDays : "-"}
-                </p>
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  วัน
-                </label>
-              </div>
-              <div className="flex items-center gap-2 flex-[3.5]">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  ช่องทางติดต่อ
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {contact || "-"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-[1.7]">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                  หมายเลขโทรศัพท์
-                </label>
-                <p className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-gray-800 w-full">
-                  {user.phone || "-"}
-                </p>
-              </div>
+        {/* ---------- การลาครั้งก่อน ---------- */}
+        {hasLastLeave && (
+          <Section title={`การลา${leaveType?.name || ""}ครั้งก่อน`}>
+            <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-3">
+              <Field label="ตั้งแต่" value={lastLeave?.startDate ? formatDate(lastLeave.startDate) : "-"} />
+              <Field label="ถึง" value={lastLeave?.endDate ? formatDate(lastLeave.endDate) : "-"} />
+              <Field label="จำนวนวัน" value={lastLeave?.thisTimeDays != null ? `${lastLeave.thisTimeDays} วัน` : "-"} />
             </div>
-            <div className="md:col-span-2 flex justify-end mt-10 mr-40">
-              <div className="flex flex-col text-center w-max">
-                <label className="text-sm font-medium text-gray-700">
-                  ขอแสดงความนับถือ
-                </label>
-                <label className="text-sm font-medium text-gray-700">
-                  {`${user?.prefixName}${user?.firstName} ${user?.lastName}`}
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
+          </Section>
+        )}
 
-        <div className="mt-8 p-2">
-          <h2 className="font-semibold text-lg mb-2">
-            ความคิดเห็นผู้บังคับบัญชา
-          </h2>
+        {/* ---------- ขั้นตอนการอนุมัติ ---------- */}
+        <Section title="ขั้นตอนการอนุมัติ">
           {sortedApprovalSteps.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {sortedApprovalSteps.map((step, i) => (
-                <div
-                  key={step?.id ?? `${step?.stepOrder ?? ""}-${i}`}
-                  className="bg-white border px-4 py-2 rounded-lg"
-                >
-                  <div className="text-[11px] text-gray-400 font-light mb-1">
-                    STEP {i + 1}
-                  </div>
-                  <div className="p-2 rounded flex items-center gap-2 bg-gray-100 overflow-hidden">
-                    <p className="text-sm">
-                      {step.comment ? step.comment : "-"}
-                    </p>
-                  </div>
-                  <p className="text-sm mt-1">
-                    ชื่อผู้บังคับบัญชา: {step.approver?.prefixName}{step.approver?.firstName} {step.approver?.lastName}
-                  </p>
-                  <p className="text-sm mt-1">
-                    ตำแหน่ง: {getApproverPositionName(step)}
-                  </p>
-                  <p className="text-sm mt-1">
-                    {step.reviewedAt ? formatDate(step.reviewedAt) : "-"}
-                  </p>
-                  <div className="flex items-center">
-                    <p className="text-sm mt-1">
-                      หมายเหตุ: {step.remarks ? step.remarks : "-"}
-                    </p>
-                    <p className="text-sm text-gray-600 italic mt-1 ml-auto">
-                      สถานะ: {step.status}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ol className="space-y-3">
+              {sortedApprovalSteps.map((step, i) => {
+                const meta = stepStatusMeta(step.status);
+                const approverName = `${step.approver?.prefixName || ""}${step.approver?.firstName || ""} ${step.approver?.lastName || ""}`.trim();
+                return (
+                  <li
+                    key={step?.id ?? `${step?.stepOrder ?? ""}-${i}`}
+                    className="relative rounded-xl border border-slate-200 bg-white p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${meta.dot}`} />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-slate-800">
+                            {approverName || "— ยังไม่มีผู้อนุมัติ"}
+                          </p>
+                          <p className="text-xs text-slate-500">{getApproverPositionName(step)}</p>
+                        </div>
+                      </div>
+                      <span className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-xs font-medium ${meta.cls}`}>
+                        {meta.label}
+                      </span>
+                    </div>
+                    {step.comment && step.comment !== "-" && (
+                      <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                        {step.comment}
+                      </p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+                      {step.reviewedAt && <span>เมื่อ {formatDate(step.reviewedAt)}</span>}
+                      {step.remarks && step.remarks !== "-" && <span>หมายเหตุ: {step.remarks}</span>}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
           ) : (
-            <p className="text-gray-500">ไม่มีความคิดเห็น</p>
+            <p className="py-4 text-center text-sm text-slate-400">ยังไม่มีขั้นตอนการอนุมัติ</p>
           )}
-        </div>
+        </Section>
 
+        {/* ---------- ไฟล์แนบ ---------- */}
         {files?.length > 0 && (
-          <div className="mt-8">
-            <h2 className="font-semibold text-lg mb-2">ไฟล์แนบ</h2>
-            <ul className="list-disc pl-5">
+          <Section title="ไฟล์แนบ">
+            <ul className="space-y-2">
               {files.map((file) => (
                 <li key={file.id}>
                   <a
                     href={file.filePath}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 underline"
+                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-brand-700 transition hover:bg-brand-50"
                   >
-                    {file.name ? (
-                      <>
-                        เอกสารแนบ {file.type}
-                        <span className="text-gray-600 ml-2 text-sm">
-                          ({file.name.length > 50 ? file.name.substring(0, 50) + '...' : file.name})
-                        </span>
-                      </>
-                    ) : (
-                      `เอกสารแนบ ${file.type}`
+                    <FaFileAlt className="text-slate-400" />
+                    เอกสารแนบ {file.type}
+                    {file.name && (
+                      <span className="text-slate-400">
+                        ({file.name.length > 50 ? file.name.substring(0, 50) + "..." : file.name})
+                      </span>
                     )}
                   </a>
                 </li>
               ))}
             </ul>
+          </Section>
+        )}
+
+        {/* ---------- ปุ่มดำเนินการ ---------- */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button
+              onClick={goBack}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              ← ย้อนกลับ
+            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowAudit(true)}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                <FaHistory className="h-3.5 w-3.5 text-slate-400" />
+                ประวัติใบลา
+              </button>
+            )}
           </div>
-        )}
-
-        <div className="mt-8 text-right">
-          <span
-            className={`inline-block px-4 py-2 rounded-lg font-semibold text-white ${status === "APPROVED"
-              ? "bg-green-500"
-              : status === "REJECTED"
-                ? "bg-red-500"
-                : status === "CANCELLED"
-                  ? "bg-gray-500"
-                  : "bg-yellow-400"
+          <div className="flex flex-col items-stretch gap-2 sm:items-end">
+            <button
+              onClick={canExport ? downloadReport : undefined}
+              disabled={downloading || !canExport}
+              className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition ${
+                canExport ? "bg-brand-600 hover:bg-brand-700" : "cursor-not-allowed bg-slate-300"
               }`}
-          >
-            สถานะ:{" "}
-            {status === "APPROVED"
-              ? "อนุมัติแล้ว"
-              : status === "REJECTED"
-                ? "ไม่อนุมัติ"
-                : status === "CANCELLED"
-                  ? "ยกเลิกแล้ว"
-                  : "รออนุมัติ"}
-          </span>
+            >
+              {downloading ? "กำลังดาวน์โหลด..." : "ส่งออก PDF"}
+            </button>
+            {!canExport && !isFinalStatus && (
+              <p className="text-xs text-slate-500 sm:text-right">
+                ส่งออก PDF ได้เมื่อใบลาได้รับการอนุมัติหรือถูกปฏิเสธแล้ว
+              </p>
+            )}
+            {!canExport && isFinalStatus && !isExportableType && (
+              <p className="text-xs text-slate-500 sm:text-right">
+                ประเภทการลานี้ไม่รองรับการส่งออก PDF
+              </p>
+            )}
+          </div>
         </div>
-
-        <div className="mt-6 flex flex-wrap items-center justify-center sm:justify-start gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-block px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition font-medium"
-          >
-            ← กลับหน้ารายการลา
-          </button>
-          <button
-            onClick={canExport ? downloadReport : undefined}
-            disabled={downloading || !canExport}
-            className={`px-4 py-2 rounded text-white font-medium transition
-              ${canExport
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-gray-300 cursor-not-allowed"
-              }`}
-          >
-            {downloading ? "กำลังดาวน์โหลด..." : "ส่งออก PDF"}
-          </button>
-        </div>
-
-        {/* message notice case pending */}
-        {!canExport && !isFinalStatus && (
-          <p className="mt-3 text-sm text-red-500 text-center sm:text-left">
-            หมายเหตุ: กระบวนการอนุมัติใบลายังไม่เสร็จสิ้น จึงไม่สามารถส่งออก PDF ได้
-            กรุณารอให้ใบลาได้รับการอนุมัติหรือถูกปฏิเสธก่อน
-          </p>
-        )}
-
-        {!canExport && isFinalStatus && !isExportableType && (
-          <p className="mt-3 text-sm text-red-500 text-center sm:text-left">
-            หมายเหตุ: ประเภทการลานี้ไม่รองรับการส่งออก PDF
-          </p>
-        )}
       </div>
+
+      {showAudit && (
+        <AuditTrailModal
+          title="ประวัติการเปลี่ยนแปลงของใบลา"
+          subtitle={documentNumber ? `เลขที่ใบลา ${documentNumber}` : `ใบลา #${id}`}
+          url={`/admin/audit-logs/leave-request/${id}`}
+          onClose={() => setShowAudit(false)}
+        />
+      )}
     </div>
   );
 }
 
+function Section({ title, children }) {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <header className="border-b border-slate-100 px-5 py-3">
+        <h2 className="text-base font-semibold tracking-tight text-slate-900">{title}</h2>
+      </header>
+      <div className="px-5 py-4">{children}</div>
+    </section>
+  );
+}
+
+function Field({ label, value }) {
+  const display = value === null || value === undefined || value === "" ? "-" : value;
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs text-slate-400">{label}</dt>
+      <dd className="mt-0.5 break-words text-sm font-medium text-slate-800">{display}</dd>
+    </div>
+  );
+}
+
+Section.propTypes = {
+  title: PropTypes.string.isRequired,
+  children: PropTypes.node,
+};
+
+Field.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.node,
+};
+
 const formatDate = (dateStr) => {
   if (!dateStr) return "-";
   const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "-"; // กันวันที่ไม่ถูกต้อง ไม่ให้ render พัง
   const day = date.getDate();
   const month = date.toLocaleDateString("th-TH", { month: "long" });
   const year = date.getFullYear() + 543;
