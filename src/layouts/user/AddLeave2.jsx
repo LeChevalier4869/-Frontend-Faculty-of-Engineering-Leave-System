@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { apiEndpoints } from "../../utils/api";
 import useAuth from "../../hooks/useAuth";

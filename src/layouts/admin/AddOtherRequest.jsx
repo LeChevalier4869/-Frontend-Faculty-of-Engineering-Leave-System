@@ -6,7 +6,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { th } from "date-fns/locale";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { API, apiEndpoints } from "../../utils/api";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useLeaveRequest from "../../hooks/useLeaveRequest";

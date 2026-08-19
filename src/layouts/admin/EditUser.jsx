@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useGoBack } from "../../utils/useGoBack";
-import Swal from "sweetalert2";
+/* eslint-disable react/prop-types, react/no-unescaped-entities */
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { notifySuccess, notifyError } from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -27,7 +27,11 @@ const ROLE_LABEL_TH = {
 export default function UserEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const goBack = useGoBack("/admin/manage-user");
+  const location = useLocation();
+  // page ล่าสุดของรายการผู้ใช้ (ส่งมาจากปุ่มแก้ไข) — กลับไปหน้าเดิมหลังบันทึก/ยกเลิก
+  const returnPage = location.state?.returnPage;
+  const backToUsers = () =>
+    navigate("/admin/management?tab=users", { state: { restorePage: returnPage } });
   const { user: currentUser } = useAuth();
 
   const currentUserRoleNames = currentUser?.roles || currentUser?.role || [];
@@ -131,9 +135,8 @@ export default function UserEdit() {
         // setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
       } catch (err) {
         console.error(err);
-        Swal.fire("ไม่พบผู้ใช้งาน", "", "error").then(() =>
-          navigate("/admin/manage-user")
-        );
+        await notifyError("ไม่พบผู้ใช้งาน");
+        backToUsers();
       } finally {
         setLoading(false);
       }
@@ -204,17 +207,14 @@ export default function UserEdit() {
         setSelectedRoles(nextInit);
       }
 
-      Swal.fire(
-        "อัปเดตสำเร็จ",
-        "ข้อมูลผู้ใช้งานได้รับการอัปเดตแล้ว",
-        "success"
-      ).then(() => navigate("/admin/manage-user"));
+      // ป็อปอัพสำเร็จปิดเองอัตโนมัติ แล้วกลับไปรายการผู้ใช้หน้าเดิม (ไม่ต้องรอกดปิด)
+      notifySuccess("อัปเดตสำเร็จ", "ข้อมูลผู้ใช้งานได้รับการอัปเดตแล้ว");
+      backToUsers();
     } catch (err) {
       console.error(err);
-      Swal.fire(
+      notifyError(
         "อัปเดตล้มเหลว",
-        err.response?.data?.message || "ไม่สามารถอัปเดตได้",
-        "error"
+        err.response?.data?.message || "ไม่สามารถอัปเดตได้"
       );
     } finally {
       setSubmitting(false);
@@ -464,7 +464,7 @@ export default function UserEdit() {
             <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={goBack}
+                onClick={backToUsers}
                 className="px-4 py-2 rounded-xl border border-slate-300 bg-white text-sm text-slate-700 hover:bg-slate-50 transition"
               >
                 ยกเลิก

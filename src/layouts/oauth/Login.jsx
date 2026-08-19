@@ -1,6 +1,6 @@
 import { FaGoogle } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints, BASE_URL } from "../../utils/api";
 import bg from "../../assets/bg.jpg";

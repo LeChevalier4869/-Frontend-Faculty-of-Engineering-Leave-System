@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { ChevronDown, Clock } from "lucide-react";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import PropTypes from "prop-types";
 import { API, apiEndpoints } from "../../utils/api";
 import { scrollMainToTop } from "../../utils/scroll";

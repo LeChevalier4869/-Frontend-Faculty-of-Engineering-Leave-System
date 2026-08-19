@@ -7,7 +7,7 @@ import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
 import thLocale from "@fullcalendar/core/locales/th";
 import dayjs from "dayjs";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import PropTypes from "prop-types";
 import { API, apiEndpoints } from "../../utils/api";
 import { expandHolidays, defaultHolidayYears } from "../../utils/holidayUtils";

@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
-import Swal from "sweetalert2";
+import Swal from "../utils/alert";
 import axios from "axios";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { saveAs } from "file-saver";

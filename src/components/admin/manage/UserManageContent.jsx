@@ -1,17 +1,14 @@
 // src/pages/admin/UserManage.jsx
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { Link, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import Swal from "../../../utils/alert";
+import { confirmAction, notifySuccess, notifyError } from "../../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../../utils/api";
-import { FiUser, FiUsers } from "react-icons/fi";
 
 const PAGE_SIZE = 10;
 const DEBOUNCE_MS = 200;
-
-const MySwal = withReactContent(Swal);
 
 const ROLE_PRIORITY = [
   "SUPER_ADMIN",
@@ -124,12 +121,14 @@ const RoleBadgeCell = ({ userRoles }) => {
 };
 
 function UserManageContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  // กลับมาจากหน้าแก้ไข → คงหน้าเดิม (state.restorePage) · เข้าเมนูใหม่ = ไม่มี state = เริ่มหน้า 1
+  const [currentPage, setCurrentPage] = useState(location.state?.restorePage || 1);
   const [searchInput, setSearchInput] = useState("");
   const [keyword, setKeyword] = useState("");
-  const navigate = useNavigate();
 
   useEffect(() => {
     const id = setTimeout(
@@ -157,7 +156,7 @@ function UserManageContent() {
         () => (window.location.href = "/login"),
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("เกิดข้อผิดพลาด", err.response?.data?.message || err.message);
     }
   };
 
@@ -178,20 +177,17 @@ function UserManageContent() {
   }, []);
 
   const handleDelete = async (id) => {
-    const confirm = await Swal.fire({
+    const ok = await confirmAction({
       title: "ยืนยันการลบ?",
       text: "การลบนี้ไม่สามารถย้อนกลับได้!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "ลบ",
-      cancelButtonText: "ยกเลิก",
-      confirmButtonColor: "#dc2626",
+      confirmText: "ลบ",
+      danger: true,
     });
-    if (!confirm.isConfirmed) return;
+    if (!ok) return;
 
     try {
       await axios.delete(apiEndpoints.deleteUserByAdmin(id), authHeader());
-      Swal.fire("ลบสำเร็จ!", "ข้อมูลผู้ใช้งานถูกลบแล้ว", "success");
+      notifySuccess("ลบสำเร็จ!", "ข้อมูลผู้ใช้งานถูกลบแล้ว");
       loadUsers();
     } catch (err) {
       handleApiError(err);
@@ -335,6 +331,7 @@ function UserManageContent() {
                         <div className="flex flex-row items-center justify-center gap-2 whitespace-nowrap">
                           <Link
                             to={`/admin/user/${user.id}`}
+                            state={{ returnPage: currentPage }}
                             className="inline-flex items-center justify-center rounded-lg bg-slate-700 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-slate-600"
                           >
                             แก้ไข

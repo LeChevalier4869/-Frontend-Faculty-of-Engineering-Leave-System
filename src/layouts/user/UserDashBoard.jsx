@@ -28,7 +28,7 @@ import getApiUrl from "../../utils/apiUtils";
 import useAuth from "../../hooks/useAuth";
 import { apiEndpoints, API } from "../../utils/api";
 import { expandHolidays, defaultHolidayYears } from "../../utils/holidayUtils";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import useLeaveRequest from "../../hooks/useLeaveRequest";
 import LeaveRequestModal from "./LeaveRequestModal";
 import dayjs from "dayjs";

@@ -14,7 +14,7 @@ import {
   HeartHandshake,
 } from "lucide-react";
 import axios from "axios";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { apiEndpoints } from "../../utils/api";
 import useAuth from "../../hooks/useAuth";
 import {

@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import useAuth from "../../hooks/useAuth";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 

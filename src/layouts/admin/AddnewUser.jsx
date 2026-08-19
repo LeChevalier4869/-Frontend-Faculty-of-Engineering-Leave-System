@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import { HiOutlineChevronDown } from "react-icons/hi";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import ExcelUploadPanel from "../../components/ExcelUploadPanel";

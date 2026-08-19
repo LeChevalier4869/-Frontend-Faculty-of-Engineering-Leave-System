@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { apiEndpoints } from "../../utils/api";
 import { FaCog, FaSync, FaCalendarAlt, FaExclamationTriangle, FaLock } from "react-icons/fa";
 import LoadingSpinner from "../../components/LoadingSpinner";

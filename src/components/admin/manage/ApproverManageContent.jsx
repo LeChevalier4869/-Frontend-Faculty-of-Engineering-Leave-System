@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Swal from "sweetalert2";
+import Swal from "../../../utils/alert";
 import {
   FaUserShield,
   FaSearch,

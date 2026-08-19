@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { API, apiEndpoints } from "../../utils/api";
 
 /* eslint-disable react/prop-types */

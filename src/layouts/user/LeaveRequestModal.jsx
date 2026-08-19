@@ -9,7 +9,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { th } from "date-fns/locale";
 import { apiEndpoints } from "../../utils/api";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import useAuth from "../../hooks/useAuth";
 import {

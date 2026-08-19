@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { API, apiEndpoints } from "../../utils/api";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { X, FileText, Search, AlertCircle, CheckCircle, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
