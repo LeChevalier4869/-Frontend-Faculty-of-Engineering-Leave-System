@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { ChevronDown, Clock } from "lucide-react";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import PropTypes from "prop-types";
 import { API, apiEndpoints } from "../../utils/api";
 import { scrollMainToTop } from "../../utils/scroll";
@@ -28,13 +28,27 @@ const statusColors = {
 };
 
 /**
- * Component กลางสำหรับหน้า "รายการการลาที่รออนุมัติ" ของผู้อนุมัติทุกระดับ (Approver 1-4)
+ * Component กลางสำหรับหน้า "รายการการลาที่รออนุมัติ" ของผู้อนุมัติทุกระดับ (Approver 1-4 และผู้ตรวจสอบ)
  * รับ config ของแต่ละระดับผ่าน props:
  *  - listUrl: URL สำหรับดึงรายการคำขอที่รออนุมัติของระดับนั้น
  *  - approveUrl(detailId): สร้าง URL สำหรับอนุมัติ
  *  - rejectUrl(detailId): สร้าง URL สำหรับปฏิเสธ
+ *  - approveLabel/rejectLabel: คำบนปุ่ม (เช่น ผู้ตรวจสอบใช้ "ผ่าน"/"ไม่ผ่าน" แทน "อนุมัติ"/"ปฏิเสธ")
+ *  - showComment: แสดงช่องความคิดเห็นหรือไม่ (ผู้ตรวจสอบไม่แสดงความคิดเห็น)
+ *  - approveRemark/rejectRemark: หมายเหตุเริ่มต้นที่บันทึกเมื่อไม่ได้กรอกความคิดเห็น
  */
-export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
+export default function LeaveApproverBase({
+  listUrl,
+  approveUrl,
+  rejectUrl,
+  approveLabel = "อนุมัติ",
+  rejectLabel = "ปฏิเสธ",
+  showComment = true,
+  approveRemark = "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+  rejectRemark = "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
+  title = "รายการการลาที่รออนุมัติ",
+  subtitle = "ตรวจสอบและรับรองคำขอลา พร้อมระบุความคิดเห็นเพิ่มเติมได้จากที่นี่",
+}) {
   const navigate = useNavigate();
   const [leaveRequest, setLeaveRequest] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,14 +112,14 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
     });
     try {
       await API.patch(approveUrl(detailId), {
-        remarks: commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
-        comment: commentFromInput || "อนุมัติเนื่องจากเห็นสมควร โปรดพิจารณา",
+        remarks: commentFromInput || approveRemark,
+        comment: commentFromInput || approveRemark,
       });
       Swal.close();
       await Swal.fire({
         icon: "success",
         title: "สำเร็จ",
-        text: "อนุมัติเรียบร้อยแล้ว",
+        text: `${approveLabel}เรียบร้อยแล้ว`,
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -118,7 +132,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
     } catch (error) {
       console.error("❌ Error approving request", error);
       Swal.close();
-      Swal.fire("ผิดพลาด", "ไม่สามารถอนุมัติได้", "error");
+      Swal.fire("ผิดพลาด", `ไม่สามารถ${approveLabel}ได้`, "error");
     } finally {
       setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
     }
@@ -134,14 +148,14 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
     });
     try {
       await API.patch(rejectUrl(detailId), {
-        remarks: commentFromInput || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
-        comment: commentFromInput || "ปฏิเสธเนื่องจากไม่ผ่านเกณฑ์",
+        remarks: commentFromInput || rejectRemark,
+        comment: commentFromInput || rejectRemark,
       });
       Swal.close();
       await Swal.fire({
         icon: "success",
         title: "สำเร็จ",
-        text: "ปฏิเสธเรียบร้อยแล้ว",
+        text: `${rejectLabel}เรียบร้อยแล้ว`,
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
@@ -154,7 +168,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
     } catch (error) {
       console.error("❌ Error rejecting request", error);
       Swal.close();
-      Swal.fire("ผิดพลาด", "ไม่สามารถปฏิเสธได้", "error");
+      Swal.fire("ผิดพลาด", `ไม่สามารถ${rejectLabel}ได้`, "error");
     } finally {
       setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
     }
@@ -221,10 +235,10 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
-              รายการการลาที่รออนุมัติ
+              {title}
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              ตรวจสอบและรับรองคำขอลา พร้อมระบุความคิดเห็นเพิ่มเติมได้จากที่นี่
+              {subtitle}
             </p>
           </div>
         </div>
@@ -369,30 +383,32 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
                         >
                           รายละเอียด
                         </button>
-                        <button
-                          onClick={() => setExpandedComment(commentOpen ? null : detailId)}
-                          className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
-                            hasComment || commentOpen
-                              ? "border-brand-200 bg-brand-50 text-brand-700"
-                              : "border-slate-200 text-slate-500 hover:bg-slate-100"
-                          }`}
-                          title="เพิ่มความคิดเห็น"
-                        >
-                          ความคิดเห็น
-                        </button>
+                        {showComment && (
+                          <button
+                            onClick={() => setExpandedComment(commentOpen ? null : detailId)}
+                            className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
+                              hasComment || commentOpen
+                                ? "border-brand-200 bg-brand-50 text-brand-700"
+                                : "border-slate-200 text-slate-500 hover:bg-slate-100"
+                            }`}
+                            title="เพิ่มความคิดเห็น"
+                          >
+                            ความคิดเห็น
+                          </button>
+                        )}
                         <button
                           onClick={() => handleReject(detailId)}
                           disabled={busy}
                           className={`rounded-lg px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition ${busy ? "cursor-not-allowed bg-rose-300" : "bg-rose-500 hover:bg-rose-600"}`}
                         >
-                          ปฏิเสธ
+                          {rejectLabel}
                         </button>
                         <button
                           onClick={() => handleApprove(detailId)}
                           disabled={busy}
                           className={`rounded-lg px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition ${busy ? "cursor-not-allowed bg-emerald-300" : "bg-emerald-500 hover:bg-emerald-600"}`}
                         >
-                          {busy ? "กำลัง..." : "อนุมัติ"}
+                          {busy ? "กำลัง..." : approveLabel}
                         </button>
                       </div>
                     </div>
@@ -405,7 +421,7 @@ export default function LeaveApproverBase({ listUrl, approveUrl, rejectUrl }) {
                     )}
 
                     {/* ช่องความคิดเห็น — แสดงเมื่อกดเปิดเท่านั้น ไม่บวมทุกแถว */}
-                    {commentOpen && (
+                    {showComment && commentOpen && (
                       <textarea
                         rows={2}
                         autoFocus
@@ -489,4 +505,11 @@ LeaveApproverBase.propTypes = {
   listUrl: PropTypes.string.isRequired,
   approveUrl: PropTypes.func.isRequired,
   rejectUrl: PropTypes.func.isRequired,
+  approveLabel: PropTypes.string,
+  rejectLabel: PropTypes.string,
+  showComment: PropTypes.bool,
+  approveRemark: PropTypes.string,
+  rejectRemark: PropTypes.string,
+  title: PropTypes.string,
+  subtitle: PropTypes.string,
 };

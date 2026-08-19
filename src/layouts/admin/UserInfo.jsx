@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { apiEndpoints } from "../../utils/api";
 import { useGoBack } from "../../utils/useGoBack";
 import { FaUserAlt, FaHistory } from "react-icons/fa";
@@ -163,6 +163,21 @@ export default function UserInfo() {
   const nonDeductibleBalances = currentBalances.filter(
     (b) => b.leaveType?.isNonDeductible === true
   );
+
+  // จำนวนครั้งที่ลาจริง (ไม่นับที่ถูกปฏิเสธ/ยกเลิก) แยกตามประเภท เฉพาะปีงบประมาณล่าสุด
+  // เพื่อให้ "กี่ครั้ง" สอดคล้องกับยอด "ใช้ไป (วัน)" ของปีเดียวกัน
+  const fiscalYearOf = (d) => {
+    const x = new Date(d);
+    if (Number.isNaN(x.getTime())) return null;
+    return x.getMonth() >= 9 ? x.getFullYear() + 1 : x.getFullYear();
+  };
+  const timesByType = {};
+  for (const lr of leaveRequests) {
+    const st = (lr.status || "").toUpperCase();
+    if (st === "REJECTED" || st === "CANCELLED") continue;
+    if (latestYear && fiscalYearOf(lr.startDate) !== latestYear) continue;
+    timesByType[lr.leaveTypeId] = (timesByType[lr.leaveTypeId] || 0) + 1;
+  }
   // เรียงให้ประเภทหักวันลาปกติขึ้นก่อน แล้วประเภทไม่หักวันลาไว้ล่างสุด
   const userRanks = [...(user.userRanks || [])].sort((a, b) => {
     const an = a.rank?.leaveType?.isNonDeductible ? 1 : 0;
@@ -361,6 +376,9 @@ export default function UserInfo() {
                     ใช้ไป
                   </th>
                   <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ครั้งที่ลา
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
                     รออนุมัติ
                   </th>
                   <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
@@ -384,6 +402,9 @@ export default function UserInfo() {
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {formatLeaveDays(b.usedDays)}
                       </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap text-slate-600">
+                        {timesByType[b.leaveTypeId] || 0} ครั้ง
+                      </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap text-amber-600">
                         {formatLeaveDays(b.pendingDays)}
                       </td>
@@ -395,7 +416,7 @@ export default function UserInfo() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="5"
+                      colSpan="6"
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่มีข้อมูล
@@ -427,7 +448,8 @@ export default function UserInfo() {
                     ลาไปแล้ว{" "}
                     <span className="font-semibold text-slate-800">
                       {formatLeaveDays(b.usedDays)}
-                    </span>
+                    </span>{" "}
+                    ({timesByType[b.leaveTypeId] || 0} ครั้ง)
                   </span>
                 </div>
               ))}

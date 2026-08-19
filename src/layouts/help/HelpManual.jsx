@@ -1,0 +1,433 @@
+/* eslint-disable react/prop-types */
+import { useState, Fragment } from "react";
+import { Link } from "react-router-dom";
+import useAuth from "../../hooks/useAuth";
+import ProfileImage from "../../components/ProfileImage";
+
+/* ---------- ส่วนประกอบเนื้อหา (แทน markdown เพื่อไม่เพิ่ม dependency) ---------- */
+const H2 = ({ children }) => (
+  <h2 className="mt-8 mb-3 text-xl font-semibold tracking-tight text-slate-900 first:mt-0">
+    {children}
+  </h2>
+);
+const H3 = ({ children }) => (
+  <h3 className="mt-6 mb-2 text-base font-semibold text-slate-800">{children}</h3>
+);
+const P = ({ children }) => (
+  <p className="mb-3 text-sm leading-relaxed text-slate-600">{children}</p>
+);
+const Ul = ({ children }) => (
+  <ul className="mb-3 ml-5 list-disc space-y-1 text-sm leading-relaxed text-slate-600 marker:text-slate-400">
+    {children}
+  </ul>
+);
+const Code = ({ children }) => (
+  <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] text-brand-700">
+    {children}
+  </code>
+);
+const Callout = ({ tone = "info", children }) => {
+  const cls =
+    tone === "warn"
+      ? "border-amber-200 bg-amber-50 text-amber-800"
+      : "border-brand-200 bg-brand-50/60 text-brand-800";
+  return (
+    <div className={`mb-3 rounded-xl border px-4 py-3 text-sm leading-relaxed ${cls}`}>
+      {children}
+    </div>
+  );
+};
+const Step = ({ n, title, children }) => (
+  <div className="mb-4 flex gap-3">
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+      {n}
+    </span>
+    <div className="min-w-0 flex-1">
+      <p className="mb-1 font-medium text-slate-800">{title}</p>
+      {children}
+    </div>
+  </div>
+);
+const Feature = ({ icon, title, children }) => (
+  <div className="mb-3 flex gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-lg">
+      {icon}
+    </span>
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-semibold text-slate-800">{title}</p>
+      <div className="mt-0.5 text-sm leading-relaxed text-slate-600">{children}</div>
+    </div>
+  </div>
+);
+
+/* ---------- แผนภาพสายอนุมัติ (ไล่ซ้าย→ขวาบนจอใหญ่, บน→ล่างบนมือถือ) ---------- */
+const APPROVAL_FLOW = [
+  { n: 1, role: "หัวหน้าสาขา", sub: "APPROVER_1", note: "อนุมัติขั้นแรก (เฉพาะสาขา)" },
+  { n: 2, role: "ผู้ตรวจสอบ", sub: "VERIFIER", note: "ออกเลขที่ใบลา" },
+  { n: 3, role: "สารบรรณคณะ", sub: "APPROVER_2", note: null },
+  { n: 4, role: "รองคณบดี", sub: "APPROVER_3", note: null },
+  { n: 5, role: "คณบดี", sub: "APPROVER_4", note: "อนุมัติขั้นสุดท้าย" },
+];
+const ApprovalFlow = () => (
+  <div className="my-4 flex flex-col items-stretch gap-1 sm:flex-row sm:items-center sm:gap-0 sm:overflow-x-auto sm:pb-1">
+    {APPROVAL_FLOW.map((s, i) => (
+      <Fragment key={s.n}>
+        <div className="rounded-xl border border-brand-200 bg-brand-50/50 p-2.5 text-center sm:min-w-0 sm:flex-1">
+          <div className="mx-auto mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">
+            {s.n}
+          </div>
+          <div className="text-sm font-semibold text-slate-800">{s.role}</div>
+          <div className="font-mono text-[10px] text-brand-700">{s.sub}</div>
+          {s.note && (
+            <div className="mt-1 text-[11px] leading-tight text-slate-500">{s.note}</div>
+          )}
+        </div>
+        {i < APPROVAL_FLOW.length - 1 && (
+          <div className="flex items-center justify-center text-lg text-brand-400 sm:px-1">
+            <span className="sm:hidden">↓</span>
+            <span className="hidden sm:inline">→</span>
+          </div>
+        )}
+      </Fragment>
+    ))}
+  </div>
+);
+/* ---------- เนื้อหาแต่ละหมวด ---------- */
+function Overview() {
+  return (
+    <div>
+      <H2>ภาพรวมระบบ eLeave</H2>
+      <P>
+        ระบบลาออนไลน์ของคณะ — ผู้ใช้ยื่นคำขอลา แล้วเอกสารจะไหลตามสายอนุมัติจนเสร็จสิ้น
+        ผู้ดูแลกำหนดข้อมูลหลักและสิทธิ์ ผู้อนุมัติแต่ละระดับพิจารณาอนุมัติ/ปฏิเสธ
+      </P>
+      <H3>บทบาทในระบบ</H3>
+      <Ul>
+        <li><Code>USER</Code> — ผู้ใช้ทั่วไป ยื่นลาและดูยอดวันลา/ประวัติของตนเอง</li>
+        <li><Code>APPROVER_1</Code> — หัวหน้าสาขา อนุมัติขั้นแรก (เฉพาะคนในสาขาตนเอง)</li>
+        <li><Code>VERIFIER</Code> — ผู้ตรวจสอบระดับคณะ ให้ผ่าน/ไม่ผ่าน และออกเลขที่ใบลา</li>
+        <li><Code>APPROVER_2/3/4</Code> — สารบรรณคณะ / รองคณบดี / คณบดี (ระดับคณะ)</li>
+        <li><Code>ADMIN</Code> — ผู้ดูแล จัดการข้อมูลหลักและผู้ใช้</li>
+        <li><Code>SUPER_ADMIN</Code> — ผู้ดูแลขั้นสูง (มีสิทธิ์ ADMIN ทั้งหมด + ข้อมูลที่อ่อนไหว)</li>
+      </Ul>
+      <H3>สายอนุมัติ</H3>
+      <P>เอกสารจะไหลตามลำดับต่อไปนี้ หากขั้นใดปฏิเสธ คำขอจะหยุดและแจ้งเหตุผลกลับ</P>
+      <ApprovalFlow />
+    </div>
+  );
+}
+
+function FirstUse() {
+  return (
+    <div>
+      <H2>การใช้งานระบบครั้งแรก</H2>
+      <P>
+        หลังติดตั้งระบบและผู้ดูแลเข้าสู่ระบบได้แล้ว ยังต้องตั้งค่าเริ่มต้นอีกเล็กน้อยก่อนเปิดใช้งานจริง
+        — นำเข้าผู้ใช้และมอบบทบาทผู้อนุมัติ ซึ่ง<strong>ทำผ่านหน้าเว็บทั้งหมด</strong> ไม่ต้องใช้คำสั่ง
+      </P>
+
+      <Callout tone="info">
+        📦 <strong>การติดตั้งระบบ</strong> (ลงเซิร์ฟเวอร์และฐานข้อมูลครั้งแรก) เป็นงานฝั่งผู้ดูแลไอที
+        ดูขั้นตอนแบบละเอียด (Native / Docker) ได้ที่{" "}
+        <a
+          href="https://lechevalier4869.github.io/ELeave-install-docs/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-brand-700 underline underline-offset-2"
+        >
+          เว็บคู่มือติดตั้งระบบ
+        </a>{" "}
+        (แยกต่างหาก เปิดดูได้แม้ระบบยังไม่รัน)
+      </Callout>
+
+      <H3>ลำดับการตั้งค่าเริ่มต้น</H3>
+      <Step n={1} title="เข้าสู่ระบบด้วยบัญชีผู้ดูแล">
+        <P>
+          ผู้ดูแลคนแรกกด <strong>เข้าสู่ระบบด้วย Google</strong> ด้วยอีเมลที่ตั้งไว้ตอนติดตั้ง
+          → เข้าสู่แดชบอร์ดผู้ดูแล (ระบบล็อกอินด้วย Google เท่านั้น)
+        </P>
+      </Step>
+      <Step n={2} title="นำเข้าผู้ใช้จากไฟล์ Excel">
+        <P>
+          ไปที่ <strong>การจัดการ → จัดการผู้ใช้งาน</strong> → ดาวน์โหลดเทมเพลต Excel → กรอกข้อมูล → นำเข้า
+        </P>
+        <Ul>
+          <li>คอลัมน์ <strong>เลขที่ตำแหน่ง</strong> จำเป็นทุกคน</li>
+          <li>
+            คอลัมน์ยอดคงเหลือ (ลาป่วย/ลากิจ/ลาพักผ่อน) ใส่หรือไม่ก็ได้ — ถ้าไม่ใส่
+            ระบบตั้งยอดเริ่มต้นตามสิทธิ์ (เงื่อนไขวันลา/อายุงาน) ให้อัตโนมัติ
+          </li>
+        </Ul>
+        <P>ระบบแจ้งผลรายแถว หากผิด (เช่น สาขาสะกดผิด) จะแนะนำชื่อที่ใกล้เคียงให้</P>
+      </Step>
+      <Step n={3} title="มอบบทบาทผู้อนุมัติ">
+        <P>
+          ที่แท็บ <strong>จัดการผู้อนุมัติ</strong> กำหนด <Code>VERIFIER</Code>,{" "}
+          <Code>APPROVER_1</Code> (หัวหน้าสาขาของแต่ละแผนก) และ <Code>APPROVER_2/3/4</Code>
+          ให้ผู้ใช้ที่เกี่ยวข้อง
+        </P>
+      </Step>
+      <Step n={4} title="ตรวจเงื่อนไขวันลา (Rank)">
+        <P>
+          ตรวจ/ปรับกติกาจำนวนวันลาของแต่ละประเภทบุคลากรที่เมนูผู้ดูแลระดับสูง →{" "}
+          <strong>เงื่อนไขวันลา (Rank)</strong> — ปกติข้อมูลตั้งต้นถูกใส่ให้แล้วตอนติดตั้ง
+        </P>
+      </Step>
+
+      <Callout tone="warn">
+        <strong>จำเป็นเสมอ:</strong> ต้องมีผู้ตรวจสอบ (<Code>VERIFIER</Code>) อย่างน้อย 1 คน
+        ไม่งั้น<strong>การยื่นลาจะล้มเหลว</strong> (ระบบต้องมีผู้ตรวจสอบเพื่อออกเลขที่ใบลา)
+        และต้องมีผู้อนุมัติครบสายเพื่อให้คำขอเดินจนจบ
+      </Callout>
+    </div>
+  );
+}
+
+function UserGuide() {
+  return (
+    <div>
+      <H2>คู่มือผู้ใช้ทั่วไป</H2>
+      <P>
+        ผู้ใช้ทุกคนสามารถยื่นคำขอลา ติดตามสถานะ ตรวจยอดวันลาคงเหลือ และดูปฏิทินของตนเองได้
+        เมนูทั้งหมดอยู่ในกลุ่ม <strong>&ldquo;ทั่วไป&rdquo;</strong> ที่แถบด้านซ้าย
+      </P>
+
+      <H3>เมนูและความสามารถ</H3>
+      <Feature icon="📊" title="แดชบอร์ด">
+        ภาพรวมของตนเอง — สรุปยอดวันลาคงเหลือ คำขอที่กำลังดำเนินการ และประวัติการลาล่าสุด
+      </Feature>
+      <Feature icon="📝" title="ยื่นการลา">
+        เลือกประเภทการลา ระบุช่วงวันที่และเหตุผล ระบบจะคำนวณจำนวนวัน (ตัดวันหยุด/เสาร์อาทิตย์ให้)
+        และตรวจยอดคงเหลือก่อนส่ง เมื่อส่งแล้วคำขอจะเข้าสู่สายอนุมัติทันที
+      </Feature>
+      <Feature icon="📋" title="การลา (รายการคำขอ)">
+        ดูคำขอทั้งหมดของตนเองพร้อม<strong>สถานะ</strong> — รอดำเนินการ / อนุมัติ / ปฏิเสธ / ยกเลิก
+        และติดตามได้ว่าค้างอยู่ที่ผู้อนุมัติขั้นไหน
+      </Feature>
+      <Feature icon="🔎" title="รายละเอียดการลา">
+        กดที่คำขอเพื่อดูรายละเอียดครบถ้วน — ผลการพิจารณาของผู้อนุมัติแต่ละขั้น เลขที่ใบลา (เมื่อผ่านผู้ตรวจสอบ)
+        และเอกสารใบลา
+      </Feature>
+      <Feature icon="📈" title="ยอดวันลาคงเหลือ">
+        ตรวจสิทธิ์คงเหลือของแต่ละประเภทการลา (ตามเงื่อนไขวันลา/อายุงานของตน)
+      </Feature>
+      <Feature icon="📅" title="ปฏิทิน">
+        ดูวันลาของตนเองและวันหยุดราชการในมุมมองปฏิทิน
+      </Feature>
+      <Feature icon="👤" title="โปรไฟล์ผู้ใช้">
+        ดูและแก้ไขข้อมูลส่วนตัว (ข้อมูลหลักบางอย่างแก้ได้เฉพาะผู้ดูแล)
+      </Feature>
+
+      <H3>ขั้นตอนการยื่นลา</H3>
+      <Step n={1} title="เลือกเมนู “การลา” → “ยื่นการลา”">
+        <P>เลือกประเภทการลาที่ต้องการ (เช่น ลาป่วย ลากิจ ลาพักผ่อน)</P>
+      </Step>
+      <Step n={2} title="ระบุช่วงวันที่และเหตุผล">
+        <P>ระบบจะคำนวณจำนวนวันลาให้อัตโนมัติ และเตือนถ้าเลือกเฉพาะวันหยุด</P>
+      </Step>
+      <Step n={3} title="ตรวจยอดคงเหลือแล้วกดส่ง">
+        <P>ถ้ายอดคงเหลือไม่พอ หรือเงื่อนไขไม่ผ่าน ระบบจะแจ้งก่อนบันทึก</P>
+      </Step>
+      <Step n={4} title="ติดตามสถานะ">
+        <P>ดูความคืบหน้าได้ที่เมนู “การลา” จนกว่าจะอนุมัติครบทุกขั้น</P>
+      </Step>
+
+      <Callout tone="info">
+        คำขอจะไหลตามสายอนุมัติ: <strong>หัวหน้าสาขา → ผู้ตรวจสอบ (ออกเลขที่ใบลา) → สารบรรณคณะ → รองคณบดี → คณบดี</strong>
+        แต่ละขั้นอาจอนุมัติหรือปฏิเสธ หากถูกปฏิเสธคำขอจะหยุดและแจ้งเหตุผลกลับมา
+      </Callout>
+    </div>
+  );
+}
+
+function ApproverGuide() {
+  return (
+    <div>
+      <H2>คู่มือผู้อนุมัติ</H2>
+      <P>
+        ผู้อนุมัติแต่ละระดับจะเห็นเมนูในกลุ่ม <strong>&ldquo;งานอนุมัติ / สารบรรณ&rdquo;</strong>
+        ตามบทบาทที่ได้รับ คำขอจะไหลผ่านทีละขั้นตามสายอนุมัติ
+      </P>
+
+      <H3>สายอนุมัติและบทบาท</H3>
+      <Ul>
+        <li><Code>APPROVER_1</Code> — หัวหน้าสาขา: พิจารณาขั้นแรก เห็นเฉพาะคำขอของคนใน<strong>สาขาตนเอง</strong></li>
+        <li><Code>VERIFIER</Code> — ผู้ตรวจสอบ: ตรวจความถูกต้องและ<strong>ออกเลขที่ใบลา</strong></li>
+        <li><Code>APPROVER_2</Code> — สารบรรณคณะ</li>
+        <li><Code>APPROVER_3</Code> — รองคณบดี</li>
+        <li><Code>APPROVER_4</Code> — คณบดี (ขั้นสุดท้าย)</li>
+      </Ul>
+      <ApprovalFlow />
+
+      <H3>เมนูและความสามารถ</H3>
+      <Feature icon="🗂️" title="แดชบอร์ดผู้อนุมัติ">
+        ภาพรวมข้อมูลในความดูแล — สถิติการลา อันดับผู้ลามากสุด (วัน/ครั้ง) ปฏิทินพร้อมไฮไลต์วันหยุด
+        และช่อง<strong>ค้นหาผู้ยื่นลา</strong>เพื่อดูโปรไฟล์ ยอดคงเหลือ และประวัติการลาแบบละเอียด
+        <br />ขอบเขตข้อมูล: หัวหน้าสาขา (APPROVER_1) เห็นเฉพาะ<strong>สาขาตนเอง</strong> ·
+        ผู้ตรวจสอบและผู้อนุมัติระดับสูงกว่าเห็น<strong>ทั้งคณะ</strong>
+      </Feature>
+      <Feature icon="✅" title="อนุมัติ / ปฏิเสธ">
+        เปิดคำขอที่รอคิว ตรวจรายละเอียด แล้วกด <strong>อนุมัติ</strong> หรือ <strong>ปฏิเสธ</strong>
+        (ระบุเหตุผลได้) เมื่ออนุมัติ คำขอจะส่งต่อขั้นถัดไปอัตโนมัติ
+      </Feature>
+      <Feature icon="🔖" title="ผู้ตรวจสอบ (ผ่าน / ไม่ผ่าน)">
+        ผู้ตรวจสอบใช้ปุ่ม <strong>ผ่าน / ไม่ผ่าน</strong> แทนอนุมัติ/ปฏิเสธ โดยปกติจะ &ldquo;ผ่าน&rdquo; เว้นแต่พบสิ่งผิดปกติ
+        เมื่อผ่านระบบจะ<strong>ออกเลขที่ใบลา</strong>ให้ ผู้ตรวจสอบทำหน้าที่ลงนามตรวจ ไม่ต้องแสดงความคิดเห็น
+      </Feature>
+      <Feature icon="🤝" title="การมอบอำนาจ (Proxy)">
+        หากได้รับมอบอำนาจให้ทำงานแทนผู้อนุมัติคนอื่น เมนู &ldquo;การมอบอำนาจ&rdquo; จะปรากฏขึ้น
+        และสามารถอนุมัติแทนได้ตามสิทธิ์ที่ได้รับ
+      </Feature>
+
+      <Callout tone="info">
+        ผู้ใช้หนึ่งคนมีได้หลายบทบาท เช่น เป็นทั้งผู้ใช้ทั่วไปและหัวหน้าสาขา
+        เมนูที่แสดงจะขึ้นตามบทบาทที่มีทั้งหมด
+      </Callout>
+    </div>
+  );
+}
+
+function AdminGuide() {
+  return (
+    <div>
+      <H2>คู่มือผู้ดูแลระบบ</H2>
+      <P>
+        ผู้ดูแล (ADMIN) จัดการผู้ใช้และข้อมูลที่ทำให้ระบบทำงานได้ ส่วนผู้ดูแลขั้นสูง (SUPER_ADMIN)
+        เข้าถึงข้อมูลหลักที่อ่อนไหวเพิ่มเติม เมนูอยู่ในกลุ่ม <strong>&ldquo;ผู้ดูแลระบบ&rdquo;</strong>
+      </P>
+
+      <H3>เมนูผู้ดูแล (ADMIN)</H3>
+      <Feature icon="📊" title="แดชบอร์ด">
+        ภาพรวมทั้งระบบ — สถิติการลาและอันดับผู้ลามากสุด (เห็นได้ทุกคนทั้งระบบ) กดที่รายชื่อเพื่อดูรายละเอียด
+      </Feature>
+      <Feature icon="🛠️" title="การจัดการ (รวมหลายงานไว้เป็นแท็บ)">
+        หน้าเดียวที่รวมงานหลักไว้ด้วยกัน:
+        <Ul>
+          <li><strong>จัดการผู้ใช้งาน</strong> — เพิ่ม/แก้ไข/ค้นหาผู้ใช้ และ<strong>นำเข้าผู้ใช้จากไฟล์ Excel</strong></li>
+          <li><strong>จัดการเลขที่ตำแหน่ง</strong> — กำหนด/ย้ายเลขที่ตำแหน่ง</li>
+          <li><strong>จัดการแผนก</strong> — เพิ่ม/แก้ไขแผนกภายในองค์กร</li>
+          <li><strong>จัดการผู้อนุมัติ</strong> — มอบบทบาทผู้อนุมัติ/ผู้ตรวจสอบ และกำหนดหัวหน้าสาขา</li>
+          <li><strong>จัดการวันหยุด</strong> — วันหยุดราชการ (มีผลต่อการคำนวณวันลา)</li>
+          <li><strong>บันทึกคำขอการลา</strong> — บันทึกใบลาย้อนหลัง/แทนผู้ใช้</li>
+          <li><strong>จัดการการมอบอำนาจ</strong> — ตั้งผู้ทำงานแทน (Proxy) ของผู้อนุมัติ</li>
+        </Ul>
+      </Feature>
+      <Feature icon="🧾" title="บันทึกการทำงาน (Audit Logs)">
+        ตรวจประวัติการเปลี่ยนแปลงสำคัญในระบบ ใครทำอะไรเมื่อไหร่
+      </Feature>
+      <Feature icon="⚙️" title="ตั้งค่า">
+        ค่าติดต่อผู้ดูแล เทมเพลตเอกสาร และค่าคอนฟิกทั่วไปของระบบ
+      </Feature>
+
+      <Callout tone="info">
+        <strong>การนำเข้าผู้ใช้จาก Excel — ยอดวันลาคงเหลือ (ใส่/ไม่ใส่ก็ได้):</strong> ถ้าไฟล์<strong>มี</strong>คอลัมน์ยอดคงเหลือ
+        (เช่น ลาป่วยคงเหลือ/ลากิจคงเหลือ/ลาพักผ่อนคงเหลือ) ระบบจะตั้งยอดตามค่านั้น ·
+        ถ้า<strong>ไม่มี</strong> ระบบจะตั้งยอดเริ่มต้นให้อัตโนมัติตามสิทธิ์ (เงื่อนไขวันลา/อายุงาน) ของแต่ละคน
+      </Callout>
+
+      <H3>เมนูผู้ดูแลระดับสูง (SUPER_ADMIN)</H3>
+      <P>ข้อมูลหลักที่กระทบทั้งระบบ — แก้ไขเมื่อจำเป็นเท่านั้น</P>
+      <Feature icon="🏢" title="จัดการองค์กร">โครงสร้างองค์กรระดับบนสุด</Feature>
+      <Feature icon="👥" title="จัดการประเภทบุคคล">ประเภทบุคลากร (ข้าราชการ/พนักงาน ฯลฯ) ที่ใช้กำหนดสิทธิ์วันลา</Feature>
+      <Feature icon="📑" title="จัดการประเภทการลา">รายการประเภทการลาและคุณสมบัติ (หักยอด/รีเซ็ตปีงบ ฯลฯ)</Feature>
+      <Feature icon="🎚️" title="เงื่อนไขวันลา (Rank)">
+        กติกาจำนวนวันลาตามประเภทบุคคล × ประเภทการลา × ช่วงอายุงาน — เป็นฐานที่ระบบใช้ตั้งยอดให้ผู้ใช้ใหม่
+      </Feature>
+      <Feature icon="🔐" title="จัดการบทบาท">ดูรายการบทบาทและสิทธิ์ในระบบ (หน้านี้แสดงข้อมูลอย่างเดียว)</Feature>
+
+      <Callout tone="warn">
+        การแก้ไขข้อมูลหลัก (ประเภทบุคคล ประเภทการลา เงื่อนไขวันลา องค์กร) กระทบสิทธิ์ของผู้ใช้ทั้งระบบ
+        ควรทำด้วยความระมัดระวังและเมื่อจำเป็นเท่านั้น
+      </Callout>
+    </div>
+  );
+}
+
+const SECTIONS = [
+  { key: "overview", label: "ภาพรวมระบบ", render: () => <Overview /> },
+  { key: "first-use", label: "การใช้งานครั้งแรก", render: () => <FirstUse /> },
+  { key: "user", label: "คู่มือผู้ใช้ทั่วไป", render: () => <UserGuide /> },
+  { key: "approver", label: "คู่มือผู้อนุมัติ", render: () => <ApproverGuide /> },
+  { key: "admin", label: "คู่มือผู้ดูแลระบบ", render: () => <AdminGuide /> },
+];
+
+export default function HelpManual() {
+  const [active, setActive] = useState("overview");
+  const current = SECTIONS.find((s) => s.key === active) || SECTIONS[0];
+
+  // ถ้าผู้ใช้ล็อกอินอยู่แล้ว ให้แสดงโปรไฟล์ (คลิกกลับเข้าระบบ) แทนปุ่ม "เข้าสู่ระบบ"
+  const { user } = useAuth();
+  const isAuthed = !!(user?.id && localStorage.getItem("accessToken"));
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+  const googleAvatar = user?.accounts?.find((a) => a.provider === "google")?.profilePictureUrl;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-kanit text-slate-900">
+      {/* Header */}
+      <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-8">
+          <div className="flex items-center gap-2">
+            <span className="text-brand-600">📖</span>
+            <span className="text-lg font-semibold tracking-tight">คู่มือการใช้งานระบบ eLeave</span>
+          </div>
+          {isAuthed ? (
+            <Link
+              to="/"
+              title="กลับสู่ระบบ"
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-3 shadow-sm transition hover:bg-slate-50"
+            >
+              <ProfileImage
+                profilePicturePath={user?.profilePicturePath}
+                googleProfilePictureUrl={googleAvatar}
+                size="small"
+                className="rounded-lg bg-gradient-to-br from-brand-600 to-brand-800"
+              />
+              <div className="hidden text-left leading-tight sm:block">
+                <div className="max-w-[10rem] truncate text-sm font-medium text-slate-800">
+                  {fullName || user?.email}
+                </div>
+                <div className="text-[11px] text-slate-500">กลับสู่ระบบ</div>
+              </div>
+            </Link>
+          ) : (
+            <Link
+              to="/"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              เข้าสู่ระบบ
+            </Link>
+          )}
+        </div>
+      </header>
+
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 md:flex-row md:px-8">
+        {/* Section nav */}
+        <nav className="shrink-0 md:w-60">
+          <ul className="flex gap-2 overflow-x-auto md:flex-col md:gap-1 md:overflow-visible">
+            {SECTIONS.map((s) => (
+              <li key={s.key} className="shrink-0">
+                <button
+                  onClick={() => setActive(s.key)}
+                  className={`w-full whitespace-nowrap rounded-xl px-4 py-2 text-left text-sm font-medium transition ${
+                    active === s.key
+                      ? "bg-brand-600 text-white shadow-sm"
+                      : "text-slate-600 hover:bg-white hover:text-slate-900"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Content */}
+        <main className="min-w-0 flex-1">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+            {current.render()}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

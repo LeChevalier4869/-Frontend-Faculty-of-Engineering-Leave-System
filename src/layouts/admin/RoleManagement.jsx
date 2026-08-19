@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { API, apiEndpoints } from "../../utils/api";
 
 /* eslint-disable react/prop-types */
@@ -14,20 +14,11 @@ const SYSTEM_ROLES = [
   "VERIFIER", "APPROVER_1", "APPROVER_2", "APPROVER_3", "APPROVER_4"
 ];
 
+// หน้านี้เป็น "ดูอย่างเดียว" — แสดงรายการบทบาทในระบบ ไม่อนุญาตให้เพิ่ม/แก้ไข/ลบ
+// (บทบาทเป็นข้อมูลระดับระบบ การเปลี่ยนแปลงกระทบสิทธิ์ผู้ใช้ทั้งระบบ)
 const RoleManagement = () => {
   const [roles, setRoles] = useState([]);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [editId, setEditId] = useState(null);
-  const [editIsSystem, setEditIsSystem] = useState(false);
-  const [initialEditData, setInitialEditData] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const inputClass =
-    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder:text-slate-400";
-  const buttonClass =
-    "inline-flex items-center justify-center rounded-xl text-sm font-medium text-white shadow-sm transition px-4 py-2";
-
 
   const handleApiError = (err) => {
     if (err.response?.status === 401) {
@@ -54,81 +45,8 @@ const RoleManagement = () => {
 
   useEffect(() => {
     loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const resetForm = () => {
-    setName("");
-    setDescription("");
-    setEditId(null);
-    setEditIsSystem(false);
-    setInitialEditData(null);
-  };
-
-  const handleAdd = async () => {
-    if (!name.trim()) {
-      return Swal.fire("Error", "กรุณาระบุชื่อ Role", "error");
-    }
-    try {
-      await API.post(apiEndpoints.createRole, {
-        name: name.trim(),
-        description: description.trim() || null,
-      });
-      Swal.fire("บันทึกสำเร็จ!", "", "success");
-      resetForm();
-      loadData();
-    } catch (err) {
-      handleApiError(err);
-    }
-  };
-
-  const handleEdit = (id) => {
-    const r = roles.find((t) => t.id === id);
-    if (!r) return;
-    setName(r.name);
-    setDescription(r.description || "");
-    setEditId(r.id);
-    setEditIsSystem(SYSTEM_ROLES.includes(r.name));
-    setInitialEditData({ name: r.name, description: r.description || "" });
-  };
-
-  const handleUpdate = async () => {
-    if (!name.trim()) {
-      return Swal.fire("Error", "กรุณาระบุชื่อ Role", "error");
-    }
-    try {
-      await API.put(apiEndpoints.updateRole(editId), {
-        name: name.trim(),
-        description: description.trim() || null,
-      });
-      Swal.fire("อัปเดตสำเร็จ!", "", "success");
-      resetForm();
-      loadData();
-    } catch (err) {
-      handleApiError(err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    const confirm = await Swal.fire({
-      title: "ยืนยันการลบ?",
-      text: "การลบนี้ไม่สามารถย้อนกลับได้!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "ลบ",
-      cancelButtonText: "ยกเลิก",
-      confirmButtonColor: "#dc2626",
-    });
-    if (!confirm.isConfirmed) return;
-
-    try {
-      await API.delete(apiEndpoints.deleteRole(id));
-      Swal.fire("ลบสำเร็จ!", "", "success");
-      loadData();
-    } catch (err) {
-      handleApiError(err);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900 rounded-2xl">
@@ -146,98 +64,37 @@ const RoleManagement = () => {
                 จัดการบทบาท (Role)
               </h1>
               <p className="text-sm text-slate-600">
-                จัดการสิทธิ์การเข้าถึงและบทบาทในระบบ
+                ดูรายการบทบาทและสิทธิ์ในระบบ
               </p>
             </div>
             <div className="text-xs text-slate-500">
               ทั้งหมด{" "}
-              <span className="font-semibold text-brand-600">
-                {roles.length}
-              </span>{" "}
+              <span className="font-semibold text-brand-600">{roles.length}</span>{" "}
               บทบาท
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+        {/* แจ้งว่าเป็นหน้าดูอย่างเดียว */}
+        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
-              <span className="text-amber-600 text-xs font-bold">!</span>
-            </div>
+            <span className="mt-0.5 flex-shrink-0 text-slate-500">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </span>
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-amber-800 mb-1">โปรดระมัดระวังในการแก้ไข</h3>
-              <p className="text-xs text-amber-700">
-                การเปลี่ยนแปลง Role อาจส่งผลกระทบต่อสิทธิ์การเข้าถึงของผู้ใช้ทั้งระบบ
-                กรุณาตรวจสอบให้แน่ใจก่อนทำการเปลี่ยนแปลง
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+                หน้านี้แสดงข้อมูลอย่างเดียว (อ่านอย่างเดียว)
+              </h3>
+              <p className="text-xs text-slate-500">
+                บทบาทเป็นข้อมูลระดับระบบที่มีผลต่อสิทธิ์การเข้าถึงของผู้ใช้ทั้งหมด
+                จึงไม่อนุญาตให้เพิ่ม แก้ไข หรือลบบทบาทจากหน้านี้
               </p>
             </div>
           </div>
         </div>
-
-        <Panel className="p-5">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
-            <div className="lg:col-span-1 flex flex-col gap-1 relative">
-              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
-                ชื่อ Role
-              </label>
-              <input
-                type="text"
-                placeholder="เช่น MANAGER, HR"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={editIsSystem}
-                className={`${inputClass} ${editIsSystem ? 'bg-slate-100 cursor-not-allowed opacity-60' : ''}`}
-              />
-              {editIsSystem && (
-                <p className="absolute -bottom-4 left-0 text-[10px] text-amber-600 whitespace-nowrap">
-                  System Role — ไม่สามารถเปลี่ยนชื่อได้
-                </p>
-              )}
-            </div>
-            <div className="lg:col-span-2 flex flex-col gap-1">
-              <label className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
-                คำอธิบาย
-              </label>
-              <input
-                type="text"
-                placeholder="อธิบายบทบาทของ Role นี้"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div className="lg:col-span-1 flex gap-2 lg:justify-end">
-              {editId ? (
-                <>
-                  <button
-                    onClick={handleUpdate}
-                    disabled={initialEditData && name === initialEditData.name && description === initialEditData.description}
-                    className={`${buttonClass} ${
-                      initialEditData && name === initialEditData.name && description === initialEditData.description
-                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                        : "bg-amber-500 hover:bg-amber-400"
-                    }`}
-                  >
-                    อัปเดต
-                  </button>
-                  <button
-                    onClick={resetForm}
-                    className={`${buttonClass} bg-slate-400 hover:bg-slate-300`}
-                  >
-                    ยกเลิก
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={handleAdd}
-                  className={`${buttonClass} w-full lg:w-auto bg-brand-600 hover:bg-brand-500`}
-                >
-                  เพิ่ม Role
-                </button>
-              )}
-            </div>
-          </div>
-        </Panel>
 
         <Panel className="p-5">
           <div className="overflow-x-auto rounded-2xl border border-slate-200">
@@ -254,20 +111,17 @@ const RoleManagement = () => {
                     คำอธิบาย
                   </th>
                   <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
-                    สร้างเมื่อ
+                    ประเภท
                   </th>
                   <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
-                    การจัดการ
+                    สร้างเมื่อ
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="text-center py-6 text-sm text-slate-500"
-                    >
+                    <td colSpan={5} className="text-center py-6 text-sm text-slate-500">
                       กำลังโหลด...
                     </td>
                   </tr>
@@ -281,19 +135,23 @@ const RoleManagement = () => {
                     >
                       <td className="px-4 py-2 text-slate-600">{r.id}</td>
                       <td className="px-4 py-2 font-medium text-slate-900">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200">
-                            {r.name}
-                          </span>
-                          {SYSTEM_ROLES.includes(r.name) && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-600 border border-amber-200">
-                              System
-                            </span>
-                          )}
-                        </div>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200">
+                          {r.name}
+                        </span>
                       </td>
                       <td className="px-4 py-2 text-slate-600">
                         {r.description || <span className="text-slate-400">-</span>}
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        {SYSTEM_ROLES.includes(r.name) ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-600 border border-amber-200">
+                            System
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                            กำหนดเอง
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-2 text-center text-slate-500">
                         {r.createdAt
@@ -304,32 +162,11 @@ const RoleManagement = () => {
                             })
                           : "-"}
                       </td>
-                      <td className="px-4 py-2">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleEdit(r.id)}
-                            className="overflow-hidden whitespace-nowrap inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium bg-amber-500 hover:bg-amber-400 text-white"
-                          >
-                            {SYSTEM_ROLES.includes(r.name) ? "แก้คำอธิบาย" : "แก้ไข"}
-                          </button>
-                          {!SYSTEM_ROLES.includes(r.name) && (
-                            <button
-                              onClick={() => handleDelete(r.id)}
-                              className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium bg-rose-500 hover:bg-rose-400 text-white"
-                            >
-                              ลบ
-                            </button>
-                          )}
-                        </div>
-                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="text-center py-6 text-sm text-slate-500"
-                    >
+                    <td colSpan={5} className="text-center py-6 text-sm text-slate-500">
                       ไม่มีข้อมูลบทบาท
                     </td>
                   </tr>
@@ -341,6 +178,6 @@ const RoleManagement = () => {
       </div>
     </div>
   );
-}
+};
 
 export default RoleManagement;

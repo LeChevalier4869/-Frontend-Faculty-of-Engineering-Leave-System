@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
-import Swal from "sweetalert2";
+import Swal from "../../../utils/alert";
 import { BASE_URL } from "../../../utils/api";
 import { ChevronDown } from "lucide-react";
 

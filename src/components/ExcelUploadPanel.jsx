@@ -1,5 +1,6 @@
+/* eslint-disable react/prop-types */
 import { useState } from "react";
-import Swal from "sweetalert2";
+import Swal from "../utils/alert";
 import axios from "axios";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { saveAs } from "file-saver";
@@ -43,7 +44,26 @@ export default function ExcelUploadPanel({
       setResult(res.data);
       onSuccess?.(res.data);
 
-      Swal.fire("สำเร็จ", "อัปโหลดเรียบร้อย", "success");
+      const created = res.data?.createdCount || 0;
+      const failed = res.data?.failedCount || 0;
+      const warned = (res.data?.warnings || []).length;
+      if (failed > 0) {
+        Swal.fire({
+          icon: created > 0 ? "warning" : "error",
+          title: "อัปโหลดเสร็จสิ้น",
+          html: `เพิ่มสำเร็จ <b>${created}</b> · ล้มเหลว <b>${failed}</b>${
+            warned ? ` · คำเตือน <b>${warned}</b>` : ""
+          }<br/><span style="font-size:0.85rem;color:#64748b">ดูรายละเอียดข้อผิดพลาดด้านล่าง</span>`,
+        });
+      } else {
+        Swal.fire({
+          icon: "success",
+          title: "สำเร็จ",
+          html: `เพิ่มผู้ใช้ <b>${created}</b> รายการ${
+            warned ? ` · มีคำเตือน <b>${warned}</b> รายการ (ดูด้านล่าง)` : ""
+          }`,
+        });
+      }
     } catch (err) {
       Swal.fire(
         "ผิดพลาด",
@@ -155,8 +175,8 @@ export default function ExcelUploadPanel({
 
       {/* Result */}
       {result && (
-        <div className="border-t pt-6">
-          <div className="grid sm:grid-cols-2 gap-3 mb-4">
+        <div className="border-t pt-6 space-y-4">
+          <div className="grid sm:grid-cols-2 gap-3">
             <ResultCard
               label="เพิ่มสำเร็จ"
               value={result.createdCount}
@@ -170,24 +190,79 @@ export default function ExcelUploadPanel({
               color="rose"
             />
           </div>
+
+          {/* รายการที่ล้มเหลว — บอกว่าแถวไหน/คนไหน ผิดเพราะอะไร */}
+          {Array.isArray(result.failedUsers) && result.failedUsers.length > 0 && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50/60 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-rose-200 bg-rose-50">
+                <FiXCircle className="text-rose-600" />
+                <span className="text-sm font-semibold text-rose-700">
+                  ข้อผิดพลาดที่ต้องแก้ไข ({result.failedUsers.length} รายการ)
+                </span>
+              </div>
+              <ul className="max-h-72 overflow-y-auto divide-y divide-rose-100">
+                {result.failedUsers.map((f, i) => (
+                  <li key={i} className="px-4 py-2.5 text-sm">
+                    <span className="font-medium text-rose-800">
+                      {f?.email || `แถวที่ ${i + 1}`}
+                    </span>
+                    <span className="text-rose-700">
+                      {" — "}
+                      {f?.reason || f?.message || "ไม่ทราบสาเหตุ"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* คำเตือน — ไม่ทำให้ล้มเหลว แต่ควรตรวจ (เช่น คอลัมน์ balance ไม่ใช่ตัวเลข) */}
+          {Array.isArray(result.warnings) && result.warnings.length > 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50/60 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-amber-200 bg-amber-50">
+                <FiFile className="text-amber-600" />
+                <span className="text-sm font-semibold text-amber-700">
+                  คำเตือน — นำเข้าสำเร็จแต่ควรตรวจสอบ ({result.warnings.length} รายการ)
+                </span>
+              </div>
+              <ul className="max-h-56 overflow-y-auto divide-y divide-amber-100">
+                {result.warnings.map((w, i) => (
+                  <li key={i} className="px-4 py-2.5 text-sm text-amber-800">
+                    {w}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {result.failedCount === 0 &&
+            !(result.warnings && result.warnings.length) && (
+              <p className="flex items-center gap-2 text-sm text-emerald-700">
+                <FiCheckCircle /> นำเข้าครบทุกรายการ ไม่มีข้อผิดพลาด
+              </p>
+            )}
         </div>
       )}
     </div>
   );
 }
 
+const RESULT_CARD_STYLES = {
+  emerald: "bg-emerald-50 border-emerald-200 text-emerald-600",
+  rose: "bg-rose-50 border-rose-200 text-rose-600",
+};
+
 function ResultCard({ label, value, icon, color }) {
+  const cls = RESULT_CARD_STYLES[color] || RESULT_CARD_STYLES.emerald;
   return (
-    <div
-      className={`bg-${color}-50 border border-${color}-200 rounded-xl p-4 flex justify-between`}
-    >
+    <div className={`border rounded-xl p-4 flex justify-between ${cls}`}>
       <div>
-        <p className={`text-${color}-600 text-xs`}>{label}</p>
-        <p className={`text-${color}-700 text-xl font-semibold`}>
-          {value.toLocaleString()} รายการ
+        <p className="text-xs">{label}</p>
+        <p className="text-xl font-semibold">
+          {Number(value || 0).toLocaleString()} รายการ
         </p>
       </div>
-      <div className={`text-${color}-600 text-xl`}>{icon}</div>
+      <div className="text-xl">{icon}</div>
     </div>
   );
 }

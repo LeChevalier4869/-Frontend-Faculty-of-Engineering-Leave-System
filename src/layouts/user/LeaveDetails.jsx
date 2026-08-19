@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import useAuth from "../../hooks/useAuth";
 import AuditTrailModal from "../../components/AuditTrailModal";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import { FaFileAlt, FaHistory } from "react-icons/fa";
 import axios from "axios";
 import PropTypes from "prop-types";

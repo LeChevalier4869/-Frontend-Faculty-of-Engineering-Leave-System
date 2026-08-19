@@ -1,6 +1,6 @@
 import { FaGoogle } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints, BASE_URL } from "../../utils/api";
 import bg from "../../assets/bg.jpg";
@@ -120,6 +120,16 @@ export default function Login() {
               >
                 ติดต่อเจ้าหน้าที่ระบบ
               </button>
+            </p>
+            <p className="mt-2 text-white/70 text-sm">
+              <a
+                href="/help"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-gold hover:underline font-medium"
+              >
+                📖 คู่มือการใช้งาน / การติดตั้งระบบ
+              </a>
             </p>
           </div>
         </div>

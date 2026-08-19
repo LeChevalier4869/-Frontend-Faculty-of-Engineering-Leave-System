@@ -91,6 +91,7 @@ export const apiEndpoints = {
 
   // admin manage organization
   organizationCreate: `${BASE_URL}/admin/organizations`,
+  organizationsList: `${BASE_URL}/admin/organizations`, //GET
   organizationUpdate: (id) => `${BASE_URL}/admin/organizations/${id}`,
 
   // leave balance
@@ -169,6 +170,18 @@ export const apiEndpoints = {
 
   //PDF
   generatePdf: `${BASE_URL}/api/download-report`, // POST
+  reportDataforMonth : `${BASE_URL}/api/report/data-month`, //GET
+
+  // ---- รายงานสรุปการลา (preview + export) ----
+  reportSummaryData: `${BASE_URL}/api/report/data`, // POST { organizationId, startDate, endDate } → รอบประเมิน
+  reportFiscalData: `${BASE_URL}/api/report/fiscal-data`, // GET ?organizationId=&fiscalYear= → รอบปีงบ
+  reportFiscalYears: `${BASE_URL}/api/report/fiscal-years`, // GET → ปีงบที่มีข้อมูล (พ.ศ.)
+  exportRoundReportPdf: `${BASE_URL}/api/export-round-report-pdf`, // POST
+  exportRoundReportWord: `${BASE_URL}/api/export-round-report-word`, // POST
+  exportYearReportPdf: `${BASE_URL}/api/export-year-report-pdf`, // POST
+  exportYearReportWord: `${BASE_URL}/api/export-year-report-word`, // POST
+  exportMonthReportPdf: `${BASE_URL}/api/export-month-report-pdf`, // POST
+  exportMonthReportWord: `${BASE_URL}/api/export-month-report-word`, // POST
 
   // Proxy Approval
   proxyApproval: `${BASE_URL}/proxy-approval`, // CRUD

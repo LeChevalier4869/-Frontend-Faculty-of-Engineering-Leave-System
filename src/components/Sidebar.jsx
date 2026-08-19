@@ -4,8 +4,8 @@ import axios from "axios";
 import { BASE_URL } from "../utils/api";
 import {
   FaUser,
+  FaUsers,
   FaCalendarAlt,
-  FaUsersCog,
   FaTools,
   FaCog,
   FaTachometerAlt,
@@ -14,18 +14,16 @@ import {
   FaClipboardList,
   FaClipboardCheck,
   FaCheckCircle,
-  FaIdCard,
-  FaFileSignature,
   FaUserShield,
   FaUserLock,
+  FaUserTag,
   FaHistory,
   FaSitemap,
   FaTags,
   FaLayerGroup,
-  FaIdBadge
+  FaBook,
+  FaChevronDown,
 } from "react-icons/fa";
-import { TbLayoutDashboardFilled } from "react-icons/tb";
-import { HiOutlineChevronDown } from "react-icons/hi";
 import useAuth from "../hooks/useAuth";
 import logo from "../assets/logo.png";
 import PropTypes from "prop-types";
@@ -45,8 +43,8 @@ const userNav = [
 
 const approverNav1 = [
   {
-    to: "/approver/dashboard-approver1",
-    text: "แดชบอร์ดหัวหน้าสาขา",
+    to: "/approver/dashboard-approver",
+    text: "แดชบอร์ดผู้อนุมัติ",
     icon: <FaTachometerAlt />,
   },
   {
@@ -60,7 +58,7 @@ const verifierNav = [
   {
     to: "/approver/leave-request-verifier",
     text: "ตรวจสอบคำขอการลา",
-    icon: <FaCheckCircle />,
+    icon: <FaClipboardCheck />,
   },
 ];
 const approverNav2 = [
@@ -86,16 +84,10 @@ const approverNav4 = [
 ];
 
 const adminNav = [
-  { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <TbLayoutDashboardFilled /> },
-  // { to: "/admin/leave-report", text: "รายงานสรุปผล", icon: <FaUsersCog /> },
-  // { to: "/admin/add-other-request", text: "บันทึกคำขอการลาลงระบบ", icon: <FaUsersCog /> },
-  // { to: "/admin/manage-user", text: "จัดการผู้ใช้งาน", icon: <FaUsersCog /> },
-  // { to: "/admin/position-numbers", text: "จัดการเลขที่ตำแหน่ง", icon: <FaIdBadge /> },
-  // { to: "/admin/department-manage", text: "จัดการแผนก", icon: <FaUsersCog /> },
-  // { to: "/admin/holiday-manage", text: "จัดการวันหยุด", icon: <FaUsersCog /> },
-  // { to: "/admin/proxy-approval", text: "จัดการการมอบอำนาจ", icon: <FaUsersCog /> },
+  { to: "/admin/dashboard", text: "แดชบอร์ด", icon: <FaTachometerAlt /> },
+  { to: "/admin/leave-report", text: "รายงานสรุปการลา", icon: <FaChartBar /> },
   { to: "/admin/management", text: "การจัดการ", icon: <FaTools /> },
-  { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaClipboardList /> },
+  { to: "/admin/audit-logs", text: "บันทึกการทำงาน", icon: <FaHistory /> },
   { to: "/admin/config", text: "ตั้งค่า", icon: <FaCog /> },
 ];
 
@@ -103,24 +95,24 @@ const superAdminOnlyNav = [
   {
     to: "/admin/organization-manage",
     text: "จัดการองค์กร",
-    icon: <FaUsersCog />,
+    icon: <FaSitemap />,
   },
   {
     to: "/admin/personel-manage",
     text: "จัดการประเภทบุคคล",
-    icon: <FaUsersCog />,
+    icon: <FaUsers />,
   },
   {
     to: "/admin/leave-type-manage",
     text: "จัดการประเภทการลา",
-    icon: <FaUsersCog />,
+    icon: <FaTags />,
   },
   {
     to: "/admin/rank-manage",
     text: "เงื่อนไขวันลา (Rank)",
-    icon: <FaUsersCog />,
+    icon: <FaLayerGroup />,
   },
-  { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUsersCog /> },
+  { to: "/admin/role-management", text: "จัดการบทบาท", icon: <FaUserTag /> },
 ];
 
 // const adminConfigNav = [
@@ -361,9 +353,6 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
   const isProxyApprover2 = proxyApprovers2.length > 0;
   const isProxyApprover3 = proxyApprovers3.length > 0;
   const isProxyApprover4 = proxyApprovers4.length > 0;
-
-  // Debug admin menu render
-  const shouldShowAdminMenu = hasRole("ADMIN");
 
   // Check proxy roles
   useEffect(() => {
@@ -607,7 +596,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                           <FaUserShield className="text-base shrink-0" />
                           <span>การมอบอำนาจ (Proxy)</span>
                         </span>
-                        <HiOutlineChevronDown
+                        <FaChevronDown
                           className={`w-5 h-5 ml-2 transition-transform ${
                             openProxy ? "rotate-180" : "rotate-0"
                           }`}
@@ -740,7 +729,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         <FaUserLock className="text-base" />
                         <span>เมนูผู้ดูแล</span>
                       </span>
-                      <HiOutlineChevronDown
+                      <FaChevronDown
                         className={`w-5 h-5 ml-2 transition-transform ${
                           openAdmin ? "rotate-180" : "rotate-0"
                         }`}
@@ -790,6 +779,22 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                 </>
               )}
             </nav>
+
+            {/* คู่มือการใช้งาน — เปิดหน้า public /help ใน tab ใหม่ */}
+            <div className="px-3 pb-2">
+              <a
+                href="/help"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="คู่มือการใช้งาน (เปิดแท็บใหม่)"
+                className="flex items-center gap-3 px-4 py-2 rounded-xl font-kanit text-sm text-slate-200 hover:text-white hover:bg-white/10 transition"
+              >
+                <span className="text-base shrink-0">
+                  <FaBook />
+                </span>
+                <span className="truncate">คู่มือการใช้งาน</span>
+              </a>
+            </div>
 
             {/* Footer */}
             <footer className="p-4 text-center text-xs text-slate-300 border-t border-white/10 whitespace-nowrap">

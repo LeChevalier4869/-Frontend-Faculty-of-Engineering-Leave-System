@@ -35,7 +35,11 @@ const LeaveApprover2 = lazy(() => import("../layouts/approver/LeaveApprover2"));
 const LeaveApprover3 = lazy(() => import("../layouts/approver/LeaveApprover3"));
 const LeaveApprover4 = lazy(() => import("../layouts/approver/LeaveApprover4"));
 const LeaveVerifier = lazy(() => import("../layouts/approver/LeaveVerifier"));
-const Approver1Dashboard = lazy(() => import("../layouts/approver/Approver1DashBoard"));
+const ApproverDashboard = lazy(() => import("../layouts/approver/ApproverDashboard"));
+
+
+/** Public pages **/
+import HelpManual from "../layouts/help/HelpManual";
 
 /** Admin pages **/
 import AdminDashboard from "../layouts/admin/AdminDashBoard";
@@ -134,6 +138,17 @@ function AppLayout() {
   );
 }
 
+// ระหว่างที่มี token แต่ AuthContext ยังโหลด user ไม่เสร็จ อย่าเพิ่งเด้งกลับหน้าแรก
+// (ไม่งั้น refresh บนหน้า protected ใดๆ จะหลุดไป "/" ก่อน router จะสลับเป็น authed)
+function GuestFallback() {
+  const { loading } = useAuth();
+  const hasToken = localStorage.getItem("accessToken");
+  if (hasToken && loading) {
+    return <LoadingSpinner message="กำลังเข้าสู่ระบบ..." />;
+  }
+  return <Navigate to="/" replace />;
+}
+
 const guestRouter = createBrowserRouter([
   {
     element: (
@@ -145,14 +160,18 @@ const guestRouter = createBrowserRouter([
       { path: "/", element: <Login2 /> },
       { path: "/login", element: <Login2 /> },
       { path: "/callback", element: <Callback /> },
+      { path: "/help", element: <HelpManual /> },
       { path: "/dashboard", element: <UserDashBoard /> },
       { path: "/leave-dev", element: <Leave2 /> },
-      { path: "*", element: <Navigate to="/" replace /> },
+      { path: "*", element: <GuestFallback /> },
     ],
   },
 ]);
 
 const userRouter = createBrowserRouter([
+  // คู่มือ: หน้าสาธารณะ ไม่ผูกกับ AppLayout (มี header ของตัวเอง) ดูได้แม้ล็อกอินอยู่
+  { path: "/help", element: <HelpManual /> },
+
   {
     element: <AppLayout />,
     children: [
@@ -210,10 +229,10 @@ const userRouter = createBrowserRouter([
             )
           },
           {
-            path: "dashboard-approver1",
+            path: "dashboard-approver",
             element: (
-              <ProtectedRoute requiredRoles={['APPROVER_1']} checkProxy={true}>
-                <Approver1Dashboard />
+              <ProtectedRoute requiredRoles={['APPROVER_1','VERIFIER','APPROVER_2','APPROVER_3','APPROVER_4',]} checkProxy={true}>
+                <ApproverDashboard />
               </ProtectedRoute>
             )
           },

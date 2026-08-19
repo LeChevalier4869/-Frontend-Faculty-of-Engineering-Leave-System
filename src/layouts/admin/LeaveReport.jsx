@@ -1,214 +1,524 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { apiEndpoints } from "../../utils/api";
+/* eslint-disable react/prop-types */
+import { useEffect, useMemo, useState } from "react";
+import Swal from "../../utils/alert";
+import { FileDown, FileText } from "lucide-react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from 'recharts';
+  getMonthlyReport,
+  getSummaryReport,
+  getFiscalReport,
+  getFiscalYears,
+  getOrganizations,
+  downloadReport,
+} from "../../services/reportService";
+import { SYMBOL_TO_KEY, ATTENDANCE_SYMBOL } from "../../constants/leaveMeta";
+import ReportHeader from "../../components/admin/report/ReportHeader";
+import ReportFilter from "../../components/admin/report/ReportFilter";
+import ReportDescription from "../../components/admin/report/ReportDescription";
+import Panel from "../../components/admin/report/elements/Panel";
+import SymbolMeaningModal from "../../components/admin/report/elements/SymbolMeaningModal";
+import MonthlyReportTable from "../../components/admin/report/tables/MonthlyReportTable";
+import SummaryReportTable from "../../components/admin/report/tables/SummaryReportTable";
+import MonthlyReportLegend from "../../components/admin/report/tables/MonthlyReportLegend";
+import { YEARS } from "../../constants/reportMockData";
+import { daysInMonth, weekdayOf } from "../../utils/reportUtils";
 
-const mockData = [
-  { name: 'สมชาย มาตรฐาน', days: 12 },
-  { name: 'สมหญิง จันทร์ฉาย', days: 8 },
-  { name: 'สมปอง ใจดี', days: 5 },
-  { name: 'สมพร แก้วใส', days: 3 },
-];
+const FONTS = `
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap');
+`;
 
-export default function LeaveReportMockup() {
-  const [filters, setFilters] = useState({
-    organizationId: '',
-    startDate: '',
-    endDate: '',
-    countReport: '4',
-    customCount: '',
-    format: 'pdf',
+const BRAND = "#b23a47";
+
+const nowMonthIndex = new Date().getMonth();
+const nowYearBE = new Date().getFullYear() + 543;
+const DEFAULT_YEAR = YEARS.includes(nowYearBE)
+  ? nowYearBE
+  : YEARS[YEARS.length - 1];
+
+// ปีงบประมาณปัจจุบัน (พ.ศ.): เดือน ต.ค. (index 9) ขึ้นไป = ปีงบถัดไป
+const nowFiscalYearBE =
+  (new Date().getMonth() >= 9
+    ? new Date().getFullYear() + 1
+    : new Date().getFullYear()) + 543;
+
+// leaveSummary[key] → { times, days } (undefined → ให้ตารางแสดง "-")
+const pickType = (ls, key) => {
+  const s = ls?.[key];
+  return { times: s?.count, days: s?.days };
+};
+const toSummaryRows = (users) =>
+  users.map((u) => ({
+    name: u.name,
+    positionNo: u.positionNo,
+    sick: pickType(u.leaveSummary, "ลาป่วย"),
+    personal: pickType(u.leaveSummary, "ลากิจส่วนตัว"),
+    annual: pickType(u.leaveSummary, "ลาพักผ่อน"),
+    late: "-",
+    absent: "-",
+    other: "",
+    note: "",
+  }));
+
+/* ปุ่มดาวน์โหลด PDF / Word — แบบเด่น (filled) */
+function DownloadButton({
+  icon: Icon,
+  label,
+  busy,
+  disabled,
+  onClick,
+  colorClass,
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || busy}
+      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-md ring-1 ring-black/5 transition hover:shadow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:brightness-100 ${colorClass}`}
+    >
+      {busy ? (
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+      ) : (
+        <Icon className="h-4 w-4" />
+      )}
+      {busy ? "กำลังสร้าง..." : label}
+    </button>
+  );
+}
+
+export default function AttendanceReport() {
+  const [reportType, setReportType] = useState("monthly");
+  const [appliedType, setAppliedType] = useState("monthly");
+  const [organizations, setOrganizations] = useState([]);
+  const [organization, setOrganization] = useState("");
+
+  const [monthIndex, setMonthIndex] = useState(nowMonthIndex);
+  const [year, setYear] = useState(DEFAULT_YEAR);
+
+  const [cycleNumber, setCycleNumber] = useState(1);
+  const [cycleStart, setCycleStart] = useState("");
+  const [cycleEnd, setCycleEnd] = useState("");
+
+  const [fiscalYear, setFiscalYear] = useState(nowFiscalYearBE); // พ.ศ.
+  const [fiscalYearOptions, setFiscalYearOptions] = useState([nowFiscalYearBE]);
+
+  const [reportData, setReportData] = useState(null); // monthly
+  const [summaryData, setSummaryData] = useState(null); // cycle/fiscal grouped
+
+  const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(null); // "pdf" | "word" | null
+  const [hasApplied, setHasApplied] = useState(false);
+  const [activeSymbolKey, setActiveSymbolKey] = useState(null);
+  const onSymbolClick = (key) => {
+    setActiveSymbolKey(key);
+  };
+
+  const [applied, setApplied] = useState({
+    organization: "",
+    monthIndex: nowMonthIndex,
+    year: DEFAULT_YEAR,
+    cycleNumber: 1,
+    cycleStart: "",
+    cycleEnd: "",
+    fiscalYear: nowFiscalYearBE,
+    fiscalStart: "",
+    fiscalEnd: "",
   });
 
-  const organizations = [
-    { id: 1, name: 'คณะวิศวกรรมศาสตร์' },
-    { id: 2, name: 'คณะวิทยาศาสตร์' },
-    { id: 3, name: 'คณะสถาปัตยกรรม' },
-  ];
+  useEffect(() => {
+    (async () => {
+      try {
+        const [result, years] = await Promise.all([
+          getOrganizations(),
+          getFiscalYears().catch(() => []),
+        ]);
+        setOrganizations(result);
+        if (result.length > 0) {
+          setOrganization(result[0].id);
+          setApplied((prev) => ({ ...prev, organization: result[0].id }));
+        }
+        if (years.length > 0) {
+          setFiscalYearOptions(years);
+          setFiscalYear(years[0]); // ปีล่าสุด (มีข้อมูล) เป็นค่าเริ่มต้น
+        }
+      } catch (error) {
+        console.error("โหลด organizations ไม่สำเร็จ:", error);
+      }
+    })();
+  }, []);
 
-  const topCount =
-    filters.countReport === 'custom' && filters.customCount
-      ? parseInt(filters.customCount)
-      : parseInt(filters.countReport);
+  const totalDays = useMemo(
+    () => daysInMonth(applied.monthIndex, applied.year),
+    [applied.monthIndex, applied.year],
+  );
+  const dayList = useMemo(
+    () => Array.from({ length: totalDays }, (_, i) => i + 1),
+    [totalDays],
+  );
 
-  const filteredData = mockData
-    .sort((a, b) => b.days - a.days)
-    .slice(0, topCount);
+  // ---- ตารางรายเดือน (ลงเวลารายวัน) แยกตามประเภทบุคลากร เหมือนในใบรายงาน ----
+  const monthlyGroups = useMemo(() => {
+    if (!reportData) return [];
 
-  const handleExport = async () => {
-    if (!filters.startDate || !filters.endDate || !filters.organizationId) {
-      alert('กรุณาเลือกคณะ และวันที่เริ่มต้น/สิ้นสุด');
-      return;
-    }
+    const ceYear = applied.year - 543;
 
-    const payload = {
-      organizationId: parseInt(filters.organizationId),
-      startDate: filters.startDate,
-      endDate: filters.endDate,
-      countReport:
-        filters.countReport === 'custom' ? filters.customCount : filters.countReport,
-      format: filters.format,
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const toRow = (emp) => {
+      const cells = dayList.map((day) => {
+        const isWeekend = [0, 6].includes(
+          weekdayOf(applied.monthIndex, applied.year, day),
+        );
+
+        // เสาร์-อาทิตย์
+        if (isWeekend) {
+          return {
+            day,
+            symbol: "-",
+            weekend: true,
+          };
+        }
+
+        const currentDate = new Date(ceYear, applied.monthIndex, day);
+        currentDate.setHours(0, 0, 0, 0);
+
+        // วันนี้และอนาคต = ยังไม่แสดงข้อมูล
+        if (currentDate >= today) {
+          return {
+            day,
+            symbol: "",
+            weekend: false,
+            future: true,
+          };
+        }
+
+        // วันที่ผ่านมาแล้ว และมีการลา
+        const leaveSym = ATTENDANCE_SYMBOL[emp.attendance?.[day]];
+
+        if (leaveSym) {
+          return {
+            day,
+            symbol: leaveSym,
+            weekend: false,
+            future: false,
+          };
+        }
+
+        // วันที่ผ่านมาแล้ว ไม่มีลา = มาทำงาน
+        return {
+          day,
+          symbol: "✓",
+          weekend: false,
+          future: false,
+        };
+      });
+
+      const tally = {
+        PRESENT: 0,
+        ANNUAL: 0,
+        SICK: 0,
+        PERSONAL: 0,
+        ABSENT: 0,
+      };
+
+      cells.forEach((cell) => {
+        if (cell.weekend || cell.future) return;
+
+        const key = SYMBOL_TO_KEY[cell.symbol];
+
+        if (key && tally[key] != null) {
+          tally[key]++;
+        }
+      });
+
+      return {
+        userId: emp.userId,
+        name: emp.name,
+        totalWorkDays: emp.totalWorkDays,
+        cells,
+        tally,
+      };
     };
 
-    try {
-      // const response = await axios.post(
-      //   apiEndpoints.exportReport, // เปลี่ยนเป็น endpoint จริง
-      //   payload,
-      //   { responseType: 'blob' } // important! รับเป็นไฟล์ binary
-      // );
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.post(
-        apiEndpoints.exportReport, // เปลี่ยนเป็น endpoint จริง
-        payload,
-        {
-          responseType: 'blob', // important! รับเป็นไฟล์ binary
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+    return Object.entries(reportData.report)
+      .filter(([, emps]) => Array.isArray(emps) && emps.length)
+      .map(([type, emps]) => ({
+        type,
+        rows: emps.map(toRow),
+      }));
+  }, [reportData, dayList, applied.monthIndex, applied.year]);
 
-      // สร้างลิงก์ดาวน์โหลด
-      const blob = new Blob([response.data], {
-        type: filters.format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  // ---- ตารางสรุป (รอบประเมิน/ปีงบ) แยกตามประเภทบุคลากร ----
+  const summaryGroups = useMemo(() => {
+    if (!summaryData) return [];
+    return Object.entries(summaryData)
+      .filter(([, users]) => Array.isArray(users) && users.length)
+      .map(([type, users]) => ({ type, rows: toSummaryRows(users) }));
+  }, [summaryData]);
+
+  const isSummary = appliedType === "cycle" || appliedType === "fiscal";
+
+  const handleReportTypeChange = (t) => {
+    setReportType(t);
+    setHasApplied(false);
+    setReportData(null);
+    setSummaryData(null);
+  };
+
+  const handleApply = async () => {
+    if (!organization) {
+      Swal.fire("ข้อมูลไม่ครบ", "กรุณาเลือกคณะ", "warning");
+      return;
+    }
+    if (reportType === "cycle") {
+      if (!cycleStart || !cycleEnd) {
+        Swal.fire("ข้อมูลไม่ครบ", "กรุณาเลือกช่วงวันที่", "warning");
+        return;
+      }
+      if (new Date(cycleStart) > new Date(cycleEnd)) {
+        Swal.fire(
+          "ช่วงวันที่ไม่ถูกต้อง",
+          "วันเริ่มต้องไม่หลังวันสิ้นสุด",
+          "warning",
+        );
+        return;
+      }
+      if (!cycleNumber) {
+        Swal.fire("ข้อมูลไม่ครบ", "กรุณาระบุรอบประเมิน ครั้งที่", "warning");
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+      // ปีงบ: ช่วงวันที่มาจาก backend (setting) — เก็บไว้แสดงหัวรายงาน
+      let fiscalStart = "";
+      let fiscalEnd = "";
+      if (reportType === "monthly") {
+        const result = await getMonthlyReport({
+          organizationId: organization,
+          month: monthIndex + 1,
+          year: year - 543,
+        });
+        setReportData(result);
+        setSummaryData(null);
+      } else if (reportType === "cycle") {
+        const rows = await getSummaryReport({
+          organizationId: organization,
+          startDate: cycleStart,
+          endDate: cycleEnd,
+        });
+        setSummaryData(rows || {});
+        setReportData(null);
+      } else {
+        const res = await getFiscalReport({
+          organizationId: organization,
+          fiscalYear: fiscalYear - 543, // ส่งเป็น ค.ศ.
+        });
+        fiscalStart = res.startDate;
+        fiscalEnd = res.endDate;
+        setSummaryData(res.rows || {});
+        setReportData(null);
+      }
+      setApplied({
+        organization,
+        monthIndex,
+        year,
+        cycleNumber,
+        cycleStart,
+        cycleEnd,
+        fiscalYear,
+        fiscalStart,
+        fiscalEnd,
       });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute(
-        'download',
-        `leave_report.${filters.format === 'pdf' ? 'pdf' : 'docx'}`
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      alert('เกิดข้อผิดพลาด: ' + (error.response?.data?.message || error.message));
+      setAppliedType(reportType);
+      setHasApplied(true);
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "เกิดข้อผิดพลาด";
+      Swal.fire("โหลดรายงานไม่สำเร็จ", msg, "error");
+      setHasApplied(false);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleReset = () => {
+    // คงอยู่ tab เดิม (ไม่เด้งกลับ monthly) — แค่ล้างข้อมูล/ฟิลเตอร์
+    setOrganization(organizations[0]?.id ?? "");
+    setMonthIndex(nowMonthIndex);
+    setYear(DEFAULT_YEAR);
+    setCycleNumber(1);
+    setCycleStart("");
+    setCycleEnd("");
+    setFiscalYear(nowFiscalYearBE);
+    setReportData(null);
+    setSummaryData(null);
+    setHasApplied(false);
+  };
+
+  const buildPayload = () => {
+    if (appliedType === "cycle")
+      return {
+        organizationId: applied.organization,
+        countReport: applied.cycleNumber,
+        startDate: applied.cycleStart,
+        endDate: applied.cycleEnd,
+      };
+    if (appliedType === "fiscal")
+      return {
+        organizationId: applied.organization,
+        fiscalYear: applied.fiscalYear - 543, // ค.ศ.
+      };
+    return {
+      organizationId: applied.organization,
+      month: applied.monthIndex + 1,
+      year: applied.year - 543,
+    };
+  };
+
+  const handleDownload = async (format) => {
+    try {
+      setDownloading(format);
+      await downloadReport({
+        reportType: appliedType,
+        format,
+        payload: buildPayload(),
+      });
+    } catch (err) {
+      Swal.fire("ดาวน์โหลดไม่สำเร็จ", err.message, "error");
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const downloadActions = (
+    <div className="flex items-center gap-2.5">
+      <span className="hidden text-sm font-medium text-slate-500 sm:inline">
+        ดาวน์โหลด:
+      </span>
+      <DownloadButton
+        icon={FileDown}
+        label="PDF"
+        colorClass="bg-rose-600"
+        busy={downloading === "pdf"}
+        disabled={!!downloading}
+        onClick={() => handleDownload("pdf")}
+      />
+      <DownloadButton
+        icon={FileText}
+        label="Word"
+        colorClass="bg-sky-600"
+        busy={downloading === "word"}
+        disabled={!!downloading}
+        onClick={() => handleDownload("word")}
+      />
+    </div>
+  );
+
+  const orgName =
+    organizations.find((o) => o.id === applied.organization)?.name || "";
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-kanit text-black">
-      <h1 className="mb-4 text-2xl font-bold">รายงานสรุปวันลาของพนักงาน</h1>
+    <div
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 px-4 py-8 md:px-8"
+      style={{ fontFamily: "'Kanit', sans-serif" }}
+    >
+      <style>{FONTS}</style>
 
-      {/* Filters */}
-      <div className="mb-5 flex flex-wrap gap-3 items-center">
-        <select
-          value={filters.organizationId}
-          onChange={(e) => setFilters({ ...filters, organizationId: e.target.value })}
-          className="rounded-lg border border-gray-400 bg-white px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">-- เลือกคณะ --</option>
-          {organizations.map((org) => (
-            <option key={org.id} value={org.id}>
-              {org.name}
-            </option>
-          ))}
-        </select>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <ReportHeader brandColor={BRAND} />
 
-        <input
-          type="date"
-          value={filters.startDate}
-          onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-          className="rounded-lg border border-gray-400 bg-white px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
+        <ReportFilter
+          reportType={reportType}
+          setReportType={handleReportTypeChange}
+          organization={organization}
+          setOrganization={setOrganization}
+          organizations={organizations}
+          monthIndex={monthIndex}
+          setMonthIndex={setMonthIndex}
+          year={year}
+          setYear={setYear}
+          cycleNumber={cycleNumber}
+          setCycleNumber={setCycleNumber}
+          cycleStart={cycleStart}
+          setCycleStart={setCycleStart}
+          cycleEnd={cycleEnd}
+          setCycleEnd={setCycleEnd}
+          fiscalYear={fiscalYear}
+          setFiscalYear={setFiscalYear}
+          fiscalYearOptions={fiscalYearOptions}
+          onApply={handleApply}
+          onReset={handleReset}
+          applying={loading}
+          brandColor={BRAND}
         />
 
-        <input
-          type="date"
-          value={filters.endDate}
-          onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-          className="rounded-lg border border-gray-400 bg-white px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
-        />
+        {hasApplied && (
+          <Panel
+            title={
+              isSummary
+                ? "รายงานสรุปการลาและการลงเวลาปฏิบัติราชการของบุคลากร"
+                : "รายงานสรุปการลาและการมาปฏิบัติราชการของบุคลากร"
+            }
+            subtitle={`มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น${orgName ? ` · สังกัด ${orgName}` : ""}`}
+            action={downloadActions}
+          >
+            <ReportDescription reportType={appliedType} applied={applied} />
 
-        <select
-          value={filters.countReport}
-          onChange={(e) => setFilters({ ...filters, countReport: e.target.value })}
-          className="rounded-lg border border-gray-400 bg-white px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="custom">กำหนดเอง</option>
-        </select>
+            {isSummary ? (
+              summaryGroups.length ? (
+                <div className="space-y-8">
+                  {summaryGroups.map((g) => (
+                    <div key={g.type}>
+                      <h3 className="mb-2 text-sm font-semibold text-slate-700">
+                        ประเภทบุคลากร: {g.type}{" "}
+                        <span className="font-normal text-slate-400">
+                          ({g.rows.length} คน)
+                        </span>
+                      </h3>
 
-        {filters.countReport === 'custom' && (
-          <input
-            type="number"
-            min="1"
-            max={mockData.length}
-            value={filters.customCount}
-            onChange={(e) => setFilters({ ...filters, customCount: e.target.value })}
-            placeholder="จำนวน..."
-            className="rounded-lg border border-gray-400 bg-white px-3 py-1 text-sm w-24 focus:ring-2 focus:ring-blue-500"
-          />
+                      <SummaryReportTable rows={g.rows} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-10 text-center text-sm text-slate-400">
+                  ไม่พบข้อมูลการลาในช่วงเวลาที่เลือก
+                </div>
+              )
+            ) : monthlyGroups.length ? (
+              <div className="space-y-8">
+                {monthlyGroups.map((group) => (
+                  <div key={group.type}>
+                    <h3 className="mb-2 font-semibold">
+                      ประเภทบุคลากร: {group.type}  ({group.rows.length} คน)
+                    </h3>
+                    <MonthlyReportTable
+                      dayList={dayList}
+                      rows={group.rows}
+                      onSymbolClick={onSymbolClick}
+                    />
+                  </div>
+                ))}
+
+                {/* Legend แสดงครั้งเดียวท้ายตารางทั้งหมด */}
+                <MonthlyReportLegend onSymbolClick={onSymbolClick} />
+              </div>
+            ) : (
+              <div className="py-10 text-center text-sm text-slate-400">
+                ไม่พบข้อมูลบุคลากรในช่วงเวลาที่เลือก
+              </div>
+            )}
+          </Panel>
         )}
-
-        <select
-          value={filters.format}
-          onChange={(e) => setFilters({ ...filters, format: e.target.value })}
-          className="rounded-lg border border-gray-400 bg-white px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="pdf">PDF</option>
-          <option value="word">Word</option>
-        </select>
-
-        <button
-          className="rounded-lg bg-black px-3 py-1 text-sm text-white transition hover:bg-gray-800"
-          onClick={handleExport}
-        >
-          Export
-        </button>
       </div>
 
-      {/* Chart */}
-      <div className="mb-6 rounded-xl bg-white p-4 shadow">
-        <h2 className="mb-3 text-lg font-semibold">Top {topCount} ผู้ลาเยอะที่สุด</h2>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={filteredData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="name"
-              stroke="#000000"
-              tick={{ fontSize: 11, fill: '#000000' }}
-            />
-            <YAxis stroke="#000000" tick={{ fontSize: 11, fill: '#000000' }} />
-            <Tooltip contentStyle={{ fontSize: '12px' }} />
-            <Bar dataKey="days" fill="#3b82f6" barSize={16} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Table */}
-      <div className="rounded-xl bg-white p-4 shadow">
-        <h2 className="mb-3 text-lg font-semibold">รายละเอียดวันลา</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-white">
-              <tr>
-                <th className="px-4 py-2 text-left font-medium">ชื่อพนักงาน</th>
-                <th className="px-4 py-2 text-left font-medium">จำนวนวันลา (วัน)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredData.map((row) => (
-                <tr key={row.name} className="hover:bg-gray-50">
-                  <td className="px-4 py-2">{row.name}</td>
-                  <td className="px-4 py-2">{row.days}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <SymbolMeaningModal
+        symbolKey={activeSymbolKey}
+        onClose={() => setActiveSymbolKey(null)}
+      />
     </div>
   );
 }

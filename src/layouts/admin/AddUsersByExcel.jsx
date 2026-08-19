@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useGoBack } from "../../utils/useGoBack";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import axios from "axios";
 import getApiUrl from "../../utils/apiUtils";
-import Swal from "sweetalert2";
+import Swal from "../../utils/alert";
 
 export default function Callback() {
   const navigate = useNavigate();
