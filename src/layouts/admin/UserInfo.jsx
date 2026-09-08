@@ -9,7 +9,10 @@ import AuditTrailModal from "../../components/AuditTrailModal";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import ProfileImage from "../../components/ProfileImage";
-import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import {
+  formatLeaveDaysByUnit,
+  leaveUnitForMaxDays,
+} from "../../utils/formatLeaveDays";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 const Panel = ({ className = "", children }) => (
@@ -388,7 +391,9 @@ export default function UserInfo() {
               </thead>
               <tbody>
                 {deductibleBalances.length > 0 ? (
-                  deductibleBalances.map((b, idx) => (
+                  deductibleBalances.map((b, idx) => {
+                    const unit = leaveUnitForMaxDays(b.maxDays);
+                    return (
                     <tr
                       key={b.id ?? idx}
                       className={`border-t border-slate-100 ${
@@ -397,22 +402,23 @@ export default function UserInfo() {
                     >
                       <td className="px-4 py-3">{leaveName(b)}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        {formatLeaveDays(b.maxDays)}
+                        {formatLeaveDaysByUnit(b.maxDays, unit)}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        {formatLeaveDays(b.usedDays)}
+                        {formatLeaveDaysByUnit(b.usedDays, unit)}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap text-slate-600">
                         {timesByType[b.leaveTypeId] || 0} ครั้ง
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap text-amber-600">
-                        {formatLeaveDays(b.pendingDays)}
+                        {formatLeaveDaysByUnit(b.pendingDays, unit)}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap font-semibold text-emerald-700">
-                        {formatLeaveDays(b.remainingDays)}
+                        {formatLeaveDaysByUnit(b.remainingDays, unit)}
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 ) : (
                   <tr>
                     <td
@@ -447,7 +453,7 @@ export default function UserInfo() {
                   <span className="text-sm text-slate-500 whitespace-nowrap">
                     ลาไปแล้ว{" "}
                     <span className="font-semibold text-slate-800">
-                      {formatLeaveDays(b.usedDays)}
+                      {formatLeaveDaysByUnit(b.usedDays, leaveUnitForMaxDays(b.maxDays))}
                     </span>{" "}
                     ({timesByType[b.leaveTypeId] || 0} ครั้ง)
                   </span>
@@ -516,10 +522,16 @@ export default function UserInfo() {
                         ) : (
                           <>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
-                              {formatLeaveDays(ur.rank?.receiveDays)}
+                              {formatLeaveDaysByUnit(
+                                ur.rank?.receiveDays,
+                                leaveUnitForMaxDays(ur.rank?.maxDays),
+                              )}
                             </td>
                             <td className="px-4 py-3 text-right whitespace-nowrap text-slate-600">
-                              {formatLeaveDays(ur.rank?.maxDays)}
+                              {formatLeaveDaysByUnit(
+                                ur.rank?.maxDays,
+                                leaveUnitForMaxDays(ur.rank?.maxDays),
+                              )}
                             </td>
                           </>
                         )}

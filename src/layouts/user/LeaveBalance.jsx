@@ -20,9 +20,11 @@ import useAuth from "../../hooks/useAuth";
 import {
   filterLeaveBalancesBySex,
   filterLeaveBalancesLatestYear,
-  formatRemainingDays,
 } from "../../utils/leavePolicy";
-import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import {
+  formatLeaveDaysByUnit,
+  leaveUnitForMaxDays,
+} from "../../utils/formatLeaveDays";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function LeaveBalancePage() {
@@ -186,8 +188,10 @@ export default function LeaveBalancePage() {
             const used = item.usedDays ?? 0;
             const pending = item.pendingDays ?? 0;
             const remaining = item.remainingDays ?? total - used - pending;
-            const remainingDisplay = formatRemainingDays(remaining);
-            
+
+            // หน่วยแสดงผลของประเภทการลานี้: เกิน 1 ปี → "ปี", ไม่เกิน → "วัน" (ไม่มีเดือน)
+            const unit = leaveUnitForMaxDays(total);
+
             // ตรวจสอบว่าเป็นประเภทการลาที่ไม่ต้องหักวันหรือไม่
             // ตรวจสอบจากค่า 0 ในฐานข้อมูล (maxDays = 0, remainingDays = 0) หรือจาก leaveTypeId ที่กำหนด
             const nonDeductibleLeaveTypes = [5, 6, 10, 11, 13]; // ลาอุปสมบท, ลาเข้ารับการตรวจเลือก, ลาไปถือศีล, ลาไปปฏิบัติงานในองค์การระหว่างประเทศ, ลาไปประกอบพิธีฮัจย์
@@ -255,14 +259,14 @@ export default function LeaveBalancePage() {
                         <div className="flex justify-between items-center">
                           <span>ใช้ไปแล้ว:</span>
                           <span className="font-semibold text-slate-900">
-                            {formatLeaveDays(leaveInfo.used)}
+                            {formatLeaveDaysByUnit(leaveInfo.used, unit)}
                           </span>
                         </div>
                         {leaveInfo.pending > 0 && (
                           <div className="flex justify-between items-center">
                             <span>กำลังดำเนินการ:</span>
                             <span className="font-semibold text-amber-600">
-                              {formatLeaveDays(leaveInfo.pending)}
+                              {formatLeaveDaysByUnit(leaveInfo.pending, unit)}
                             </span>
                           </div>
                         )}
@@ -276,27 +280,27 @@ export default function LeaveBalancePage() {
                         <div className="flex justify-between items-center">
                           <span>จำนวนวันทั้งหมด:</span>
                           <span className="font-semibold text-slate-900">
-                            {formatLeaveDays(leaveInfo.total)}
+                            {formatLeaveDaysByUnit(leaveInfo.total, unit)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>ใช้ไปแล้ว:</span>
                           <span className="font-semibold text-rose-600">
-                            {formatLeaveDays(leaveInfo.used)}
+                            {formatLeaveDaysByUnit(leaveInfo.used, unit)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span>กำลังดำเนินการ:</span>
                           <span className="font-semibold text-amber-600">
-                            {formatLeaveDays(leaveInfo.pending)}
+                            {formatLeaveDaysByUnit(leaveInfo.pending, unit)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center border-t pt-1">
                           <span className="font-medium">คงเหลือ:</span>
                           <span className={`font-bold ${leaveInfo.hasOverused ? 'text-rose-600' : 'text-emerald-600'}`}>
                             {leaveInfo.hasOverused
-                              ? `เกิน ${formatLeaveDays(leaveInfo.overusedDays)}`
-                              : formatRemainingDays(leaveInfo.remaining).text
+                              ? `เกิน ${formatLeaveDaysByUnit(leaveInfo.overusedDays, unit)}`
+                              : formatLeaveDaysByUnit(leaveInfo.remaining, unit)
                             }
                           </span>
                         </div>

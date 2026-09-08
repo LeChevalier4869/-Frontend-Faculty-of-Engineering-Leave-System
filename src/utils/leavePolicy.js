@@ -24,6 +24,23 @@ export function isFemaleOnlyLeaveTypeName(name) {
   return false;
 }
 
+// ลาเฉพาะเพศชาย: ลาเข้ารับการตรวจเลือก/เตรียมพล (การเกณฑ์ทหาร)
+export function isMaleOnlyLeaveTypeName(name) {
+  const n = String(name || "").trim();
+  if (!n) return false;
+  return n.includes("ตรวจเลือก") || n.includes("เตรียมพล") || n.includes("เกณฑ์ทหาร");
+}
+
+// หาเพศของผู้ใช้แบบเชื่อถือได้: ใช้ field sex ก่อน ถ้าไม่มีค่อย fallback จากคำนำหน้า
+export function resolveUserSex(user) {
+  const s = normalizeSex(user?.sex);
+  if (s) return s;
+  const prefix = String(user?.prefixName || "");
+  if (prefix.includes("นางสาว") || prefix.includes("นาง")) return "FEMALE";
+  if (prefix.includes("นาย")) return "MALE";
+  return "";
+}
+
 // ประเภทการลาที่ผู้ใช้ยื่นเองในระบบได้ (นอกเหนือจากนี้ต้องยื่นผ่านช่องทางอื่น)
 // เทียบด้วย "ชื่อ" เพื่อไม่ผูกกับ id ที่อาจต่างกันในแต่ละฐานข้อมูล
 const SELF_SERVICE_LEAVE_NAMES = ["ลาป่วย", "ลากิจส่วนตัว", "ลาพักผ่อน"];
@@ -43,6 +60,9 @@ export function filterLeaveTypesBySex(leaveTypes, sex) {
   if (normalized === "MALE") {
     return selfService.filter((t) => !isFemaleOnlyLeaveTypeName(t?.name));
   }
+  if (normalized === "FEMALE") {
+    return selfService.filter((t) => !isMaleOnlyLeaveTypeName(t?.name));
+  }
 
   return selfService;
 }
@@ -55,6 +75,9 @@ export function filterLeaveBalancesBySex(balances, sex) {
   if (normalized === "MALE") {
     return list.filter((b) => !isFemaleOnlyLeaveTypeName(b?.leaveType?.name));
   }
+  if (normalized === "FEMALE") {
+    return list.filter((b) => !isMaleOnlyLeaveTypeName(b?.leaveType?.name));
+  }
 
   return list;
 }
@@ -64,15 +87,13 @@ export function filterLeaveTypesMapBySex(leaveTypesMap, sex) {
   const map = leaveTypesMap && typeof leaveTypesMap === "object" ? leaveTypesMap : {};
   if (!normalized) return map;
 
-  if (normalized === "MALE") {
-    const next = {};
-    Object.entries(map).forEach(([id, name]) => {
-      if (!isFemaleOnlyLeaveTypeName(name)) next[id] = name;
-    });
-    return next;
-  }
-
-  return map;
+  const next = {};
+  Object.entries(map).forEach(([id, name]) => {
+    if (normalized === "MALE" && isFemaleOnlyLeaveTypeName(name)) return;
+    if (normalized === "FEMALE" && isMaleOnlyLeaveTypeName(name)) return;
+    next[id] = name;
+  });
+  return next;
 }
 
 export function filterLeaveBalancesLatestYear(balances) {

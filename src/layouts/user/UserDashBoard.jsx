@@ -36,8 +36,11 @@ import "dayjs/locale/th";
 import {
   filterLeaveBalancesBySex,
   filterLeaveBalancesLatestYear,
-  formatRemainingDays,
 } from "../../utils/leavePolicy";
+import {
+  formatLeaveDaysByUnit,
+  leaveUnitForMaxDays,
+} from "../../utils/formatLeaveDays";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import PeriodFilter from "../../components/PeriodFilter";
 import { filterByPeriod, DEFAULT_PERIOD } from "../../utils/periodRange";
@@ -466,7 +469,18 @@ export default function UserDashboard() {
           {entitlements.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {entitlements.map((item, index) => {
-                const remainingDisplay = formatRemainingDays(item.remainingDays);
+                // หน่วยตามสิทธิ์รวม: เกิน 1 ปี → "ปี" ไม่เกิน → "วัน" (ไม่มีเดือน)
+                const unit = leaveUnitForMaxDays(item.maxDays);
+                const remainingNum = Number(item.remainingDays) || 0;
+                const overused = remainingNum < 0;
+                const remainingDisplay = {
+                  text: overused
+                    ? `เกิน ${formatLeaveDaysByUnit(Math.abs(remainingNum), unit)}`
+                    : formatLeaveDaysByUnit(remainingNum, unit),
+                  className: overused
+                    ? "text-rose-600 font-bold"
+                    : "text-emerald-600 font-bold",
+                };
                 return (
                   <div
                     key={item.id ?? index}

@@ -35,6 +35,8 @@ import {
   filterLeaveBalancesLatestYear,
   filterLeaveTypesMapBySex,
   isFemaleOnlyLeaveTypeName,
+  isMaleOnlyLeaveTypeName,
+  resolveUserSex,
 } from "../../utils/leavePolicy";
 import { expandHolidays, defaultHolidayYears } from "../../utils/holidayUtils";
 import LeaveCancellationModal from "../../components/admin/LeaveCancellationModal";
@@ -342,9 +344,22 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
     setSelectedLeaveBalance(selected || null);
   }, [leaveTypeId, leaveBalances]);
 
+  const userSex = useMemo(() => resolveUserSex(selectedUser), [selectedUser]);
+
   const leaveTypesMapByUserSex = useMemo(() => {
-    return filterLeaveTypesMapBySex(leaveTypesMap, selectedUser?.sex);
-  }, [leaveTypesMap, selectedUser?.sex]);
+    return filterLeaveTypesMapBySex(leaveTypesMap, userSex);
+  }, [leaveTypesMap, userSex]);
+
+  // เงื่อนไขเพศไม่ตรงกับประเภทการลาที่เลือก (ใช้ทั้งเตือนและบล็อกการบันทึก)
+  const sexLeaveConflict = useMemo(() => {
+    if (!selectedUser || !leaveTypeId) return null;
+    const name = leaveTypesMap?.[leaveTypeId] || "";
+    if (userSex === "MALE" && isFemaleOnlyLeaveTypeName(name))
+      return { requiredSex: "หญิง", name };
+    if (userSex === "FEMALE" && isMaleOnlyLeaveTypeName(name))
+      return { requiredSex: "ชาย", name };
+    return null;
+  }, [selectedUser, leaveTypeId, leaveTypesMap, userSex]);
 
   const parseYmdOrDmy = useCallback((value) => {
     if (!value) return dayjs.invalid();
@@ -460,6 +475,16 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       }
       if (!String(documentNumber || "").trim()) {
         alert("กรุณาระบุเลขที่เอกสาร");
+        return;
+      }
+
+      if (sexLeaveConflict) {
+        await Swal.fire({
+          icon: "warning",
+          title: "เพศไม่ตรงกับประเภทการลา",
+          text: `ประเภทการลา "${sexLeaveConflict.name}" สำหรับเพศ${sexLeaveConflict.requiredSex}เท่านั้น`,
+          confirmButtonText: "ตกลง",
+        });
         return;
       }
 
@@ -674,26 +699,20 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                 />
               </div>
 
-              {/* ตรวจสอบเงื่อนไขเพศของประเภทการลา */}
-              {selectedUser && leaveTypeId && (() => {
-                const leaveTypeName = leaveTypesMapByUserSex[leaveTypeId] || "";
-                const isFemaleOnly = isFemaleOnlyLeaveTypeName(leaveTypeName);
-                const isMale = selectedUser.prefixName?.includes("นาย") || selectedUser.sex === "MALE";
-                
-                if (isFemaleOnly && isMale) {
-                  return (
-                    <div className="sm:col-span-2">
-                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 border border-amber-200">
-                        <span className="font-medium">⚠️ ประเภทการลานี้สำหรับสตรีเท่านั้น</span>
-                        <span className="ml-2 text-xs text-amber-600">
-                          ({selectedUser.prefixName} {selectedUser.firstName} {selectedUser.lastName} ไม่สามารถเลือกประเภทนี้ได้)
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
+              {/* เตือนเมื่อเพศของผู้ใช้ไม่ตรงกับประเภทการลาที่เลือก (บล็อกการบันทึกด้วย) */}
+              {sexLeaveConflict && (
+                <div className="sm:col-span-2">
+                  <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800 border border-rose-200">
+                    <span className="font-medium">
+                      ⚠️ ประเภทการลานี้สำหรับเพศ{sexLeaveConflict.requiredSex}เท่านั้น
+                    </span>
+                    <span className="ml-2 text-xs text-rose-600">
+                      ({selectedUser.prefixName} {selectedUser.firstName}{" "}
+                      {selectedUser.lastName} ไม่สามารถยื่นลาประเภทนี้ได้)
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {(holidayLoadError || selectedLeaveBalance) && (
                 <div className="sm:col-span-2">
