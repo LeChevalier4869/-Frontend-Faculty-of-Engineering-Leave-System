@@ -3,15 +3,12 @@ import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import Swal, { notifySuccess, notifyError } from "../../utils/alert";
-import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { FiUser, FiUsers } from "react-icons/fi";
 
 const PAGE_SIZE = 10;
 const DEBOUNCE_MS = 200;
-
-const MySwal = withReactContent(Swal);
 
 const ROLE_PRIORITY = [
   "SUPER_ADMIN", "ADMIN", "APPROVER_4", "APPROVER_3",
