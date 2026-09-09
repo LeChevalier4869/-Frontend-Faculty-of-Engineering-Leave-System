@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { BASE_URL } from "../../utils/api";
 
 const PAGE_SIZE = 10;
@@ -61,7 +61,7 @@ export default function SettingManage() {
         () => (window.location.href = "/login")
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("Error", err.response?.data?.message || err.message);
     }
   };
 
@@ -92,7 +92,7 @@ export default function SettingManage() {
 
   const handleAdd = async () => {
     if (!newKey || !newValue || !newType) {
-      return Swal.fire("Error", "ต้องระบุ key, type และ value", "error");
+      return notifyError("Error", "ต้องระบุ key, type และ value");
     }
     try {
       await axios.post(
@@ -100,7 +100,7 @@ export default function SettingManage() {
         { key: newKey, type: newType, value: newValue, description },
         authHeader()
       );
-      Swal.fire("บันทึกสำเร็จ!", "", "success");
+      notifySuccess("บันทึกสำเร็จ!");
       resetForm();
       loadData();
       setCurrentPage(1);
@@ -122,7 +122,7 @@ export default function SettingManage() {
 
   const handleUpdate = async () => {
     if (!newKey || !newValue || !newType) {
-      return Swal.fire("Error", "ต้องระบุ key, type และ value", "error");
+      return notifyError("Error", "ต้องระบุ key, type และ value");
     }
     try {
       await axios.put(
@@ -130,7 +130,7 @@ export default function SettingManage() {
         { key: newKey, type: newType, value: newValue, description },
         authHeader()
       );
-      Swal.fire("อัปเดตสำเร็จ!", "", "success");
+      notifySuccess("อัปเดตสำเร็จ!");
       resetForm();
       loadData();
     } catch (err) {
@@ -152,7 +152,7 @@ export default function SettingManage() {
 
     try {
       await axios.delete(`${BASE_URL}/admin/setting/${id}`, authHeader());
-      Swal.fire("ลบสำเร็จ!", "", "success");
+      notifySuccess("ลบสำเร็จ!");
       loadData();
     } catch (err) {
       handleApiError(err);

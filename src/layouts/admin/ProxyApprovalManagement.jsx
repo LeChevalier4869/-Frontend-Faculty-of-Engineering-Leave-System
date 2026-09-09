@@ -6,7 +6,7 @@ import { th } from 'date-fns/locale';
 import { API, apiEndpoints } from '../../utils/api';
 import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUser, FaCheckCircle } from 'react-icons/fa';
 import { X, ChevronDown, AlertTriangle } from 'lucide-react';
-import Swal from 'sweetalert2';
+import Swal, { notifySuccess, notifyError } from '../../utils/alert';
 import { useNavigate } from 'react-router-dom';
 import PeoplePickerModal from '../../components/PeoplePickerModal';
 
@@ -200,7 +200,7 @@ const ProxyApprovalManagement = () => {
       }
     } catch (error) {
       console.error('Error loading proxy approvals:', error);
-      Swal.fire('ข้อผิดพลาด', 'โหลดข้อมูลไม่สำเร็จ', 'error');
+      notifyError('ข้อผิดพลาด', 'โหลดข้อมูลไม่สำเร็จ');
     } finally {
       setLoading(false);
     }
@@ -428,7 +428,7 @@ const ProxyApprovalManagement = () => {
 
         // ตรวจสอบว่า backend สำเร็จจริงหรือไม่
         if (response.status === 200 || response.status === 201) {
-          Swal.fire('สำเร็จ', 'ยกเลิกการมอบอำนาจสำเร็จ', 'success');
+          notifySuccess('สำเร็จ', 'ยกเลิกการมอบอำนาจสำเร็จ');
           loadProxyApprovals();
           // แจ้ง Sidebar ให้ดึงสิทธิ์ proxy ใหม่ทันที
           window.dispatchEvent(new Event("proxy-updated"));
@@ -458,7 +458,7 @@ const ProxyApprovalManagement = () => {
           errorMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ กรุณาตรวจสอบอินเทอร์เน็ต';
         }
 
-        Swal.fire('ข้อผิดพลาด', errorMessage, 'error');
+        notifyError('ข้อผิดพลาด', errorMessage);
       }
     }
   };
@@ -515,32 +515,23 @@ const ProxyApprovalManagement = () => {
     // ตรวจสอบว่าเลือก original approver และ proxy approver ครบถ้วนหรือไม่
     if (!selectedOriginalUser) {
       console.log('🔍 Debug - No selected original user');
-      Swal.fire({
-        icon: "error",
-        title: "ข้อมูลไม่ครบถ้วน",
-        text: "กรุณาเลือกผู้มอบอำนาจ (Original Approver)",
-      });
+      notifyError("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกผู้มอบอำนาจ (Original Approver)");
       return;
     }
 
     if (!selectedProxyUser) {
       console.log('🔍 Debug - No selected proxy user');
-      Swal.fire({
-        icon: "error",
-        title: "ข้อมูลไม่ครบถ้วน",
-        text: "กรุณาเลือกผู้อนุมัติแทน",
-      });
+      notifyError("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกผู้อนุมัติแทน");
       return;
     }
 
     // ตรวจสอบว่า original approver และ proxy approver เป็นคนเดียวกันหรือไม่
     if (selectedOriginalUser.id === selectedProxyUser.id) {
       console.log('🔍 Debug - Same user selected:', selectedOriginalUser.id, selectedProxyUser.id);
-      Swal.fire({
-        icon: "error",
-        title: "ข้อมูลไม่ถูกต้อง",
-        text: "ไม่สามารถมอบอำนาจให้ตนเองได้ กรุณาเลือกผู้อนุมัติแทนที่ต่างจากผู้มอบอำนาจ",
-      });
+      notifyError(
+        "ข้อมูลไม่ถูกต้อง",
+        "ไม่สามารถมอบอำนาจให้ตนเองได้ กรุณาเลือกผู้อนุมัติแทนที่ต่างจากผู้มอบอำนาจ"
+      );
       return;
     }
 
@@ -548,29 +539,17 @@ const ProxyApprovalManagement = () => {
     // ตรวจสอบวันที่
     if (formData.isDaily) {
       if (!formData.dailyDate) {
-        Swal.fire({
-          icon: "error",
-          title: "ข้อมูลไม่ครบถ้วน",
-          text: "กรุณาเลือกวันที่สำหรับการมอบอำนาจรายวัน",
-        });
+        notifyError("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกวันที่สำหรับการมอบอำนาจรายวัน");
         return;
       }
     } else {
       if (!formData.startDate || !formData.endDate) {
-        Swal.fire({
-          icon: "error",
-          title: "ข้อมูลไม่ครบถ้วน",
-          text: "กรุณาเลือกวันเริ่มต้นและวันสิ้นสุด",
-        });
+        notifyError("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกวันเริ่มต้นและวันสิ้นสุด");
         return;
       }
 
       if (new Date(formData.startDate) > new Date(formData.endDate)) {
-        Swal.fire({
-          icon: "error",
-          title: "ข้อมูลไม่ถูกต้อง",
-          text: "วันเริ่มต้นต้องไม่เกินวันสิ้นสุด",
-        });
+        notifyError("ข้อมูลไม่ถูกต้อง", "วันเริ่มต้นต้องไม่เกินวันสิ้นสุด");
         return;
       }
     }
@@ -654,11 +633,10 @@ const ProxyApprovalManagement = () => {
       );
 
       if (existingProxyCheck) {
-        Swal.fire({
-          icon: "error",
-          title: "ข้อมูลไม่ถูกต้อง",
-          text: "ผู้อนุมัติแทนนี้มีอำนาจในระดับที่กำหนดอยู่แล้ว ไม่สามารถมอบอำนาจซ้ำได้",
-        });
+        notifyError(
+          "ข้อมูลไม่ถูกต้อง",
+          "ผู้อนุมัติแทนนี้มีอำนาจในระดับที่กำหนดอยู่แล้ว ไม่สามารถมอบอำนาจซ้ำได้"
+        );
         return;
       }
 
@@ -694,11 +672,10 @@ const ProxyApprovalManagement = () => {
         response = await API.post(apiEndpoints.proxyApproval, payload);
       }
 
-      Swal.fire({
-        icon: "success",
-        title: "สำเร็จ",
-        text: editingProxy ? "แก้ไขการมอบอำนาจสำเร็จแล้ว" : "สร้างการมอบอำนาจสำเร็จแล้ว",
-      });
+      notifySuccess(
+        "สำเร็จ",
+        editingProxy ? "แก้ไขการมอบอำนาจสำเร็จแล้ว" : "สร้างการมอบอำนาจสำเร็จแล้ว"
+      );
 
       loadProxyApprovals();
       setShowModal(false);
@@ -711,11 +688,10 @@ const ProxyApprovalManagement = () => {
       console.error("Error status:", err.response?.status);
       console.error("Error data:", err.response?.data);
 
-      Swal.fire({
-        icon: "error",
-        title: "เกิดข้อผิดพลาด",
-        text: err.response?.data?.message || err.message || "บันทึกข้อมูลไม่สำเร็จ",
-      });
+      notifyError(
+        "เกิดข้อผิดพลาด",
+        err.response?.data?.message || err.message || "บันทึกข้อมูลไม่สำเร็จ"
+      );
     } finally {
       setIsSubmitting(false);
     }

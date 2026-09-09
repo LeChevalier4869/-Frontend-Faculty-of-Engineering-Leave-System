@@ -12,7 +12,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { th } from "date-fns/locale";
 import { apiEndpoints } from "../../utils/api";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import useAuth from "../../hooks/useAuth";
 import {
@@ -202,22 +202,16 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
         },
       });
 
-      Swal.fire({
-        icon: "success",
-        title: "บันทึกคำขอลาสำเร็จ",
-        confirmButtonColor: "#3b82f6",
-      });
+      notifySuccess("บันทึกคำขอลาสำเร็จ");
       // ไม่ reload หน้า — onSuccess ปิด modal และดึงรายการใหม่ให้แล้ว (ลื่นเหมือน modal อื่น)
       resetForm();
       onSuccess();
     } catch (err) {
       console.error("Submit Error:", err);
-      Swal.fire({
-        icon: "error",
-        title: "เกิดข้อผิดพลาด",
-        text: err.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้",
-        confirmButtonColor: "#ef4444",
-      });
+      notifyError(
+        "เกิดข้อผิดพลาด",
+        err.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้"
+      );
     } finally {
       setSubmitting(false);
     }

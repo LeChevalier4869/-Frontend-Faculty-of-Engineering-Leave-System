@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
@@ -145,7 +145,7 @@ function UserManage() {
         () => (window.location.href = "/login")
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("Error", err.response?.data?.message || err.message);
     }
   };
 
@@ -179,7 +179,7 @@ function UserManage() {
 
     try {
       await axios.delete(apiEndpoints.deleteUserByAdmin(id), authHeader());
-      Swal.fire("ลบสำเร็จ!", "ข้อมูลผู้ใช้งานถูกลบแล้ว", "success");
+      notifySuccess("ลบสำเร็จ!", "ข้อมูลผู้ใช้งานถูกลบแล้ว");
       loadUsers();
     } catch (err) {
       handleApiError(err);

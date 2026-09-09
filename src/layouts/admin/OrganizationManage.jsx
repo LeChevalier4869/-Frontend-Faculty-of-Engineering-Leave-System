@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { BASE_URL } from "../../utils/api";
 import { apiEndpoints } from "../../utils/api";
 
@@ -34,7 +34,7 @@ export default function OrganizationManage() {
         () => (window.location.href = "/login")
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("Error", err.response?.data?.message || err.message);
     }
   };
 
@@ -65,7 +65,7 @@ export default function OrganizationManage() {
 
   const handleAdd = async () => {
     if (!newName.trim()) {
-      return Swal.fire("Error", "ต้องระบุชื่อหน่วยงาน", "error");
+      return notifyError("Error", "ต้องระบุชื่อหน่วยงาน");
     }
     try {
       await axios.post(
@@ -73,7 +73,7 @@ export default function OrganizationManage() {
         { name: newName },
         authHeader()
       );
-      Swal.fire("บันทึกสำเร็จ!", "", "success");
+      notifySuccess("บันทึกสำเร็จ!");
       resetForm();
       loadData();
       setCurrentPage(1);
@@ -92,7 +92,7 @@ export default function OrganizationManage() {
 
   const handleUpdate = async () => {
     if (!newName.trim()) {
-      return Swal.fire("Error", "ต้องระบุชื่อหน่วยงาน", "error");
+      return notifyError("Error", "ต้องระบุชื่อหน่วยงาน");
     }
     try {
       await axios.put(
@@ -100,7 +100,7 @@ export default function OrganizationManage() {
         { name: newName },
         authHeader()
       );
-      Swal.fire("อัปเดตสำเร็จ!", "", "success");
+      notifySuccess("อัปเดตสำเร็จ!");
       resetForm();
       loadData();
     } catch (err) {
@@ -125,7 +125,7 @@ export default function OrganizationManage() {
         `${BASE_URL}/admin/organizations/${id}`,
         authHeader()
       );
-      Swal.fire("ลบสำเร็จ!", "ข้อมูลหน่วยงานถูกลบแล้ว", "success");
+      notifySuccess("ลบสำเร็จ!", "ข้อมูลหน่วยงานถูกลบแล้ว");
       const pageCount = Math.ceil(organizations.length / PAGE_SIZE);
       if (currentPage > pageCount) setCurrentPage(pageCount);
       loadData();

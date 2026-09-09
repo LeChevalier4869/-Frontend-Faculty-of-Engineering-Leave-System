@@ -6,12 +6,13 @@ import {
   Baby,
   Church,
   GraduationCap,
-  Home,
   Accessibility,
   Flag,
   TreePalm,
   Globe,
   HeartHandshake,
+  PenSquare,
+  ShieldCheck,
 } from "lucide-react";
 import axios from "axios";
 import Swal from "../../utils/alert";
@@ -20,6 +21,7 @@ import useAuth from "../../hooks/useAuth";
 import {
   filterLeaveBalancesBySex,
   filterLeaveBalancesLatestYear,
+  isSelfServiceLeaveType,
 } from "../../utils/leavePolicy";
 import {
   formatLeaveDaysByUnit,
@@ -36,9 +38,19 @@ export default function LeaveBalancePage() {
     const filtered = filterLeaveBalancesBySex(entitlements, user?.sex);
     // ดึงปีปัจจุบันจากข้อมูลที่กรองแล้ว
     const currentYear = filtered.length > 0 ? filtered[0]?.year : null;
-    console.log("Current year from data:", currentYear);
     return { data: filtered, year: currentYear };
   }, [entitlements, user?.sex]);
+
+  // แบ่งเป็น 2 กลุ่ม: ยื่นเองในระบบได้ (ลาป่วย/ลากิจ/ลาพักผ่อน) กับประเภทอื่นที่แอดมินต้องกรอกให้
+  const { selfServiceItems, otherItems } = useMemo(() => {
+    const selfService = [];
+    const others = [];
+    visibleEntitlements.data.forEach((item) => {
+      if (isSelfServiceLeaveType(item.leaveType?.name)) selfService.push(item);
+      else others.push(item);
+    });
+    return { selfServiceItems: selfService, otherItems: others };
+  }, [visibleEntitlements.data]);
 
   useEffect(() => {
     const fetchLeaveBalance = async () => {
@@ -62,7 +74,6 @@ export default function LeaveBalancePage() {
         if (Array.isArray(res.data.data)) {
           const latestYearOnly = filterLeaveBalancesLatestYear(res.data.data);
           setEntitlements(latestYearOnly);
-          console.log("latestYearOnly", latestYearOnly);
         } else {
           setEntitlements([]);
         }
@@ -137,8 +148,179 @@ export default function LeaveBalancePage() {
     "ลาติดตามคู่สมรส": "ring-rose-200 bg-rose-50",
   };
 
+  const renderCard = (item, index) => {
+    const type = item.leaveType?.name ?? "ไม่ระบุ";
+    const total = item.maxDays ?? 0;
+    const used = item.usedDays ?? 0;
+    const pending = item.pendingDays ?? 0;
+
+    // หน่วยแสดงผลของประเภทการลานี้: เกิน 1 ปี → "ปี", ไม่เกิน → "วัน" (ไม่มีเดือน)
+    const unit = leaveUnitForMaxDays(total);
+
+    // ตรวจสอบว่าเป็นประเภทการลาที่ไม่ต้องหักวันหรือไม่
+    // ตรวจสอบจากค่า 0 ในฐานข้อมูล (maxDays = 0, remainingDays = 0) หรือจาก leaveTypeId ที่กำหนด
+    const nonDeductibleLeaveTypes = [5, 6, 10, 11, 13]; // ลาอุปสมบท, ลาเข้ารับการตรวจเลือก, ลาไปถือศีล, ลาไปปฏิบัติงานในองค์การระหว่างประเทศ, ลาไปประกอบพิธีฮัจย์
+    const isNonDeductible =
+      (item.maxDays === 0 && item.remainingDays === 0) ||
+      nonDeductibleLeaveTypes.includes(item.leaveType?.id);
+
+    // คำนวณข้อมูลสำหรับการแสดงผล
+    const leaveInfo = {
+      total,
+      used,
+      pending,
+      remaining: item.remainingDays ?? total - used - pending,
+      isUnlimited: isNonDeductible,
+      hasOverused: false,
+      overusedDays: 0,
+    };
+
+    // สำหรับประเภทการลาที่ไม่ต้องหักวัน: ไม่ต้องตรวจสอบการลาเกิน แต่ยังแสดงวันที่ใช้จริง
+    if (!leaveInfo.isUnlimited && leaveInfo.remaining < 0) {
+      leaveInfo.hasOverused = true;
+      leaveInfo.overusedDays = Math.abs(leaveInfo.remaining);
+    }
+
+    const icon =
+      iconMap[type] || (
+        <User className="w-10 h-10 md:w-12 md:h-12 text-slate-500 drop-shadow-[0_0_10px_rgba(148,163,184,0.6)]" />
+      );
+    const ringBg = ringColorMap[type] || "ring-slate-200 bg-slate-50";
+
+    return (
+      <div
+        key={item.id ?? index}
+        className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md"
+      >
+        <div className="rounded-xl px-3 py-2 mb-3 border border-slate-100 bg-slate-50">
+          <h3
+            className={`font-semibold text-slate-900 ${
+              type.length > 35
+                ? "text-xs sm:text-sm md:text-base"
+                : type.length > 30
+                ? "text-sm sm:text-base md:text-lg"
+                : "text-base sm:text-lg md:text-xl"
+            }`}
+          >
+            {type}
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-4 md:gap-5">
+          <div
+            className={`${ringBg} p-3 sm:p-4 rounded-2xl flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 shrink-0 ring-1`}
+          >
+            {icon}
+          </div>
+
+          <div className="grid grid-cols-1 gap-1 text-xs sm:text-sm md:text-base text-slate-700 flex-1">
+            {leaveInfo.isUnlimited ? (
+              // แสดงสำหรับประเภทการลาที่ไม่ต้องหักวัน
+              <div className="space-y-1">
+                <p className="font-semibold text-emerald-600 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  ไม่จำกัดวันลา
+                </p>
+                <div className="flex justify-between items-center">
+                  <span>ใช้ไปแล้ว:</span>
+                  <span className="font-semibold text-slate-900">
+                    {formatLeaveDaysByUnit(leaveInfo.used, unit)}
+                  </span>
+                </div>
+                {leaveInfo.pending > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span>กำลังดำเนินการ:</span>
+                    <span className="font-semibold text-amber-600">
+                      {formatLeaveDaysByUnit(leaveInfo.pending, unit)}
+                    </span>
+                  </div>
+                )}
+                <p className="text-xs text-slate-500">ประเภทนี้ไม่ต้องหักวันลา</p>
+              </div>
+            ) : (
+              // แสดงปกติสำหรับประเภทการลาที่ต้องหักวัน
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <span>จำนวนวันทั้งหมด:</span>
+                  <span className="font-semibold text-slate-900">
+                    {formatLeaveDaysByUnit(leaveInfo.total, unit)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>ใช้ไปแล้ว:</span>
+                  <span className="font-semibold text-rose-600">
+                    {formatLeaveDaysByUnit(leaveInfo.used, unit)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>กำลังดำเนินการ:</span>
+                  <span className="font-semibold text-amber-600">
+                    {formatLeaveDaysByUnit(leaveInfo.pending, unit)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-t pt-1">
+                  <span className="font-medium">คงเหลือ:</span>
+                  <span
+                    className={`font-bold ${
+                      leaveInfo.hasOverused ? "text-rose-600" : "text-emerald-600"
+                    }`}
+                  >
+                    {leaveInfo.hasOverused
+                      ? `เกิน ${formatLeaveDaysByUnit(leaveInfo.overusedDays, unit)}`
+                      : formatLeaveDaysByUnit(leaveInfo.remaining, unit)}
+                  </span>
+                </div>
+                {leaveInfo.hasOverused && (
+                  <p className="text-xs text-rose-500 italic">
+                    ⚠️ ลาเกินวันที่ได้รับอนุญาต
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSection = ({ title, subtitle, badge, accent, items }) => {
+    if (!items.length) return null;
+    return (
+      <section className="mb-8 md:mb-10">
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span
+              className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent.iconBg} ${accent.iconText} ring-1 ${accent.ring}`}
+            >
+              {badge}
+            </span>
+            <div>
+              <h2 className="text-lg md:text-xl font-semibold text-slate-900">
+                {title}
+              </h2>
+              <p className="text-xs md:text-sm text-slate-500">{subtitle}</p>
+            </div>
+          </div>
+          <span
+            className={`self-start rounded-full px-3 py-1 text-xs font-medium ${accent.chipBg} ${accent.chipText}`}
+          >
+            {items.length} ประเภท
+          </span>
+        </div>
+        <div
+          className="grid gap-5 md:gap-6"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}
+        >
+          {items.map((item, index) => renderCard(item, index))}
+        </div>
+      </section>
+    );
+  };
+
   if (isLoading) {
-    return <LoadingSpinner message="กำลังโหลดข้อมูลสิทธิลาการลา..." fullScreen={false} />;
+    return (
+      <LoadingSpinner message="กำลังโหลดข้อมูลสิทธิลาการลา..." fullScreen={false} />
+    );
   }
 
   if (visibleEntitlements.data.length === 0) {
@@ -176,147 +358,33 @@ export default function LeaveBalancePage() {
           )}
         </div>
 
-        <div
-          className="grid gap-5 md:gap-6"
-          style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          }}
-        >
-          {visibleEntitlements.data.map((item, index) => {
-            const type = item.leaveType?.name ?? "ไม่ระบุ";
-            const total = item.maxDays ?? 0;
-            const used = item.usedDays ?? 0;
-            const pending = item.pendingDays ?? 0;
-            const remaining = item.remainingDays ?? total - used - pending;
+        {renderSection({
+          title: "ยื่นลาได้เองในระบบ",
+          subtitle: "ลาป่วย ลากิจส่วนตัว ลาพักผ่อน — ยื่นคำขอผ่านระบบได้ด้วยตนเอง",
+          badge: <PenSquare className="h-5 w-5" />,
+          accent: {
+            iconBg: "bg-brand-50",
+            iconText: "text-brand-600",
+            ring: "ring-brand-200",
+            chipBg: "bg-brand-50",
+            chipText: "text-brand-700",
+          },
+          items: selfServiceItems,
+        })}
 
-            // หน่วยแสดงผลของประเภทการลานี้: เกิน 1 ปี → "ปี", ไม่เกิน → "วัน" (ไม่มีเดือน)
-            const unit = leaveUnitForMaxDays(total);
-
-            // ตรวจสอบว่าเป็นประเภทการลาที่ไม่ต้องหักวันหรือไม่
-            // ตรวจสอบจากค่า 0 ในฐานข้อมูล (maxDays = 0, remainingDays = 0) หรือจาก leaveTypeId ที่กำหนด
-            const nonDeductibleLeaveTypes = [5, 6, 10, 11, 13]; // ลาอุปสมบท, ลาเข้ารับการตรวจเลือก, ลาไปถือศีล, ลาไปปฏิบัติงานในองค์การระหว่างประเทศ, ลาไปประกอบพิธีฮัจย์
-            const isNonDeductible = (item.maxDays === 0 && item.remainingDays === 0) ||
-                                   nonDeductibleLeaveTypes.includes(item.leaveType?.id);
-            
-            // คำนวณข้อมูลสำหรับการแสดงผล
-            const leaveInfo = {
-              total: item.maxDays ?? 0,
-              used: item.usedDays ?? 0,
-              pending: item.pendingDays ?? 0,
-              remaining: item.remainingDays ?? (item.maxDays ?? 0) - (item.usedDays ?? 0) - (item.pendingDays ?? 0),
-              isUnlimited: isNonDeductible,
-              hasOverused: false,
-              overusedDays: 0
-            };
-            
-            // สำหรับประเภทการลาที่ไม่ต้องหักวัน: ไม่ต้องตรวจสอบการลาเกิน
-            // แต่ยังคงแสดงจำนวนวันที่ใช้ไปจริง
-            if (!leaveInfo.isUnlimited && leaveInfo.remaining < 0) {
-              leaveInfo.hasOverused = true;
-              leaveInfo.overusedDays = Math.abs(leaveInfo.remaining);
-            }
-            
-            const icon =
-              iconMap[type] || (
-                <User className="w-10 h-10 md:w-12 md:h-12 text-slate-500 drop-shadow-[0_0_10px_rgba(148,163,184,0.6)]" />
-              );
-            const ringBg =
-              ringColorMap[type] || "ring-slate-200 bg-slate-50";
-
-            return (
-              <div
-                key={item.id ?? index}
-                className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-6 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <div className="rounded-xl px-3 py-2 mb-3 border border-slate-100 bg-slate-50">
-                  <h3
-                    className={`font-semibold text-slate-900 ${type.length > 35
-                      ? "text-xs sm:text-sm md:text-base"
-                      : type.length > 30
-                        ? "text-sm sm:text-base md:text-lg"
-                        : "text-base sm:text-lg md:text-xl"
-                      }`}
-                  >
-                    {type}
-                  </h3>
-                </div>
-
-                <div className="flex items-center gap-4 md:gap-5">
-                  <div
-                    className={`${ringBg} p-3 sm:p-4 rounded-2xl flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 shrink-0 ring-1`}
-                  >
-                    {icon}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-1 text-xs sm:text-sm md:text-base text-slate-700 flex-1">
-                    {leaveInfo.isUnlimited ? (
-                      // แสดงสำหรับประเภทการลาที่ไม่ต้องหักวัน
-                      <div className="space-y-1">
-                        <p className="font-semibold text-emerald-600 flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                          ไม่จำกัดวันลา
-                        </p>
-                        <div className="flex justify-between items-center">
-                          <span>ใช้ไปแล้ว:</span>
-                          <span className="font-semibold text-slate-900">
-                            {formatLeaveDaysByUnit(leaveInfo.used, unit)}
-                          </span>
-                        </div>
-                        {leaveInfo.pending > 0 && (
-                          <div className="flex justify-between items-center">
-                            <span>กำลังดำเนินการ:</span>
-                            <span className="font-semibold text-amber-600">
-                              {formatLeaveDaysByUnit(leaveInfo.pending, unit)}
-                            </span>
-                          </div>
-                        )}
-                        <p className="text-xs text-slate-500">
-                          ประเภทนี้ไม่ต้องหักวันลา
-                        </p>
-                      </div>
-                    ) : (
-                      // แสดงปกติสำหรับประเภทการลาที่ต้องหักวัน
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span>จำนวนวันทั้งหมด:</span>
-                          <span className="font-semibold text-slate-900">
-                            {formatLeaveDaysByUnit(leaveInfo.total, unit)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span>ใช้ไปแล้ว:</span>
-                          <span className="font-semibold text-rose-600">
-                            {formatLeaveDaysByUnit(leaveInfo.used, unit)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span>กำลังดำเนินการ:</span>
-                          <span className="font-semibold text-amber-600">
-                            {formatLeaveDaysByUnit(leaveInfo.pending, unit)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center border-t pt-1">
-                          <span className="font-medium">คงเหลือ:</span>
-                          <span className={`font-bold ${leaveInfo.hasOverused ? 'text-rose-600' : 'text-emerald-600'}`}>
-                            {leaveInfo.hasOverused
-                              ? `เกิน ${formatLeaveDaysByUnit(leaveInfo.overusedDays, unit)}`
-                              : formatLeaveDaysByUnit(leaveInfo.remaining, unit)
-                            }
-                          </span>
-                        </div>
-                        {leaveInfo.hasOverused && (
-                          <p className="text-xs text-rose-500 italic">
-                            ⚠️ ลาเกินวันที่ได้รับอนุญาต
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {renderSection({
+          title: "ประเภทลาอื่น ๆ",
+          subtitle: "ผู้ดูแล (แอดมิน) เป็นผู้บันทึกข้อมูลการลาให้ ไม่สามารถยื่นเองในระบบ",
+          badge: <ShieldCheck className="h-5 w-5" />,
+          accent: {
+            iconBg: "bg-slate-100",
+            iconText: "text-slate-600",
+            ring: "ring-slate-200",
+            chipBg: "bg-slate-100",
+            chipText: "text-slate-600",
+          },
+          items: otherItems,
+        })}
       </div>
     </div>
   );

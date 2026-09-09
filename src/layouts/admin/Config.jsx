@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { apiEndpoints } from "../../utils/api";
 import { FaCog, FaSync, FaCalendarAlt, FaExclamationTriangle, FaLock } from "react-icons/fa";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -63,6 +63,15 @@ export default function ConfigPage() {
   };
 
   const showAlert = (icon, title, text = "", timer = null) => {
+    // ป็อปอัพแจ้งผล: สำเร็จ = เด้งปิดเอง, ผิดพลาด = มีปุ่มปิด (ให้เหมือนกันทั้งระบบ)
+    if (icon === "success") {
+      notifySuccess(title, text);
+      return;
+    }
+    if (icon === "error") {
+      notifyError(title, text);
+      return;
+    }
     Swal.fire({
       icon,
       title,
@@ -347,13 +356,11 @@ export default function ConfigPage() {
       await fetchFiscalYear();
     } catch (err) {
       console.error(err);
-      Swal.fire({
-        title: "เกิดข้อผิดพลาด",
-        text:
-          err?.response?.data?.message ||
-          "ไม่สามารถรีเซ็ตยอดวันลาได้ กรุณาลองใหม่",
-        icon: "error"
-      });
+      notifyError(
+        "เกิดข้อผิดพลาด",
+        err?.response?.data?.message ||
+          "ไม่สามารถรีเซ็ตยอดวันลาได้ กรุณาลองใหม่"
+      );
     } finally {
       setResetLoading(false);
     }
@@ -478,11 +485,7 @@ export default function ConfigPage() {
     } catch (err) {
       console.error(err);
       const message = err.response?.data?.message || "ไม่สามารถลบข้อมูลได้";
-      Swal.fire({
-        title: "เกิดข้อผิดพลาด",
-        text: message,
-        icon: "error"
-      });
+      notifyError("เกิดข้อผิดพลาด", message);
     } finally {
       setDeleteLoading(false);
     }

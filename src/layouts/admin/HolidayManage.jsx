@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { BASE_URL } from "../../utils/api";
 
 const PAGE_SIZE = 10;
@@ -55,7 +55,7 @@ export default function HolidayManage() {
         () => (window.location.href = "/login")
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("Error", err.response?.data?.message || err.message);
     }
   };
 
@@ -86,7 +86,7 @@ export default function HolidayManage() {
 
   const handleAdd = async () => {
     if (!date || !description.trim()) {
-      return Swal.fire("Error", "กรุณาระบุข้อมูลให้ครบถ้วน", "error");
+      return notifyError("Error", "กรุณาระบุข้อมูลให้ครบถ้วน");
     }
     try {
       await axios.post(
@@ -94,7 +94,7 @@ export default function HolidayManage() {
         { date, description, isRecurring, holidayType },
         authHeader()
       );
-      Swal.fire("เพิ่มวันหยุดสำเร็จ", "", "success");
+      notifySuccess("เพิ่มวันหยุดสำเร็จ");
       resetForm();
       loadData();
       setCurrentPage(1);
@@ -116,7 +116,7 @@ export default function HolidayManage() {
 
   const handleUpdate = async () => {
     if (!date || !description.trim()) {
-      return Swal.fire("Error", "กรุณาระบุข้อมูลให้ครบถ้วน", "error");
+      return notifyError("Error", "กรุณาระบุข้อมูลให้ครบถ้วน");
     }
     try {
       await axios.put(
@@ -124,7 +124,7 @@ export default function HolidayManage() {
         { date, description, isRecurring, holidayType },
         authHeader()
       );
-      Swal.fire("อัปเดตสำเร็จ", "", "success");
+      notifySuccess("อัปเดตสำเร็จ");
       resetForm();
       loadData();
     } catch (err) {
@@ -146,7 +146,7 @@ export default function HolidayManage() {
 
     try {
       await axios.delete(`${BASE_URL}/admin/holiday/${id}`, authHeader());
-      Swal.fire("ลบสำเร็จ", "", "success");
+      notifySuccess("ลบสำเร็จ");
       const pageCount = Math.ceil(holidays.length / PAGE_SIZE);
       if (currentPage > pageCount) setCurrentPage(pageCount);
       loadData();

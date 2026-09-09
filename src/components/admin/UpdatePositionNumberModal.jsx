@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaSave, FaExclamationTriangle } from 'react-icons/fa';
-import Swal from 'sweetalert2';
+import Swal, { notifySuccess, notifyError } from '../../utils/alert';
 import PositionNumberService from '../../services/positionNumberService';
 import PositionNumberBadge from '../common/PositionNumberBadge';
 
@@ -31,12 +31,10 @@ const UpdatePositionNumberModal = ({ user, onClose, onSuccess }) => {
     e.preventDefault();
 
     if (!positionNumber.trim()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'กรุณาระบุเลขที่ตำแหน่ง',
-        text: 'เลขที่ตำแหน่งเป็นข้อมูลที่จำเป็นต้องระบุ',
-        confirmButtonColor: '#3B82F6'
-      });
+      notifyError(
+        'กรุณาระบุเลขที่ตำแหน่ง',
+        'เลขที่ตำแหน่งเป็นข้อมูลที่จำเป็นต้องระบุ'
+      );
       return;
     }
 
@@ -68,23 +66,16 @@ const UpdatePositionNumberModal = ({ user, onClose, onSuccess }) => {
     try {
       await PositionNumberService.updateUserPositionNumber(user.id, positionNumber.trim());
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'อัปเดตสำเร็จ!',
-        text: `เปลี่ยนเลขที่ตำแหน่งเป็น "${positionNumber.trim()}" เรียบร้อยแล้ว`,
-        confirmButtonColor: '#10B981'
-      });
+      await notifySuccess(
+        'อัปเดตสำเร็จ!',
+        `เปลี่ยนเลขที่ตำแหน่งเป็น "${positionNumber.trim()}" เรียบร้อยแล้ว`
+      );
 
       onSuccess();
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัปเดตเลขที่ตำแหน่ง';
 
-      await Swal.fire({
-        icon: 'error',
-        title: 'เกิดข้อผิดพลาด',
-        text: errorMessage,
-        confirmButtonColor: '#EF4444'
-      });
+      await notifyError('เกิดข้อผิดพลาด', errorMessage);
     } finally {
       setLoading(false);
     }

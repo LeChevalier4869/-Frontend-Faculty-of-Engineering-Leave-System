@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { apiEndpoints } from "../../utils/api";
 import useAuth from "../../hooks/useAuth";
@@ -87,21 +87,15 @@ function AddLeave2() {
         },
       });
 
-      Swal.fire({
-        icon: "success",
-        title: "บันทึกคำขอลาสำเร็จ",
-        text: "ระบบได้บันทึกข้อมูลของคุณแล้ว",
-        confirmButtonColor: "#3b82f6",
-        confirmButtonText: "ตกลง",
-      }).then(() => navigate("/leave"));
+      notifySuccess("บันทึกคำขอลาสำเร็จ", "ระบบได้บันทึกข้อมูลของคุณแล้ว").then(
+        () => navigate("/leave")
+      );
     } catch (err) {
       console.error("❌ Submit Error:", err.response || err.message || err);
-      Swal.fire({
-        icon: "error",
-        title: "เกิดข้อผิดพลาด",
-        text: err.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้",
-        confirmButtonColor: "#ef4444",
-      });
+      notifyError(
+        "เกิดข้อผิดพลาด",
+        err.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้"
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -37,16 +37,16 @@ export function formatLeaveDays(value) {
   return (negative ? "-" : "") + parts.join(" ");
 }
 
-// เลือกหน่วยแสดงผลตามสิทธิ์รวมของประเภทการลา
-// - สิทธิ์รวมเกิน 1 ปี (มากกว่า 365 วัน) → หน่วย "ปี"
-// - ไม่เกิน 1 ปี → หน่วย "วัน"  (ไม่ใช้หน่วย "เดือน")
+// เลือกหน่วยแสดงผลตามสิทธิ์รวมของประเภทการลา (มาตรฐาน 1 ปี = 365 วัน)
+// - สิทธิ์รวมตั้งแต่ 1 ปีขึ้นไป (>= 365 วัน) → หน่วย "ปี"
+// - ไม่ถึง 1 ปี → หน่วย "วัน"  (ไม่ใช้หน่วย "เดือน")
 export function leaveUnitForMaxDays(maxDays) {
-  return Number(maxDays) > 365 ? "year" : "day";
+  return Number(maxDays) >= 365 ? "year" : "day";
 }
 
-// แสดงจำนวนวันลาตามหน่วยที่กำหนด (ปี หรือ วัน) โดยไม่มีหน่วยเดือน
-// หน่วย "ปี" จะแตกเป็น "X ปี Y วัน" แบบนับปีจริง (leap-aware) — เต็มปีพอดีโชว์ "X ปี",
-// ถ้าไม่พอดีจะโชว์วันที่เหลือให้เห็น (เช่น 366→"1 ปี", พอหัก 1 วันเหลือ 365→"365 วัน")
+// แสดงจำนวนวันลาตามหน่วยที่กำหนด (ปี หรือ วัน) โดยไม่มีหน่วยเดือน — ยึด 1 ปี = 365 วัน
+// หน่วย "ปี" แตกเป็น "X ปี Y วัน" — เต็มปีพอดีโชว์ "X ปี", ไม่พอดีโชว์วันที่เหลือให้เห็น
+// (เช่น 365→"1 ปี", พอหัก 1 วันเหลือ 364→"364 วัน"; 1460→"4 ปี")
 export function formatLeaveDaysByUnit(value, unit = "day") {
   if (value === null || value === undefined || value === "") return "-";
   const n = Number(value);
@@ -56,13 +56,8 @@ export function formatLeaveDaysByUnit(value, unit = "day") {
   const abs = Math.abs(n);
 
   if (unit === "year") {
-    const whole = Math.floor(abs);
-    const frac = Math.round((abs - whole) * 10) / 10; // คงครึ่งวัน (0.5) ไว้
-
-    const start = dayjs(ANCHOR);
-    const end = start.add(whole, "day");
-    const years = end.diff(start, "year");
-    const days = end.diff(start.add(years, "year"), "day") + frac;
+    const years = Math.floor(abs / 365);
+    const days = Math.round((abs - years * 365) * 10) / 10; // คงครึ่งวัน (0.5) ไว้
 
     const parts = [];
     if (years) parts.push(`${years} ปี`);

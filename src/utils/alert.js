@@ -27,6 +27,16 @@ export const notifySuccess = (title, text = "") =>
     showConfirmButton: false,
   });
 
+// แสดง loading ระหว่างรอดำเนินการ (ปิดเองไม่ได้ — ให้ notifySuccess/notifyError มาแทนที่เมื่อเสร็จ)
+export const notifyLoading = (title = "กำลังดำเนินการ...") =>
+  AppSwal.fire({
+    title,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    didOpen: () => AppSwal.showLoading(),
+  });
+
 // แจ้งข้อผิดพลาด — มีปุ่มปิด
 export const notifyError = (title, text = "") =>
   AppSwal.fire({ icon: "error", title, text, confirmButtonColor: "#ef4444" });

@@ -3,7 +3,7 @@ import axios from "axios";
 import getApiUrl from "../../utils/apiUtils";
 import { useNavigate } from "react-router-dom";
 import { apiEndpoints } from "../../utils/api";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { Clock } from "lucide-react";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
@@ -77,10 +77,10 @@ function LeaveAdmin() {
     if (value) {
       try {
         await axios.post(apiEndpoints.ApproveleaveRequests(id), value);
-        Swal.fire("สำเร็จ", "อนุมัติคำขอเรียบร้อยแล้ว", "success");
+        notifySuccess("สำเร็จ", "อนุมัติคำขอเรียบร้อยแล้ว");
         fetchLeaveRequests();
       } catch (error) {
-        Swal.fire("ผิดพลาด", error.response?.data?.message || "เกิดข้อผิดพลาด", "error");
+        notifyError("ผิดพลาด", error.response?.data?.message || "เกิดข้อผิดพลาด");
       }
     }
   };
@@ -105,10 +105,10 @@ function LeaveAdmin() {
     if (value) {
       try {
         await axios.post(apiEndpoints.RejectleaveRequests(id), value);
-        Swal.fire("สำเร็จ", "ปฏิเสธคำขอเรียบร้อยแล้ว", "success");
+        notifySuccess("สำเร็จ", "ปฏิเสธคำขอเรียบร้อยแล้ว");
         fetchLeaveRequests();
       } catch (error) {
-        Swal.fire("ผิดพลาด", error.response?.data?.message || "เกิดข้อผิดพลาด", "error");
+        notifyError("ผิดพลาด", error.response?.data?.message || "เกิดข้อผิดพลาด");
       }
     }
   };

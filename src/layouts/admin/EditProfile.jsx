@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import useAuth from "../../hooks/useAuth";
-import Swal from "../../utils/alert";
+import { notifySuccess, notifyError } from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 
@@ -139,11 +139,11 @@ export default function EditProfile() {
       /* --- อัปเดต context --- */
       setUser(prev => ({ ...prev, ...data.user }));
 
-      await Swal.fire("อัปเดตสำเร็จ", "โปรไฟล์ถูกอัปเดตแล้ว", "success");
+      await notifySuccess("อัปเดตสำเร็จ", "โปรไฟล์ถูกอัปเดตแล้ว");
       navigate("/profile");
     } catch (err) {
       console.error("Update error:", err);
-      Swal.fire("อัปเดตล้มเหลว", err.response?.data?.message || err.message, "error");
+      notifyError("อัปเดตล้มเหลว", err.response?.data?.message || err.message);
     } finally {
       setIsSubmitting(false);
     }

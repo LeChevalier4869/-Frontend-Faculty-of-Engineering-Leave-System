@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Swal from "../../../utils/alert";
+import Swal, { notifySuccess, notifyLoading } from "../../../utils/alert";
 import {
   FaUserShield,
   FaSearch,
@@ -127,6 +127,7 @@ export default function ApproverManageContent() {
     if (!confirm.isConfirmed) return;
 
     setSaving(true);
+    notifyLoading("กำลังแต่งตั้ง...");
     try {
       await API.post(apiEndpoints.approverPositions, {
         level: level.level,
@@ -134,7 +135,7 @@ export default function ApproverManageContent() {
       });
       await loadAll();
       setPicker(null);
-      Swal.fire("สำเร็จ", `แต่งตั้ง${level.label}เรียบร้อยแล้ว`, "success");
+      notifySuccess("สำเร็จ", `แต่งตั้ง${level.label}เรียบร้อยแล้ว`);
     } catch (err) {
       Swal.fire(
         "ไม่สำเร็จ",
@@ -159,10 +160,11 @@ export default function ApproverManageContent() {
     if (!confirm.isConfirmed) return;
 
     setSaving(true);
+    notifyLoading("กำลังปลด...");
     try {
       await API.delete(apiEndpoints.approverPositionByLevel(level.level));
       await loadAll();
-      Swal.fire("สำเร็จ", "ปลดผู้ดำรงตำแหน่งเรียบร้อยแล้ว", "success");
+      notifySuccess("สำเร็จ", "ปลดผู้ดำรงตำแหน่งเรียบร้อยแล้ว");
     } catch (err) {
       Swal.fire(
         "ไม่สำเร็จ",
@@ -191,6 +193,7 @@ export default function ApproverManageContent() {
     if (!confirm.isConfirmed) return;
 
     setSaving(true);
+    notifyLoading("กำลังแต่งตั้ง...");
     try {
       await API.post(apiEndpoints.assignDepartmentHead, {
         departmentId: department.id,
@@ -198,11 +201,47 @@ export default function ApproverManageContent() {
       });
       await loadAll();
       setPicker(null);
-      Swal.fire("สำเร็จ", "แต่งตั้งหัวหน้าสาขาเรียบร้อยแล้ว", "success");
+      notifySuccess("สำเร็จ", "แต่งตั้งหัวหน้าสาขาเรียบร้อยแล้ว");
     } catch (err) {
       Swal.fire(
         "ไม่สำเร็จ",
         err.response?.data?.message || "ไม่สามารถแต่งตั้งได้",
+        "error"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const vacateHead = async (department) => {
+    const staff = staffCount.get(department.id) || 0;
+    const confirm = await Swal.fire({
+      title: `ปลดหัวหน้าสาขา${department.name}?`,
+      html: `<b>${fullName(department.head)}</b> จะถูกปลดจากหัวหน้าสาขานี้ และถอนสิทธิ์อนุมัติขั้นที่ 1${
+        staff > 0
+          ? `<br/><span style="font-size:13px;color:#b91c1c">ระหว่างที่ยังไม่มีหัวหน้าใหม่ คำขอลาของสาขานี้จะติดค้างที่ขั้นหัวหน้าสาขา</span>`
+          : ""
+      }`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "ปลดออก",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#dc2626",
+    });
+    if (!confirm.isConfirmed) return;
+
+    setSaving(true);
+    notifyLoading("กำลังปลด...");
+    try {
+      await API.post(apiEndpoints.vacateDepartmentHead, {
+        departmentId: department.id,
+      });
+      await loadAll();
+      notifySuccess("สำเร็จ", "ปลดหัวหน้าสาขาเรียบร้อยแล้ว");
+    } catch (err) {
+      Swal.fire(
+        "ไม่สำเร็จ",
+        err.response?.data?.message || "ไม่สามารถปลดได้",
         "error"
       );
     } finally {
@@ -371,19 +410,19 @@ export default function ApproverManageContent() {
               <table className="w-full table-fixed border-collapse bg-white text-sm">
                 <thead className="bg-slate-50 text-slate-700">
                   <tr>
-                    <th className="w-[30%] px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em]">
+                    <th className="w-[28%] px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em]">
                       สาขา
                     </th>
-                    <th className="w-[12%] px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em]">
+                    <th className="w-[10%] px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em]">
                       พนักงาน
                     </th>
                     <th className="w-[28%] px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em]">
                       หัวหน้าสาขา
                     </th>
-                    <th className="w-[18%] px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em]">
+                    <th className="w-[16%] px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em]">
                       สถานะ
                     </th>
-                    <th className="w-[12%] px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em]">
+                    <th className="w-[18%] px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em]">
                       จัดการ
                     </th>
                   </tr>
@@ -429,21 +468,34 @@ export default function ApproverManageContent() {
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={() =>
-                              setPicker({
-                                mode: "department",
-                                department: d,
-                                current: d.head,
-                              })
-                            }
-                            disabled={saving}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-600 disabled:opacity-60"
-                          >
-                            <FaExchangeAlt className="h-3 w-3" />
-                            {d.head ? "เปลี่ยน" : "กำหนด"}
-                          </button>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-start gap-1.5">
+                            <button
+                              onClick={() =>
+                                setPicker({
+                                  mode: "department",
+                                  department: d,
+                                  current: d.head,
+                                })
+                              }
+                              disabled={saving}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-slate-600 disabled:opacity-60"
+                            >
+                              <FaExchangeAlt className="h-3 w-3" />
+                              {d.head ? "เปลี่ยน" : "กำหนด"}
+                            </button>
+                            {d.head && (
+                              <button
+                                onClick={() => vacateHead(d)}
+                                disabled={saving}
+                                title="ปลดหัวหน้าสาขา"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:opacity-60"
+                              >
+                                <FaUserSlash className="h-3 w-3" />
+                                ปลด
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -505,20 +557,32 @@ export default function ApproverManageContent() {
                     </div>
                   </dl>
 
-                  <button
-                    onClick={() =>
-                      setPicker({
-                        mode: "department",
-                        department: d,
-                        current: d.head,
-                      })
-                    }
-                    disabled={saving}
-                    className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-white transition hover:bg-slate-600 disabled:opacity-60"
-                  >
-                    <FaExchangeAlt className="h-3 w-3" />
-                    {d.head ? "เปลี่ยนหัวหน้าสาขา" : "กำหนดหัวหน้าสาขา"}
-                  </button>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() =>
+                        setPicker({
+                          mode: "department",
+                          department: d,
+                          current: d.head,
+                        })
+                      }
+                      disabled={saving}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-white transition hover:bg-slate-600 disabled:opacity-60"
+                    >
+                      <FaExchangeAlt className="h-3 w-3" />
+                      {d.head ? "เปลี่ยนหัวหน้า" : "กำหนดหัวหน้า"}
+                    </button>
+                    {d.head && (
+                      <button
+                        onClick={() => vacateHead(d)}
+                        disabled={saving}
+                        className="flex items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:opacity-60"
+                      >
+                        <FaUserSlash className="h-3 w-3" />
+                        ปลด
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}

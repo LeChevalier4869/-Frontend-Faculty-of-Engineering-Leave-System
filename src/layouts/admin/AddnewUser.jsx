@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import { HiOutlineChevronDown } from "react-icons/hi";
-import Swal from "../../utils/alert";
+import { notifySuccess, notifyError } from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import ExcelUploadPanel from "../../components/ExcelUploadPanel";
@@ -70,7 +70,7 @@ export default function AddUser() {
         const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
         setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
       } catch (err) {
-        Swal.fire("Error", "โหลดข้อมูล lookup ล้มเหลว", "error");
+        notifyError("Error", "โหลดข้อมูล lookup ล้มเหลว");
       }
     };
     fetchLookup();
@@ -131,14 +131,13 @@ export default function AddUser() {
         },
       });
 
-      Swal.fire("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว", "success").then(
+      notifySuccess("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว").then(
         () => navigate("/admin/manage-user")
       );
     } catch (err) {
-      Swal.fire(
+      notifyError(
         "ผิดพลาด",
-        err.response?.data?.message || "ไม่สามารถเพิ่มผู้ใช้งานได้",
-        "error"
+        err.response?.data?.message || "ไม่สามารถเพิ่มผู้ใช้งานได้"
       );
     } finally {
       setLoading(false);

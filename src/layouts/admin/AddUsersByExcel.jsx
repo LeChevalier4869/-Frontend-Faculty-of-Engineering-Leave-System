@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useGoBack } from "../../utils/useGoBack";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";
@@ -60,13 +60,12 @@ export default function AddUsersByExcel() {
       });
 
       setResult(res.data);
-      Swal.fire("สำเร็จ", "อัปโหลดข้อมูลผู้ใช้เรียบร้อยแล้ว", "success");
+      notifySuccess("สำเร็จ", "อัปโหลดข้อมูลผู้ใช้เรียบร้อยแล้ว");
     } catch (err) {
       console.error(err);
-      Swal.fire(
+      notifyError(
         "เกิดข้อผิดพลาด",
-        err.response?.data?.message || "ไม่สามารถอัปโหลดได้",
-        "error"
+        err.response?.data?.message || "ไม่สามารถอัปโหลดได้"
       );
     } finally {
       setUploading(false);

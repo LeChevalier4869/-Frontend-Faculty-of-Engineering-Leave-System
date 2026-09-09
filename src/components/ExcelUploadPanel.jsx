@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
-import Swal from "../utils/alert";
+import Swal, { notifyError } from "../utils/alert";
 import axios from "axios";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { saveAs } from "file-saver";
@@ -65,10 +65,9 @@ export default function ExcelUploadPanel({
         });
       }
     } catch (err) {
-      Swal.fire(
+      notifyError(
         "ผิดพลาด",
-        err.response?.data?.message || "ไม่สามารถอัปโหลดได้",
-        "error"
+        err.response?.data?.message || "ไม่สามารถอัปโหลดได้"
       );
     } finally {
       setUploading(false);
