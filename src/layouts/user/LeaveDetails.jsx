@@ -186,6 +186,11 @@ export default function LeaveDetail() {
   const lastTotal = lastLeave?.totalDays ?? null;
 
   const leaveData = useMemo(() => {
+    // ค้นด้วย stepOrder ตรงๆ (ทนต่อ step หาย/สลับ/รายการ cancel) แทนการอิง index ของ array
+    // stepOrder: 1=APPROVER_1(หัวหน้าสาขา), 2=APPROVER_2(สารบรรณคณะ/ช่อง verifier),
+    //            4=APPROVER_3(หัวหน้าสำนักงานคณบดี), 5=APPROVER_4(รองคณบดีฝ่ายบริหาร), 6=APPROVER_5(คณบดี)
+    const details = leave?.leaveRequestDetails || [];
+    const step = (n) => details.find((d) => d.stepOrder === n) || null;
     return {
       userId: leave?.userId ?? null,
       documentNumber: documentNumber || "-", //
@@ -217,29 +222,32 @@ export default function LeaveDetail() {
       contact: contact || "-", //
       phone: user?.phone || "-", //
       signature: `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim(),
-      commentApprover1: leave?.leaveRequestDetails?.[0]?.comment || "โปรดพิจารณา",
+      // ขั้นที่ 1: หัวหน้าสาขา (APPROVER_1)
+      commentApprover1: step(1)?.comment || "โปรดพิจารณา",
       signatureApprover1: " ",
-      positionApprover1: "หัวหน้าสาขา",
-      DateApprover1:
-        leave?.leaveRequestDetails?.[0]?.reviewedAt || new Date().toISOString(), // ดึงจากวันที่อนุมัติ
-      commentApprover2: leave?.leaveRequestDetails?.[2]?.comment || "โปรดพิจารณา",
+      // ตำแหน่งหัวหน้าสาขา + ชื่อแผนกของผู้ยื่น เช่น "หัวหน้าสาขาวิศวกรรมคอมพิวเตอร์"
+      positionApprover1: `หัวหน้าสาขา${user?.department?.name || ""}`,
+      DateApprover1: step(1)?.reviewedAt || new Date().toISOString(), // ดึงจากวันที่อนุมัติ
+      // ขั้นที่ 4 (stepOrder 4): หัวหน้าสำนักงานคณบดี (APPROVER_3)
+      commentApprover2: step(4)?.comment || "โปรดพิจารณา",
       signatureApprover2: " ",
-      positionApprover2: "สารบรรณคณะวิศวกรรมศาสตร์",
-      DateApprover2:
-        leave?.leaveRequestDetails?.[2]?.reviewedAt || new Date().toISOString(),
-      commentApprover3: leave?.leaveRequestDetails?.[3]?.comment || "โปรดพิจารณา",
+      positionApprover2: "หัวหน้าสำนักงานคณบดี",
+      DateApprover2: step(4)?.reviewedAt || new Date().toISOString(),
+      // ขั้นที่ 5 (stepOrder 5): รองคณบดีฝ่ายบริหาร (APPROVER_4)
+      commentApprover3: step(5)?.comment || "โปรดพิจารณา",
       signatureApprover3: " ",
-      positionApprover3: "รองคณบดี",
-      DateApprover3:
-        leave?.leaveRequestDetails?.[3]?.reviewedAt || new Date().toISOString(),
+      positionApprover3: "รองคณบดีฝ่ายบริหาร",
+      DateApprover3: step(5)?.reviewedAt || new Date().toISOString(),
+      // ช่องผู้ตรวจสอบ = ขั้นที่ 2 (stepOrder 2): สารบรรณคณะ (APPROVER_2) — ออกเลขที่ใบลา
       signatureVerifier: " ",
       DateVerifier: leave?.documentIssuedDate,
-      isApprove: (leave?.leaveRequestDetails?.[1]?.status ?? null) === "APPROVED" || 
-        leave?.leaveRequestDetails?.[0]?.remarks === "บันทึกโดยผู้ดูแลระบบ", 
-      commentApprover4: leave?.leaveRequestDetails?.[4]?.comment || "โปรดพิจารณา",
+      isApprove:
+        (step(2)?.status ?? null) === "APPROVED" ||
+        step(1)?.remarks === "บันทึกโดยผู้ดูแลระบบ",
+      // ขั้นที่ 6 (stepOrder 6): คณบดี (APPROVER_5)
+      commentApprover4: step(6)?.comment || "โปรดพิจารณา",
       signatureApprover4: " ",
-      DateApprover4:
-        leave?.leaveRequestDetails?.[4]?.reviewedAt || new Date().toISOString(),
+      DateApprover4: step(6)?.reviewedAt || new Date().toISOString(),
       // leaveDetails: leave?.leaveRequestDetails,   --> แค่ log เพื่อดูผล
     };
   }, [
@@ -262,6 +270,7 @@ export default function LeaveDetail() {
     thisTimeDays,
     totalDays,
     user?.department?.organization?.id,
+    user?.department?.name,
     user?.firstName,
     user?.lastName,
     user?.personnelType?.name,
@@ -351,18 +360,18 @@ export default function LeaveDetail() {
   // จึงหยิบมาผิดขั้น แล้วโชว์ตำแหน่งไม่ตรงกับหน้าที่ในขั้นนั้น
   const POSITION_BY_STEP = {
     1: "หัวหน้าสาขา", // APPROVER_1
-    2: "ผู้ตรวจสอบ", // VERIFIER
-    4: "สารบรรณคณะ", // APPROVER_2
-    5: "รองคณบดี", // APPROVER_3
-    6: "คณบดี", // APPROVER_4
+    2: "สารบรรณคณะ", // APPROVER_2 (ตรวจสอบ/ออกเลขที่ใบลา)
+    4: "หัวหน้าสำนักงานคณบดี", // APPROVER_3
+    5: "รองคณบดีฝ่ายบริหาร", // APPROVER_4
+    6: "คณบดี", // APPROVER_5
   };
 
   const POSITION_BY_ROLE = {
     APPROVER_1: "หัวหน้าสาขา",
-    VERIFIER: "ผู้ตรวจสอบ",
     APPROVER_2: "สารบรรณคณะ",
-    APPROVER_3: "รองคณบดี",
-    APPROVER_4: "คณบดี",
+    APPROVER_3: "หัวหน้าสำนักงานคณบดี",
+    APPROVER_4: "รองคณบดีฝ่ายบริหาร",
+    APPROVER_5: "คณบดี",
   };
 
   const getApproverPositionName = (step) => {
@@ -370,13 +379,11 @@ export default function LeaveDetail() {
     const byStep = POSITION_BY_STEP[Number(step?.stepOrder)];
     if (byStep) return byStep;
 
-    // 2) เผื่อ stepOrder ไม่มา ค่อย fallback ไปดู role ของผู้อนุมัติ
+    // 2) เผื่อ stepOrder ไม่มา ค่อย fallback ไปดู role ของผู้อนุมัติ (อิงชื่อ role ไม่ใช่ id)
     const roleName = Array.isArray(step?.approver?.userRoles)
       ? step.approver.userRoles
-          .map((ur) => ur?.role)
-          .filter((r) => r?.id != null && r.id >= 3 && r.id <= 7)
-          .map((r) => r?.name)
-          .filter(Boolean)[0]
+          .map((ur) => ur?.role?.name)
+          .filter((name) => name && POSITION_BY_ROLE[name])[0]
       : null;
 
     return POSITION_BY_ROLE[roleName] || "-";
@@ -440,6 +447,7 @@ export default function LeaveDetail() {
           <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
             <Field label="ชื่อ-นามสกุล" value={`${user?.prefixName || ""}${user?.firstName || ""} ${user?.lastName || ""}`.trim()} />
             <Field label="ตำแหน่ง" value={user?.position} />
+            <Field label="แผนก/สาขา" value={user?.department?.name} />
             <Field label="สังกัด" value={user?.department?.organization?.name} />
             <Field label="ประเภทบุคลากร" value={user?.personnelType?.name} />
             <Field label="เบอร์โทรศัพท์" value={user?.phone} />

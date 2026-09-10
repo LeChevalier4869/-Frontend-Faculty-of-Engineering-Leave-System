@@ -17,11 +17,11 @@ const ROLE_LABEL_TH = {
   USER: "ผู้ใช้งานทั่วไป",
   ADMIN: "ผู้ดูแลระบบ",
   SUPER_ADMIN: "ผู้ดูแลระบบสูงสุด",
-  VERIFIER: "ผู้ตรวจสอบ",
   APPROVER_1: "หัวหน้าสาขา",
-  APPROVER_2: "สรรบรรณคณะ",
-  APPROVER_3: "รองคณบดี",
-  APPROVER_4: "คณบดี",
+  APPROVER_2: "สารบรรณคณะ",
+  APPROVER_3: "หัวหน้าสำนักงานคณบดี",
+  APPROVER_4: "รองคณบดีฝ่ายบริหาร",
+  APPROVER_5: "คณบดี",
 };
 
 export default function UserEdit() {

@@ -170,10 +170,10 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
 
   const STEP_LABELS = {
     1: "หัวหน้าสาขา (Approver 1)",
-    2: "ผู้ตรวจสอบ (Verifier)",
-    4: "สรรบรรณคณะ (Approver 2)",
-    5: "รองคณบดี (Approver 3)",
-    6: "คณบดี (Approver 4)",
+    2: "สารบรรณคณะ (Approver 2)",
+    4: "หัวหน้าสำนักงานคณบดี (Approver 3)",
+    5: "รองคณบดีฝ่ายบริหาร (Approver 4)",
+    6: "คณบดี (Approver 5)",
   };
 
   const formatUserName = (u) => {

@@ -63,10 +63,10 @@ const Feature = ({ icon, title, children }) => (
 /* ---------- แผนภาพสายอนุมัติ (ไล่ซ้าย→ขวาบนจอใหญ่, บน→ล่างบนมือถือ) ---------- */
 const APPROVAL_FLOW = [
   { n: 1, role: "หัวหน้าสาขา", sub: "APPROVER_1", note: "อนุมัติขั้นแรก (เฉพาะสาขา)" },
-  { n: 2, role: "ผู้ตรวจสอบ", sub: "VERIFIER", note: "ออกเลขที่ใบลา" },
-  { n: 3, role: "สารบรรณคณะ", sub: "APPROVER_2", note: null },
-  { n: 4, role: "รองคณบดี", sub: "APPROVER_3", note: null },
-  { n: 5, role: "คณบดี", sub: "APPROVER_4", note: "อนุมัติขั้นสุดท้าย" },
+  { n: 2, role: "สารบรรณคณะ", sub: "APPROVER_2", note: "ตรวจสอบ/ออกเลขที่ใบลา" },
+  { n: 3, role: "หัวหน้าสำนักงานคณบดี", sub: "APPROVER_3", note: null },
+  { n: 4, role: "รองคณบดีฝ่ายบริหาร", sub: "APPROVER_4", note: null },
+  { n: 5, role: "คณบดี", sub: "APPROVER_5", note: "อนุมัติขั้นสุดท้าย" },
 ];
 const ApprovalFlow = () => (
   <div className="my-4 flex flex-col items-stretch gap-1 sm:flex-row sm:items-center sm:gap-0 sm:overflow-x-auto sm:pb-1">
@@ -105,8 +105,8 @@ function Overview() {
       <Ul>
         <li><Code>USER</Code> — ผู้ใช้ทั่วไป ยื่นลาและดูยอดวันลา/ประวัติของตนเอง</li>
         <li><Code>APPROVER_1</Code> — หัวหน้าสาขา อนุมัติขั้นแรก (เฉพาะคนในสาขาตนเอง)</li>
-        <li><Code>VERIFIER</Code> — ผู้ตรวจสอบระดับคณะ ให้ผ่าน/ไม่ผ่าน และออกเลขที่ใบลา</li>
-        <li><Code>APPROVER_2/3/4</Code> — สารบรรณคณะ / รองคณบดี / คณบดี (ระดับคณะ)</li>
+        <li><Code>APPROVER_2</Code> — สารบรรณคณะ: ตรวจสอบและออกเลขที่ใบลา</li>
+        <li><Code>APPROVER_3/4/5</Code> — หัวหน้าสำนักงานคณบดี / รองคณบดีฝ่ายบริหาร / คณบดี (ระดับคณะ)</li>
         <li><Code>ADMIN</Code> — ผู้ดูแล จัดการข้อมูลหลักและผู้ใช้</li>
         <li><Code>SUPER_ADMIN</Code> — ผู้ดูแลขั้นสูง (มีสิทธิ์ ADMIN ทั้งหมด + ข้อมูลที่อ่อนไหว)</li>
       </Ul>
@@ -162,8 +162,8 @@ function FirstUse() {
       </Step>
       <Step n={3} title="มอบบทบาทผู้อนุมัติ">
         <P>
-          ที่แท็บ <strong>จัดการผู้อนุมัติ</strong> กำหนด <Code>VERIFIER</Code>,{" "}
-          <Code>APPROVER_1</Code> (หัวหน้าสาขาของแต่ละแผนก) และ <Code>APPROVER_2/3/4</Code>
+          ที่แท็บ <strong>จัดการผู้อนุมัติ</strong> กำหนด{" "}
+          <Code>APPROVER_1</Code> (หัวหน้าสาขาของแต่ละแผนก) และ <Code>APPROVER_2/3/4/5</Code>
           ให้ผู้ใช้ที่เกี่ยวข้อง
         </P>
       </Step>
@@ -175,8 +175,8 @@ function FirstUse() {
       </Step>
 
       <Callout tone="warn">
-        <strong>จำเป็นเสมอ:</strong> ต้องมีผู้ตรวจสอบ (<Code>VERIFIER</Code>) อย่างน้อย 1 คน
-        ไม่งั้น<strong>การยื่นลาจะล้มเหลว</strong> (ระบบต้องมีผู้ตรวจสอบเพื่อออกเลขที่ใบลา)
+        <strong>จำเป็นเสมอ:</strong> ต้องมีสารบรรณคณะ (<Code>APPROVER_2</Code>) อย่างน้อย 1 คน
+        ไม่งั้น<strong>การยื่นลาจะล้มเหลว</strong> (ระบบต้องมีผู้ออกเลขที่ใบลา)
         และต้องมีผู้อนุมัติครบสายเพื่อให้คำขอเดินจนจบ
       </Callout>
     </div>
@@ -233,7 +233,7 @@ function UserGuide() {
       </Step>
 
       <Callout tone="info">
-        คำขอจะไหลตามสายอนุมัติ: <strong>หัวหน้าสาขา → ผู้ตรวจสอบ (ออกเลขที่ใบลา) → สารบรรณคณะ → รองคณบดี → คณบดี</strong>
+        คำขอจะไหลตามสายอนุมัติ: <strong>หัวหน้าสาขา → สารบรรณคณะ (ออกเลขที่ใบลา) → หัวหน้าสำนักงานคณบดี → รองคณบดีฝ่ายบริหาร → คณบดี</strong>
         แต่ละขั้นอาจอนุมัติหรือปฏิเสธ หากถูกปฏิเสธคำขอจะหยุดและแจ้งเหตุผลกลับมา
       </Callout>
     </div>
@@ -252,10 +252,10 @@ function ApproverGuide() {
       <H3>สายอนุมัติและบทบาท</H3>
       <Ul>
         <li><Code>APPROVER_1</Code> — หัวหน้าสาขา: พิจารณาขั้นแรก เห็นเฉพาะคำขอของคนใน<strong>สาขาตนเอง</strong></li>
-        <li><Code>VERIFIER</Code> — ผู้ตรวจสอบ: ตรวจความถูกต้องและ<strong>ออกเลขที่ใบลา</strong></li>
-        <li><Code>APPROVER_2</Code> — สารบรรณคณะ</li>
-        <li><Code>APPROVER_3</Code> — รองคณบดี</li>
-        <li><Code>APPROVER_4</Code> — คณบดี (ขั้นสุดท้าย)</li>
+        <li><Code>APPROVER_2</Code> — สารบรรณคณะ: ตรวจความถูกต้องและ<strong>ออกเลขที่ใบลา</strong></li>
+        <li><Code>APPROVER_3</Code> — หัวหน้าสำนักงานคณบดี</li>
+        <li><Code>APPROVER_4</Code> — รองคณบดีฝ่ายบริหาร</li>
+        <li><Code>APPROVER_5</Code> — คณบดี (ขั้นสุดท้าย)</li>
       </Ul>
       <ApprovalFlow />
 
@@ -270,9 +270,9 @@ function ApproverGuide() {
         เปิดคำขอที่รอคิว ตรวจรายละเอียด แล้วกด <strong>อนุมัติ</strong> หรือ <strong>ปฏิเสธ</strong>
         (ระบุเหตุผลได้) เมื่ออนุมัติ คำขอจะส่งต่อขั้นถัดไปอัตโนมัติ
       </Feature>
-      <Feature icon="🔖" title="ผู้ตรวจสอบ (ผ่าน / ไม่ผ่าน)">
-        ผู้ตรวจสอบใช้ปุ่ม <strong>ผ่าน / ไม่ผ่าน</strong> แทนอนุมัติ/ปฏิเสธ โดยปกติจะ &ldquo;ผ่าน&rdquo; เว้นแต่พบสิ่งผิดปกติ
-        เมื่อผ่านระบบจะ<strong>ออกเลขที่ใบลา</strong>ให้ ผู้ตรวจสอบทำหน้าที่ลงนามตรวจ ไม่ต้องแสดงความคิดเห็น
+      <Feature icon="🔖" title="สารบรรณคณะ (ผ่าน / ไม่ผ่าน)">
+        สารบรรณคณะใช้ปุ่ม <strong>ผ่าน / ไม่ผ่าน</strong> แทนอนุมัติ/ปฏิเสธ โดยปกติจะ &ldquo;ผ่าน&rdquo; เว้นแต่พบสิ่งผิดปกติ
+        เมื่อผ่านระบบจะ<strong>ออกเลขที่ใบลา</strong>ให้ ทำหน้าที่ลงนามตรวจ ไม่ต้องแสดงความคิดเห็น
       </Feature>
       <Feature icon="🤝" title="การมอบอำนาจ (Proxy)">
         หากได้รับมอบอำนาจให้ทำงานแทนผู้อนุมัติคนอื่น เมนู &ldquo;การมอบอำนาจ&rdquo; จะปรากฏขึ้น

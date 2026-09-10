@@ -57,28 +57,28 @@ const approverNav1 = [
 const verifierNav = [
   {
     to: "/approver/leave-request-verifier",
-    text: "ตรวจสอบคำขอการลา",
+    text: "สารบรรณคณะ (ตรวจ/ออกเลขที่ใบลา)",
     icon: <FaClipboardCheck />,
   },
 ];
 const approverNav2 = [
   {
     to: "/approver/leave-request-approver2",
-    text: "อนุมัติระดับ 2",
+    text: "อนุมัติระดับหัวหน้าสำนักงานคณบดี",
     icon: <FaCheckCircle />,
   },
 ];
 const approverNav3 = [
   {
     to: "/approver/leave-request-approver3",
-    text: "อนุมัติระดับ 3",
+    text: "อนุมัติระดับรองคณบดีฝ่ายบริหาร",
     icon: <FaCheckCircle />,
   },
 ];
 const approverNav4 = [
   {
     to: "/approver/leave-request-approver4",
-    text: "อนุมัติระดับ 4",
+    text: "อนุมัติระดับคณบดี",
     icon: <FaCheckCircle />,
   },
 ];
@@ -458,7 +458,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
     hasRole("APPROVER_2") ||
     hasRole("APPROVER_3") ||
     hasRole("APPROVER_4") ||
-    hasRole("VERIFIER") ||
+    hasRole("APPROVER_5") ||
     isProxyApprover1 ||
     isProxyApprover2 ||
     isProxyApprover3 ||
@@ -544,7 +544,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         text={m.text}
                       />
                     ))}
-                  {hasRole("VERIFIER") &&
+                  {hasRole("APPROVER_2") &&
                     verifierNav.map((m, i) => (
                       <Item
                         key={`${m.to}-${i}`}
@@ -553,7 +553,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         text={m.text}
                       />
                     ))}
-                  {hasRole("APPROVER_2") &&
+                  {hasRole("APPROVER_3") &&
                     approverNav2.map((m, i) => (
                       <Item
                         key={`${m.to}-${i}`}
@@ -562,7 +562,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         text={m.text}
                       />
                     ))}
-                  {hasRole("APPROVER_3") &&
+                  {hasRole("APPROVER_4") &&
                     approverNav3.map((m, i) => (
                       <Item
                         key={`${m.to}-${i}`}
@@ -571,7 +571,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         text={m.text}
                       />
                     ))}
-                  {hasRole("APPROVER_4") &&
+                  {hasRole("APPROVER_5") &&
                     approverNav4.map((m, i) => (
                       <Item
                         key={`${m.to}-${i}`}

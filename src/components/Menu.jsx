@@ -185,10 +185,10 @@ function Sidebar({ isOpen }) {
           ))}
 
         {user?.role.includes("APPROVER_1") && renderDropdown("เมนูหัวหน้าสาขา", approverNav1)}
-        {user?.role.includes("VERIFIER") && renderDropdown("เมนูผู้ตรวจสอบ", verifierNav)}
-        {user?.role.includes("APPROVER_2") && renderDropdown("เมนูผู้อนุมัติ2", approverNav2)}
-        {user?.role.includes("APPROVER_3") && renderDropdown("เมนูผู้อนุมัติ3", approverNav3)}
-        {user?.role.includes("APPROVER_4") && renderDropdown("เมนูผู้อนุมัติ4", approverNav4)}
+        {user?.role.includes("APPROVER_2") && renderDropdown("เมนูสารบรรณคณะ", verifierNav)}
+        {user?.role.includes("APPROVER_3") && renderDropdown("เมนูหัวหน้าสำนักงานคณบดี", approverNav2)}
+        {user?.role.includes("APPROVER_4") && renderDropdown("เมนูรองคณบดีฝ่ายบริหาร", approverNav3)}
+        {user?.role.includes("APPROVER_5") && renderDropdown("เมนูคณบดี", approverNav4)}
         
         {/* Proxy Menus - แสดงเฉพาะเมื่อโหลดเสร็จและมีสิทธิ์ */}
         {!proxyLoading && (

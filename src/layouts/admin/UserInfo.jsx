@@ -25,11 +25,11 @@ const ROLE_LABEL_TH = {
   USER: "ผู้ใช้งานทั่วไป",
   ADMIN: "ผู้ดูแลระบบ",
   SUPER_ADMIN: "ผู้ดูแลระดับสูง",
-  VERIFIER: "ผู้ตรวจสอบ",
   APPROVER_1: "หัวหน้าสาขา",
-  APPROVER_2: "สรรบรรณคณะ",
-  APPROVER_3: "รองคณบดี",
-  APPROVER_4: "คณบดี",
+  APPROVER_2: "สารบรรณคณะ",
+  APPROVER_3: "หัวหน้าสำนักงานคณบดี",
+  APPROVER_4: "รองคณบดีฝ่ายบริหาร",
+  APPROVER_5: "คณบดี",
 };
 
 export default function UserInfo() {
@@ -299,11 +299,11 @@ export default function UserInfo() {
                 const colorMap = {
                   SUPER_ADMIN: "bg-rose-50 text-rose-700 border-rose-200",
                   ADMIN: "bg-amber-50 text-amber-700 border-amber-200",
+                  APPROVER_5: "bg-violet-50 text-violet-700 border-violet-200",
                   APPROVER_4: "bg-violet-50 text-violet-700 border-violet-200",
                   APPROVER_3: "bg-violet-50 text-violet-700 border-violet-200",
                   APPROVER_2: "bg-violet-50 text-violet-700 border-violet-200",
                   APPROVER_1: "bg-violet-50 text-violet-700 border-violet-200",
-                  VERIFIER: "bg-teal-50 text-teal-700 border-teal-200",
                   USER: "bg-slate-50 text-slate-600 border-slate-200",
                 };
                 return display.map((r) => {

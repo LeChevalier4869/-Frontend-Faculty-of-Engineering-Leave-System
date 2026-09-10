@@ -12,9 +12,10 @@ import PeoplePickerModal from '../../components/PeoplePickerModal';
 
 const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
-// ระดับผู้อนุมัติ -> roleId ในตาราง Role
-// (VERIFIER=3, APPROVER_1=4, APPROVER_2=5, APPROVER_3=6, APPROVER_4=7)
-const ROLE_ID_BY_LEVEL = { 1: 4, 2: 3, 3: 5, 4: 6, 5: 7 };
+// ระดับผู้อนุมัติ -> ชื่อ role (contiguous: level N = APPROVER_N)
+// อ้างอิงด้วย "ชื่อ role" ไม่ใช่ Role.id (ปลอดภัยทั้ง prod และ fresh install)
+const ROLE_NAME_BY_LEVEL = { 1: "APPROVER_1", 2: "APPROVER_2", 3: "APPROVER_3", 4: "APPROVER_4", 5: "APPROVER_5" };
+const APPROVER_ROLE_NAMES = ["APPROVER_1", "APPROVER_2", "APPROVER_3", "APPROVER_4", "APPROVER_5"];
 
 const ProxyApprovalManagement = () => {
   // Tab navigation state
@@ -70,10 +71,10 @@ const ProxyApprovalManagement = () => {
 
   const approverLevels = {
     1: 'APPROVER_1 (หัวหน้าสาขา)',
-    2: 'VERIFIER (ผู้ตรวจสอบ)',
-    3: 'APPROVER_2 (สรรบรรณคณะ)',
-    4: 'APPROVER_3 (รองคณบดี)',
-    5: 'APPROVER_4 (คณบดี)',
+    2: 'APPROVER_2 (สารบรรณคณะ)',
+    3: 'APPROVER_3 (หัวหน้าสำนักงานคณบดี)',
+    4: 'APPROVER_4 (รองคณบดีฝ่ายบริหาร)',
+    5: 'APPROVER_5 (คณบดี)',
   };
 
   useEffect(() => {
@@ -130,9 +131,9 @@ const ProxyApprovalManagement = () => {
   // คำนวณจากรายชื่อทั้งระบบ (allUsers) ตรง ๆ เพื่อไม่ให้ endpoint approvers-for-level
   // ตัดคนที่บังเอิญถือ proxy อยู่ (isProxy) ออกไป และเห็นหัวหน้าสาขาครบทุกสาขา
   const originalApproversForLevel = (level) => {
-    const roleId = ROLE_ID_BY_LEVEL[Number(level)];
-    if (!roleId) return [];
-    return allUsers.filter((u) => (u.roles || []).includes(roleId));
+    const roleName = ROLE_NAME_BY_LEVEL[Number(level)];
+    if (!roleName) return [];
+    return allUsers.filter((u) => (u.roleNames || []).includes(roleName));
   };
 
   // เซ็ต id ของผู้ที่เป็นหัวหน้าสาขา (อย่างน้อย 1 สาขา) — ใช้กรอง APPROVER_1
@@ -231,34 +232,23 @@ const ProxyApprovalManagement = () => {
 
       let list = normalizeUsers(res?.data);
 
-      // แยกผู้ใช้ตาม role สำหรับ original approvers (role 3-7)
-      const originalApprovers = list.filter(user => {
-        const userRoles = user.roles || [];
-        return userRoles.some(roleId => roleId >= 3 && roleId <= 7);
-      });
-
+      // แยกผู้ใช้ที่ถือบทบาทผู้อนุมัติ (APPROVER_1..5)
+      const originalApprovers = list.filter(user =>
+        (user.roleNames || []).some(r => APPROVER_ROLE_NAMES.includes(r))
+      );
 
       // สำหรับ proxy approvers ให้เลือกได้ทุกคน (รวม user ทั่วไปด้วย)
       const allUsers = normalizeUsers(res?.data);
 
       setAllUsers(allUsers); // เก็บผู้ใช้ทั้งหมดสำหรับ proxy selection
 
-      // สร้าง role mapping สำหรับ original approvers
+      // สร้าง role mapping สำหรับ original approvers (userId -> ชื่อ role อนุมัติ)
       const roles = {};
       originalApprovers.forEach(user => {
-        const userRoles = user.roles || [];
-        // หา role แรกที่ตรงกับเงื่อนไข (3-7)
-        const approverRole = userRoles.find(roleId => roleId >= 3 && roleId <= 7);
-        if (approverRole) {
-          const roleNames = {
-            3: 'VERIFIER',
-            4: 'APPROVER_1',
-            5: 'APPROVER_2',
-            6: 'APPROVER_3',
-            7: 'APPROVER_4'
-          };
-          roles[user.id] = roleNames[approverRole] || 'user';
-        }
+        const approverRole = (user.roleNames || []).find(r =>
+          APPROVER_ROLE_NAMES.includes(r)
+        );
+        if (approverRole) roles[user.id] = approverRole;
       });
       setUserRoles(roles);
 
@@ -284,23 +274,13 @@ const ProxyApprovalManagement = () => {
     const user = allUsers.find(u => u.id === userId);
     if (!user) return 'user';
 
-    const userRoles = user.roles || [];
-    // หา role แรกที่ตรงกับเงื่อนไข (3-7)
-    const approverRole = userRoles.find(roleId => roleId >= 3 && roleId <= 7);
-    if (approverRole) {
-      const roleNames = {
-        3: 'VERIFIER',
-        4: 'APPROVER_1',
-        5: 'APPROVER_2',
-        6: 'APPROVER_3',
-        7: 'APPROVER_4'
-      };
-      return roleNames[approverRole] || 'user';
-    }
+    const names = user.roleNames || [];
+    const approverRole = names.find(r => APPROVER_ROLE_NAMES.includes(r));
+    if (approverRole) return approverRole;
 
-    // ถ้าไม่มี approver role ให้แสดง USER/ADMIN ถ้ามี
-    if (userRoles.includes(1)) return 'USER';
-    if (userRoles.includes(2)) return 'ADMIN';
+    // ถ้าไม่มี approver role ให้แสดง ADMIN/USER ถ้ามี
+    if (names.includes('ADMIN')) return 'ADMIN';
+    if (names.includes('USER')) return 'USER';
 
     return 'user';
   };
@@ -313,9 +293,9 @@ const ProxyApprovalManagement = () => {
   const getRoleForLevel = (level) => {
     const roleMap = {
       1: 'หัวหน้าสาขา',
-      2: 'ผู้ตรวจสอบ',
-      3: 'สรรบรรณคณะ',
-      4: 'รองคณบดี',
+      2: 'สารบรรณคณะ',
+      3: 'หัวหน้าสำนักงานคณบดี',
+      4: 'รองคณบดีฝ่ายบริหาร',
       5: 'คณบดี',
     };
     return roleMap[level] || '';
@@ -354,6 +334,9 @@ const ProxyApprovalManagement = () => {
     return arr
       .map((u) => {
         const userRoles = u.userRoles ? u.userRoles.map(ur => ur.roleId) : [];
+        const roleNames = u.userRoles
+          ? u.userRoles.map(ur => ur.role?.name).filter(Boolean)
+          : [];
 
         return {
           id: u.id ?? u.userId ?? null,
@@ -364,6 +347,7 @@ const ProxyApprovalManagement = () => {
           email: u.email ?? "",
           // ดึง roles จาก UserRole relationship
           roles: userRoles,
+          roleNames,
           position: u.position ?? "",
           department: u.department ?? null,
           personnelTypeId: u.personnelTypeId ?? u.personnelType?.id ?? null,
@@ -1329,7 +1313,7 @@ const ProxyApprovalManagement = () => {
                             <div className="text-sm text-amber-800">
                               <div className="font-medium">ข้อควรพิจารณา:</div>
                               <ul className="mt-1 space-y-1">
-                                {selectedProxyUser && getProxyUserRole(selectedProxyUser.id) === getRoleForLevel(formData.approverLevel) && ['VERIFIER', 'APPROVER_1', 'APPROVER_2', 'APPROVER_3', 'APPROVER_4'].includes(getProxyUserRole(selectedProxyUser.id)) && (
+                                {selectedProxyUser && getProxyUserRole(selectedProxyUser.id) === getRoleForLevel(formData.approverLevel) && ['APPROVER_1', 'APPROVER_2', 'APPROVER_3', 'APPROVER_4', 'APPROVER_5'].includes(getProxyUserRole(selectedProxyUser.id)) && (
                                   <li>• ผู้อนุมัติแทน ({getProxyUserRole(selectedProxyUser.id)}) มี role เดียวกับระดับที่เลือก ({getRoleForLevel(formData.approverLevel)}) - จะได้รับอำนาจเพิ่มเติม</li>
                                 )}
                               </ul>
