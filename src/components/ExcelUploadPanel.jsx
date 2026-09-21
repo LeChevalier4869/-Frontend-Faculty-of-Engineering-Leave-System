@@ -12,6 +12,7 @@ export default function ExcelUploadPanel({
   uploadUrl,
   templatePath,
   templateName = "Template.xlsx",
+  exampleTemplatePath,
   exampleTemplateName = "Template_Example.xlsx",
   tokenKey = "accessToken",
   onSuccess,
@@ -137,7 +138,7 @@ export default function ExcelUploadPanel({
       <div className="flex flex-wrap justify-between gap-3">
         <div className="flex gap-2">
           <button
-            onClick={() => saveAs(templatePath, exampleTemplateName)}
+            onClick={() => saveAs(exampleTemplatePath, exampleTemplateName)}
             className="px-4 py-2 rounded-xl bg-amber-100 border text-sm"
           >
             โหลดตัวอย่าง

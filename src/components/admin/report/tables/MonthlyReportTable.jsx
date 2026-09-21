@@ -36,7 +36,7 @@ export default function MonthlyReportTable({ dayList, rows, onSymbolClick }) {
                 </ReportTh>
               ))}
 
-              <ReportTh style={{ minWidth: 64 }}>รวมวันมา</ReportTh>
+              <ReportTh style={{ minWidth: 64 }}>รวมวันทำงาน</ReportTh>
             </tr>
           </thead>
 
