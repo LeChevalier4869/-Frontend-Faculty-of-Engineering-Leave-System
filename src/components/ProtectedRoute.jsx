@@ -39,10 +39,10 @@ const ProtectedRoute = ({ children, requiredRoles, checkProxy = false }) => {
         // แปลง approverLevel เป็น role names
         const roleMapping = {
           1: 'APPROVER_1',
-          2: 'VERIFIER',
-          3: 'APPROVER_2',
-          4: 'APPROVER_3',
-          5: 'APPROVER_4'
+          2: 'APPROVER_2',
+          3: 'APPROVER_3',
+          4: 'APPROVER_4',
+          5: 'APPROVER_5'
         };
 
         const proxyRoles = activeProxies.map(proxy => roleMapping[proxy.approverLevel]).filter(Boolean);

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import { FaUserAlt } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
@@ -42,13 +42,9 @@ function UserProfile2() {
           profilePicturePath: newProfilePath
         }));
 
-        Swal.fire("สำเร็จ", "อัปเดตรูปโปรไฟล์เรียบร้อยแล้ว", "success");
+        notifySuccess("สำเร็จ", "อัปเดตรูปโปรไฟล์เรียบร้อยแล้ว");
       } catch (err) {
-        Swal.fire(
-          "เกิดข้อผิดพลาด",
-          err.response?.data?.error || err.message,
-          "error"
-        );
+        notifyError("เกิดข้อผิดพลาด", err.response?.data?.error || err.message);
       }
     };
 
@@ -91,14 +87,10 @@ function UserProfile2() {
           // Force ProfileImage component to remount
           setProfileKey(prev => prev + 1);
 
-          Swal.fire("สำเร็จ", "ลบรูปโปรไฟล์เรียบร้อยแล้ว", "success");
+          notifySuccess("สำเร็จ", "ลบรูปโปรไฟล์เรียบร้อยแล้ว");
         }
       } catch (err) {
-        Swal.fire(
-          "เกิดข้อผิดพลาด",
-          err.response?.data?.error || err.message,
-          "error"
-        );
+        notifyError("เกิดข้อผิดพลาด", err.response?.data?.error || err.message);
       }
     };
 
@@ -120,18 +112,16 @@ function UserProfile2() {
                   const file = e.target.files[0];
                   if (file) {
                     if (file.size > 2 * 1024 * 1024) {
-                      Swal.fire(
+                      notifyError(
                         "ขนาดไฟล์ใหญ่เกินไป",
-                        "กรุณาเลือกรูปภาพที่มีขนาดไม่เกิน 2MB",
-                        "error"
+                        "กรุณาเลือกรูปภาพที่มีขนาดไม่เกิน 2MB"
                       );
                       return;
                     }
                     if (!file.type.startsWith("image/")) {
-                      Swal.fire(
+                      notifyError(
                         "ประเภทไฟล์ไม่ถูกต้อง",
-                        "กรุณาเลือกไฟล์รูปภาพเท่านั้น",
-                        "error"
+                        "กรุณาเลือกไฟล์รูปภาพเท่านั้น"
                       );
                       return;
                     }
@@ -190,14 +180,10 @@ function UserProfile2() {
             },
           });
 
-          Swal.fire("สำเร็จ", "บันทึกลายเซ็นเรียบร้อยแล้ว", "success");
+          notifySuccess("สำเร็จ", "บันทึกลายเซ็นเรียบร้อยแล้ว");
           window.location.reload();
         } catch (err) {
-          Swal.fire(
-            "เกิดข้อผิดพลาด",
-            err.response?.data?.error || err.message,
-            "error"
-          );
+          notifyError("เกิดข้อผิดพลาด", err.response?.data?.error || err.message);
         }
       };
 
@@ -219,14 +205,10 @@ function UserProfile2() {
               },
             });
 
-            Swal.fire("ลบแล้ว", "ลายเซ็นถูกลบเรียบร้อยแล้ว", "success");
+            notifySuccess("ลบแล้ว", "ลายเซ็นถูกลบเรียบร้อยแล้ว");
             window.location.reload();
           } catch (err) {
-            Swal.fire(
-              "เกิดข้อผิดพลาด",
-              err.response?.data?.error || err.message,
-              "error"
-            );
+            notifyError("เกิดข้อผิดพลาด", err.response?.data?.error || err.message);
           }
         }
       };

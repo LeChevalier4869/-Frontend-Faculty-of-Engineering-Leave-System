@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { API, apiEndpoints } from "../../utils/api";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { X, FileText, Search, AlertCircle, CheckCircle, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -160,26 +160,19 @@ function LeaveCancellationModal({ onClose, onSuccess }) {
         }
       );
 
-      await Swal.fire({
-        icon: "success",
-        title: "ดำเนินการสำเร็จ",
-        text: response.data.message || "ยกเลิกคำขอลาเรียบร้อยแล้ว",
-        confirmButtonText: "ตกลง",
-      });
+      notifySuccess(
+        "ดำเนินการสำเร็จ",
+        response.data.message || "ยกเลิกคำขอลาเรียบร้อยแล้ว"
+      );
 
       onSuccess?.();
       onClose();
     } catch (err) {
       console.error("Cancel error:", err);
       const errorMessage = err?.response?.data?.message || "เกิดข้อผิดพลาดในการยกเลิกคำขอลา";
-      
-      await Swal.fire({
-        icon: "error",
-        title: "ดำเนินการล้มเหลว",
-        text: errorMessage,
-        confirmButtonText: "ตกลง",
-      });
-      
+
+      notifyError("ดำเนินการล้มเหลว", errorMessage);
+
       setError(errorMessage);
     } finally {
       setSubmitting(false);

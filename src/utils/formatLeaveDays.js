@@ -37,4 +37,37 @@ export function formatLeaveDays(value) {
   return (negative ? "-" : "") + parts.join(" ");
 }
 
+// เลือกหน่วยแสดงผลตามสิทธิ์รวมของประเภทการลา (มาตรฐาน 1 ปี = 365 วัน)
+// - สิทธิ์รวมตั้งแต่ 1 ปีขึ้นไป (>= 365 วัน) → หน่วย "ปี"
+// - ไม่ถึง 1 ปี → หน่วย "วัน"  (ไม่ใช้หน่วย "เดือน")
+export function leaveUnitForMaxDays(maxDays) {
+  return Number(maxDays) >= 365 ? "year" : "day";
+}
+
+// แสดงจำนวนวันลาตามหน่วยที่กำหนด (ปี หรือ วัน) โดยไม่มีหน่วยเดือน — ยึด 1 ปี = 365 วัน
+// หน่วย "ปี" แตกเป็น "X ปี Y วัน" — เต็มปีพอดีโชว์ "X ปี", ไม่พอดีโชว์วันที่เหลือให้เห็น
+// (เช่น 365→"1 ปี", พอหัก 1 วันเหลือ 364→"364 วัน"; 1460→"4 ปี")
+export function formatLeaveDaysByUnit(value, unit = "day") {
+  if (value === null || value === undefined || value === "") return "-";
+  const n = Number(value);
+  if (Number.isNaN(n)) return String(value);
+
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+
+  if (unit === "year") {
+    const years = Math.floor(abs / 365);
+    const days = Math.round((abs - years * 365) * 10) / 10; // คงครึ่งวัน (0.5) ไว้
+
+    const parts = [];
+    if (years) parts.push(`${years} ปี`);
+    if (days || parts.length === 0) parts.push(`${days} วัน`);
+    return sign + parts.join(" ");
+  }
+
+  // หน่วยวัน — คงครึ่งวัน (0.5) ไว้
+  const days = Math.round(abs * 10) / 10;
+  return `${sign}${days} วัน`;
+}
+
 export default formatLeaveDays;

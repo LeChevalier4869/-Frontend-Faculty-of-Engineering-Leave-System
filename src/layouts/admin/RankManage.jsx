@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { BASE_URL } from "../../utils/api";
 import { ChevronDown } from "lucide-react";
 
@@ -54,7 +54,7 @@ export default function RankManage() {
         () => (window.location.href = "/login")
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("Error", err.response?.data?.message || err.message);
     }
   };
 
@@ -97,11 +97,11 @@ export default function RankManage() {
 
   const handleAdd = async () => {
     if (!form.rank.trim() || !form.leaveTypeId || !form.personnelTypeId) {
-      return Swal.fire("Error", "กรุณาระบุชื่อ, ประเภทการลา และประเภทบุคลากร", "error");
+      return notifyError("Error", "กรุณาระบุชื่อ, ประเภทการลา และประเภทบุคลากร");
     }
     try {
       await axios.post(`${BASE_URL}/ranks`, form, authHeader());
-      Swal.fire("บันทึกสำเร็จ!", "", "success");
+      notifySuccess("บันทึกสำเร็จ!");
       resetForm();
       loadData();
       setCurrentPage(1);
@@ -130,11 +130,11 @@ export default function RankManage() {
 
   const handleUpdate = async () => {
     if (!form.rank.trim() || !form.leaveTypeId || !form.personnelTypeId) {
-      return Swal.fire("Error", "กรุณาระบุชื่อ, ประเภทการลา และประเภทบุคลากร", "error");
+      return notifyError("Error", "กรุณาระบุชื่อ, ประเภทการลา และประเภทบุคลากร");
     }
     try {
       await axios.put(`${BASE_URL}/ranks/${editId}`, form, authHeader());
-      Swal.fire("อัปเดตสำเร็จ!", "", "success");
+      notifySuccess("อัปเดตสำเร็จ!");
       resetForm();
       loadData();
     } catch (err) {
@@ -156,7 +156,7 @@ export default function RankManage() {
 
     try {
       await axios.delete(`${BASE_URL}/ranks/${id}`, authHeader());
-      Swal.fire("ลบสำเร็จ!", "", "success");
+      notifySuccess("ลบสำเร็จ!");
       loadData();
     } catch (err) {
       handleApiError(err);

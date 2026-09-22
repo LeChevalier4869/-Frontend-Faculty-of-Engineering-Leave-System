@@ -9,7 +9,10 @@ import AuditTrailModal from "../../components/AuditTrailModal";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import ProfileImage from "../../components/ProfileImage";
-import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import {
+  formatLeaveDaysByUnit,
+  leaveUnitForMaxDays,
+} from "../../utils/formatLeaveDays";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 const Panel = ({ className = "", children }) => (
@@ -22,11 +25,11 @@ const ROLE_LABEL_TH = {
   USER: "ผู้ใช้งานทั่วไป",
   ADMIN: "ผู้ดูแลระบบ",
   SUPER_ADMIN: "ผู้ดูแลระดับสูง",
-  VERIFIER: "ผู้ตรวจสอบ",
   APPROVER_1: "หัวหน้าสาขา",
-  APPROVER_2: "สรรบรรณคณะ",
-  APPROVER_3: "รองคณบดี",
-  APPROVER_4: "คณบดี",
+  APPROVER_2: "สารบรรณคณะ",
+  APPROVER_3: "หัวหน้าสำนักงานคณบดี",
+  APPROVER_4: "รองคณบดีฝ่ายบริหาร",
+  APPROVER_5: "คณบดี",
 };
 
 export default function UserInfo() {
@@ -296,11 +299,11 @@ export default function UserInfo() {
                 const colorMap = {
                   SUPER_ADMIN: "bg-rose-50 text-rose-700 border-rose-200",
                   ADMIN: "bg-amber-50 text-amber-700 border-amber-200",
+                  APPROVER_5: "bg-violet-50 text-violet-700 border-violet-200",
                   APPROVER_4: "bg-violet-50 text-violet-700 border-violet-200",
                   APPROVER_3: "bg-violet-50 text-violet-700 border-violet-200",
                   APPROVER_2: "bg-violet-50 text-violet-700 border-violet-200",
                   APPROVER_1: "bg-violet-50 text-violet-700 border-violet-200",
-                  VERIFIER: "bg-teal-50 text-teal-700 border-teal-200",
                   USER: "bg-slate-50 text-slate-600 border-slate-200",
                 };
                 return display.map((r) => {
@@ -388,7 +391,9 @@ export default function UserInfo() {
               </thead>
               <tbody>
                 {deductibleBalances.length > 0 ? (
-                  deductibleBalances.map((b, idx) => (
+                  deductibleBalances.map((b, idx) => {
+                    const unit = leaveUnitForMaxDays(b.maxDays);
+                    return (
                     <tr
                       key={b.id ?? idx}
                       className={`border-t border-slate-100 ${
@@ -397,22 +402,23 @@ export default function UserInfo() {
                     >
                       <td className="px-4 py-3">{leaveName(b)}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        {formatLeaveDays(b.maxDays)}
+                        {formatLeaveDaysByUnit(b.maxDays, unit)}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        {formatLeaveDays(b.usedDays)}
+                        {formatLeaveDaysByUnit(b.usedDays, unit)}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap text-slate-600">
                         {timesByType[b.leaveTypeId] || 0} ครั้ง
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap text-amber-600">
-                        {formatLeaveDays(b.pendingDays)}
+                        {formatLeaveDaysByUnit(b.pendingDays, unit)}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap font-semibold text-emerald-700">
-                        {formatLeaveDays(b.remainingDays)}
+                        {formatLeaveDaysByUnit(b.remainingDays, unit)}
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 ) : (
                   <tr>
                     <td
@@ -447,7 +453,7 @@ export default function UserInfo() {
                   <span className="text-sm text-slate-500 whitespace-nowrap">
                     ลาไปแล้ว{" "}
                     <span className="font-semibold text-slate-800">
-                      {formatLeaveDays(b.usedDays)}
+                      {formatLeaveDaysByUnit(b.usedDays, leaveUnitForMaxDays(b.maxDays))}
                     </span>{" "}
                     ({timesByType[b.leaveTypeId] || 0} ครั้ง)
                   </span>
@@ -516,10 +522,16 @@ export default function UserInfo() {
                         ) : (
                           <>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
-                              {formatLeaveDays(ur.rank?.receiveDays)}
+                              {formatLeaveDaysByUnit(
+                                ur.rank?.receiveDays,
+                                leaveUnitForMaxDays(ur.rank?.maxDays),
+                              )}
                             </td>
                             <td className="px-4 py-3 text-right whitespace-nowrap text-slate-600">
-                              {formatLeaveDays(ur.rank?.maxDays)}
+                              {formatLeaveDaysByUnit(
+                                ur.rank?.maxDays,
+                                leaveUnitForMaxDays(ur.rank?.maxDays),
+                              )}
                             </td>
                           </>
                         )}

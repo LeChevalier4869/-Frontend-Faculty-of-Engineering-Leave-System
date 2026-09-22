@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
-import Swal from "../../utils/alert";
-import withReactContent from "sweetalert2-react-content";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { FiUser, FiUsers } from "react-icons/fi";
@@ -11,20 +10,18 @@ import { FiUser, FiUsers } from "react-icons/fi";
 const PAGE_SIZE = 10;
 const DEBOUNCE_MS = 200;
 
-const MySwal = withReactContent(Swal);
-
 const ROLE_PRIORITY = [
-  "SUPER_ADMIN", "ADMIN", "APPROVER_4", "APPROVER_3",
-  "APPROVER_2", "APPROVER_1", "VERIFIER", "USER",
+  "SUPER_ADMIN", "ADMIN", "APPROVER_5", "APPROVER_4", "APPROVER_3",
+  "APPROVER_2", "APPROVER_1", "USER",
 ];
 const ROLE_COLOR = {
   SUPER_ADMIN: "bg-rose-50 text-rose-700 border-rose-200",
   ADMIN: "bg-amber-50 text-amber-700 border-amber-200",
+  APPROVER_5: "bg-violet-50 text-violet-700 border-violet-200",
   APPROVER_4: "bg-violet-50 text-violet-700 border-violet-200",
   APPROVER_3: "bg-violet-50 text-violet-700 border-violet-200",
   APPROVER_2: "bg-violet-50 text-violet-700 border-violet-200",
   APPROVER_1: "bg-violet-50 text-violet-700 border-violet-200",
-  VERIFIER: "bg-teal-50 text-teal-700 border-teal-200",
   USER: "bg-slate-50 text-slate-600 border-slate-200",
 };
 
@@ -145,7 +142,7 @@ function UserManage() {
         () => (window.location.href = "/login")
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("Error", err.response?.data?.message || err.message);
     }
   };
 
@@ -179,7 +176,7 @@ function UserManage() {
 
     try {
       await axios.delete(apiEndpoints.deleteUserByAdmin(id), authHeader());
-      Swal.fire("ลบสำเร็จ!", "ข้อมูลผู้ใช้งานถูกลบแล้ว", "success");
+      notifySuccess("ลบสำเร็จ!", "ข้อมูลผู้ใช้งานถูกลบแล้ว");
       loadUsers();
     } catch (err) {
       handleApiError(err);

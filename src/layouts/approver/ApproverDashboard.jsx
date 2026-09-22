@@ -32,10 +32,10 @@ import { filterByPeriod, DEFAULT_PERIOD } from "../../utils/periodRange";
 // คิวอนุมัติของแต่ละบทบาท (list = endpoint นับจำนวน, page = หน้าคิว)
 const APPROVER_QUEUES = [
   { role: "APPROVER_1", label: "หัวหน้าสาขา", list: "/leave-requests/for-approver1", page: "/approver/leave-request-approver1" },
-  { role: "VERIFIER", label: "ผู้ตรวจสอบ", list: "/leave-requests/for-verifier", page: "/approver/leave-request-verifier" },
-  { role: "APPROVER_2", label: "สารบรรณคณะ", list: "/leave-requests/for-approver2", page: "/approver/leave-request-approver2" },
-  { role: "APPROVER_3", label: "รองคณบดี", list: "/leave-requests/for-approver3", page: "/approver/leave-request-approver3" },
-  { role: "APPROVER_4", label: "คณบดี", list: "/leave-requests/for-approver4", page: "/approver/leave-request-approver4" },
+  { role: "APPROVER_2", label: "สารบรรณคณะ", list: "/leave-requests/for-verifier", page: "/approver/leave-request-verifier" },
+  { role: "APPROVER_3", label: "หัวหน้าสำนักงานคณบดี", list: "/leave-requests/for-approver2", page: "/approver/leave-request-approver2" },
+  { role: "APPROVER_4", label: "รองคณบดีฝ่ายบริหาร", list: "/leave-requests/for-approver3", page: "/approver/leave-request-approver3" },
+  { role: "APPROVER_5", label: "คณบดี", list: "/leave-requests/for-approver4", page: "/approver/leave-request-approver4" },
 ];
 
 /**

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
-import Swal from "../../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../../utils/alert";
 import { BASE_URL } from "../../../utils/api";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
@@ -24,6 +24,7 @@ export default function DepartmentManageContent() {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrgFilter, setSelectedOrgFilter] = useState(initialOrgId);
+  const [search, setSearch] = useState("");
 
   const authHeader = () => {
     const token = localStorage.getItem("accessToken");
@@ -47,7 +48,7 @@ export default function DepartmentManageContent() {
         },
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("Error", err.response?.data?.message || err.message);
     }
   };
 
@@ -103,7 +104,7 @@ export default function DepartmentManageContent() {
 
   const handleAdd = async () => {
     if (!newName.trim() || !newOrgId) {
-      return Swal.fire("Error", "ต้องระบุชื่อแผนกและเลือกหน่วยงาน", "error");
+      return notifyError("Error", "ต้องระบุชื่อแผนกและเลือกหน่วยงาน");
     }
     try {
       await axios.post(
@@ -115,7 +116,7 @@ export default function DepartmentManageContent() {
         },
         authHeader(),
       );
-      Swal.fire("บันทึกสำเร็จ!", "", "success");
+      notifySuccess("บันทึกสำเร็จ!");
       resetForm();
       loadData();
       setCurrentPage(1);
@@ -141,7 +142,7 @@ export default function DepartmentManageContent() {
 
   const handleUpdate = async () => {
     if (!newName.trim() || !editOrgId) {
-      return Swal.fire("Error", "ต้องระบุชื่อแผนกและเลือกหน่วยงาน", "error");
+      return notifyError("Error", "ต้องระบุชื่อแผนกและเลือกหน่วยงาน");
     }
     try {
       await axios.put(
@@ -153,7 +154,7 @@ export default function DepartmentManageContent() {
         },
         authHeader(),
       );
-      Swal.fire("อัปเดตสำเร็จ!", "", "success");
+      notifySuccess("อัปเดตสำเร็จ!");
       resetForm();
       loadData();
     } catch (err) {
@@ -175,7 +176,7 @@ export default function DepartmentManageContent() {
 
     try {
       await axios.delete(`${BASE_URL}/admin/departments/${id}`, authHeader());
-      Swal.fire("ลบสำเร็จ!", "ข้อมูลแผนกถูกลบแล้ว", "success");
+      notifySuccess("ลบสำเร็จ!", "ข้อมูลแผนกถูกลบแล้ว");
       const pageCount = Math.ceil(departments.length / PAGE_SIZE);
       if (currentPage > pageCount) setCurrentPage(pageCount);
       loadData();
@@ -184,9 +185,15 @@ export default function DepartmentManageContent() {
     }
   };
 
-  const filteredDepartments = selectedOrgFilter
-    ? departments.filter((d) => d.organizationId === +selectedOrgFilter)
-    : departments;
+  const q = search.trim().toLowerCase();
+  const filteredDepartments = departments.filter((d) => {
+    if (selectedOrgFilter && d.organizationId !== +selectedOrgFilter) return false;
+    if (!q) return true;
+    const headName = d.head ? `${d.head.firstName} ${d.head.lastName}` : "";
+    return (
+      d.name.toLowerCase().includes(q) || headName.toLowerCase().includes(q)
+    );
+  });
 
   const totalPages = Math.ceil(filteredDepartments.length / PAGE_SIZE);
   const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -202,7 +209,7 @@ export default function DepartmentManageContent() {
     <div className="font-kanit text-slate-900">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col items-center gap-3 text-center mb-2 md:items-start">
-          <div className="w-full flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col items-center gap-1 md:items-start">
               <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
                 จัดการแผนก
@@ -210,6 +217,21 @@ export default function DepartmentManageContent() {
               <p className="text-sm text-slate-600">
                 เพิ่ม แก้ไข หรือลบข้อมูลแผนก และกำหนดหัวหน้าแผนกตามหน่วยงาน
               </p>
+            </div>
+            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-end">
+              <div className="relative w-full md:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="ค้นหาชื่อแผนก หรือหัวหน้า..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                />
+              </div>
             </div>
           </div>
         </div>
