@@ -1,4 +1,4 @@
-import { formatLeaveDays } from "./formatLeaveDays";
+import { formatLeaveDaysByUnit, leaveUnitForMaxDays } from "./formatLeaveDays";
 
 export function normalizeSex(sex) {
   const s = String(sex || "").trim();
@@ -133,19 +133,20 @@ export function filterLeaveBalancesLatestYear(balances) {
 
 /**
  * Format remainingDays for UI display.
- * If negative, shows as "เกิน X วัน" (overused X days).
- * Returns { text, className }.
+ * แสดงเป็นหน่วย "วัน/ปี" เท่านั้น (ไม่มี "เดือน") — เลือกหน่วยจาก maxDays ของประเภทนั้น
+ * ถ้าติดลบ แสดงเป็น "เกิน X" (ใช้สิทธิ์เกิน). Returns { text, className }.
  */
-export function formatRemainingDays(remainingDays) {
+export function formatRemainingDays(remainingDays, maxDays) {
   const num = Number(remainingDays) || 0;
+  const unit = leaveUnitForMaxDays(maxDays);
   if (num < 0) {
     return {
-      text: `เกิน ${formatLeaveDays(Math.abs(num))}`,
+      text: `เกิน ${formatLeaveDaysByUnit(Math.abs(num), unit)}`,
       className: "text-rose-600 font-bold",
     };
   }
   return {
-    text: formatLeaveDays(num),
+    text: formatLeaveDaysByUnit(num, unit),
     className: "text-emerald-600 font-bold",
   };
 }

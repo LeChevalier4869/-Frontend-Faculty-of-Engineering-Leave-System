@@ -5,6 +5,8 @@ import {
   Palmtree,
   Baby,
   GraduationCap,
+  BookOpen,
+  Briefcase,
   Accessibility,
   HandHeart,
   Globe2,
@@ -31,6 +33,8 @@ export const ATTENDANCE_SYMBOL = {
   ORDINATION: "อ",
   MILITARY: "ท",
   STUDY: "ศ",
+  TRAINING: "ฝ",
+  OFFICIAL_DUTY: "ช",
   PATERNITY: "ภ",
   REHABILITATION: "ฟ",
   DHARMA: "ธ",
@@ -110,9 +114,23 @@ export const LEAVE_META = {
 
   STUDY: {
     symbol: ATTENDANCE_SYMBOL.STUDY,
-    label: "ลาไปศึกษา ฝึกอบรม วิจัย ดูงาน",
+    label: "ลาไปศึกษา",
     color: "#0891b2",
     Icon: GraduationCap,
+  },
+
+  TRAINING: {
+    symbol: ATTENDANCE_SYMBOL.TRAINING,
+    label: "ลาไปฝึกอบรม ปฏิบัติการวิจัย หรือดูงาน",
+    color: "#0d9488",
+    Icon: BookOpen,
+  },
+
+  OFFICIAL_DUTY: {
+    symbol: ATTENDANCE_SYMBOL.OFFICIAL_DUTY,
+    label: "ไปราชการ",
+    color: "#b45309",
+    Icon: Briefcase,
   },
 
   PATERNITY: {
@@ -177,6 +195,8 @@ export const LEAVE_ORDER = [
   "ORDINATION",
   "MILITARY",
   "STUDY",
+  "TRAINING",
+  "OFFICIAL_DUTY",
   "PATERNITY",
   "REHABILITATION",
   "DHARMA",
