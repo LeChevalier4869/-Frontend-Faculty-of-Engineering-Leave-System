@@ -10,8 +10,10 @@ import {
   Moon,
   CircleX,
   Clock3,
+  FlaskConical,
   Shield,
   Accessibility,
+  HandHeart,
 } from "lucide-react";
 
 /**
@@ -28,18 +30,17 @@ export const ATTENDANCE_SYMBOL = {
   SICK: "ป",
   ANNUAL: "พ",
   MATERNITY: "ค",
-
   PATERNITY: "ช",
   ORDINATION: "บ",
   DHARMA: "บ",
   HAJJ: "บ",
-
   STUDY: "ศ",
-
   MILITARY: "อ1",
   INTERNATIONAL_WORK: "อ2",
   FOLLOW_SPOUSE: "อ3",
   REHABILITATION: "อ4",
+  TRAINING_RESEARCH: "ว",
+  OFFICIAL_DUTY: "ร",
 
   ABSENT: "ข",
 };
@@ -112,42 +113,42 @@ export const LEAVE_META = {
 
   ORDINATION: {
     symbol: ATTENDANCE_SYMBOL.ORDINATION,
-    label: "ลาอุปสมบท",
+    label: "ลาอุปสมบท / พิธีฮัจย์ / ปฏิบัติธรรม (สตรี)",
     color: "#7c3aed",
     Icon: Moon,
   },
 
   DHARMA: {
     symbol: ATTENDANCE_SYMBOL.DHARMA,
-    label: "ลาถือศีล/ปฏิบัติธรรม (สตรี)",
+    label: "ลาอุปสมบท / พิธีฮัจย์ / ปฏิบัติธรรม (สตรี)",
     color: "#7c3aed",
     Icon: Moon,
   },
 
   HAJJ: {
     symbol: ATTENDANCE_SYMBOL.HAJJ,
-    label: "ลาไปประกอบพิธีฮัจย์",
+    label: "ลาอุปสมบท / พิธีฮัจย์ / ปฏิบัติธรรม (สตรี)",
     color: "#7c3aed",
     Icon: Moon,
   },
 
   STUDY: {
     symbol: ATTENDANCE_SYMBOL.STUDY,
-    label: "ลาศึกษาต่อ",
+    label: "ลาไปศึกษา",
     color: "#0891b2",
     Icon: GraduationCap,
   },
 
   MILITARY: {
     symbol: ATTENDANCE_SYMBOL.MILITARY,
-    label: "ลาเตรียมพล",
+    label: "ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล",
     color: "#475569",
     Icon: Shield,
   },
 
   INTERNATIONAL_WORK: {
     symbol: ATTENDANCE_SYMBOL.INTERNATIONAL_WORK,
-    label: "ลาปฏิบัติงานต่างประเทศ",
+    label: "ลาไปปฏิบัติงานในองค์การระหว่างประเทศ",
     color: "#0369a1",
     Icon: Globe2,
   },
@@ -161,9 +162,23 @@ export const LEAVE_META = {
 
   REHABILITATION: {
     symbol: ATTENDANCE_SYMBOL.REHABILITATION,
-    label: "ลาฟื้นฟูอาชีพ",
+    label: "ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ",
     color: "#9333ea",
     Icon: Accessibility,
+  },
+
+  TRAINING_RESEARCH: {
+    symbol: ATTENDANCE_SYMBOL.TRAINING_RESEARCH,
+    label: "ลาไปฝึกอบรม ปฏิบัติการวิจัย หรือดูงาน",
+    color: "#0e7490",
+    Icon: FlaskConical,
+  },
+
+  OFFICIAL_DUTY: {
+    symbol: ATTENDANCE_SYMBOL.OFFICIAL_DUTY,
+    label: "ไปราชการ",
+    color: "#0284c7",
+    Icon: HandHeart,
   },
 
   ABSENT: {
@@ -187,12 +202,12 @@ export const LEAVE_ORDER = [
   "MATERNITY",
   "PATERNITY",
   "ORDINATION",
-  "DHARMA",
-  "HAJJ",
   "STUDY",
   "MILITARY",
   "INTERNATIONAL_WORK",
   "FOLLOW_SPOUSE",
   "REHABILITATION",
+  "TRAINING_RESEARCH",
+  "OFFICIAL_DUTY",
   "ABSENT",
 ];
