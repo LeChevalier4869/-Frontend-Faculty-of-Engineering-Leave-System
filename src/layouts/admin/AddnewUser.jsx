@@ -289,22 +289,25 @@ export default function AddUser() {
                 {renderDropdown(
                   "ประเภทบุคลากร",
                   "personnelTypeId",
-                  personnelTypes.map((pt) => ({ value: pt.id, label: pt.name }))
+                  personnelTypes.map((pt) => ({
+                    value: pt.id,
+                    label: pt.name,
+                  })),
                 )}
                 {renderDropdown(
                   "แผนก",
                   "departmentId",
-                  departments.map((d) => ({ value: d.id, label: d.name }))
+                  departments.map((d) => ({ value: d.id, label: d.name })),
                 )}
                 {renderDropdown(
                   "องค์กร",
                   "organizationId",
-                  organizations.map((o) => ({ value: o.id, label: o.name }))
+                  organizations.map((o) => ({ value: o.id, label: o.name })),
                 )}
                 {renderDropdown(
                   "ประเภทพนักงาน",
                   "employmentType",
-                  employmentTypes
+                  employmentTypes,
                 )}
                 <div>
                   <label className="block text-sm font-medium mb-1 text-slate-800">
@@ -378,6 +381,7 @@ export default function AddUser() {
           description="อัปโหลดไฟล์ Excel เพื่อเพิ่มผู้ใช้หลายคน"
           uploadUrl={apiEndpoints.uploadUserExcel}
           templatePath="/Add_Users_Template.xlsx"
+          exampleTemplatePath="/Add_Users_Template_Example.xlsx"
           templateName="Add_Users_Template.xlsx"
           exampleTemplateName="Add_Users_Template_Example.xlsx"
           onSuccess={(result) => {

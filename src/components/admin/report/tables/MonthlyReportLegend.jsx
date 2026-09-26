@@ -6,7 +6,7 @@ import {
 
 export default function MonthlyReportLegend({ onSymbolClick }) {
   return (
-    <div className="flex flex-wrap gap-x-6 gap-y-2 pt-4 mt-2 border-t border-slate-100">
+    <div className="flex flex-wrap gap-x-4 gap-y-2 pt-4 mt-2 border-t border-slate-100">
       {LEAVE_ORDER.map((k) => {
         const meta = LEAVE_META[k];
 
@@ -38,7 +38,7 @@ export default function MonthlyReportLegend({ onSymbolClick }) {
         className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition-colors"
       >
         <span className="font-semibold">-</span>
-        {" = วันหยุดราชการ"}
+        {" = วันหยุด"}
       </button>
     </div>
   );
