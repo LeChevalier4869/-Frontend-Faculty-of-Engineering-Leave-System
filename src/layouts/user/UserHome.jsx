@@ -5,7 +5,10 @@ import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import { Link } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
-import { formatLeaveDays } from "../../utils/formatLeaveDays";
+import {
+  formatLeaveDaysByUnit,
+  leaveUnitForMaxDays,
+} from "../../utils/formatLeaveDays";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 export default function UserHome() {
@@ -72,22 +75,25 @@ export default function UserHome() {
                 </tr>
               </thead>
               <tbody>
-                {leaveBalance.map((e, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50">
-                    <td className="border border-gray-200 px-4 py-2">
-                      {e.leavetypes?.name || "-"}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-2 text-right whitespace-nowrap">
-                      {formatLeaveDays(e.maxDays)}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-2 text-right whitespace-nowrap">
-                      {formatLeaveDays(e.usedDays)}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-2 text-right whitespace-nowrap">
-                      {formatLeaveDays(e.remainingDays)}
-                    </td>
-                  </tr>
-                ))}
+                {leaveBalance.map((e, idx) => {
+                  const unit = leaveUnitForMaxDays(e.maxDays);
+                  return (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      <td className="border border-gray-200 px-4 py-2">
+                        {e.leavetypes?.name || "-"}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2 text-right whitespace-nowrap">
+                        {formatLeaveDaysByUnit(e.maxDays, unit)}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2 text-right whitespace-nowrap">
+                        {formatLeaveDaysByUnit(e.usedDays, unit)}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2 text-right whitespace-nowrap">
+                        {formatLeaveDaysByUnit(e.remainingDays, unit)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           ) : (

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { ChevronDown, Clock } from "lucide-react";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import PropTypes from "prop-types";
 import { API, apiEndpoints } from "../../utils/api";
 import { scrollMainToTop } from "../../utils/scroll";
@@ -116,23 +116,14 @@ export default function LeaveApproverBase({
         comment: commentFromInput || approveRemark,
       });
       Swal.close();
-      await Swal.fire({
-        icon: "success",
-        title: "สำเร็จ",
-        text: `${approveLabel}เรียบร้อยแล้ว`,
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        showCloseButton: true, // ปุ่มกากบาทปิดแบบแมนนวล
-        allowOutsideClick: true, // คลิกพื้นที่ด้านนอกเพื่อปิดได้
-      });
+      await notifySuccess("สำเร็จ", `${approveLabel}เรียบร้อยแล้ว`);
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
     } catch (error) {
       console.error("❌ Error approving request", error);
       Swal.close();
-      Swal.fire("ผิดพลาด", `ไม่สามารถ${approveLabel}ได้`, "error");
+      notifyError("ผิดพลาด", `ไม่สามารถ${approveLabel}ได้`);
     } finally {
       setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
     }
@@ -152,23 +143,14 @@ export default function LeaveApproverBase({
         comment: commentFromInput || rejectRemark,
       });
       Swal.close();
-      await Swal.fire({
-        icon: "success",
-        title: "สำเร็จ",
-        text: `${rejectLabel}เรียบร้อยแล้ว`,
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        showCloseButton: true, // ปุ่มกากบาทปิดแบบแมนนวล
-        allowOutsideClick: true, // คลิกพื้นที่ด้านนอกเพื่อปิดได้
-      });
+      await notifySuccess("สำเร็จ", `${rejectLabel}เรียบร้อยแล้ว`);
       setLeaveRequest((prev) =>
         prev.filter((item) => item.leaveRequestDetails?.[0]?.id !== detailId)
       );
     } catch (error) {
       console.error("❌ Error rejecting request", error);
       Swal.close();
-      Swal.fire("ผิดพลาด", `ไม่สามารถ${rejectLabel}ได้`, "error");
+      notifyError("ผิดพลาด", `ไม่สามารถ${rejectLabel}ได้`);
     } finally {
       setLoadingApprovals((prev) => ({ ...prev, [detailId]: false }));
     }

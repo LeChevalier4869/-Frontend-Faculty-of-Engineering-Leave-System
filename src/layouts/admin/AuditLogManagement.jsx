@@ -32,6 +32,7 @@ const AuditLogManagement = () => {
   const [selectedLog, setSelectedLog] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [users, setUsers] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
 
   // Action translations
   const actionTranslations = {
@@ -101,6 +102,60 @@ const AuditLogManagement = () => {
     'Setting': 'การตั้งค่า'
   };
 
+  // แปลชื่อฟิลด์ใน snapshot/diff ให้อ่านง่าย (แทน key ภาษาอังกฤษดิบ)
+  const fieldLabels = {
+    id: 'รหัส',
+    action: 'การกระทำ',
+    status: 'สถานะ',
+    reason: 'เหตุผล',
+    remarks: 'หมายเหตุ',
+    comment: 'ความเห็น',
+    // ผู้ใช้
+    userId: 'ผู้ใช้', userName: 'ผู้ใช้', user: 'ผู้ใช้',
+    prefixName: 'คำนำหน้า', firstName: 'ชื่อ', lastName: 'นามสกุล',
+    email: 'อีเมล', phone: 'เบอร์โทร', position: 'ตำแหน่ง', sex: 'เพศ',
+    employmentType: 'ประเภทการจ้าง', hireDate: 'วันที่เริ่มงาน',
+    department: 'แผนก', personnelType: 'ประเภทบุคลากร', roles: 'บทบาท',
+    // การลา
+    leaveTypeId: 'ประเภทการลา', leaveTypeName: 'ประเภทการลา', leaveType: 'ประเภทการลา',
+    requestedDays: 'จำนวนวันที่ขอ', totalDays: 'จำนวนวันรวม', thisTimeDays: 'จำนวนวันลาครั้งนี้',
+    documentNumber: 'เลขที่เอกสาร', startDate: 'วันที่เริ่ม', endDate: 'วันที่สิ้นสุด',
+    approverId: 'ผู้อนุมัติ', approverLevel: 'ระดับผู้อนุมัติ', rejectedBy: 'ผู้ปฏิเสธ',
+    balanceChange: 'การเปลี่ยนแปลงยอดวันลา', daysReturned: 'จำนวนวันที่คืน',
+    // มอบอำนาจ
+    originalApproverId: 'ผู้อนุมัติเดิม', originalApprover: 'ผู้อนุมัติเดิม',
+    proxyApproverId: 'ผู้รับมอบอำนาจ', proxyApprover: 'ผู้รับมอบอำนาจ',
+    isDaily: 'มอบอำนาจรายวัน', dailyDate: 'วันที่มอบอำนาจ',
+    // วันหยุด / ประเภทลา config
+    date: 'วันที่', description: 'คำอธิบาย', fiscalYear: 'ปีงบประมาณ',
+    isRecurring: 'เกิดซ้ำทุกปี', holidayType: 'ประเภทวันหยุด',
+    name: 'ชื่อ', isAvailable: 'เปิดใช้งาน', resetOnFiscalYear: 'รีเซ็ตตามปีงบ', template: 'เทมเพลต',
+    // ตั้งค่า / ระบบ
+    key: 'คีย์', value: 'ค่า', type: 'ประเภท', year: 'ปี', force: 'บังคับ',
+    currentYear: 'ปีปฏิทิน', createdCount: 'สร้างสำเร็จ', failedCount: 'ล้มเหลว', deletedCount: 'ลบไป',
+  };
+  const labelForKey = (k) => fieldLabels[k] || k;
+
+  // รวมชื่อ-นามสกุลจาก object ผู้ใช้ (ถ้าเป็น object ผู้ใช้จริง)
+  const nameFromUser = (u) =>
+    u && typeof u === 'object'
+      ? `${u.prefixName || ''}${u.firstName || ''} ${u.lastName || ''}`.trim()
+      : '';
+
+  // resolve id -> ชื่อ สำหรับ log เก่าที่เก็บแต่ id ดิบ (ใช้ข้อมูล users/leaveTypes ที่โหลดไว้)
+  const resolveIdToName = (key, value) => {
+    if (value == null || typeof value === 'object') return null;
+    const id = Number(value);
+    if (Number.isNaN(id)) return null;
+    if (key === 'leaveTypeId') {
+      return leaveTypes.find((t) => t.id === id)?.name || null;
+    }
+    if (['userId', 'approverId', 'rejectedBy', 'originalApproverId', 'proxyApproverId'].includes(key)) {
+      return nameFromUser(users.find((u) => u.id === id)) || null;
+    }
+    return null;
+  };
+
   // ดึงข้อมูลผู้ใช้สำหรับ filter
   useEffect(() => {
     const fetchUsers = async () => {
@@ -113,6 +168,19 @@ const AuditLogManagement = () => {
       }
     };
     fetchUsers();
+  }, []);
+
+  // ดึงประเภทการลาไว้ resolve id -> ชื่อ (ช่วยให้ log เก่าที่เก็บแค่ leaveTypeId อ่านออก)
+  useEffect(() => {
+    const fetchLeaveTypes = async () => {
+      try {
+        const response = await API.get('/leave-types');
+        setLeaveTypes(response.data?.data || []);
+      } catch (error) {
+        console.error('Failed to fetch leave types:', error);
+      }
+    };
+    fetchLeaveTypes();
   }, []);
 
   // Close user suggestions when clicking outside
@@ -285,11 +353,36 @@ const AuditLogManagement = () => {
   };
 
   // แสดงค่าที่อ่านง่าย (ไม่ dump object/JSON ดิบ)
+  const isoDateRe = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
   const formatValue = (v) => {
     if (v === null || v === undefined || v === '') return '—';
     if (typeof v === 'boolean') return v ? 'ใช่' : 'ไม่ใช่';
-    if (typeof v === 'object') return Array.isArray(v) ? v.join(', ') : JSON.stringify(v);
+    if (Array.isArray(v)) return v.map((x) => formatValue(x)).join(', ') || '—';
+    if (typeof v === 'object') {
+      // object ผู้ใช้ -> ชื่อ (email)
+      const person = nameFromUser(v);
+      if (person) return v.email ? `${person} (${v.email})` : person;
+      // object ที่มีชื่อ -> ชื่อ (#id)
+      if (v.name) return v.id != null ? `${v.name} (#${v.id})` : v.name;
+      // อื่น ๆ -> ไล่ key: value แบบอ่านง่าย (ไม่ใช่ JSON ดิบ)
+      const parts = Object.entries(v).map(([k, val]) => `${labelForKey(k)}: ${formatValue(val)}`);
+      return parts.length ? parts.join(', ') : '—';
+    }
+    // สตริงวันที่ ISO -> วันที่แบบไทย
+    if (typeof v === 'string' && isoDateRe.test(v)) {
+      try {
+        return format(new Date(v), 'dd/MM/yyyy', { locale: th });
+      } catch {
+        return v;
+      }
+    }
     return String(v);
+  };
+
+  // แสดงค่าโดยพยายาม resolve id -> ชื่อ ก่อน (สำหรับ field ที่เป็น foreign key)
+  const displayValue = (key, value) => {
+    const resolved = resolveIdToName(key, value);
+    return resolved ? `${resolved} (#${value})` : formatValue(value);
   };
 
   // แปลง entityData ที่บันทึกไว้เป็นตาราง "ก่อน → หลัง" หรือรายการค่า (แทน <pre> JSON)
@@ -323,9 +416,9 @@ const AuditLogManagement = () => {
               <tbody>
                 {keys.map((k) => (
                   <tr key={k} className="border-t border-slate-100">
-                    <td className="px-3 py-2 font-medium text-slate-700">{k}</td>
-                    <td className="px-3 py-2 text-rose-600 line-through decoration-rose-300">{formatValue(data.oldData[k])}</td>
-                    <td className="px-3 py-2 text-emerald-700">{formatValue(data.newData[k])}</td>
+                    <td className="px-3 py-2 font-medium text-slate-700">{labelForKey(k)}</td>
+                    <td className="px-3 py-2 text-rose-600 line-through decoration-rose-300">{displayValue(k, data.oldData[k])}</td>
+                    <td className="px-3 py-2 text-emerald-700">{displayValue(k, data.newData[k])}</td>
                   </tr>
                 ))}
               </tbody>
@@ -336,9 +429,14 @@ const AuditLogManagement = () => {
     }
 
     // กรณี snapshot ธรรมดา (สร้าง/ลบ) — แสดงเป็นรายการ key -> value
-    const entries = Object.entries(data).filter(
-      ([k]) => !['diff', 'timestamp', 'approverLevel'].includes(k)
-    );
+    // ถ้ามีทั้ง id และ name คู่กัน ให้โชว์เฉพาะ name (กันซ้ำ) ; ถ้ามีแต่ id (log เก่า) จะ resolve เป็นชื่อให้เอง
+    const idNamePairs = { leaveTypeId: 'leaveTypeName', userId: 'userName' };
+    const entries = Object.entries(data).filter(([k]) => {
+      if (['diff', 'timestamp', 'approverLevel'].includes(k)) return false;
+      const nameSibling = idNamePairs[k];
+      if (nameSibling && data[nameSibling]) return false;
+      return true;
+    });
     if (entries.length === 0) return null;
     return (
       <div>
@@ -348,8 +446,8 @@ const AuditLogManagement = () => {
         <dl className="grid grid-cols-1 gap-x-4 gap-y-1 rounded-lg border border-slate-200 bg-white p-3 text-sm sm:grid-cols-2">
           {entries.map(([k, v]) => (
             <div key={k} className="flex gap-2">
-              <dt className="shrink-0 text-slate-500">{k}:</dt>
-              <dd className="min-w-0 break-words text-slate-800">{formatValue(v)}</dd>
+              <dt className="shrink-0 text-slate-500">{labelForKey(k)}:</dt>
+              <dd className="min-w-0 break-words text-slate-800">{displayValue(k, v)}</dd>
             </div>
           ))}
         </dl>

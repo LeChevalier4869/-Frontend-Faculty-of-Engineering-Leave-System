@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { BASE_URL, apiEndpoints } from "../../utils/api";
 
 const PAGE_SIZE = 10;
@@ -33,7 +33,7 @@ export default function PersonnelTypeManage() {
         () => (window.location.href = "/login")
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("Error", err.response?.data?.message || err.message);
     }
   };
 
@@ -64,7 +64,7 @@ export default function PersonnelTypeManage() {
 
   const handleAdd = async () => {
     if (!newName.trim()) {
-      return Swal.fire("Error", "ต้องระบุชื่อประเภทบุคลากร", "error");
+      return notifyError("Error", "ต้องระบุชื่อประเภทบุคลากร");
     }
     try {
       const res = await axios.post(
@@ -81,7 +81,7 @@ export default function PersonnelTypeManage() {
           confirmButtonText: "รับทราบ",
         });
       } else {
-        Swal.fire("เพิ่มสำเร็จ!", "", "success");
+        notifySuccess("เพิ่มสำเร็จ!");
       }
       resetForm();
       loadData();
@@ -101,7 +101,7 @@ export default function PersonnelTypeManage() {
 
   const handleUpdate = async () => {
     if (!newName.trim()) {
-      return Swal.fire("Error", "ต้องระบุชื่อประเภทบุคลากร", "error");
+      return notifyError("Error", "ต้องระบุชื่อประเภทบุคลากร");
     }
     try {
       await axios.put(
@@ -109,7 +109,7 @@ export default function PersonnelTypeManage() {
         { name: newName },
         authHeader()
       );
-      Swal.fire("อัปเดตสำเร็จ!", "", "success");
+      notifySuccess("อัปเดตสำเร็จ!");
       resetForm();
       loadData();
     } catch (err) {
@@ -134,7 +134,7 @@ export default function PersonnelTypeManage() {
         `${BASE_URL}/admin/personnel-type/${id}`,
         authHeader()
       );
-      Swal.fire("ลบสำเร็จ!", "", "success");
+      notifySuccess("ลบสำเร็จ!");
       const pageCount = Math.ceil(types.length / PAGE_SIZE);
       if (currentPage > pageCount) setCurrentPage(pageCount);
       loadData();

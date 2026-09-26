@@ -81,6 +81,7 @@ export const apiEndpoints = {
   departmentsAdmin: `${BASE_URL}/admin/departments`,
   departmentByIdAdmin: (id) => `${BASE_URL}/admin/departments/${id}`,
   assignDepartmentHead: `${BASE_URL}/admin/assign-head`, // POST { departmentId, headId }
+  vacateDepartmentHead: `${BASE_URL}/admin/vacate-head`, // POST { departmentId }
 
   // admin manage approver positions (ผู้อนุมัติระดับคณะ)
   approverPositions: `${BASE_URL}/admin/approver-positions`, // GET, POST { level, userId }

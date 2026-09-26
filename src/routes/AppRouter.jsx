@@ -199,7 +199,7 @@ const userRouter = createBrowserRouter([
           {
             path: "leave-request-approver2",
             element: (
-              <ProtectedRoute requiredRoles={['APPROVER_2']} checkProxy={true}>
+              <ProtectedRoute requiredRoles={['APPROVER_3']} checkProxy={true}>
                 <LeaveApprover2 />
               </ProtectedRoute>
             )
@@ -207,7 +207,7 @@ const userRouter = createBrowserRouter([
           {
             path: "leave-request-approver3",
             element: (
-              <ProtectedRoute requiredRoles={['APPROVER_3']} checkProxy={true}>
+              <ProtectedRoute requiredRoles={['APPROVER_4']} checkProxy={true}>
                 <LeaveApprover3 />
               </ProtectedRoute>
             )
@@ -215,7 +215,7 @@ const userRouter = createBrowserRouter([
           {
             path: "leave-request-approver4",
             element: (
-              <ProtectedRoute requiredRoles={['APPROVER_4']} checkProxy={true}>
+              <ProtectedRoute requiredRoles={['APPROVER_5']} checkProxy={true}>
                 <LeaveApprover4 />
               </ProtectedRoute>
             )
@@ -223,7 +223,7 @@ const userRouter = createBrowserRouter([
           {
             path: "leave-request-verifier",
             element: (
-              <ProtectedRoute requiredRoles={['VERIFIER']} checkProxy={true}>
+              <ProtectedRoute requiredRoles={['APPROVER_2']} checkProxy={true}>
                 <LeaveVerifier />
               </ProtectedRoute>
             )
@@ -231,7 +231,7 @@ const userRouter = createBrowserRouter([
           {
             path: "dashboard-approver",
             element: (
-              <ProtectedRoute requiredRoles={['APPROVER_1','VERIFIER','APPROVER_2','APPROVER_3','APPROVER_4',]} checkProxy={true}>
+              <ProtectedRoute requiredRoles={['APPROVER_1','APPROVER_2','APPROVER_3','APPROVER_4','APPROVER_5']} checkProxy={true}>
                 <ApproverDashboard />
               </ProtectedRoute>
             )

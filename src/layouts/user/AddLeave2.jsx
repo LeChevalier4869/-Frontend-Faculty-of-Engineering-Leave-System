@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import getApiUrl from "../../utils/apiUtils";
 import axios from "axios";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError, confirmAction } from "../../utils/alert";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { apiEndpoints } from "../../utils/api";
 import useAuth from "../../hooks/useAuth";
 import { filterLeaveTypesBySex } from "../../utils/leavePolicy";
+import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+dayjs.extend(isSameOrBefore);
 
 function AddLeave2() {
   const navigate = useNavigate();
@@ -15,6 +18,8 @@ function AddLeave2() {
   const { user } = useAuth();
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // ใบลาของฉันที่ยังมีผล (รออนุมัติ/อนุมัติแล้ว) ใช้ตรวจวันลาซ้อนทับ
+  const [myActiveRequests, setMyActiveRequests] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -30,6 +35,29 @@ function AddLeave2() {
 
     fetchData();
   }, [user?.sex]);
+
+  // ดึงใบลาของฉันที่ยังมีผล เพื่อใช้เตือนกรณีวันลาซ้อนทับ
+  useEffect(() => {
+    async function fetchMyActiveRequests() {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) return;
+        const res = await axios.get(apiEndpoints.leaveRequestMe, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const list = Array.isArray(res.data?.data) ? res.data.data : [];
+        // นับเฉพาะใบที่ยังมีผลจองวันอยู่ (ใบที่ถูกปฏิเสธ/ยกเลิกไปแล้ว วันจะว่างคืน)
+        setMyActiveRequests(
+          list.filter((r) => r.status === "PENDING" || r.status === "APPROVED"),
+        );
+      } catch (error) {
+        console.error("Error fetching my leave requests:", error);
+        setMyActiveRequests([]);
+      }
+    }
+
+    fetchMyActiveRequests();
+  }, []);
   const [formData, setFormData] = useState({
     leaveTypeId: "",
     startDate: "",
@@ -53,6 +81,34 @@ function AddLeave2() {
     setFormData((prev) => ({ ...prev, images: e.target.files[0] }));
   };
 
+  // ตรวจหาใบลาที่ยื่นไว้ก่อนหน้าและมีช่วงวันซ้อนทับกับที่กำลังเลือก
+  // (สองช่วงซ้อนทับกันเมื่อ start ≤ อีกฝั่ง.end และ อีกฝั่ง.start ≤ end)
+  const overlappingRequests = useMemo(() => {
+    if (!formData.startDate || !formData.endDate) return [];
+    const start = dayjs(formData.startDate);
+    const end = dayjs(formData.endDate);
+    if (!start.isValid() || !end.isValid() || end.isBefore(start, "day"))
+      return [];
+
+    return myActiveRequests.filter((r) => {
+      const rStart = dayjs(r.startDate);
+      const rEnd = dayjs(r.endDate);
+      if (!rStart.isValid() || !rEnd.isValid()) return false;
+      return (
+        start.isSameOrBefore(rEnd, "day") && rStart.isSameOrBefore(end, "day")
+      );
+    });
+  }, [formData.startDate, formData.endDate, myActiveRequests]);
+
+  const statusLabel = (status) =>
+    status === "APPROVED" ? "อนุมัติแล้ว" : "รออนุมัติ";
+
+  const formatOverlapRange = (r) => {
+    const s = dayjs(r.startDate).format("DD/MM/YYYY");
+    const e = dayjs(r.endDate).format("DD/MM/YYYY");
+    return s === e ? s : `${s} - ${e}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -64,6 +120,31 @@ function AddLeave2() {
         confirmButtonColor: "#ef4444",
       });
       return;
+    }
+
+    // เตือนกรณีช่วงวันที่ซ้อนทับกับใบลาที่ยื่นไว้ก่อนหน้า — ให้ยืนยันก่อนบันทึก
+    if (overlappingRequests.length > 0) {
+      const list = overlappingRequests
+        .map(
+          (r) =>
+            `<li>${r.leaveType?.name || "การลา"} วันที่ ${formatOverlapRange(
+              r,
+            )} (${statusLabel(r.status)})</li>`,
+        )
+        .join("");
+      const confirmed = await confirmAction({
+        title: "ยืนยันการยื่นลาที่มีวันซ้อนทับ?",
+        html: `
+          <div style="text-align:left">
+            <p>ช่วงวันที่ที่คุณเลือกซ้อนทับกับใบลาที่ยื่นไว้ก่อนหน้า ดังนี้</p>
+            <ul style="margin:8px 0 8px 20px;list-style:disc">${list}</ul>
+            <p>การยื่นซ้อนทับอาจทำให้เกิดการลาซ้ำซ้อนในวันเดียวกัน คุณแน่ใจหรือไม่ที่จะยื่นใบลานี้?</p>
+          </div>`,
+        confirmText: "ยืนยันยื่นลา",
+        cancelText: "ยกเลิก",
+        icon: "warning",
+      });
+      if (!confirmed) return;
     }
 
     setIsSubmitting(true);
@@ -87,21 +168,15 @@ function AddLeave2() {
         },
       });
 
-      Swal.fire({
-        icon: "success",
-        title: "บันทึกคำขอลาสำเร็จ",
-        text: "ระบบได้บันทึกข้อมูลของคุณแล้ว",
-        confirmButtonColor: "#3b82f6",
-        confirmButtonText: "ตกลง",
-      }).then(() => navigate("/leave"));
+      notifySuccess("บันทึกคำขอลาสำเร็จ", "ระบบได้บันทึกข้อมูลของคุณแล้ว").then(
+        () => navigate("/leave")
+      );
     } catch (err) {
       console.error("❌ Submit Error:", err.response || err.message || err);
-      Swal.fire({
-        icon: "error",
-        title: "เกิดข้อผิดพลาด",
-        text: err.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้",
-        confirmButtonColor: "#ef4444",
-      });
+      notifyError(
+        "เกิดข้อผิดพลาด",
+        err.response?.data?.message || "ไม่สามารถบันทึกข้อมูลได้"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -191,6 +266,26 @@ function AddLeave2() {
               </div>
             </div>
           </div>
+
+          {/* แจ้งเตือนเมื่อช่วงวันที่เลือกซ้อนทับกับใบลาที่ยื่นไว้ก่อนหน้า */}
+          {overlappingRequests.length > 0 && (
+            <div className="rounded-lg bg-orange-50 px-3 py-2 text-sm text-orange-800 border border-orange-200">
+              <div className="font-medium">
+                ⚠️ ช่วงวันที่ที่เลือกซ้อนทับกับใบลาที่ยื่นไว้ก่อนหน้า
+              </div>
+              <ul className="mt-1 ml-5 list-disc space-y-0.5 text-xs text-orange-700">
+                {overlappingRequests.map((r) => (
+                  <li key={r.id}>
+                    {r.leaveType?.name || "การลา"} วันที่ {formatOverlapRange(r)}{" "}
+                    ({statusLabel(r.status)})
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-1 text-xs text-orange-600">
+                หากยืนยันการยื่นซ้อนทับ ระบบจะให้ยืนยันอีกครั้งก่อนบันทึก
+              </div>
+            </div>
+          )}
 
           {/* เหตุผลการลา */}
           <div>

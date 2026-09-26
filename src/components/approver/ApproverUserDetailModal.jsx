@@ -151,7 +151,7 @@ export default function ApproverUserDetailModal({ userId, onClose }) {
                 ) : (
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     {balances.map((b) => {
-                      const rd = formatRemainingDays(b.remainingDays);
+                      const rd = formatRemainingDays(b.remainingDays, b.maxDays);
                       return (
                         <div
                           key={b.id}

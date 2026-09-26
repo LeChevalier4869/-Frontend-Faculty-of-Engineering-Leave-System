@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import { HiOutlineChevronDown } from "react-icons/hi";
-import Swal from "../../utils/alert";
+import { notifySuccess, notifyError } from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import ExcelUploadPanel from "../../components/ExcelUploadPanel";
@@ -70,7 +70,7 @@ export default function AddUser() {
         const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
         setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
       } catch (err) {
-        Swal.fire("Error", "โหลดข้อมูล lookup ล้มเหลว", "error");
+        notifyError("Error", "โหลดข้อมูล lookup ล้มเหลว");
       }
     };
     fetchLookup();
@@ -131,14 +131,13 @@ export default function AddUser() {
         },
       });
 
-      Swal.fire("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว", "success").then(
+      notifySuccess("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว").then(
         () => navigate("/admin/manage-user")
       );
     } catch (err) {
-      Swal.fire(
+      notifyError(
         "ผิดพลาด",
-        err.response?.data?.message || "ไม่สามารถเพิ่มผู้ใช้งานได้",
-        "error"
+        err.response?.data?.message || "ไม่สามารถเพิ่มผู้ใช้งานได้"
       );
     } finally {
       setLoading(false);
@@ -290,22 +289,25 @@ export default function AddUser() {
                 {renderDropdown(
                   "ประเภทบุคลากร",
                   "personnelTypeId",
-                  personnelTypes.map((pt) => ({ value: pt.id, label: pt.name }))
+                  personnelTypes.map((pt) => ({
+                    value: pt.id,
+                    label: pt.name,
+                  })),
                 )}
                 {renderDropdown(
                   "แผนก",
                   "departmentId",
-                  departments.map((d) => ({ value: d.id, label: d.name }))
+                  departments.map((d) => ({ value: d.id, label: d.name })),
                 )}
                 {renderDropdown(
                   "องค์กร",
                   "organizationId",
-                  organizations.map((o) => ({ value: o.id, label: o.name }))
+                  organizations.map((o) => ({ value: o.id, label: o.name })),
                 )}
                 {renderDropdown(
                   "ประเภทพนักงาน",
                   "employmentType",
-                  employmentTypes
+                  employmentTypes,
                 )}
                 <div>
                   <label className="block text-sm font-medium mb-1 text-slate-800">
@@ -379,6 +381,7 @@ export default function AddUser() {
           description="อัปโหลดไฟล์ Excel เพื่อเพิ่มผู้ใช้หลายคน"
           uploadUrl={apiEndpoints.uploadUserExcel}
           templatePath="/Add_Users_Template.xlsx"
+          exampleTemplatePath="/Add_Users_Template_Example.xlsx"
           templateName="Add_Users_Template.xlsx"
           exampleTemplateName="Add_Users_Template_Example.xlsx"
           onSuccess={(result) => {

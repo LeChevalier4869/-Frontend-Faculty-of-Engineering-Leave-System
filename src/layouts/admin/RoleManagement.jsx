@@ -11,7 +11,7 @@ const Panel = ({ className = "", children }) => (
 
 const SYSTEM_ROLES = [
   "USER", "ADMIN", "SUPER_ADMIN",
-  "VERIFIER", "APPROVER_1", "APPROVER_2", "APPROVER_3", "APPROVER_4"
+  "APPROVER_1", "APPROVER_2", "APPROVER_3", "APPROVER_4", "APPROVER_5"
 ];
 
 // หน้านี้เป็น "ดูอย่างเดียว" — แสดงรายการบทบาทในระบบ ไม่อนุญาตให้เพิ่ม/แก้ไข/ลบ

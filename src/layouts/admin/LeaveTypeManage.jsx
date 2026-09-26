@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Swal from "../../utils/alert";
+import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { BASE_URL } from "../../utils/api";
 
 const Panel = ({ className = "", children }) => (
@@ -45,7 +45,7 @@ export default function LeaveTypeManage() {
         () => (window.location.href = "/login")
       );
     } else {
-      Swal.fire("Error", err.response?.data?.message || err.message, "error");
+      notifyError("Error", err.response?.data?.message || err.message);
     }
   };
 
@@ -75,7 +75,7 @@ export default function LeaveTypeManage() {
 
   const handleAdd = async () => {
     if (!name.trim()) {
-      return Swal.fire("Error", "กรุณาระบุชื่อประเภทการลา", "error");
+      return notifyError("Error", "กรุณาระบุชื่อประเภทการลา");
     }
     try {
       const res = await axios.post(
@@ -92,7 +92,7 @@ export default function LeaveTypeManage() {
           confirmButtonText: "รับทราบ",
         });
       } else {
-        Swal.fire("บันทึกสำเร็จ!", "", "success");
+        notifySuccess("บันทึกสำเร็จ!");
       }
       resetForm();
       loadData();
@@ -113,7 +113,7 @@ export default function LeaveTypeManage() {
 
   const handleUpdate = async () => {
     if (!name.trim()) {
-      return Swal.fire("Error", "กรุณาระบุชื่อประเภทการลา", "error");
+      return notifyError("Error", "กรุณาระบุชื่อประเภทการลา");
     }
     try {
       await axios.put(
@@ -121,7 +121,7 @@ export default function LeaveTypeManage() {
         { name, isAvailable, resetOnFiscalYear },
         authHeader()
       );
-      Swal.fire("อัปเดตสำเร็จ!", "", "success");
+      notifySuccess("อัปเดตสำเร็จ!");
       resetForm();
       loadData();
     } catch (err) {
@@ -143,7 +143,7 @@ export default function LeaveTypeManage() {
 
     try {
       await axios.delete(`${BASE_URL}/leave-types/${id}`, authHeader());
-      Swal.fire("ลบสำเร็จ!", "", "success");
+      notifySuccess("ลบสำเร็จ!");
       loadData();
     } catch (err) {
       handleApiError(err);

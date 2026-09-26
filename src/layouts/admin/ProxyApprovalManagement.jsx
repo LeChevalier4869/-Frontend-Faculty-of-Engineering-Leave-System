@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -6,15 +6,16 @@ import { th } from 'date-fns/locale';
 import { API, apiEndpoints } from '../../utils/api';
 import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaUser, FaCheckCircle } from 'react-icons/fa';
 import { X, ChevronDown, AlertTriangle } from 'lucide-react';
-import Swal from 'sweetalert2';
+import Swal, { notifySuccess, notifyError } from '../../utils/alert';
 import { useNavigate } from 'react-router-dom';
 import PeoplePickerModal from '../../components/PeoplePickerModal';
 
 const inputStyle = "w-full bg-white text-slate-900 border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
-// ระดับผู้อนุมัติ -> roleId ในตาราง Role
-// (VERIFIER=3, APPROVER_1=4, APPROVER_2=5, APPROVER_3=6, APPROVER_4=7)
-const ROLE_ID_BY_LEVEL = { 1: 4, 2: 3, 3: 5, 4: 6, 5: 7 };
+// ระดับผู้อนุมัติ -> ชื่อ role (contiguous: level N = APPROVER_N)
+// อ้างอิงด้วย "ชื่อ role" ไม่ใช่ Role.id (ปลอดภัยทั้ง prod และ fresh install)
+const ROLE_NAME_BY_LEVEL = { 1: "APPROVER_1", 2: "APPROVER_2", 3: "APPROVER_3", 4: "APPROVER_4", 5: "APPROVER_5" };
+const APPROVER_ROLE_NAMES = ["APPROVER_1", "APPROVER_2", "APPROVER_3", "APPROVER_4", "APPROVER_5"];
 
 const ProxyApprovalManagement = () => {
   // Tab navigation state
@@ -43,6 +44,7 @@ const ProxyApprovalManagement = () => {
   const [userRoles, setUserRoles] = useState({});
   const [roleConflict, setRoleConflict] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [departments, setDepartments] = useState([]); // ใช้กรอง APPROVER_1 = หัวหน้าสาขา + สาขาของหัวหน้า
 
   // Pagination states - แยกตาม tab
   const [currentPageToday, setCurrentPageToday] = useState(1);
@@ -69,10 +71,10 @@ const ProxyApprovalManagement = () => {
 
   const approverLevels = {
     1: 'APPROVER_1 (หัวหน้าสาขา)',
-    2: 'VERIFIER (ผู้ตรวจสอบ)',
-    3: 'APPROVER_2 (สรรบรรณคณะ)',
-    4: 'APPROVER_3 (รองคณบดี)',
-    5: 'APPROVER_4 (คณบดี)',
+    2: 'APPROVER_2 (สารบรรณคณะ)',
+    3: 'APPROVER_3 (หัวหน้าสำนักงานคณบดี)',
+    4: 'APPROVER_4 (รองคณบดีฝ่ายบริหาร)',
+    5: 'APPROVER_5 (คณบดี)',
   };
 
   useEffect(() => {
@@ -83,6 +85,7 @@ const ProxyApprovalManagement = () => {
       // โหลดข้อมูลอื่นๆ หลังจากได้ข้อมูลผู้ใช้แล้ว
       loadProxyApprovals(1);
       fetchUserLand();
+      fetchDepartments();
     });
   }, []);
 
@@ -128,14 +131,31 @@ const ProxyApprovalManagement = () => {
   // คำนวณจากรายชื่อทั้งระบบ (allUsers) ตรง ๆ เพื่อไม่ให้ endpoint approvers-for-level
   // ตัดคนที่บังเอิญถือ proxy อยู่ (isProxy) ออกไป และเห็นหัวหน้าสาขาครบทุกสาขา
   const originalApproversForLevel = (level) => {
-    const roleId = ROLE_ID_BY_LEVEL[Number(level)];
-    if (!roleId) return [];
-    return allUsers.filter((u) => (u.roles || []).includes(roleId));
+    const roleName = ROLE_NAME_BY_LEVEL[Number(level)];
+    if (!roleName) return [];
+    return allUsers.filter((u) => (u.roleNames || []).includes(roleName));
   };
+
+  // เซ็ต id ของผู้ที่เป็นหัวหน้าสาขา (อย่างน้อย 1 สาขา) — ใช้กรอง APPROVER_1
+  const deptHeadIds = useMemo(
+    () => new Set(departments.map((d) => d.headId).filter(Boolean)),
+    [departments],
+  );
 
   // เมื่อเปลี่ยนระดับ: เตรียม pool ผู้มอบอำนาจ (ผู้ถือบทบาทของระดับนั้น) และตั้งค่าเริ่มต้น
   // ผู้ใช้เปลี่ยนคนเองได้ผ่าน modal ค้นหา (โดยเฉพาะ APPROVER_1 ที่มีหัวหน้าหลายสาขา)
   const autoMapOriginalApprover = (level) => {
+    // APPROVER_1 (หัวหน้าสาขา): admin เลือกหัวหน้าสาขาเอง — ไม่ auto-select
+    // และ pool จำกัดเฉพาะ "ผู้ที่เป็นหัวหน้าสาขาจริง" (ไม่ใช่ทุกคนที่ถือบทบาท APPROVER_1)
+    if (Number(level) === 1) {
+      const heads = allUsers.filter((u) => deptHeadIds.has(u.id));
+      // fallback: ถ้า departments ยังโหลดไม่เสร็จ/ว่าง ให้ใช้ผู้ถือบทบาท APPROVER_1 ไปก่อน
+      // (หัวหน้าสาขา ⟺ APPROVER_1 ถูก sync อยู่แล้ว) เพื่อให้ยังเลือกผู้มอบอำนาจได้เสมอ
+      setOriginalApproverPool(heads.length ? heads : originalApproversForLevel(1));
+      clearOriginalUser();
+      return;
+    }
+
     const pool = originalApproversForLevel(level);
     setOriginalApproverPool(pool);
 
@@ -200,7 +220,7 @@ const ProxyApprovalManagement = () => {
       }
     } catch (error) {
       console.error('Error loading proxy approvals:', error);
-      Swal.fire('ข้อผิดพลาด', 'โหลดข้อมูลไม่สำเร็จ', 'error');
+      notifyError('ข้อผิดพลาด', 'โหลดข้อมูลไม่สำเร็จ');
     } finally {
       setLoading(false);
     }
@@ -212,34 +232,23 @@ const ProxyApprovalManagement = () => {
 
       let list = normalizeUsers(res?.data);
 
-      // แยกผู้ใช้ตาม role สำหรับ original approvers (role 3-7)
-      const originalApprovers = list.filter(user => {
-        const userRoles = user.roles || [];
-        return userRoles.some(roleId => roleId >= 3 && roleId <= 7);
-      });
-
+      // แยกผู้ใช้ที่ถือบทบาทผู้อนุมัติ (APPROVER_1..5)
+      const originalApprovers = list.filter(user =>
+        (user.roleNames || []).some(r => APPROVER_ROLE_NAMES.includes(r))
+      );
 
       // สำหรับ proxy approvers ให้เลือกได้ทุกคน (รวม user ทั่วไปด้วย)
       const allUsers = normalizeUsers(res?.data);
 
       setAllUsers(allUsers); // เก็บผู้ใช้ทั้งหมดสำหรับ proxy selection
 
-      // สร้าง role mapping สำหรับ original approvers
+      // สร้าง role mapping สำหรับ original approvers (userId -> ชื่อ role อนุมัติ)
       const roles = {};
       originalApprovers.forEach(user => {
-        const userRoles = user.roles || [];
-        // หา role แรกที่ตรงกับเงื่อนไข (3-7)
-        const approverRole = userRoles.find(roleId => roleId >= 3 && roleId <= 7);
-        if (approverRole) {
-          const roleNames = {
-            3: 'VERIFIER',
-            4: 'APPROVER_1',
-            5: 'APPROVER_2',
-            6: 'APPROVER_3',
-            7: 'APPROVER_4'
-          };
-          roles[user.id] = roleNames[approverRole] || 'user';
-        }
+        const approverRole = (user.roleNames || []).find(r =>
+          APPROVER_ROLE_NAMES.includes(r)
+        );
+        if (approverRole) roles[user.id] = approverRole;
       });
       setUserRoles(roles);
 
@@ -249,28 +258,29 @@ const ProxyApprovalManagement = () => {
     }
   };
 
+  // โหลดรายชื่อแผนก (เพื่อรู้ว่าใครเป็นหัวหน้าสาขา + สาขาที่เขาดูแล) สำหรับกรอง APPROVER_1
+  const fetchDepartments = async () => {
+    try {
+      const res = await API.get("/admin/departmentsList");
+      setDepartments(res.data?.data || []);
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+      setDepartments([]);
+    }
+  };
+
   const getProxyUserRole = (userId) => {
     // หา user จาก allUsers และ return role ถ้ามี
     const user = allUsers.find(u => u.id === userId);
     if (!user) return 'user';
 
-    const userRoles = user.roles || [];
-    // หา role แรกที่ตรงกับเงื่อนไข (3-7)
-    const approverRole = userRoles.find(roleId => roleId >= 3 && roleId <= 7);
-    if (approverRole) {
-      const roleNames = {
-        3: 'VERIFIER',
-        4: 'APPROVER_1',
-        5: 'APPROVER_2',
-        6: 'APPROVER_3',
-        7: 'APPROVER_4'
-      };
-      return roleNames[approverRole] || 'user';
-    }
+    const names = user.roleNames || [];
+    const approverRole = names.find(r => APPROVER_ROLE_NAMES.includes(r));
+    if (approverRole) return approverRole;
 
-    // ถ้าไม่มี approver role ให้แสดง USER/ADMIN ถ้ามี
-    if (userRoles.includes(1)) return 'USER';
-    if (userRoles.includes(2)) return 'ADMIN';
+    // ถ้าไม่มี approver role ให้แสดง ADMIN/USER ถ้ามี
+    if (names.includes('ADMIN')) return 'ADMIN';
+    if (names.includes('USER')) return 'USER';
 
     return 'user';
   };
@@ -283,9 +293,9 @@ const ProxyApprovalManagement = () => {
   const getRoleForLevel = (level) => {
     const roleMap = {
       1: 'หัวหน้าสาขา',
-      2: 'ผู้ตรวจสอบ',
-      3: 'สรรบรรณคณะ',
-      4: 'รองคณบดี',
+      2: 'สารบรรณคณะ',
+      3: 'หัวหน้าสำนักงานคณบดี',
+      4: 'รองคณบดีฝ่ายบริหาร',
       5: 'คณบดี',
     };
     return roleMap[level] || '';
@@ -324,6 +334,9 @@ const ProxyApprovalManagement = () => {
     return arr
       .map((u) => {
         const userRoles = u.userRoles ? u.userRoles.map(ur => ur.roleId) : [];
+        const roleNames = u.userRoles
+          ? u.userRoles.map(ur => ur.role?.name).filter(Boolean)
+          : [];
 
         return {
           id: u.id ?? u.userId ?? null,
@@ -334,6 +347,7 @@ const ProxyApprovalManagement = () => {
           email: u.email ?? "",
           // ดึง roles จาก UserRole relationship
           roles: userRoles,
+          roleNames,
           position: u.position ?? "",
           department: u.department ?? null,
           personnelTypeId: u.personnelTypeId ?? u.personnelType?.id ?? null,
@@ -361,16 +375,56 @@ const ProxyApprovalManagement = () => {
     setOriginalFirstName(u.firstName || "");
     setOriginalLastName(u.lastName || "");
     setSelectedOriginalUser(u);
+
+    // ล้างผู้อนุมัติแทนเมื่อ:
+    // - ระดับหัวหน้าสาขา (ต้องเลือกใหม่ในแผนกเดียวกัน) หรือ
+    // - ผู้มอบอำนาจที่เลือกใหม่ ตรงกับผู้อนุมัติแทนเดิม (ห้ามเป็นคนเดียวกัน)
+    const clearProxy =
+      Number(formData.approverLevel) === 1 || selectedProxyUser?.id === u.id;
+    if (clearProxy) {
+      setSeletedProxyUser(null);
+      setProxyPrefixName("");
+      setProxyFirstName("");
+      setProxyLastName("");
+    }
+
     // ใช้ functional update เพื่อป้องกัน stale state
-    setFormData(prevFormData => ({ ...prevFormData, originalApproverId: u.id }));
+    setFormData((prev) => ({
+      ...prev,
+      originalApproverId: u.id,
+      ...(clearProxy ? { proxyApproverId: "" } : {}),
+    }));
   };
+
+  // รายชื่อผู้อนุมัติแทนใน popup: ระดับหัวหน้าสาขาให้เลือกเฉพาะคนในสาขาของผู้มอบอำนาจ
+  const proxyPickerUsers = useMemo(() => {
+    let base = allUsers;
+    if (Number(formData.approverLevel) === 1 && selectedOriginalUser) {
+      const dept =
+        departments.find((d) => d.headId === selectedOriginalUser.id) ||
+        departments.find((d) => d.id === selectedOriginalUser.department?.id) ||
+        null;
+      const deptId = dept?.id ?? selectedOriginalUser.department?.id ?? null;
+      const deptName = dept?.name ?? selectedOriginalUser.department?.name ?? null;
+      if (deptId || deptName) {
+        base = allUsers.filter(
+          (u) =>
+            (deptId && u.department?.id === deptId) ||
+            (deptName && u.department?.name === deptName),
+        );
+      }
+    }
+    // ผู้อนุมัติแทนต้องไม่ใช่คนเดียวกับผู้มอบอำนาจ
+    const excludeId = selectedOriginalUser?.id;
+    return excludeId ? base.filter((u) => u.id !== excludeId) : base;
+  }, [formData.approverLevel, selectedOriginalUser, allUsers, departments]);
 
   const pickProxyUser = (u) => {
     setProxyPrefixName(u.prefixName || "");
     setProxyFirstName(u.firstName || "");
     setProxyLastName(u.lastName || "");
     setSeletedProxyUser(u);
-    setFormData({ ...formData, proxyApproverId: u.id });
+    setFormData((prev) => ({ ...prev, proxyApproverId: u.id }));
   };
 
   const clearOriginalUser = () => {
@@ -378,7 +432,8 @@ const ProxyApprovalManagement = () => {
     setOriginalFirstName("");
     setOriginalLastName("");
     setSelectedOriginalUser(null);
-    setFormData({ ...formData, originalApproverId: "" });
+    // functional update: กันทับค่า approverLevel ที่เพิ่งตั้งใน onChange เดียวกัน (stale closure)
+    setFormData((prev) => ({ ...prev, originalApproverId: "" }));
   };
 
   const handleEdit = (proxy) => {
@@ -428,7 +483,7 @@ const ProxyApprovalManagement = () => {
 
         // ตรวจสอบว่า backend สำเร็จจริงหรือไม่
         if (response.status === 200 || response.status === 201) {
-          Swal.fire('สำเร็จ', 'ยกเลิกการมอบอำนาจสำเร็จ', 'success');
+          notifySuccess('สำเร็จ', 'ยกเลิกการมอบอำนาจสำเร็จ');
           loadProxyApprovals();
           // แจ้ง Sidebar ให้ดึงสิทธิ์ proxy ใหม่ทันที
           window.dispatchEvent(new Event("proxy-updated"));
@@ -458,7 +513,7 @@ const ProxyApprovalManagement = () => {
           errorMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ กรุณาตรวจสอบอินเทอร์เน็ต';
         }
 
-        Swal.fire('ข้อผิดพลาด', errorMessage, 'error');
+        notifyError('ข้อผิดพลาด', errorMessage);
       }
     }
   };
@@ -515,32 +570,23 @@ const ProxyApprovalManagement = () => {
     // ตรวจสอบว่าเลือก original approver และ proxy approver ครบถ้วนหรือไม่
     if (!selectedOriginalUser) {
       console.log('🔍 Debug - No selected original user');
-      Swal.fire({
-        icon: "error",
-        title: "ข้อมูลไม่ครบถ้วน",
-        text: "กรุณาเลือกผู้มอบอำนาจ (Original Approver)",
-      });
+      notifyError("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกผู้มอบอำนาจ (Original Approver)");
       return;
     }
 
     if (!selectedProxyUser) {
       console.log('🔍 Debug - No selected proxy user');
-      Swal.fire({
-        icon: "error",
-        title: "ข้อมูลไม่ครบถ้วน",
-        text: "กรุณาเลือกผู้อนุมัติแทน",
-      });
+      notifyError("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกผู้อนุมัติแทน");
       return;
     }
 
     // ตรวจสอบว่า original approver และ proxy approver เป็นคนเดียวกันหรือไม่
     if (selectedOriginalUser.id === selectedProxyUser.id) {
       console.log('🔍 Debug - Same user selected:', selectedOriginalUser.id, selectedProxyUser.id);
-      Swal.fire({
-        icon: "error",
-        title: "ข้อมูลไม่ถูกต้อง",
-        text: "ไม่สามารถมอบอำนาจให้ตนเองได้ กรุณาเลือกผู้อนุมัติแทนที่ต่างจากผู้มอบอำนาจ",
-      });
+      notifyError(
+        "ข้อมูลไม่ถูกต้อง",
+        "ไม่สามารถมอบอำนาจให้ตนเองได้ กรุณาเลือกผู้อนุมัติแทนที่ต่างจากผู้มอบอำนาจ"
+      );
       return;
     }
 
@@ -548,29 +594,17 @@ const ProxyApprovalManagement = () => {
     // ตรวจสอบวันที่
     if (formData.isDaily) {
       if (!formData.dailyDate) {
-        Swal.fire({
-          icon: "error",
-          title: "ข้อมูลไม่ครบถ้วน",
-          text: "กรุณาเลือกวันที่สำหรับการมอบอำนาจรายวัน",
-        });
+        notifyError("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกวันที่สำหรับการมอบอำนาจรายวัน");
         return;
       }
     } else {
       if (!formData.startDate || !formData.endDate) {
-        Swal.fire({
-          icon: "error",
-          title: "ข้อมูลไม่ครบถ้วน",
-          text: "กรุณาเลือกวันเริ่มต้นและวันสิ้นสุด",
-        });
+        notifyError("ข้อมูลไม่ครบถ้วน", "กรุณาเลือกวันเริ่มต้นและวันสิ้นสุด");
         return;
       }
 
       if (new Date(formData.startDate) > new Date(formData.endDate)) {
-        Swal.fire({
-          icon: "error",
-          title: "ข้อมูลไม่ถูกต้อง",
-          text: "วันเริ่มต้นต้องไม่เกินวันสิ้นสุด",
-        });
+        notifyError("ข้อมูลไม่ถูกต้อง", "วันเริ่มต้นต้องไม่เกินวันสิ้นสุด");
         return;
       }
     }
@@ -654,11 +688,10 @@ const ProxyApprovalManagement = () => {
       );
 
       if (existingProxyCheck) {
-        Swal.fire({
-          icon: "error",
-          title: "ข้อมูลไม่ถูกต้อง",
-          text: "ผู้อนุมัติแทนนี้มีอำนาจในระดับที่กำหนดอยู่แล้ว ไม่สามารถมอบอำนาจซ้ำได้",
-        });
+        notifyError(
+          "ข้อมูลไม่ถูกต้อง",
+          "ผู้อนุมัติแทนนี้มีอำนาจในระดับที่กำหนดอยู่แล้ว ไม่สามารถมอบอำนาจซ้ำได้"
+        );
         return;
       }
 
@@ -694,11 +727,10 @@ const ProxyApprovalManagement = () => {
         response = await API.post(apiEndpoints.proxyApproval, payload);
       }
 
-      Swal.fire({
-        icon: "success",
-        title: "สำเร็จ",
-        text: editingProxy ? "แก้ไขการมอบอำนาจสำเร็จแล้ว" : "สร้างการมอบอำนาจสำเร็จแล้ว",
-      });
+      notifySuccess(
+        "สำเร็จ",
+        editingProxy ? "แก้ไขการมอบอำนาจสำเร็จแล้ว" : "สร้างการมอบอำนาจสำเร็จแล้ว"
+      );
 
       loadProxyApprovals();
       setShowModal(false);
@@ -711,11 +743,10 @@ const ProxyApprovalManagement = () => {
       console.error("Error status:", err.response?.status);
       console.error("Error data:", err.response?.data);
 
-      Swal.fire({
-        icon: "error",
-        title: "เกิดข้อผิดพลาด",
-        text: err.response?.data?.message || err.message || "บันทึกข้อมูลไม่สำเร็จ",
-      });
+      notifyError(
+        "เกิดข้อผิดพลาด",
+        err.response?.data?.message || err.message || "บันทึกข้อมูลไม่สำเร็จ"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -1083,6 +1114,10 @@ const ProxyApprovalManagement = () => {
                       <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 border border-amber-200">
                         กรุณาเลือกระดับผู้อนุมัติก่อน
                       </div>
+                    ) : Number(formData.approverLevel) === 1 && !selectedOriginalUser ? (
+                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 border border-amber-200">
+                        กรุณาเลือกผู้มอบอำนาจ (หัวหน้าสาขา) ก่อน — ระบบจะให้เลือกผู้อนุมัติแทนเฉพาะบุคลากรในสาขานั้น
+                      </div>
                     ) : selectedProxyUser ? (
                       <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                         <div className="flex min-w-0 items-center gap-2">
@@ -1278,7 +1313,7 @@ const ProxyApprovalManagement = () => {
                             <div className="text-sm text-amber-800">
                               <div className="font-medium">ข้อควรพิจารณา:</div>
                               <ul className="mt-1 space-y-1">
-                                {selectedProxyUser && getProxyUserRole(selectedProxyUser.id) === getRoleForLevel(formData.approverLevel) && ['VERIFIER', 'APPROVER_1', 'APPROVER_2', 'APPROVER_3', 'APPROVER_4'].includes(getProxyUserRole(selectedProxyUser.id)) && (
+                                {selectedProxyUser && getProxyUserRole(selectedProxyUser.id) === getRoleForLevel(formData.approverLevel) && ['APPROVER_1', 'APPROVER_2', 'APPROVER_3', 'APPROVER_4', 'APPROVER_5'].includes(getProxyUserRole(selectedProxyUser.id)) && (
                                   <li>• ผู้อนุมัติแทน ({getProxyUserRole(selectedProxyUser.id)}) มี role เดียวกับระดับที่เลือก ({getRoleForLevel(formData.approverLevel)}) - จะได้รับอำนาจเพิ่มเติม</li>
                                 )}
                               </ul>
@@ -1326,10 +1361,14 @@ const ProxyApprovalManagement = () => {
           title={peoplePicker === "original" ? "เลือกผู้มอบอำนาจ" : "เลือกผู้อนุมัติแทน"}
           subtitle={
             peoplePicker === "original"
-              ? "ผู้ถือบทบาทของระดับที่เลือก (แสดงทุกสาขา ดูสาขากำกับได้)"
-              : "เลือกได้ทุกคนในระบบ"
+              ? Number(formData.approverLevel) === 1
+                ? "เฉพาะหัวหน้าสาขา (เลือกได้ทุกสาขา)"
+                : "ผู้ถือบทบาทของระดับที่เลือก (แสดงทุกสาขา ดูสาขากำกับได้)"
+              : Number(formData.approverLevel) === 1
+                ? "เฉพาะบุคลากรในสาขาของผู้มอบอำนาจ"
+                : "เลือกได้ทุกคนในระบบ"
           }
-          users={peoplePicker === "original" ? originalApproverPool : allUsers}
+          users={peoplePicker === "original" ? originalApproverPool : proxyPickerUsers}
           currentId={
             peoplePicker === "original"
               ? selectedOriginalUser?.id
@@ -1337,8 +1376,12 @@ const ProxyApprovalManagement = () => {
           }
           emptyText={
             peoplePicker === "original"
-              ? "ไม่มีผู้ถือบทบาทในระดับนี้"
-              : "ไม่พบผู้ใช้งาน"
+              ? Number(formData.approverLevel) === 1
+                ? "ไม่พบหัวหน้าสาขา"
+                : "ไม่มีผู้ถือบทบาทในระดับนี้"
+              : Number(formData.approverLevel) === 1
+                ? "ไม่พบบุคลากรในสาขานี้ (เลือกผู้มอบอำนาจก่อน)"
+                : "ไม่พบผู้ใช้งาน"
           }
           onPick={(u) => {
             if (peoplePicker === "original") pickOriginalUser(u);

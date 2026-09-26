@@ -18,14 +18,9 @@ import {
   Ban,
   Info,
   ExternalLink,
-  LayoutDashboard,
   ClipboardList,
   CalendarDays,
   RotateCcw,
-  CheckCircle2,
-  Hourglass,
-  FileStack,
-  CalendarClock,
 } from "lucide-react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -35,6 +30,8 @@ import {
   filterLeaveBalancesLatestYear,
   filterLeaveTypesMapBySex,
   isFemaleOnlyLeaveTypeName,
+  isMaleOnlyLeaveTypeName,
+  resolveUserSex,
 } from "../../utils/leavePolicy";
 import { expandHolidays, defaultHolidayYears } from "../../utils/holidayUtils";
 import LeaveCancellationModal from "../../components/admin/LeaveCancellationModal";
@@ -173,10 +170,10 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
 
   const STEP_LABELS = {
     1: "หัวหน้าสาขา (Approver 1)",
-    2: "ผู้ตรวจสอบ (Verifier)",
-    4: "สรรบรรณคณะ (Approver 2)",
-    5: "รองคณบดี (Approver 3)",
-    6: "คณบดี (Approver 4)",
+    2: "สารบรรณคณะ (Approver 2)",
+    4: "หัวหน้าสำนักงานคณบดี (Approver 3)",
+    5: "รองคณบดีฝ่ายบริหาร (Approver 4)",
+    6: "คณบดี (Approver 5)",
   };
 
   const formatUserName = (u) => {
@@ -342,9 +339,22 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
     setSelectedLeaveBalance(selected || null);
   }, [leaveTypeId, leaveBalances]);
 
+  const userSex = useMemo(() => resolveUserSex(selectedUser), [selectedUser]);
+
   const leaveTypesMapByUserSex = useMemo(() => {
-    return filterLeaveTypesMapBySex(leaveTypesMap, selectedUser?.sex);
-  }, [leaveTypesMap, selectedUser?.sex]);
+    return filterLeaveTypesMapBySex(leaveTypesMap, userSex);
+  }, [leaveTypesMap, userSex]);
+
+  // เงื่อนไขเพศไม่ตรงกับประเภทการลาที่เลือก (ใช้ทั้งเตือนและบล็อกการบันทึก)
+  const sexLeaveConflict = useMemo(() => {
+    if (!selectedUser || !leaveTypeId) return null;
+    const name = leaveTypesMap?.[leaveTypeId] || "";
+    if (userSex === "MALE" && isFemaleOnlyLeaveTypeName(name))
+      return { requiredSex: "หญิง", name };
+    if (userSex === "FEMALE" && isMaleOnlyLeaveTypeName(name))
+      return { requiredSex: "ชาย", name };
+    return null;
+  }, [selectedUser, leaveTypeId, leaveTypesMap, userSex]);
 
   const parseYmdOrDmy = useCallback((value) => {
     if (!value) return dayjs.invalid();
@@ -460,6 +470,16 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
       }
       if (!String(documentNumber || "").trim()) {
         alert("กรุณาระบุเลขที่เอกสาร");
+        return;
+      }
+
+      if (sexLeaveConflict) {
+        await Swal.fire({
+          icon: "warning",
+          title: "เพศไม่ตรงกับประเภทการลา",
+          text: `ประเภทการลา "${sexLeaveConflict.name}" สำหรับเพศ${sexLeaveConflict.requiredSex}เท่านั้น`,
+          confirmButtonText: "ตกลง",
+        });
         return;
       }
 
@@ -674,26 +694,20 @@ function LeaveRequestModalAdmin({ leaveTypesMap = {}, onClose, onSuccess }) {
                 />
               </div>
 
-              {/* ตรวจสอบเงื่อนไขเพศของประเภทการลา */}
-              {selectedUser && leaveTypeId && (() => {
-                const leaveTypeName = leaveTypesMapByUserSex[leaveTypeId] || "";
-                const isFemaleOnly = isFemaleOnlyLeaveTypeName(leaveTypeName);
-                const isMale = selectedUser.prefixName?.includes("นาย") || selectedUser.sex === "MALE";
-                
-                if (isFemaleOnly && isMale) {
-                  return (
-                    <div className="sm:col-span-2">
-                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 border border-amber-200">
-                        <span className="font-medium">⚠️ ประเภทการลานี้สำหรับสตรีเท่านั้น</span>
-                        <span className="ml-2 text-xs text-amber-600">
-                          ({selectedUser.prefixName} {selectedUser.firstName} {selectedUser.lastName} ไม่สามารถเลือกประเภทนี้ได้)
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
+              {/* เตือนเมื่อเพศของผู้ใช้ไม่ตรงกับประเภทการลาที่เลือก (บล็อกการบันทึกด้วย) */}
+              {sexLeaveConflict && (
+                <div className="sm:col-span-2">
+                  <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800 border border-rose-200">
+                    <span className="font-medium">
+                      ⚠️ ประเภทการลานี้สำหรับเพศ{sexLeaveConflict.requiredSex}เท่านั้น
+                    </span>
+                    <span className="ml-2 text-xs text-rose-600">
+                      ({selectedUser.prefixName} {selectedUser.firstName}{" "}
+                      {selectedUser.lastName} ไม่สามารถยื่นลาประเภทนี้ได้)
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {(holidayLoadError || selectedLeaveBalance) && (
                 <div className="sm:col-span-2">
@@ -945,7 +959,8 @@ export default function AddOtherRequest() {
   // แท็บย่อยเก็บใน URL (?sub= / ?rsub=) เพื่อให้คงค้างเมื่อกด back กลับมา
   // (เข้าไปดูรายละเอียดใบลาแล้วย้อนกลับ ต้องอยู่แท็บย่อยเดิม) โดยคง ?tab= ของแท็บบนไว้
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("sub") || "overview"; // 'overview' | 'requests' | 'calendar'
+  // รวมแท็บ "ภาพรวม" เข้ากับ "คำขอลา" แล้ว เหลือ 2 แท็บ: requests | calendar
+  const activeTab = searchParams.get("sub") === "calendar" ? "calendar" : "requests";
   const requestSubTab = searchParams.get("rsub") || "today"; // 'today' | 'all'
 
   const setActiveTab = (value) => {
@@ -1229,40 +1244,8 @@ export default function AddOtherRequest() {
   }
 
   const tabs = [
-    { key: "overview", label: "ภาพรวม", icon: LayoutDashboard },
     { key: "requests", label: "คำขอลา", icon: ClipboardList },
     { key: "calendar", label: "ปฏิทิน", icon: CalendarDays },
-  ];
-
-  const statCards = [
-    {
-      key: "total",
-      label: "คำขอทั้งหมด",
-      value: stats.total,
-      icon: FileStack,
-      tone: "text-slate-700 bg-slate-100",
-    },
-    {
-      key: "today",
-      label: "ยื่นวันนี้",
-      value: stats.today,
-      icon: CalendarClock,
-      tone: "text-brand-700 bg-brand-50",
-    },
-    {
-      key: "pending",
-      label: "รอดำเนินการ",
-      value: stats.pending,
-      icon: Hourglass,
-      tone: "text-amber-700 bg-amber-50",
-    },
-    {
-      key: "approved",
-      label: "อนุมัติแล้ว",
-      value: stats.approved,
-      icon: CheckCircle2,
-      tone: "text-emerald-700 bg-emerald-50",
-    },
   ];
 
   return (
@@ -1322,36 +1305,9 @@ export default function AddOtherRequest() {
           </div>
         </div>
 
-        {/* ===================== แท็บ: ภาพรวม ===================== */}
-        {activeTab === "overview" && (
+        {/* ===================== แท็บ: คำขอลา (รวมภาพรวม) ===================== */}
+        {activeTab === "requests" && (
           <div className="space-y-6">
-            {/* Stat cards */}
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              {statCards.map((c) => {
-                const Icon = c.icon;
-                return (
-                  <div
-                    key={c.key}
-                    className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 flex items-center gap-3"
-                  >
-                    <span
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl ${c.tone}`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-2xl font-semibold text-slate-900 leading-tight">
-                        {c.value}
-                      </div>
-                      <div className="text-xs text-slate-500 truncate">
-                        {c.label}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
             {/* กำลังลาวันนี้ */}
             <div className="rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 p-5 shadow-sm flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500 text-white">
@@ -1399,12 +1355,8 @@ export default function AddOtherRequest() {
                 </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* ===================== แท็บ: คำขอลา ===================== */}
-        {activeTab === "requests" && (
-          <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5">
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:p-5">
             {/* Sub-tabs: วันนี้ / ทั้งหมด */}
             <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
               <div className="inline-flex rounded-xl bg-slate-100 p-1">
@@ -1675,6 +1627,7 @@ export default function AddOtherRequest() {
                 </nav>
               </div>
             )}
+            </div>
           </div>
         )}
 

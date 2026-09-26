@@ -5,14 +5,15 @@ import {
   Palmtree,
   Baby,
   GraduationCap,
-  Accessibility,
-  HandHeart,
   Globe2,
   Heart,
   Moon,
-  Plane,
-  ShieldCheck,
   CircleX,
+  Clock3,
+  FlaskConical,
+  Shield,
+  Accessibility,
+  HandHeart,
 } from "lucide-react";
 
 /**
@@ -22,21 +23,24 @@ import {
  * symbol = สัญลักษณ์ที่แสดงในตาราง
  */
 export const ATTENDANCE_SYMBOL = {
-  PRESENT: "✓",
+  PRESENT: "/",
+  LATE: "ส",
 
-  SICK: "ป",
-  MATERNITY: "ค",
   PERSONAL: "ก",
-  ANNUAL: "ล",
-  ORDINATION: "อ",
-  MILITARY: "ท",
+  SICK: "ป",
+  ANNUAL: "พ",
+  MATERNITY: "ค",
+  PATERNITY: "ช",
+  ORDINATION: "บ",
+  DHARMA: "บ",
+  HAJJ: "บ",
   STUDY: "ศ",
-  PATERNITY: "ภ",
-  REHABILITATION: "ฟ",
-  DHARMA: "ธ",
-  INTERNATIONAL_WORK: "ร",
-  FOLLOW_SPOUSE: "ต",
-  HAJJ: "ฮ",
+  MILITARY: "อ1",
+  INTERNATIONAL_WORK: "อ2",
+  FOLLOW_SPOUSE: "อ3",
+  REHABILITATION: "อ4",
+  TRAINING_RESEARCH: "ว",
+  OFFICIAL_DUTY: "ร",
 
   ABSENT: "ข",
 };
@@ -44,15 +48,14 @@ export const ATTENDANCE_SYMBOL = {
 /**
  * แปลงจากสัญลักษณ์กลับเป็น key
  *
- * "ป" -> "SICK"
- * "ค" -> "MATERNITY"
- * "ล" -> "ANNUAL"
+ * หมายเหตุ:
+ * บ = ORDINATION / DHARMA / HAJJ
+ *
+ * เนื่องจากหลายประเภทใช้สัญลักษณ์เดียวกัน
+ * จึงไม่สามารถระบุ key เดิมจาก symbol "บ" ได้แบบ 1:1
  */
 export const SYMBOL_TO_KEY = Object.fromEntries(
-  Object.entries(ATTENDANCE_SYMBOL).map(([key, symbol]) => [
-    symbol,
-    key,
-  ]),
+  Object.entries(ATTENDANCE_SYMBOL).map(([key, symbol]) => [symbol, key]),
 );
 
 /**
@@ -61,23 +64,16 @@ export const SYMBOL_TO_KEY = Object.fromEntries(
 export const LEAVE_META = {
   PRESENT: {
     symbol: ATTENDANCE_SYMBOL.PRESENT,
-    label: "มาปฏิบัติงาน",
+    label: "มาปฏิบัติราชการ",
     color: "#16a34a",
     Icon: CheckCircle2,
   },
 
-  SICK: {
-    symbol: ATTENDANCE_SYMBOL.SICK,
-    label: "ลาป่วย",
-    color: "#dc2626",
-    Icon: Stethoscope,
-  },
-
-  MATERNITY: {
-    symbol: ATTENDANCE_SYMBOL.MATERNITY,
-    label: "ลาคลอดบุตร",
-    color: "#db2777",
-    Icon: Baby,
+  LATE: {
+    symbol: ATTENDANCE_SYMBOL.LATE,
+    label: "สาย",
+    color: "#ca8a04",
+    Icon: Clock3,
   },
 
   PERSONAL: {
@@ -87,6 +83,13 @@ export const LEAVE_META = {
     Icon: UserRound,
   },
 
+  SICK: {
+    symbol: ATTENDANCE_SYMBOL.SICK,
+    label: "ลาป่วย",
+    color: "#dc2626",
+    Icon: Stethoscope,
+  },
+
   ANNUAL: {
     symbol: ATTENDANCE_SYMBOL.ANNUAL,
     label: "ลาพักผ่อน",
@@ -94,72 +97,94 @@ export const LEAVE_META = {
     Icon: Palmtree,
   },
 
+  MATERNITY: {
+    symbol: ATTENDANCE_SYMBOL.MATERNITY,
+    label: "ลาคลอดบุตร",
+    color: "#db2777",
+    Icon: Baby,
+  },
+
+  PATERNITY: {
+    symbol: ATTENDANCE_SYMBOL.PATERNITY,
+    label: "ลาช่วยภริยาคลอดบุตร",
+    color: "#e11d48",
+    Icon: Heart,
+  },
+
   ORDINATION: {
     symbol: ATTENDANCE_SYMBOL.ORDINATION,
-    label: "ลาอุปสมบท",
+    label: "ลาอุปสมบท / พิธีฮัจย์ / ปฏิบัติธรรม (สตรี)",
     color: "#7c3aed",
     Icon: Moon,
+  },
+
+  DHARMA: {
+    symbol: ATTENDANCE_SYMBOL.DHARMA,
+    label: "ลาอุปสมบท / พิธีฮัจย์ / ปฏิบัติธรรม (สตรี)",
+    color: "#7c3aed",
+    Icon: Moon,
+  },
+
+  HAJJ: {
+    symbol: ATTENDANCE_SYMBOL.HAJJ,
+    label: "ลาอุปสมบท / พิธีฮัจย์ / ปฏิบัติธรรม (สตรี)",
+    color: "#7c3aed",
+    Icon: Moon,
+  },
+
+  STUDY: {
+    symbol: ATTENDANCE_SYMBOL.STUDY,
+    label: "ลาไปศึกษา",
+    color: "#0891b2",
+    Icon: GraduationCap,
   },
 
   MILITARY: {
     symbol: ATTENDANCE_SYMBOL.MILITARY,
     label: "ลาเข้ารับการตรวจเลือกเข้ารับการเตรียมพล",
     color: "#475569",
-    Icon: ShieldCheck,
-  },
-
-  STUDY: {
-    symbol: ATTENDANCE_SYMBOL.STUDY,
-    label: "ลาไปศึกษา ฝึกอบรม วิจัย ดูงาน",
-    color: "#0891b2",
-    Icon: GraduationCap,
-  },
-
-  PATERNITY: {
-    symbol: ATTENDANCE_SYMBOL.PATERNITY,
-    label: "ลาไปช่วยเหลือภริยาที่คลอดบุตร",
-    color: "#c026d3",
-    Icon: HandHeart,
-  },
-
-  REHABILITATION: {
-    symbol: ATTENDANCE_SYMBOL.REHABILITATION,
-    label: "ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ",
-    color: "#ea580c",
-    Icon: Accessibility,
-  },
-
-  DHARMA: {
-    symbol: ATTENDANCE_SYMBOL.DHARMA,
-    label: "ลาไปถือศีล ปฏิบัติธรรม",
-    color: "#9333ea",
-    Icon: Moon,
+    Icon: Shield,
   },
 
   INTERNATIONAL_WORK: {
     symbol: ATTENDANCE_SYMBOL.INTERNATIONAL_WORK,
     label: "ลาไปปฏิบัติงานในองค์การระหว่างประเทศ",
-    color: "#0284c7",
+    color: "#0369a1",
     Icon: Globe2,
   },
 
   FOLLOW_SPOUSE: {
     symbol: ATTENDANCE_SYMBOL.FOLLOW_SPOUSE,
     label: "ลาติดตามคู่สมรส",
-    color: "#e11d48",
+    color: "#be123c",
     Icon: Heart,
   },
 
-  HAJJ: {
-    symbol: ATTENDANCE_SYMBOL.HAJJ,
-    label: "ลาไปประกอบพิธีฮัจย์",
-    color: "#059669",
-    Icon: Plane,
+  REHABILITATION: {
+    symbol: ATTENDANCE_SYMBOL.REHABILITATION,
+    label: "ลาไปฟื้นฟูสมรรถภาพด้านอาชีพ",
+    color: "#9333ea",
+    Icon: Accessibility,
+  },
+
+  TRAINING_RESEARCH: {
+    symbol: ATTENDANCE_SYMBOL.TRAINING_RESEARCH,
+    label: "ลาไปฝึกอบรม ปฏิบัติการวิจัย หรือดูงาน",
+    color: "#0e7490",
+    Icon: FlaskConical,
+  },
+
+  OFFICIAL_DUTY: {
+    symbol: ATTENDANCE_SYMBOL.OFFICIAL_DUTY,
+    label: "ไปราชการ",
+    color: "#0284c7",
+    Icon: HandHeart,
   },
 
   ABSENT: {
     symbol: ATTENDANCE_SYMBOL.ABSENT,
-    label: "ขาดราชการ",
+    label:
+      "ไม่มีข้อมูลการลงเวลา หรือไม่มีข้อมูลการลา หรือไม่มีข้อมูลไปราชการ หรือขาดราชการไม่ทราบสาเหตุ",
     color: "#64748b",
     Icon: CircleX,
   },
@@ -170,18 +195,19 @@ export const LEAVE_META = {
  */
 export const LEAVE_ORDER = [
   "PRESENT",
-  "SICK",
-  "MATERNITY",
+  "LATE",
   "PERSONAL",
+  "SICK",
   "ANNUAL",
-  "ORDINATION",
-  "MILITARY",
-  "STUDY",
+  "MATERNITY",
   "PATERNITY",
-  "REHABILITATION",
-  "DHARMA",
+  "ORDINATION",
+  "STUDY",
+  "MILITARY",
   "INTERNATIONAL_WORK",
   "FOLLOW_SPOUSE",
-  "HAJJ",
+  "REHABILITATION",
+  "TRAINING_RESEARCH",
+  "OFFICIAL_DUTY",
   "ABSENT",
 ];

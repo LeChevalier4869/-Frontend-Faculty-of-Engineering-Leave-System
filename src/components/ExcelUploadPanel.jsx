@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
-import Swal from "../utils/alert";
+import Swal, { notifyError } from "../utils/alert";
 import axios from "axios";
 import { FiFile, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { saveAs } from "file-saver";
@@ -12,6 +12,7 @@ export default function ExcelUploadPanel({
   uploadUrl,
   templatePath,
   templateName = "Template.xlsx",
+  exampleTemplatePath,
   exampleTemplateName = "Template_Example.xlsx",
   tokenKey = "accessToken",
   onSuccess,
@@ -65,10 +66,9 @@ export default function ExcelUploadPanel({
         });
       }
     } catch (err) {
-      Swal.fire(
+      notifyError(
         "ผิดพลาด",
-        err.response?.data?.message || "ไม่สามารถอัปโหลดได้",
-        "error"
+        err.response?.data?.message || "ไม่สามารถอัปโหลดได้"
       );
     } finally {
       setUploading(false);
@@ -138,7 +138,7 @@ export default function ExcelUploadPanel({
       <div className="flex flex-wrap justify-between gap-3">
         <div className="flex gap-2">
           <button
-            onClick={() => saveAs(templatePath, exampleTemplateName)}
+            onClick={() => saveAs(exampleTemplatePath, exampleTemplateName)}
             className="px-4 py-2 rounded-xl bg-amber-100 border text-sm"
           >
             โหลดตัวอย่าง
