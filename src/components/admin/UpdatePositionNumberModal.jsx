@@ -43,7 +43,7 @@ const UpdatePositionNumberModal = ({ user, onClose, onSuccess }) => {
       title: 'ยืนยันการเปลี่ยนเลขที่ตำแหน่ง',
       html: `
         <p>คุณแน่ใจหรือไม่ที่จะเปลี่ยนเลขที่ตำแหน่งเป็น:</p>
-        <div class="text-xl font-bold text-blue-600 my-3">${positionNumber.trim()}</div>
+        <div class="text-xl font-bold text-brand-600 my-3">${positionNumber.trim()}</div>
         <p class="text-sm text-gray-600">สำหรับ: ${user?.fullName || 'ผู้ใช้'}</p>
         <div class="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
           ⚠️ การเปลี่ยนแปลงนี้จะบันทึกประวัติและไม่สามารถย้อนกลับได้
@@ -53,7 +53,7 @@ const UpdatePositionNumberModal = ({ user, onClose, onSuccess }) => {
       showCancelButton: true,
       confirmButtonText: 'ยืนยันการเปลี่ยนแปลง',
       cancelButtonText: 'ยกเลิก',
-      confirmButtonColor: '#3B82F6',
+      confirmButtonColor: '#7A1B22',
       cancelButtonColor: '#6B7280',
       reverseButtons: true
     });
@@ -128,7 +128,7 @@ const UpdatePositionNumberModal = ({ user, onClose, onSuccess }) => {
           </div>
 
           {currentPosition && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <div className="mt-4 p-3 bg-brand-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">เลขที่ตำแหน่งปัจจุบัน:</span>
                 <PositionNumberBadge

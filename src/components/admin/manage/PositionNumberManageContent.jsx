@@ -170,12 +170,12 @@ const PositionNumberManageContent = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full md:w-64 rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  className="w-full md:w-64 rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
                 />
               </div>
               <button
                 onClick={handleSearch}
-                className="px-6 py-2 bg-sky-600 text-white rounded-xl hover:bg-sky-700 transition-colors flex items-center justify-center gap-2"
+                className="px-6 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
               >
                 <FaSearch />
                 ค้นหา
@@ -401,7 +401,7 @@ const PositionNumberManageContent = () => {
                         onClick={() => handlePageChange(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                           pagination.currentPage === page
-                            ? "z-10 bg-sky-50 border-sky-500 text-sky-600"
+                            ? "z-10 bg-brand-50 border-brand-500 text-brand-600"
                             : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                         }`}
                       >

@@ -597,7 +597,7 @@ export default function UserDashboard() {
                   />
                   <Bar
                     dataKey="จำนวนวัน"
-                    fill="#3b82f6"
+                    fill="#7A1B22"
                     radius={[4, 4, 0, 0]}
                     maxBarSize={30}
                   />
@@ -713,6 +713,13 @@ export default function UserDashboard() {
           {/* Desktop: ตาราง */}
           <div className="overflow-x-auto hidden md:block">
             <table className="table-fixed w-full text-sm text-slate-800">
+              <colgroup>
+                <col className="w-[17%]" />
+                <col className="w-[35%]" />
+                <col className="w-[16%]" />
+                <col className="w-[16%]" />
+                <col className="w-[16%]" />
+              </colgroup>
               <thead>
                 <tr className="bg-slate-50 border-y border-slate-200">
                   <th className="px-4 py-3 text-left font-semibold text-[11px] uppercase tracking-[0.16em] text-slate-500">
@@ -742,22 +749,24 @@ export default function UserDashboard() {
                         className="border-b border-slate-100 hover:bg-slate-50 transition cursor-pointer"
                         onClick={() => navigate(`/leave/${leave.id}`)}
                       >
-                        <td className="px-4 py-3 whitespace-nowrap">
+                        <td className="px-4 py-3 align-top whitespace-nowrap text-slate-600">
                           {formatDateTime(leave.createdAt)}
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span>{leave.leaveType?.name || "-"}</span>
+                        <td className="px-4 py-3 align-top">
+                          <div className="flex flex-col items-start gap-1.5">
+                            <span className="font-medium text-slate-800 leading-snug">
+                              {leave.leaveType?.name || "-"}
+                            </span>
                             <LeaveSubmissionBadge leave={leave} size="sm" />
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
+                        <td className="px-4 py-3 align-top whitespace-nowrap text-slate-600">
                           {formatDate(leave.startDate)}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
+                        <td className="px-4 py-3 align-top whitespace-nowrap text-slate-600">
                           {formatDate(leave.endDate)}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 align-top">
                           <span
                             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                               chipClass[key] ||
@@ -795,12 +804,12 @@ export default function UserDashboard() {
                     onClick={() => navigate(`/leave/${leave.id}`)}
                     className="w-full text-left p-4 hover:bg-slate-50 transition"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-slate-800">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium text-slate-800 leading-snug">
                         {leave.leaveType?.name || "-"}
                       </span>
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                           chipClass[key] ||
                           "bg-slate-100 text-slate-700 border border-slate-200"
                         }`}
@@ -808,7 +817,10 @@ export default function UserDashboard() {
                         {statusLabels[key] || leave.status}
                       </span>
                     </div>
-                    <div className="mt-1 text-sm text-slate-600">
+                    <div className="mt-1.5">
+                      <LeaveSubmissionBadge leave={leave} size="sm" />
+                    </div>
+                    <div className="mt-1.5 text-sm text-slate-600">
                       {formatDate(leave.startDate)} – {formatDate(leave.endDate)}
                     </div>
                     <div className="mt-1 text-xs text-slate-400">

@@ -26,7 +26,7 @@ export default function EditProfile() {
             value={value}
             onChange={onChange}
             required
-            className="block w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-3 pr-10 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="block w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-3 pr-10 text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
           >
             <option value="">{`-- เลือก ${label} --`}</option>
             {options.map((opt) => (
@@ -250,7 +250,7 @@ function Input({ label, listId, ...rest }) {
       <input
         list={listId}
         {...rest}
-        className="block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        className="block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
       />
     </div>
   );
@@ -263,7 +263,7 @@ function Checkbox({ label, ...rest }) {
         <input
           type="checkbox"
           {...rest}
-          className="h-5 w-5 border-gray-300 text-blue-600 focus:ring-blue-200"
+          className="h-5 w-5 border-gray-300 text-brand-600 focus:ring-brand-200"
         />
         <span className="text-base font-medium">{label}</span>
       </label>

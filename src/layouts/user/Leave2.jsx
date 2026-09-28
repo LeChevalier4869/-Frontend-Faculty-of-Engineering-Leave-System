@@ -208,10 +208,10 @@ export default function Leave2() {
           </div>
         </div>
 
-        <Panel className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <Panel className="p-5 bg-gradient-to-r from-brand-50 to-brand-100 border-brand-200">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center shadow-sm">
                 <Info className="w-5 h-5 text-white" />
               </div>
             </div>
@@ -226,7 +226,7 @@ export default function Leave2() {
                 href={leaveInformationUrl || 'https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-sm hover:shadow-md"
               >
                 <ExternalLink className="w-4 h-4" />
                 ดูข้อมูลการลาฉบับสมบูรณ์

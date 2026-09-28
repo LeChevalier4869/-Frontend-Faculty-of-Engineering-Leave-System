@@ -264,7 +264,7 @@ const PositionNumberManagement = () => {
                     <tr>
                       <td colSpan="7" className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-600"></div>
                           <span className="ml-2">กำลังโหลด...</span>
                         </div>
                       </td>
@@ -324,7 +324,7 @@ const PositionNumberManagement = () => {
                               <div className="flex items-center justify-center gap-2">
                                 <button
                                   onClick={() => handleUpdatePositionNumber(user)}
-                                  className="text-blue-600 hover:text-blue-800 transition-colors"
+                                  className="text-brand-600 hover:text-brand-800 transition-colors"
                                   title="แก้ไขเลขที่ตำแหน่ง"
                                 >
                                   <FaEdit />

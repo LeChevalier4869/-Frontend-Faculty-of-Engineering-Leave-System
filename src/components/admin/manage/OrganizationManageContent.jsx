@@ -206,7 +206,7 @@ export default function DepartmentManageContent() {
       );
 
   const inputBase =
-    "w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
   return (
     <div className="font-kanit text-slate-900">
@@ -232,7 +232,7 @@ export default function DepartmentManageContent() {
                     setSearch(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
                 />
               </div>
             </div>
@@ -283,9 +283,9 @@ export default function DepartmentManageContent() {
                 onClick={() => setPickerOpen(true)}
                 disabled={!editId && !newOrgId}
                 title={!editId && !newOrgId ? "เลือกหน่วยงานก่อน" : "เลือกหัวหน้าแผนก"}
-                className={`${inputBase} flex min-w-0 flex-1 items-center gap-2 text-left transition hover:border-sky-300 hover:bg-sky-50/40 disabled:cursor-not-allowed disabled:bg-slate-50`}
+                className={`${inputBase} flex min-w-0 flex-1 items-center gap-2 text-left transition hover:border-brand-300 hover:bg-brand-50/40 disabled:cursor-not-allowed disabled:bg-slate-50`}
               >
-                <UserCog className="h-4 w-4 shrink-0 text-sky-600" />
+                <UserCog className="h-4 w-4 shrink-0 text-brand-600" />
                 <span className={`truncate ${selectedHead ? "font-medium text-slate-900" : "text-slate-400"}`}>
                   {selectedHead
                     ? personName(selectedHead)
@@ -326,7 +326,7 @@ export default function DepartmentManageContent() {
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                   : editId
                     ? "bg-slate-700 hover:bg-slate-600 text-white"
-                    : "bg-sky-600 hover:bg-sky-500 text-white"
+                    : "bg-brand-600 hover:bg-brand-500 text-white"
               }`}
             >
               {editId ? "อัปเดตแผนก" : "เพิ่มแผนก"}
@@ -398,7 +398,7 @@ export default function DepartmentManageContent() {
                       key={d.id}
                       className={`border-t border-slate-100 transition-colors ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-sky-50`}
+                      } hover:bg-brand-50`}
                     >
                       <td className="px-4 py-2">{startIndex + idx + 1}</td>
                       <td className="px-4 py-2">{d.name}</td>
@@ -505,7 +505,7 @@ export default function DepartmentManageContent() {
                       onClick={() => setCurrentPage(page)}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                         currentPage === page
-                          ? "z-10 bg-sky-50 border-sky-500 text-sky-600"
+                          ? "z-10 bg-brand-50 border-brand-500 text-brand-600"
                           : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                       }`}
                     >

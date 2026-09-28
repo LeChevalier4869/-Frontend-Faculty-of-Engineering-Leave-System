@@ -87,7 +87,7 @@ const RoleBadgeCell = ({ userRoles }) => {
           {highest}
         </span>
         {display.length > 1 && (
-          <span className="text-[10px] text-slate-400 group-hover:text-sky-500 transition">
+          <span className="text-[10px] text-slate-400 group-hover:text-brand-500 transition">
             +{display.length - 1}
           </span>
         )}
@@ -230,14 +230,14 @@ function UserManageContent() {
                   setCurrentPage(1);
                 }}
                 placeholder="ค้นหาชื่อ..."
-                className="w-full md:w-64 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="w-full md:w-64 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
               <div className="flex items-center gap-3 justify-end">
                 <button
                   onClick={() => {
                     navigate("/admin/add-user");
                   }}
-                  className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-500 whitespace-nowrap"
+                  className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brand-500 whitespace-nowrap"
                 >
                   + เพิ่มผู้ใช้งาน
                 </button>
@@ -298,7 +298,7 @@ function UserManageContent() {
                       onClick={() => navigate(`/admin/user-info/${user.id}`)}
                       className={`cursor-pointer border-t border-slate-100 transition-colors ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-sky-50`}
+                      } hover:bg-brand-50`}
                     >
                       <td className="px-4 py-3 text-center text-sm font-medium text-slate-500">
                         {(currentPage - 1) * PAGE_SIZE + idx + 1}
@@ -421,7 +421,7 @@ function UserManageContent() {
                       onClick={() => setCurrentPage(page)}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                         currentPage === page
-                          ? "z-10 bg-sky-50 border-sky-500 text-sky-600"
+                          ? "z-10 bg-brand-50 border-brand-500 text-brand-600"
                           : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                       }`}
                     >
