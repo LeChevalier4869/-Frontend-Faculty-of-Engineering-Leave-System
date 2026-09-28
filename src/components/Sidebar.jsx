@@ -335,12 +335,12 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
     return () => window.removeEventListener("proxy-updated", onProxyUpdated);
   }, [user?.id, checkProxyRoles]);
 
-  // Calculate roles
-  const roles = Array.isArray(user.roles)
+  // Calculate roles (null-safe: ระหว่าง logout user อาจเป็น null)
+  const roles = Array.isArray(user?.roles)
     ? user.roles
-    : Array.isArray(user.role)
+    : Array.isArray(user?.role)
       ? user.role
-      : Array.isArray(user.roleNames)
+      : Array.isArray(user?.roleNames)
         ? user.roleNames
         : [];
 
@@ -452,6 +452,10 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
 
     checkProxyRoles();
   }, [user?.id]);
+
+  // ระหว่าง logout / ยังโหลด auth ไม่เสร็จ user อาจเป็น null -> ไม่ต้อง render sidebar
+  // (วางหลัง hooks ทั้งหมดเพื่อไม่ให้ผิดกฎ React Hooks; กัน crash "reading 'roles'")
+  if (!user) return null;
 
   const showApproval =
     hasRole("APPROVER_1") ||
