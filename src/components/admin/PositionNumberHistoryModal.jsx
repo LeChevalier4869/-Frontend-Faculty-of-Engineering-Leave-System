@@ -52,7 +52,7 @@ const PositionNumberHistoryModal = ({ user, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <FaHistory className="text-blue-600" />
+            <FaHistory className="text-brand-600" />
             <div>
               <h2 className="text-xl font-semibold text-gray-800">
                 ประวัติเลขที่ตำแหน่ง
@@ -74,7 +74,7 @@ const PositionNumberHistoryModal = ({ user, onClose }) => {
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
               <span className="ml-2">กำลังโหลดข้อมูล...</span>
             </div>
           ) : error ? (
@@ -82,7 +82,7 @@ const PositionNumberHistoryModal = ({ user, onClose }) => {
               <div className="text-red-500 mb-2">{error}</div>
               <button
                 onClick={() => window.location.reload()}
-                className="text-blue-600 hover:underline text-sm"
+                className="text-brand-600 hover:underline text-sm"
               >
                 ลองใหม่
               </button>
@@ -177,9 +177,9 @@ const PositionNumberHistoryModal = ({ user, onClose }) => {
               </div>
 
               {/* Summary */}
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h3 className="text-sm font-medium text-blue-900 mb-2">สรุปประวัติ</h3>
-                <div className="text-sm text-blue-800">
+              <div className="mt-6 p-4 bg-brand-50 rounded-lg">
+                <h3 className="text-sm font-medium text-brand-900 mb-2">สรุปประวัติ</h3>
+                <div className="text-sm text-brand-800">
                   <p>• จำนวนครั้งที่เปลี่ยนเลขที่ตำแหน่ง: {history.length - 1} ครั้ง</p>
                   <p>• เลขที่ตำแหน่งปัจจุบัน: {history[0]?.positionNumber || 'ไม่มี'}</p>
                   <p>• วันที่ได้รับเลขปัจจุบัน: {history[0]?.effectiveFrom ? formatDate(history[0].effectiveFrom) : '-'}</p>

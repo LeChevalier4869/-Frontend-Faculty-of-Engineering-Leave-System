@@ -40,7 +40,7 @@ export default function Login() {
           <div style="text-align: left; line-height: 1.8; font-size: 20px;">
             <p><i class="fas fa-user ml-9 mr-2 text-red-400"></i>${contactMap.AdminName || "-"}</p>
             <p><i class="fas fa-phone ml-9 mr-2 text-green-400"></i>${contactMap.AdminPhone || "-"}</p>
-            <p><i class="fas fa-envelope ml-9 mr-2 text-blue-400"></i>${contactMap.AdminMail || "-"}</p>
+            <p><i class="fas fa-envelope ml-9 mr-2 text-brand-400"></i>${contactMap.AdminMail || "-"}</p>
           </div>
         `,
         icon: "info",

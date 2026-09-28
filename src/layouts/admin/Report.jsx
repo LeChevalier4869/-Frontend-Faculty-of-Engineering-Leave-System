@@ -14,9 +14,9 @@ export default function ReportPage() {
     <div className="space-y-6 font-kanit">
       {/* Header */}
       <div className="flex flex-col items-center gap-3 text-center md:items-start">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200">
-          <TbReportAnalytics className="text-sky-600" />
-          <span className="text-[11px] tracking-[0.2em] uppercase text-sky-700">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200">
+          <TbReportAnalytics className="text-brand-600" />
+          <span className="text-[11px] tracking-[0.2em] uppercase text-brand-700">
             Reports
           </span>
         </div>
@@ -40,7 +40,7 @@ export default function ReportPage() {
               <p className="text-sm text-slate-500">คำขอลาทั้งหมด</p>
               <h2 className="text-3xl font-bold mt-2">245</h2>
             </div>
-            <FiUsers className="text-3xl text-sky-500" />
+            <FiUsers className="text-3xl text-brand-500" />
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export default function ReportPage() {
         </div>
 
         <div className="flex gap-3 mt-4">
-          <button className="px-4 py-2 rounded-xl bg-sky-600 text-white hover:bg-sky-500">
+          <button className="px-4 py-2 rounded-xl bg-brand-600 text-white hover:bg-brand-500">
             ค้นหา
           </button>
 

@@ -20,9 +20,9 @@ export default function HolidayManageContent() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const inputBase =
-    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
   const selectBase =
-    "appearance-none w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400";
+    "appearance-none w-full rounded-xl border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
   const selectWrapper = "relative w-full";
 
   const ArrowIcon = () => (
@@ -247,7 +247,7 @@ export default function HolidayManageContent() {
                   type="checkbox"
                   checked={isRecurring}
                   onChange={() => setIsRecurring(!isRecurring)}
-                  className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                 />
                 <span>ประจำทุกปี</span>
               </label>
@@ -270,7 +270,7 @@ export default function HolidayManageContent() {
                     isRecurring === initialEditData.isRecurring &&
                     holidayType === initialEditData.holidayType
                       ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                      : "bg-sky-600 hover:bg-sky-500 text-white"
+                      : "bg-brand-600 hover:bg-brand-500 text-white"
                   }`}
                 >
                   {editId ? "อัปเดตวันหยุด" : "เพิ่มวันหยุด"}
@@ -411,7 +411,7 @@ export default function HolidayManageContent() {
                       key={h.id}
                       className={`border-t border-slate-100 ${
                         idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                      } hover:bg-sky-50 transition-colors`}
+                      } hover:bg-brand-50 transition-colors`}
                     >
                       <td className="px-3 py-2 text-sm">
                         {startIndex + idx + 1}
@@ -518,7 +518,7 @@ export default function HolidayManageContent() {
                         onClick={() => setCurrentPage(page)}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                           currentPage === page
-                            ? "z-10 bg-sky-50 border-sky-500 text-sky-600"
+                            ? "z-10 bg-brand-50 border-brand-500 text-brand-600"
                             : "bg-white border-slate-300 text-slate-500 hover:bg-slate-50"
                         }`}
                       >

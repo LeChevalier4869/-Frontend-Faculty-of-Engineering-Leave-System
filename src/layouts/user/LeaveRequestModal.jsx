@@ -53,7 +53,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
 
   const inputStyle =
-    "w-full bg-white text-black border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400";
+    "w-full bg-white text-black border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400";
 
   useEffect(() => {
     const fetchLeaveBalances = async () => {
@@ -544,7 +544,7 @@ function LeaveRequestModal({ isOpen, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+              className="px-6 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-500"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>

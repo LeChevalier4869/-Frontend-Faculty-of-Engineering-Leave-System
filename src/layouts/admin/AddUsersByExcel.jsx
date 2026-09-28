@@ -154,6 +154,31 @@ export default function AddUsersByExcel() {
               </div>
             </div>
 
+            {/* Balance columns info */}
+            <div className="rounded-xl bg-sky-50 border border-sky-200 p-4 text-sm text-slate-700">
+              <p className="font-medium text-sky-800 mb-1">
+                คอลัมน์วันลาคงเหลือ (ไม่บังคับ)
+              </p>
+              <p className="leading-relaxed">
+                เทมเพลตมีคอลัมน์วันลาต่อท้ายคอลัมน์ข้อมูลผู้ใช้{" "}
+                <span className="font-medium">เว้นว่างได้</span> —
+                ถ้าเว้นว่างระบบจะให้สิทธิ์เริ่มต้นตามระดับ/อายุงานโดยอัตโนมัติ
+              </p>
+              <ul className="mt-2 space-y-0.5 list-disc list-inside text-slate-600">
+                <li>
+                  <span className="font-medium">(วันคงเหลือ)</span> —
+                  ลาที่หักวันได้ เช่น ลาป่วย/ลากิจ/ลาพักผ่อน ให้กรอก{" "}
+                  <span className="font-medium">จำนวนวันที่เหลือ</span>
+                </li>
+                <li>
+                  <span className="font-medium">(วันที่ใช้ไปแล้ว)</span> —
+                  ลาที่ไม่หักวัน เช่น ลาอุปสมบท/ไปราชการ ให้กรอก{" "}
+                  <span className="font-medium">จำนวนวันที่ใช้ไปแล้ว</span>
+                </li>
+                <li>กรอกได้เฉพาะตัวเลขจำนวนเต็ม หากปล่อยว่างจะใช้ค่าเริ่มต้น</li>
+              </ul>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               {/* Left buttons */}

@@ -9,6 +9,12 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import { apiEndpoints, API } from "../../utils/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import LeaveSubmissionBadge from "../../components/common/LeaveSubmissionBadge";
+import {
+  isSubmittedByAdmin,
+  leaveCategoryLabel,
+  creatorName,
+} from "../../utils/leaveSubmission";
 
 
 export default function LeaveDetail() {
@@ -44,7 +50,13 @@ export default function LeaveDetail() {
     // leaveRequestDetails,
     files,
     approvalSteps,
+    createdAt,
+    createdById,
   } = leave ?? {};
+
+  // ใบที่แอดมินยื่นแทน (createdById != null): reviewedAt ของแต่ละขั้นอิงวันที่ออกเอกสาร
+  // ซึ่งไม่มีเวลาจริง จึงใช้ "เวลา" จากตอนที่แอดมินบันทึกใบลา (createdAt) แทน
+  const isAdminSubmitted = createdById != null;
 
   // Move sortedApprovalSteps here to fix hoisting issue
   const sortedApprovalSteps = useMemo(() => {
@@ -459,6 +471,20 @@ export default function LeaveDetail() {
         <Section title="รายละเอียดการลา">
           <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
             <Field label="ประเภทการลา" value={leaveType?.name} />
+            <Field label="หมวดประเภทการลา" value={leaveCategoryLabel(leaveType)} />
+            <Field
+              label="ผู้ยื่นใบลาลงระบบ"
+              value={
+                <span className="inline-flex flex-wrap items-center gap-2">
+                  <LeaveSubmissionBadge leave={leave} />
+                  <span>
+                    {isSubmittedByAdmin(leave)
+                      ? `แอดมินบันทึกแทนผู้ลา${creatorName(leave) ? ` (${creatorName(leave)})` : ""}`
+                      : "ผู้ลายื่นด้วยตนเอง"}
+                  </span>
+                </span>
+              }
+            />
             <Field label="วันที่ลา" value={`${formatDate(startDate)}${formatDate(startDate) !== formatDate(endDate) ? ` ถึง ${formatDate(endDate)}` : ""}`} />
             <Field label="จำนวนวันลา" value={thisTimeDays != null ? `${thisTimeDays} วัน` : "-"} />
             <div className="sm:col-span-2">
@@ -546,7 +572,11 @@ export default function LeaveDetail() {
                       </p>
                     )}
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
-                      {step.reviewedAt && <span>เมื่อ {formatDate(step.reviewedAt)}</span>}
+                      {step.reviewedAt && (
+                        <span>
+                          เมื่อ {formatDateTime(step.reviewedAt, isAdminSubmitted ? createdAt : null)}
+                        </span>
+                      )}
                       {step.remarks && step.remarks !== "-" && <span>หมายเหตุ: {step.remarks}</span>}
                     </div>
                   </li>
@@ -679,4 +709,20 @@ const formatDate = (dateStr) => {
   const year = date.getFullYear() + 543;
 
   return `วันที่ ${day} ${month} พ.ศ. ${year}`;
+};
+
+// เหมือน formatDate แต่ต่อท้ายด้วยเวลา (ชม.:นาที) — ใช้กับ stamp การพิจารณาแต่ละขั้น
+// timeSource (ถ้ามี): แหล่งเวลาที่ใช้แทนเวลาใน dateStr เช่น เวลาที่แอดมินบันทึกใบลา
+// (ใบที่แอดมินยื่นแทนมี reviewedAt เป็นวันที่ล้วน ๆ ไม่มีเวลาจริง จึงยืมเวลาจาก createdAt)
+const formatDateTime = (dateStr, timeSource) => {
+  if (!dateStr) return "-";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "-";
+  const timeBasis = timeSource ? new Date(timeSource) : date;
+  const validTime = Number.isNaN(timeBasis.getTime()) ? date : timeBasis;
+  const time = validTime.toLocaleTimeString("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${formatDate(dateStr)} เวลา ${time} น.`;
 };

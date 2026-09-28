@@ -642,7 +642,7 @@ export default function ConfigPage() {
             <button
               type="button"
               onClick={() => leaveInformationUrl && window.open(leaveInformationUrl, "_blank")}
-              className="mt-3 md:mt-0 px-6 py-2 rounded-xl font-medium text-sm text-white bg-blue-600 hover:bg-blue-500 transition-all duration-150 shadow-sm"
+              className="mt-3 md:mt-0 px-6 py-2 rounded-xl font-medium text-sm text-white bg-brand-600 hover:bg-brand-500 transition-all duration-150 shadow-sm"
             >
               เปิดลิงก์
             </button>

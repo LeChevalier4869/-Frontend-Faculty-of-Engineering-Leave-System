@@ -35,6 +35,7 @@ import {
 } from "../../utils/leavePolicy";
 import { expandHolidays, defaultHolidayYears } from "../../utils/holidayUtils";
 import LeaveCancellationModal from "../../components/admin/LeaveCancellationModal";
+import LeaveSubmissionBadge from "../../components/common/LeaveSubmissionBadge";
 
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
@@ -1329,10 +1330,10 @@ export default function AddOtherRequest() {
             </div>
 
             {/* Leave Information Panel */}
-            <div className="rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-5 shadow-sm">
+            <div className="rounded-2xl bg-gradient-to-r from-brand-50 to-brand-100 border border-brand-200 p-5 shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center shadow-sm">
                     <Info className="w-5 h-5 text-white" />
                   </div>
                 </div>
@@ -1347,7 +1348,7 @@ export default function AddOtherRequest() {
                     href={leaveInformationUrl || 'https://sites.google.com/rmuti.ac.th/hrkkcrmuti/%E0%B8%AA%E0%B8%97%E0%B8%98%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B9%82%E0%B8%A2%E0%B8%8A%E0%B8%99%E0%B8%A7%E0%B8%B2%E0%B8%94%E0%B8%A7%E0%B8%A2%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%A5%E0%B8%B2'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-sm hover:shadow-md"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-sm hover:shadow-md"
                   >
                     <ExternalLink className="w-4 h-4" />
                     ดูข้อมูลการลาฉบับสมบูรณ์
@@ -1509,6 +1510,9 @@ export default function AddOtherRequest() {
                       ประเภทการลา
                     </th>
                     <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
+                      ผู้ยื่น
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
                       วันที่เริ่มต้น
                     </th>
                     <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
@@ -1523,7 +1527,7 @@ export default function AddOtherRequest() {
                   {loading ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-4 py-6 text-center text-sm text-slate-500"
                       >
                         กำลังโหลดข้อมูลการลา...
@@ -1543,7 +1547,10 @@ export default function AddOtherRequest() {
                           {formatDateTime(r.createdAt)}
                         </td>
                         <td className="px-4 py-3">
-                          {leaveTypesMap[r.leaveTypeId] || r?.leaveType?.name || "-"}
+                          {r?.leaveType?.name || leaveTypesMap[r.leaveTypeId] || "-"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <LeaveSubmissionBadge leave={r} />
                         </td>
                         <td className="px-4 py-3">{formatDate(r.startDate)}</td>
                         <td className="px-4 py-3">{formatDate(r.endDate)}</td>
@@ -1563,7 +1570,7 @@ export default function AddOtherRequest() {
                     <tr>
                       <td
                         className="px-4 py-6 text-center text-slate-500 text-sm"
-                        colSpan={6}
+                        colSpan={7}
                       >
                         ไม่พบข้อมูล
                       </td>
