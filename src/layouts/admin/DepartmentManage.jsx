@@ -3,9 +3,13 @@ import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import Swal, { notifySuccess, notifyError } from "../../utils/alert";
 import { BASE_URL } from "../../utils/api";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search, UserCog, X } from "lucide-react";
+import UserPickerModal from "../../components/common/UserPickerModal";
 
 const PAGE_SIZE = 10;
+
+const personName = (u) =>
+  u ? `${u.prefixName || ""}${u.firstName || ""} ${u.lastName || ""}`.trim() : "";
 
 export default function DepartmentManage() {
   const [searchParams] = useSearchParams();
@@ -13,7 +17,9 @@ export default function DepartmentManage() {
 
   const [departments, setDepartments] = useState([]);
   const [organizations, setOrganizations] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]);
+  // ผู้ใช้ทั้งหมด (มี department / role / ตำแหน่ง) สำหรับ modal เลือกหัวหน้า
+  const [users, setUsers] = useState([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newOrgId, setNewOrgId] = useState(initialOrgId);
   const [newHeadId, setNewHeadId] = useState("");
@@ -55,12 +61,14 @@ export default function DepartmentManage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [deptRes, orgRes] = await Promise.all([
+      const [deptRes, orgRes, userRes] = await Promise.all([
         axios.get(`${BASE_URL}/admin/departmentsList`, authHeader()),
         axios.get(`${BASE_URL}/admin/organizations`, authHeader()),
+        axios.get(`${BASE_URL}/auth/landing`, authHeader()),
       ]);
       setDepartments(deptRes.data.data || []);
       setOrganizations(orgRes.data.data || []);
+      setUsers(userRes.data.user || userRes.data.data || []);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -68,27 +76,8 @@ export default function DepartmentManage() {
     }
   };
 
-  const loadUsersByOrganizationId = async (organizationId) => {
-    if (!organizationId) {
-      setFilteredUsers([]);
-      return;
-    }
-    try {
-      const res = await axios.get(
-        `${BASE_URL}/admin/users?organizationId=${organizationId}`,
-        authHeader()
-      );
-      setFilteredUsers(res.data.data || []);
-    } catch (err) {
-      handleApiError(err);
-    }
-  };
-
   useEffect(() => {
     loadData();
-    if (initialOrgId) {
-      loadUsersByOrganizationId(initialOrgId);
-    }
   }, []);
 
   const resetForm = () => {
@@ -98,7 +87,6 @@ export default function DepartmentManage() {
     setEditId(null);
     setEditOrgId(null);
     setEditHeadId("");
-    setFilteredUsers([]);
     setInitialEditData(null);
   };
 
@@ -133,7 +121,6 @@ export default function DepartmentManage() {
     setEditOrgId(dept.organizationId);
     setEditHeadId(dept.headId || "");
     setInitialEditData({ name: dept.name, organizationId: dept.organizationId, headId: dept.headId || "" });
-    loadUsersByOrganizationId(dept.organizationId);
   };
 
   const handleUpdate = async () => {
@@ -198,6 +185,22 @@ export default function DepartmentManage() {
     startIndex + PAGE_SIZE
   );
 
+  // หัวหน้าที่เลือกไว้ในฟอร์ม (แก้ไข/เพิ่ม)
+  const selectedHeadId = editId ? editHeadId : newHeadId;
+  const editingDept = editId ? departments.find((d) => d.id === editId) : null;
+  const selectedHead = selectedHeadId
+    ? users.find((u) => u.id === +selectedHeadId) ||
+      (editingDept?.head?.id === +selectedHeadId ? editingDept.head : null)
+    : null;
+
+  // รายชื่อใน modal: แก้ไข = ส่งทุกคนแล้วให้ modal กรองเฉพาะคนในแผนกนี้ (preferredDepartmentId)
+  // เพิ่มแผนกใหม่ = ยังไม่มีสมาชิก จึงเลือกจากคนในหน่วยงานที่เลือก (ระบบย้ายหัวหน้าเข้าแผนกให้)
+  const pickerUsers = editId
+    ? users
+    : users.filter(
+        (u) => String(u.department?.organizationId ?? "") === String(newOrgId)
+      );
+
   const inputBase =
     "w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400";
 
@@ -255,10 +258,10 @@ export default function DepartmentManage() {
                   const id = e.target.value;
                   if (editId) {
                     setEditOrgId(id);
-                    loadUsersByOrganizationId(id);
                   } else {
                     setNewOrgId(id);
-                    loadUsersByOrganizationId(id);
+                    // เปลี่ยนหน่วยงาน → หัวหน้าที่เลือกไว้อาจไม่อยู่หน่วยงานนี้แล้ว
+                    setNewHeadId("");
                   }
                 }}
                 className={`${inputBase} pr-8 appearance-none`}
@@ -275,26 +278,34 @@ export default function DepartmentManage() {
               </div>
             </div>
 
-            <div className="relative w-full">
-              <select
-                value={editId ? editHeadId : newHeadId}
-                onChange={(e) =>
-                  editId
-                    ? setEditHeadId(e.target.value)
-                    : setNewHeadId(e.target.value)
-                }
-                className={`${inputBase} pr-8 appearance-none`}
+            {/* หัวหน้าสาขา — กดเพื่อเปิด modal เลือกคน (เหมือนหน้าจัดการผู้อนุมัติ) */}
+            <div className="flex w-full items-stretch gap-2">
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                disabled={!editId && !newOrgId}
+                title={!editId && !newOrgId ? "เลือกหน่วยงานก่อน" : "เลือกหัวหน้าแผนก"}
+                className={`${inputBase} flex min-w-0 flex-1 items-center gap-2 text-left transition hover:border-brand-300 hover:bg-brand-50/40 disabled:cursor-not-allowed disabled:bg-slate-50`}
               >
-                <option value="">เลือกหัวหน้าแผนก (ไม่ระบุก็ได้)</option>
-                {filteredUsers.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.fullName || user.email}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                <ChevronDown className="w-4 h-4 text-slate-500" />
-              </div>
+                <UserCog className="h-4 w-4 shrink-0 text-brand-600" />
+                <span className={`truncate ${selectedHead ? "font-medium text-slate-900" : "text-slate-400"}`}>
+                  {selectedHead
+                    ? personName(selectedHead)
+                    : !editId && !newOrgId
+                      ? "เลือกหน่วยงานก่อน"
+                      : "เลือกหัวหน้าแผนก (ไม่ระบุก็ได้)"}
+                </span>
+              </button>
+              {selectedHeadId && (
+                <button
+                  type="button"
+                  onClick={() => (editId ? setEditHeadId("") : setNewHeadId(""))}
+                  title="ไม่ระบุหัวหน้า"
+                  className="shrink-0 rounded-xl border border-slate-300 bg-white px-2.5 text-slate-400 shadow-sm transition hover:bg-rose-50 hover:text-rose-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -481,6 +492,27 @@ export default function DepartmentManage() {
           </div>
         )}
       </div>
+
+      {pickerOpen && (
+        <UserPickerModal
+          title={
+            editId
+              ? `เลือกหัวหน้าสาขา: ${editingDept?.name || newName}`
+              : `เลือกหัวหน้าแผนกใหม่${newName.trim() ? `: ${newName.trim()}` : ""}`
+          }
+          users={pickerUsers}
+          current={selectedHead}
+          preferredDepartmentId={editId || null}
+          departments={departments}
+          saving={false}
+          onPick={(user) => {
+            if (editId) setEditHeadId(user.id);
+            else setNewHeadId(user.id);
+            setPickerOpen(false);
+          }}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
     </div>
   );
 }

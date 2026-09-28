@@ -9,6 +9,7 @@ import { Plus, ChevronDown, Download, Clock, Info, ExternalLink } from "lucide-r
 import LeaveRequestModal from "./LeaveRequestModal";
 import { apiEndpoints } from "../../utils/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import LeaveSubmissionBadge from "../../components/common/LeaveSubmissionBadge";
 
 dayjs.extend(isBetween);
 
@@ -64,8 +65,6 @@ export default function Leave2() {
   const { leaveRequest = [], setLeaveRequest } = useLeaveRequest();
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
-  const [leaveTypesMap, setLeaveTypesMap] = useState({});
-  const [leaveAvailabilityMap, setLeaveAvailabilityMap] = useState({});
   const [driveUrl, setDriveUrl] = useState(null);
   const [leaveInformationUrl, setLeaveInformationUrl] = useState(null);
 
@@ -116,35 +115,21 @@ export default function Leave2() {
     }
   };
 
-  const fetchLeaveTypes = async () => {
-    try {
-      console.log("Fetching all leave types from:", apiEndpoints.getAllLeaveTypes);
-      const token = localStorage.getItem("accessToken");
-      const res = await axios.get(apiEndpoints.getAllLeaveTypes, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("All leave types response:", res.data);
-      const map = {};
-      const availabilityMap = {};
-      (res.data.data || []).forEach((lt) => {
-        map[lt.id] = lt.name;
-        availabilityMap[lt.id] = lt.isAvailable;
-      });
-      console.log("Leave types map:", map);
-      console.log("Availability map:", availabilityMap);
-      setLeaveTypesMap(map);
-      setLeaveAvailabilityMap(availabilityMap);
-    } catch (err) {
-      console.error("Error fetching leave types:", err);
-    }
-  };
-
   useEffect(() => {
     fetchLeaveRequests();
-    fetchLeaveTypes();
     fetchGoogleDriveLink();
     fetchLeaveInformationUrl();
   }, []);
+
+  // ชื่อประเภทลามากับคำขอแต่ละรายการ (include leaveType) — ไม่ต้องเรียก /leave-types
+  // ซึ่งเป็น endpoint ของแอดมิน (ผู้ใช้ทั่วไปได้ 403 ทำให้ชื่อประเภทลาขึ้น "-")
+  const leaveTypesMap = useMemo(() => {
+    const map = {};
+    leaveRequest.forEach((lr) => {
+      if (lr.leaveType?.id != null) map[lr.leaveType.id] = lr.leaveType.name;
+    });
+    return map;
+  }, [leaveRequest]);
 
   const formatDateTime = (iso) =>
     dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
@@ -373,7 +358,7 @@ export default function Leave2() {
             <table className="min-w-full w-full text-sm text-slate-800">
               <thead>
                 <tr className="bg-slate-50 border-y border-slate-200">
-                  {["วันที่ยื่น", "ประเภทการลา", "ประเภท", "วันเริ่มต้น", "วันสิ้นสุด", "สถานะ"].map(
+                  {["วันที่ยื่น", "ประเภทการลา", "ผู้ยื่น", "วันเริ่มต้น", "วันสิ้นสุด", "สถานะ"].map(
                     (h, i) => (
                       <th
                         key={i}
@@ -401,18 +386,10 @@ export default function Leave2() {
                           {formatDateTime(leave.createdAt)}
                         </td>
                         <td className="px-4 py-3">
-                          {leaveTypesMap[leave.leaveTypeId] || "-"}
+                          {leave.leaveType?.name || leaveTypesMap[leave.leaveTypeId] || "-"}
                         </td>
                         <td className="px-4 py-3">
-                          {leaveAvailabilityMap[leave.leaveTypeId] ? (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              ยื่นเอง
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                              แอดมิน
-                            </span>
-                          )}
+                          <LeaveSubmissionBadge leave={leave} size="md" />
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {formatDate(leave.startDate)}
@@ -460,7 +437,7 @@ export default function Leave2() {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-slate-800">
-                        {leaveTypesMap[leave.leaveTypeId] || "-"}
+                        {leave.leaveType?.name || leaveTypesMap[leave.leaveTypeId] || "-"}
                       </span>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
@@ -476,15 +453,7 @@ export default function Leave2() {
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-2 text-xs text-slate-400">
                       <span>ยื่นเมื่อ {formatDateTime(leave.createdAt)}</span>
-                      {leaveAvailabilityMap[leave.leaveTypeId] ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          ยื่นเอง
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                          แอดมิน
-                        </span>
-                      )}
+                      <LeaveSubmissionBadge leave={leave} size="sm" />
                     </div>
                   </button>
                 );

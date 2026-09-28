@@ -9,6 +9,12 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import { apiEndpoints, API } from "../../utils/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import LeaveSubmissionBadge from "../../components/common/LeaveSubmissionBadge";
+import {
+  isSubmittedByAdmin,
+  leaveCategoryLabel,
+  creatorName,
+} from "../../utils/leaveSubmission";
 
 
 export default function LeaveDetail() {
@@ -459,6 +465,20 @@ export default function LeaveDetail() {
         <Section title="รายละเอียดการลา">
           <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
             <Field label="ประเภทการลา" value={leaveType?.name} />
+            <Field label="หมวดประเภทการลา" value={leaveCategoryLabel(leaveType)} />
+            <Field
+              label="ผู้ยื่นใบลาลงระบบ"
+              value={
+                <span className="inline-flex flex-wrap items-center gap-2">
+                  <LeaveSubmissionBadge leave={leave} />
+                  <span>
+                    {isSubmittedByAdmin(leave)
+                      ? `แอดมินบันทึกแทนผู้ลา${creatorName(leave) ? ` (${creatorName(leave)})` : ""}`
+                      : "ผู้ลายื่นด้วยตนเอง"}
+                  </span>
+                </span>
+              }
+            />
             <Field label="วันที่ลา" value={`${formatDate(startDate)}${formatDate(startDate) !== formatDate(endDate) ? ` ถึง ${formatDate(endDate)}` : ""}`} />
             <Field label="จำนวนวันลา" value={thisTimeDays != null ? `${thisTimeDays} วัน` : "-"} />
             <div className="sm:col-span-2">

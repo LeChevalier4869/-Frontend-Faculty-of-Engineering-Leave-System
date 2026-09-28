@@ -14,6 +14,7 @@ import {
   leaveUnitForMaxDays,
 } from "../../utils/formatLeaveDays";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import LeaveSubmissionBadge from "../../components/common/LeaveSubmissionBadge";
 
 const Panel = ({ className = "", children }) => (
   <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm ${className}`}>
@@ -91,7 +92,9 @@ export default function UserInfo() {
   const fetchLeaveTypes = async () => {
     try {
       const res = await axios.get(
-        apiEndpoints.availableLeaveType,
+        // ต้องใช้ประเภทลาทั้งหมด ไม่ใช่เฉพาะที่ผู้ใช้ยื่นเองได้
+        // ไม่งั้นใบลาประเภทที่แอดมินยื่นให้จะไม่มีชื่อประเภท
+        apiEndpoints.getAllLeaveTypes,
         authHeader()
       );
       const map = {};
@@ -569,6 +572,9 @@ export default function UserInfo() {
                     ประเภทการลา
                   </th>
                   <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    ผู้ยื่น
+                  </th>
+                  <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
                     วันเริ่มต้น
                   </th>
                   <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold">
@@ -595,7 +601,10 @@ export default function UserInfo() {
                           {formatDate(leave.createdAt)}
                         </td>
                         <td className="px-4 py-3">
-                          {leaveTypesMap[leave.leaveTypeId] || "-"}
+                          {leave.leaveType?.name || leaveTypesMap[leave.leaveTypeId] || "-"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <LeaveSubmissionBadge leave={leave} />
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {formatDate(leave.startDate)}
@@ -619,7 +628,7 @@ export default function UserInfo() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="5"
+                      colSpan="6"
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่มีข้อมูลการลา

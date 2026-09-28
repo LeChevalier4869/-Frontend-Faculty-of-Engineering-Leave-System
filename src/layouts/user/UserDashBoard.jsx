@@ -45,6 +45,7 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import PeriodFilter from "../../components/PeriodFilter";
 import { filterByPeriod, DEFAULT_PERIOD } from "../../utils/periodRange";
 import MiniCalendar, { buildLeaveCalendar } from "../../components/MiniCalendar";
+import LeaveSubmissionBadge from "../../components/common/LeaveSubmissionBadge";
 
 const COLORS = {
   APPROVED: "#22c55e",
@@ -745,7 +746,10 @@ export default function UserDashboard() {
                           {formatDateTime(leave.createdAt)}
                         </td>
                         <td className="px-4 py-3">
-                          {leave.leaveType?.name || "-"}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span>{leave.leaveType?.name || "-"}</span>
+                            <LeaveSubmissionBadge leave={leave} size="sm" />
+                          </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {formatDate(leave.startDate)}

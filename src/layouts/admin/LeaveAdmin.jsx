@@ -39,12 +39,6 @@ function LeaveAdmin() {
   const itemsPerPage = 8;
   const navigate = useNavigate();
 
-  const leaveTypes = {
-    1: "ลาป่วย",
-    2: "ลากิจส่วนตัว",
-    3: "ลาพักผ่อน",
-  };
-
   const statusColors = {
     APPROVED: "bg-emerald-50 text-emerald-700 border border-emerald-200",
     PENDING: "bg-amber-50 text-amber-700 border border-amber-200",
@@ -191,7 +185,7 @@ function LeaveAdmin() {
                       <td className="px-4 py-3">
                         {item.user?.prefixName} {item.user?.firstName} {item.user?.lastName}
                       </td>
-                      <td className="px-4 py-3">{leaveTypes[item.leaveTypeId] || "ไม่ระบุ"}</td>
+                      <td className="px-4 py-3">{item.leaveType?.name || "ไม่ระบุ"}</td>
                       <td className="px-4 py-3 whitespace-nowrap">{formatDate(item.startDate)}</td>
                       <td className="px-4 py-3 whitespace-nowrap">{formatDate(item.endDate)}</td>
                       <td className="px-4 py-3 text-center">
@@ -261,7 +255,7 @@ function LeaveAdmin() {
                       </span>
                     </div>
                     <div className="mt-1 text-sm text-slate-600">
-                      {leaveTypes[item.leaveTypeId] || "ไม่ระบุ"}
+                      {item.leaveType?.name || "ไม่ระบุ"}
                     </div>
                     <div className="mt-1 text-sm text-slate-600">
                       {formatDate(item.startDate)} – {formatDate(item.endDate)}

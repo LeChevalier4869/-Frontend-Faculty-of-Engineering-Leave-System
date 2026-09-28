@@ -35,6 +35,7 @@ import {
 } from "../../utils/leavePolicy";
 import { expandHolidays, defaultHolidayYears } from "../../utils/holidayUtils";
 import LeaveCancellationModal from "../../components/admin/LeaveCancellationModal";
+import LeaveSubmissionBadge from "../../components/common/LeaveSubmissionBadge";
 
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
@@ -1509,6 +1510,9 @@ export default function AddOtherRequest() {
                       ประเภทการลา
                     </th>
                     <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
+                      ผู้ยื่น
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
                       วันที่เริ่มต้น
                     </th>
                     <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap">
@@ -1523,7 +1527,7 @@ export default function AddOtherRequest() {
                   {loading ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-4 py-6 text-center text-sm text-slate-500"
                       >
                         กำลังโหลดข้อมูลการลา...
@@ -1543,7 +1547,10 @@ export default function AddOtherRequest() {
                           {formatDateTime(r.createdAt)}
                         </td>
                         <td className="px-4 py-3">
-                          {leaveTypesMap[r.leaveTypeId] || r?.leaveType?.name || "-"}
+                          {r?.leaveType?.name || leaveTypesMap[r.leaveTypeId] || "-"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <LeaveSubmissionBadge leave={r} />
                         </td>
                         <td className="px-4 py-3">{formatDate(r.startDate)}</td>
                         <td className="px-4 py-3">{formatDate(r.endDate)}</td>
@@ -1563,7 +1570,7 @@ export default function AddOtherRequest() {
                     <tr>
                       <td
                         className="px-4 py-6 text-center text-slate-500 text-sm"
-                        colSpan={6}
+                        colSpan={7}
                       >
                         ไม่พบข้อมูล
                       </td>
