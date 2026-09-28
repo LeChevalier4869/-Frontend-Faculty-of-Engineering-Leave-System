@@ -1,13 +1,11 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { ChevronDown, LogOut, Bell, Menu } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import PropTypes from "prop-types";
 import ProfileImage from "./ProfileImage";
 
 function Header({ onMenuClick, isMobile = false }) {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -32,8 +30,10 @@ function Header({ onMenuClick, isMobile = false }) {
   const handleLogout = () => {
     setIsOpen(false);
     logout();
-    navigate("/login", { replace: true });
-    window.location.reload();
+    // hard redirect ครั้งเดียว: เบราว์เซอร์ทิ้งหน้าเดิมทันที ไม่ให้ React
+    // re-render หน้า protected ด้วย user=null (ซึ่งทำให้ error โผล่แว็บหนึ่ง)
+    // replace = ไม่เพิ่ม history ให้กด back กลับมาหน้าเดิมไม่ได้
+    window.location.replace("/login");
   };
 
   return (
