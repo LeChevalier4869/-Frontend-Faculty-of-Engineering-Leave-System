@@ -602,7 +602,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                         </span>
                         <FaChevronDown
                           className={`w-5 h-5 ml-2 transition-transform ${
-                            openProxy ? "rotate-180" : "rotate-0"
+                            openProxy ? "rotate-0" : "-rotate-90"
                           }`}
                         />
                       </button>
@@ -735,7 +735,7 @@ export default function Sidebar({ isOpen, onClose = () => {}, isMobile = false }
                       </span>
                       <FaChevronDown
                         className={`w-5 h-5 ml-2 transition-transform ${
-                          openAdmin ? "rotate-180" : "rotate-0"
+                          openAdmin ? "rotate-0" : "-rotate-90"
                         }`}
                       />
                     </button>
