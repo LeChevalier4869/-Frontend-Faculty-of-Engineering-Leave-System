@@ -69,37 +69,43 @@ export default function MonthlyReportTable({ dayList, rows, onSymbolClick }) {
                 </td>
 
                 {/* วันที่ */}
-                {row.cells.map((c) => (
-                  <td
-                    key={c.day}
-                    onClick={() => {
-                      const key = c.weekend
-                        ? "WEEKEND"
-                        : SYMBOL_TO_KEY[c.symbol];
+                {row.cells.map((c) => {
+                  // รวมเงื่อนไข: เป็นวันเสาร์-อาทิตย์ หรือ วันหยุดนักขัตฤกษ์
+                  const isOffDay = c.weekend || c.holiday;
 
-                      if (key) {
-                        onSymbolClick(key);
-                      }
-                    }}
-                    className="border border-slate-100 px-0 py-1.5 text-[12px] font-medium cursor-pointer hover:bg-slate-50 transition-colors"
-                    style={{
-                      width: 26,
-                      minWidth: 26,
-                      maxWidth: 26,
-                      color: c.weekend
-                        ? "#94a3b8"
-                        : (LEAVE_META[SYMBOL_TO_KEY[c.symbol]]?.color ??
-                          "#334155"),
-                      background: c.weekend ? "#f8fafc" : "transparent",
-                    }}
-                  >
-                    {c.symbol}
-                  </td>
-                ))}
+                  return (
+                    <td
+                      key={c.day}
+                      onClick={() => {
+                        const key = isOffDay
+                          ? "WEEKEND"
+                          : SYMBOL_TO_KEY[c.symbol];
 
-                {/* รวมวันมา */}
-                <td className="border border-slate-100 px-2 py-1.5 font-semibold bg-slate-50">
-                  {row.tally.PRESENT}
+                        if (key) {
+                          onSymbolClick(key);
+                        }
+                      }}
+                      className="border border-slate-100 px-0 py-1.5 text-[12px] font-medium cursor-pointer hover:bg-slate-100 transition-colors"
+                      style={{
+                        width: 26,
+                        minWidth: 26,
+                        maxWidth: 26,
+                        // ถ้าเป็นวันหยุด (ส-อา หรือ นักขัตฤกษ์) -> แสดงตัวอักษรเทาอ่อน และพื้นหลังเทาเหมือนกัน
+                        color: isOffDay
+                          ? "#94a3b8"
+                          : (LEAVE_META[SYMBOL_TO_KEY[c.symbol]]?.color ??
+                            "#334155"),
+                        background: isOffDay ? "#f8fafc" : "transparent",
+                      }}
+                    >
+                      {c.symbol}
+                    </td>
+                  );
+                })}
+
+                {/* รวมวันมาปฏิบัติราชการจริง */}
+                <td className="border border-slate-100 px-2 py-1.5 font-semibold bg-slate-50 text-slate-800">
+                  {row.totalWorkDays ?? 0}
                 </td>
               </tr>
             ))}

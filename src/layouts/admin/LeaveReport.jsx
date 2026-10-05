@@ -30,6 +30,7 @@ const BRAND = "#b23a47";
 
 const nowMonthIndex = new Date().getMonth();
 const nowYearBE = new Date().getFullYear() + 543;
+
 const DEFAULT_YEAR = YEARS.includes(nowYearBE)
   ? nowYearBE
   : YEARS[YEARS.length - 1];
@@ -45,6 +46,7 @@ const pickType = (ls, key) => {
   const s = ls?.[key];
   return { times: s?.count, days: s?.days };
 };
+
 const toSummaryRows = (users) =>
   users.map((u) => ({
     name: u.name,
@@ -86,6 +88,7 @@ function DownloadButton({
 export default function AttendanceReport() {
   const [reportType, setReportType] = useState("monthly");
   const [appliedType, setAppliedType] = useState("monthly");
+
   const [organizations, setOrganizations] = useState([]);
   const [organization, setOrganization] = useState("");
 
@@ -96,16 +99,17 @@ export default function AttendanceReport() {
   const [cycleStart, setCycleStart] = useState("");
   const [cycleEnd, setCycleEnd] = useState("");
 
-  const [fiscalYear, setFiscalYear] = useState(nowFiscalYearBE); // พ.ศ.
+  const [fiscalYear, setFiscalYear] = useState(nowFiscalYearBE);
   const [fiscalYearOptions, setFiscalYearOptions] = useState([nowFiscalYearBE]);
 
-  const [reportData, setReportData] = useState(null); // monthly
-  const [summaryData, setSummaryData] = useState(null); // cycle/fiscal grouped
+  const [reportData, setReportData] = useState(null);
+  const [summaryData, setSummaryData] = useState(null);
 
   const [loading, setLoading] = useState(false);
-  const [downloading, setDownloading] = useState(null); // "pdf" | "word" | null
+  const [downloading, setDownloading] = useState(null);
   const [hasApplied, setHasApplied] = useState(false);
   const [activeSymbolKey, setActiveSymbolKey] = useState(null);
+
   const onSymbolClick = (key) => {
     setActiveSymbolKey(key);
   };
@@ -123,135 +127,164 @@ export default function AttendanceReport() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+
     (async () => {
       try {
         const [result, years] = await Promise.all([
           getOrganizations(),
           getFiscalYears().catch(() => []),
         ]);
+
+        if (!isMounted) return;
+
         setOrganizations(result);
+
         if (result.length > 0) {
           setOrganization(result[0].id);
-          setApplied((prev) => ({ ...prev, organization: result[0].id }));
+          setApplied((prev) => ({
+            ...prev,
+            organization: result[0].id,
+          }));
         }
+
         if (years.length > 0) {
           setFiscalYearOptions(years);
-          setFiscalYear(years[0]); // ปีล่าสุด (มีข้อมูล) เป็นค่าเริ่มต้น
+          setFiscalYear(years[0]);
         }
       } catch (error) {
-        console.error("โหลด organizations ไม่สำเร็จ:", error);
+        if (isMounted) {
+          console.error("โหลด organizations ไม่สำเร็จ:", error);
+        }
       }
     })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const totalDays = useMemo(
     () => daysInMonth(applied.monthIndex, applied.year),
     [applied.monthIndex, applied.year],
   );
+
   const dayList = useMemo(
     () => Array.from({ length: totalDays }, (_, i) => i + 1),
     [totalDays],
   );
 
-  // ---- ตารางรายเดือน (ลงเวลารายวัน) แยกตามประเภทบุคลากร เหมือนในใบรายงาน ----
-  const monthlyGroups = useMemo(() => {
-    if (!reportData) return [];
+  // ---- ตารางรายเดือน (ลงเวลารายวัน) แยกตามประเภทบุคลากร ----
+  // ---- ตารางรายเดือน (ลงเวลารายวัน) แยกตามประเภทบุคลากร ----
+const monthlyGroups = useMemo(() => {
+  if (!reportData) return [];
 
-    const ceYear = applied.year - 543;
+  const ceYear = applied.year - 543;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    const toRow = (emp) => {
-      const cells = dayList.map((day) => {
-        const isWeekend = [0, 6].includes(
-          weekdayOf(applied.monthIndex, applied.year, day),
-        );
+  // 1. ดึงวันหยุดนักขัตฤกษ์จากตาราง Holiday (ส่งมาจาก backend ใน reportData.holidays)
+  const holidayDays = new Set(
+    (reportData.holidays || []).map((h) => new Date(h.date || h).getDate())
+  );
 
-        // เสาร์-อาทิตย์
-        if (isWeekend) {
-          return {
-            day,
-            symbol: "-",
-            weekend: true,
-          };
-        }
+  const toRow = (emp) => {
+    let calculatedWorkDays = 0; // รวมวันมาทำงานจริงเฉพาะวันทำการปกติที่ไม่ได้ลา
 
-        const currentDate = new Date(ceYear, applied.monthIndex, day);
-        currentDate.setHours(0, 0, 0, 0);
+    const cells = dayList.map((day) => {
+      const isWeekend = [0, 6].includes(
+        weekdayOf(applied.monthIndex, applied.year, day),
+      );
+      const isHoliday = holidayDays.has(day); // เช็คว่าเป็นวันหยุดนักขัตฤกษ์หรือไม่
 
-        // วันนี้และอนาคต = ยังไม่แสดงข้อมูล
-        if (currentDate >= today) {
-          return {
-            day,
-            symbol: "",
-            weekend: false,
-            future: true,
-          };
-        }
-
-        // วันที่ผ่านมาแล้ว และมีการลา
-        const leaveSym = ATTENDANCE_SYMBOL[emp.attendance?.[day]];
-
-        if (leaveSym) {
-          return {
-            day,
-            symbol: leaveSym,
-            weekend: false,
-            future: false,
-          };
-        }
-
-        // วันที่ผ่านมาแล้ว ไม่มีลา = มาทำงาน
+      // 2. วันเสาร์-อาทิตย์ หรือ วันหยุดนักขัตฤกษ์ -> แสดงเป็นวันหยุด (-) ไม่นับวันทำงาน
+      if (isWeekend || isHoliday) {
         return {
           day,
-          symbol: "✓",
+          symbol: "-",
+          weekend: isWeekend,
+          holiday: isHoliday,
+        };
+      }
+
+      const currentDate = new Date(ceYear, applied.monthIndex, day, 0, 0, 0, 0);
+
+      // 3. วันนี้และอนาคต = ยังไม่แสดงข้อมูล (ช่องว่าง)
+      if (currentDate >= today) {
+        return {
+          day,
+          symbol: "",
           weekend: false,
+          holiday: false,
+          future: true,
+        };
+      }
+
+      // 4. วันที่ผ่านมาแล้ว และมีการลา
+      const leaveSym = ATTENDANCE_SYMBOL[emp.attendance?.[day]];
+
+      if (leaveSym) {
+        return {
+          day,
+          symbol: leaveSym,
+          weekend: false,
+          holiday: false,
           future: false,
         };
-      });
+      }
 
-      const tally = {
-        PRESENT: 0,
-        ANNUAL: 0,
-        SICK: 0,
-        PERSONAL: 0,
-        ABSENT: 0,
-      };
+      // 5. วันทำงานปกติก่อนวันปัจจุบัน -> แสดงเครื่องหมาย ✓ (หรือ /) และนับบวกวันทำงานจริง
+      calculatedWorkDays++;
 
-      cells.forEach((cell) => {
-        if (cell.weekend || cell.future) return;
+      return { day, symbol: "✓", weekend: false, holiday: false, future: false };
+    });
 
-        const key = SYMBOL_TO_KEY[cell.symbol];
-
-        if (key && tally[key] != null) {
-          tally[key]++;
-        }
-      });
-
-      return {
-        userId: emp.userId,
-        name: emp.name,
-        totalWorkDays: emp.totalWorkDays,
-        cells,
-        tally,
-      };
+    const tally = {
+      PRESENT: 0,
+      ANNUAL: 0,
+      SICK: 0,
+      PERSONAL: 0,
+      ABSENT: 0,
     };
 
-    return Object.entries(reportData.report)
-      .filter(([, emps]) => Array.isArray(emps) && emps.length)
-      .map(([type, emps]) => ({
-        type,
-        rows: emps.map(toRow),
-      }));
-  }, [reportData, dayList, applied.monthIndex, applied.year]);
+    cells.forEach((cell) => {
+      if (cell.weekend || cell.holiday || cell.future) return;
+
+      const key = SYMBOL_TO_KEY[cell.symbol];
+
+      if (key && tally[key] != null) {
+        tally[key]++;
+      }
+    });
+
+    return {
+      userId: emp.userId,
+      name: emp.name,
+      totalWorkDays: emp.totalWorkDays ?? calculatedWorkDays,
+      cells,
+      tally,
+    };
+  };
+
+  return Object.entries(reportData.report || {})
+    .filter(([, emps]) => Array.isArray(emps) && emps.length)
+    .map(([type, emps]) => ({
+      type,
+      rows: emps.map(toRow),
+    }));
+}, [reportData, dayList, applied.monthIndex, applied.year]);
 
   // ---- ตารางสรุป (รอบประเมิน/ปีงบ) แยกตามประเภทบุคลากร ----
   const summaryGroups = useMemo(() => {
     if (!summaryData) return [];
+
     return Object.entries(summaryData)
       .filter(([, users]) => Array.isArray(users) && users.length)
-      .map(([type, users]) => ({ type, rows: toSummaryRows(users) }));
+      .map(([type, users]) => ({
+        type,
+        rows: toSummaryRows(users),
+      }));
   }, [summaryData]);
 
   const isSummary = appliedType === "cycle" || appliedType === "fiscal";
@@ -268,11 +301,13 @@ export default function AttendanceReport() {
       Swal.fire("ข้อมูลไม่ครบ", "กรุณาเลือกคณะ", "warning");
       return;
     }
+
     if (reportType === "cycle") {
       if (!cycleStart || !cycleEnd) {
         Swal.fire("ข้อมูลไม่ครบ", "กรุณาเลือกช่วงวันที่", "warning");
         return;
       }
+
       if (new Date(cycleStart) > new Date(cycleEnd)) {
         Swal.fire(
           "ช่วงวันที่ไม่ถูกต้อง",
@@ -281,6 +316,7 @@ export default function AttendanceReport() {
         );
         return;
       }
+
       if (!cycleNumber) {
         Swal.fire("ข้อมูลไม่ครบ", "กรุณาระบุรอบประเมิน ครั้งที่", "warning");
         return;
@@ -289,16 +325,19 @@ export default function AttendanceReport() {
 
     try {
       setLoading(true);
-      // ปีงบ: ช่วงวันที่มาจาก backend (setting) — เก็บไว้แสดงหัวรายงาน
+
       let fiscalStart = "";
       let fiscalEnd = "";
+
       if (reportType === "monthly") {
         const result = await getMonthlyReport({
           organizationId: organization,
           month: monthIndex + 1,
           year: year - 543,
         });
+
         setReportData(result);
+        console.log(result)
         setSummaryData(null);
       } else if (reportType === "cycle") {
         const rows = await getSummaryReport({
@@ -306,18 +345,22 @@ export default function AttendanceReport() {
           startDate: cycleStart,
           endDate: cycleEnd,
         });
+
         setSummaryData(rows || {});
         setReportData(null);
       } else {
         const res = await getFiscalReport({
           organizationId: organization,
-          fiscalYear: fiscalYear - 543, // ส่งเป็น ค.ศ.
+          fiscalYear: fiscalYear - 543,
         });
+
         fiscalStart = res.startDate;
         fiscalEnd = res.endDate;
+
         setSummaryData(res.rows || {});
         setReportData(null);
       }
+
       setApplied({
         organization,
         monthIndex,
@@ -329,6 +372,7 @@ export default function AttendanceReport() {
         fiscalStart,
         fiscalEnd,
       });
+
       setAppliedType(reportType);
       setHasApplied(true);
     } catch (err) {
@@ -337,6 +381,7 @@ export default function AttendanceReport() {
         err.response?.data?.error ||
         err.message ||
         "เกิดข้อผิดพลาด";
+
       Swal.fire("โหลดรายงานไม่สำเร็จ", msg, "error");
       setHasApplied(false);
     } finally {
@@ -345,7 +390,6 @@ export default function AttendanceReport() {
   };
 
   const handleReset = () => {
-    // คงอยู่ tab เดิม (ไม่เด้งกลับ monthly) — แค่ล้างข้อมูล/ฟิลเตอร์
     setOrganization(organizations[0]?.id ?? "");
     setMonthIndex(nowMonthIndex);
     setYear(DEFAULT_YEAR);
@@ -359,18 +403,22 @@ export default function AttendanceReport() {
   };
 
   const buildPayload = () => {
-    if (appliedType === "cycle")
+    if (appliedType === "cycle") {
       return {
         organizationId: applied.organization,
         countReport: applied.cycleNumber,
         startDate: applied.cycleStart,
         endDate: applied.cycleEnd,
       };
-    if (appliedType === "fiscal")
+    }
+
+    if (appliedType === "fiscal") {
       return {
         organizationId: applied.organization,
-        fiscalYear: applied.fiscalYear - 543, // ค.ศ.
+        fiscalYear: applied.fiscalYear - 543,
       };
+    }
+
     return {
       organizationId: applied.organization,
       month: applied.monthIndex + 1,
@@ -381,6 +429,7 @@ export default function AttendanceReport() {
   const handleDownload = async (format) => {
     try {
       setDownloading(format);
+
       await downloadReport({
         reportType: appliedType,
         format,
@@ -398,6 +447,7 @@ export default function AttendanceReport() {
       <span className="hidden text-sm font-medium text-slate-500 sm:inline">
         ดาวน์โหลด:
       </span>
+
       <DownloadButton
         icon={FileDown}
         label="PDF"
@@ -406,6 +456,7 @@ export default function AttendanceReport() {
         disabled={!!downloading}
         onClick={() => handleDownload("pdf")}
       />
+
       <DownloadButton
         icon={FileText}
         label="Word"
@@ -457,12 +508,10 @@ export default function AttendanceReport() {
 
         {hasApplied && (
           <Panel
-            title={
-              isSummary
-                ? "รายงานสรุปการลาและการลงเวลาปฏิบัติราชการของบุคลากร"
-                : "รายงานสรุปการลาและการลงเวลาปฏิบัติราชการของบุคลากร"
-            }
-            subtitle={`มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น${orgName ? ` · สังกัด ${orgName}` : ""}`}
+            title="รายงานสรุปการลาและการลงเวลาปฏิบัติราชการของบุคลากร"
+            subtitle={`มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น${
+              orgName ? ` · สังกัด ${orgName}` : ""
+            }`}
             action={downloadActions}
           >
             <ReportDescription reportType={appliedType} applied={applied} />
@@ -493,8 +542,9 @@ export default function AttendanceReport() {
                 {monthlyGroups.map((group) => (
                   <div key={group.type}>
                     <h3 className="mb-2 font-semibold">
-                      ประเภทบุคลากร: {group.type}  ({group.rows.length} คน)
+                      ประเภทบุคลากร: {group.type} ({group.rows.length} คน)
                     </h3>
+
                     <MonthlyReportTable
                       dayList={dayList}
                       rows={group.rows}

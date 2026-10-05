@@ -53,10 +53,16 @@ export const ATTENDANCE_SYMBOL = {
  *
  * เนื่องจากหลายประเภทใช้สัญลักษณ์เดียวกัน
  * จึงไม่สามารถระบุ key เดิมจาก symbol "บ" ได้แบบ 1:1
+ *
+ * ✓ = PRESENT
+ * รองรับกรณีข้อมูลเดิมที่ใช้ ✓ แทน /
  */
-export const SYMBOL_TO_KEY = Object.fromEntries(
-  Object.entries(ATTENDANCE_SYMBOL).map(([key, symbol]) => [symbol, key]),
-);
+export const SYMBOL_TO_KEY = {
+  ...Object.fromEntries(
+    Object.entries(ATTENDANCE_SYMBOL).map(([key, symbol]) => [symbol, key]),
+  ),
+  "✓": "PRESENT",
+};
 
 /**
  * ข้อมูลสำหรับแสดงผลของแต่ละประเภท
@@ -211,3 +217,4 @@ export const LEAVE_ORDER = [
   "OFFICIAL_DUTY",
   "ABSENT",
 ];
+
