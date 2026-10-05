@@ -127,6 +127,8 @@ export default function AttendanceReport() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+
     (async () => {
       try {
         const [result, years] = await Promise.all([
@@ -134,11 +136,12 @@ export default function AttendanceReport() {
           getFiscalYears().catch(() => []),
         ]);
 
+        if (!isMounted) return;
+
         setOrganizations(result);
 
         if (result.length > 0) {
           setOrganization(result[0].id);
-
           setApplied((prev) => ({
             ...prev,
             organization: result[0].id,
@@ -150,9 +153,15 @@ export default function AttendanceReport() {
           setFiscalYear(years[0]);
         }
       } catch (error) {
-        console.error("โหลด organizations ไม่สำเร็จ:", error);
+        if (isMounted) {
+          console.error("โหลด organizations ไม่สำเร็จ:", error);
+        }
       }
     })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const totalDays = useMemo(
@@ -166,106 +175,105 @@ export default function AttendanceReport() {
   );
 
   // ---- ตารางรายเดือน (ลงเวลารายวัน) แยกตามประเภทบุคลากร ----
-  const monthlyGroups = useMemo(() => {
-    if (!reportData) return [];
+  // ---- ตารางรายเดือน (ลงเวลารายวัน) แยกตามประเภทบุคลากร ----
+const monthlyGroups = useMemo(() => {
+  if (!reportData) return [];
 
-    const ceYear = applied.year - 543;
+  const ceYear = applied.year - 543;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    const toRow = (emp) => {
-      const cells = dayList.map((day) => {
-        const isWeekend = [0, 6].includes(
-          weekdayOf(applied.monthIndex, applied.year, day),
-        );
+  // 1. ดึงวันหยุดนักขัตฤกษ์จากตาราง Holiday (ส่งมาจาก backend ใน reportData.holidays)
+  const holidayDays = new Set(
+    (reportData.holidays || []).map((h) => new Date(h.date || h).getDate())
+  );
 
-        // เสาร์-อาทิตย์
-        if (isWeekend) {
-          return {
-            day,
-            symbol: "-",
-            weekend: true,
-          };
-        }
+  const toRow = (emp) => {
+    let calculatedWorkDays = 0; // รวมวันมาทำงานจริงเฉพาะวันทำการปกติที่ไม่ได้ลา
 
-        const currentDate = new Date(ceYear, applied.monthIndex, day);
-        currentDate.setHours(0, 0, 0, 0);
+    const cells = dayList.map((day) => {
+      const isWeekend = [0, 6].includes(
+        weekdayOf(applied.monthIndex, applied.year, day),
+      );
+      const isHoliday = holidayDays.has(day); // เช็คว่าเป็นวันหยุดนักขัตฤกษ์หรือไม่
 
-        // วันนี้และอนาคต = ยังไม่แสดงข้อมูล
-        if (currentDate >= today) {
-          return {
-            day,
-            symbol: "",
-            weekend: false,
-            future: true,
-          };
-        }
-
-        // วันที่ผ่านมาแล้ว และมีการลา
-        const leaveSym = ATTENDANCE_SYMBOL[emp.attendance?.[day]];
-
-        if (leaveSym) {
-          return {
-            day,
-            symbol: leaveSym,
-            weekend: false,
-            future: false,
-          };
-        }
-
-        // วันที่ผ่านมาแล้ว ไม่มีลา = มาทำงาน
-        // ใช้ "/" ให้ตรงกับ ATTENDANCE_SYMBOL.PRESENT
-        // เพื่อให้ SYMBOL_TO_KEY["/"] = "PRESENT"
+      // 2. วันเสาร์-อาทิตย์ หรือ วันหยุดนักขัตฤกษ์ -> แสดงเป็นวันหยุด (-) ไม่นับวันทำงาน
+      if (isWeekend || isHoliday) {
         return {
           day,
-          symbol: "✓",
+          symbol: "-",
+          weekend: isWeekend,
+          holiday: isHoliday,
+        };
+      }
+
+      const currentDate = new Date(ceYear, applied.monthIndex, day, 0, 0, 0, 0);
+
+      // 3. วันนี้และอนาคต = ยังไม่แสดงข้อมูล (ช่องว่าง)
+      if (currentDate >= today) {
+        return {
+          day,
+          symbol: "",
           weekend: false,
+          holiday: false,
+          future: true,
+        };
+      }
+
+      // 4. วันที่ผ่านมาแล้ว และมีการลา
+      const leaveSym = ATTENDANCE_SYMBOL[emp.attendance?.[day]];
+
+      if (leaveSym) {
+        return {
+          day,
+          symbol: leaveSym,
+          weekend: false,
+          holiday: false,
           future: false,
         };
-      });
+      }
 
-      const tally = {
-        PRESENT: 0,
-        ANNUAL: 0,
-        SICK: 0,
-        PERSONAL: 0,
-        ABSENT: 0,
-      };
+      // 5. วันทำงานปกติก่อนวันปัจจุบัน -> แสดงเครื่องหมาย ✓ (หรือ /) และนับบวกวันทำงานจริง
+      calculatedWorkDays++;
 
-      cells.forEach((cell) => {
-        if (cell.weekend || cell.future) return;
+      return { day, symbol: "✓", weekend: false, holiday: false, future: false };
+    });
 
-        const key = SYMBOL_TO_KEY[cell.symbol];
-
-        if (key && tally[key] != null) {
-          tally[key]++;
-        }
-      });
-
-      return {
-        userId: emp.userId,
-        name: emp.name,
-
-        // totalWorkDays = จำนวนวันทำงานทั้งหมดในเดือน
-        // ไม่ใช่จำนวนวันที่บุคลากรมาทำงานจริง
-        totalWorkDays: emp.totalWorkDays,
-
-        cells,
-
-        // tally.PRESENT = จำนวนวันที่มาทำงานจริง
-        // (ไม่นับวันที่ลา / เสาร์-อาทิตย์ / วันนี้และอนาคต)
-        tally,
-      };
+    const tally = {
+      PRESENT: 0,
+      ANNUAL: 0,
+      SICK: 0,
+      PERSONAL: 0,
+      ABSENT: 0,
     };
 
-    return Object.entries(reportData.report)
-      .filter(([, emps]) => Array.isArray(emps) && emps.length)
-      .map(([type, emps]) => ({
-        type,
-        rows: emps.map(toRow),
-      }));
-  }, [reportData, dayList, applied.monthIndex, applied.year]);
+    cells.forEach((cell) => {
+      if (cell.weekend || cell.holiday || cell.future) return;
+
+      const key = SYMBOL_TO_KEY[cell.symbol];
+
+      if (key && tally[key] != null) {
+        tally[key]++;
+      }
+    });
+
+    return {
+      userId: emp.userId,
+      name: emp.name,
+      totalWorkDays: emp.totalWorkDays ?? calculatedWorkDays,
+      cells,
+      tally,
+    };
+  };
+
+  return Object.entries(reportData.report || {})
+    .filter(([, emps]) => Array.isArray(emps) && emps.length)
+    .map(([type, emps]) => ({
+      type,
+      rows: emps.map(toRow),
+    }));
+}, [reportData, dayList, applied.monthIndex, applied.year]);
 
   // ---- ตารางสรุป (รอบประเมิน/ปีงบ) แยกตามประเภทบุคลากร ----
   const summaryGroups = useMemo(() => {
@@ -329,6 +337,7 @@ export default function AttendanceReport() {
         });
 
         setReportData(result);
+        console.log(result)
         setSummaryData(null);
       } else if (reportType === "cycle") {
         const rows = await getSummaryReport({
