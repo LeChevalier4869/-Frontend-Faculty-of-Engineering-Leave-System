@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoBack } from "../../utils/useGoBack";
 import { HiOutlineChevronDown } from "react-icons/hi";
-import { notifySuccess, notifyError } from "../../utils/alert";
+import { notify, notifySuccess, notifyError } from "../../utils/alert";
 import axios from "axios";
 import { apiEndpoints } from "../../utils/api";
 import ExcelUploadPanel from "../../components/ExcelUploadPanel";
@@ -50,6 +50,10 @@ export default function AddUser() {
   const [organizations, setOrganizations] = useState([]);
   const [personnelTypes, setPersonnelTypes] = useState([]);
   const [employmentTypes, setEmploymentTypes] = useState([]); // fallback static จะกำหนดหลัง fetch
+  const [leaveBalanceOptions, setLeaveBalanceOptions] = useState([]);
+  const [leaveBalances, setLeaveBalances] = useState({});
+  const [loadingLeaveBalanceOptions, setLoadingLeaveBalanceOptions] =
+    useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -76,9 +80,60 @@ export default function AddUser() {
     fetchLookup();
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    setLeaveBalanceOptions([]);
+    setLeaveBalances({});
+
+    if (!formData.personnelTypeId || !formData.hireDate || !formData.sex) {
+      setLoadingLeaveBalanceOptions(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    const fetchLeaveBalanceOptions = async () => {
+      setLoadingLeaveBalanceOptions(true);
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await axios.get(apiEndpoints.adminLeaveBalanceOptions, {
+          params: {
+            personnelTypeId: formData.personnelTypeId,
+            hireDate: formData.hireDate,
+            sex: formData.sex,
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (active) {
+          setLeaveBalanceOptions(res.data.data || []);
+        }
+      } catch (err) {
+        if (active) {
+          notifyError(
+            "โหลดสิทธิ์วันลาไม่สำเร็จ",
+            err.response?.data?.message || "กรุณาลองเลือกข้อมูลการทำงานอีกครั้ง",
+          );
+        }
+      } finally {
+        if (active) setLoadingLeaveBalanceOptions(false);
+      }
+    };
+
+    fetchLeaveBalanceOptions();
+    return () => {
+      active = false;
+    };
+  }, [formData.personnelTypeId, formData.hireDate, formData.sex]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePrefixNameChange = (e) => {
+    const prefixName = e.target.value;
+    const sex = prefixName === "นาย" ? "ชาย" : "หญิง";
+    setFormData((prev) => ({ ...prev, prefixName, sex }));
   };
 
   const handleFileChange = (e) => setSelectedFile(e.target.files[0]);
@@ -152,19 +207,29 @@ export default function AddUser() {
       Object.entries(formData).forEach(([k, v]) => {
         fd.append(k, v);
       });
+      fd.append("leaveBalances", JSON.stringify(leaveBalances));
       if (selectedFile) fd.append("profilePicture", selectedFile);
 
       const token = localStorage.getItem("accessToken");
-      await axios.post(apiEndpoints.createUserByAdmin, fd, {
+      const res = await axios.post(apiEndpoints.createUserByAdmin, fd, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
       });
 
-      notifySuccess("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว").then(
-        () => navigate("/admin/manage-user")
-      );
+      const warnings = res.data?.warnings || [];
+      if (warnings.length) {
+        notify(
+          "warning",
+          "เพิ่มผู้ใช้งานสำเร็จ แต่มีบางยอดใช้ค่าเริ่มต้น",
+          warnings.join("\n"),
+        ).then(() => navigate("/admin/manage-user"));
+      } else {
+        notifySuccess("สำเร็จ", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว").then(
+          () => navigate("/admin/manage-user"),
+        );
+      }
     } catch (err) {
       notifyError(
         "ผิดพลาด",
@@ -177,6 +242,59 @@ export default function AddUser() {
 
   const inputClass =
     "w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder:text-slate-400";
+  const remainingBalanceOptions = leaveBalanceOptions.filter(
+    (option) => !option.isNonDeductible,
+  );
+  const usedDaysOptions = leaveBalanceOptions.filter(
+    (option) => option.isNonDeductible,
+  );
+  const renderLeaveBalanceFields = (options, isUsedDays) =>
+    options.length ? (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {options.map((option) => (
+          <div
+            key={option.leaveTypeId}
+            className="rounded-xl border border-slate-200 bg-white p-4"
+          >
+            <label
+              htmlFor={`leave-balance-${option.leaveTypeId}`}
+              className="block text-sm font-medium text-slate-800"
+            >
+              {option.name}
+            </label>
+            <p className="mt-1 text-xs text-slate-500">
+              {isUsedDays
+                ? "นับจำนวนวันที่ใช้ไปแล้ว โดยไม่หักยอดคงเหลือ"
+                : `ค่าเริ่มต้น ${option.defaultDays} วัน · สิทธิ์สูงสุด ${option.maxDays} วัน`}
+            </p>
+            <input
+              id={`leave-balance-${option.leaveTypeId}`}
+              type="number"
+              min="0"
+              step="1"
+              max={isUsedDays ? undefined : option.maxDays}
+              value={leaveBalances[option.leaveTypeId] ?? ""}
+              onChange={(e) =>
+                setLeaveBalances((prev) => ({
+                  ...prev,
+                  [option.leaveTypeId]: e.target.value,
+                }))
+              }
+              className={`${inputClass} mt-3`}
+              placeholder={
+                isUsedDays
+                  ? "เว้นว่าง = 0 วัน"
+                  : `เว้นว่าง = ${option.defaultDays} วัน`
+              }
+            />
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="rounded-lg bg-white px-4 py-3 text-sm text-slate-500">
+        ไม่มีประเภทลาในกลุ่มนี้สำหรับพนักงาน
+      </p>
+    );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 px-4 py-8 md:px-8 font-kanit rounded-2xl">
@@ -212,11 +330,16 @@ export default function AddUser() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 {/* คำนำหน้า */}
                 <div className="md:col-span-2">
-                  {renderDropdown("คำนำหน้า", "prefixName", [
-                    { value: "นาย", label: "นาย" },
-                    { value: "นางสาว", label: "นางสาว" },
-                    { value: "นาง", label: "นาง" },
-                  ])}
+                  {renderDropdown(
+                    "คำนำหน้า",
+                    "prefixName",
+                    [
+                      { value: "นาย", label: "นาย" },
+                      { value: "นางสาว", label: "นางสาว" },
+                      { value: "นาง", label: "นาง" },
+                    ],
+                    { onChange: handlePrefixNameChange },
+                  )}
                 </div>
 
                 {/* ชื่อจริง */}
@@ -390,6 +513,77 @@ export default function AddUser() {
                   />
                 </div>
               </div>
+            </section>
+
+            {/* Leave Balance */}
+            <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-lg font-semibold text-slate-900">
+                        กำหนดยอดวันลา
+                        <span className="ml-2 text-sm font-normal text-slate-500">
+                          (ไม่บังคับ)
+                        </span>
+                      </span>
+                      <HiOutlineChevronDown
+                        size={18}
+                        className="shrink-0 text-slate-500 transition-transform group-open:rotate-180"
+                      />
+                    </div>
+                    <span className="text-sm text-slate-500">
+                      {leaveBalanceOptions.length > 0
+                        ? `${leaveBalanceOptions.length} ประเภทลา`
+                        : "คลิกเพื่อกำหนดยอดเอง"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-600">
+                    เว้นช่องว่างเพื่อใช้ค่าเริ่มต้นตามประเภทบุคลากรและอายุงาน
+                  </p>
+                </summary>
+
+                <div className="mt-4 border-t border-slate-200 pt-4">
+                  {loadingLeaveBalanceOptions ? (
+                    <p className="text-sm text-slate-600">
+                      กำลังโหลดสิทธิ์วันลาตามข้อมูลพนักงาน...
+                    </p>
+                  ) : !formData.personnelTypeId ||
+                    !formData.hireDate ||
+                    !formData.sex ? (
+                    <p className="text-sm text-slate-600">
+                      เลือกประเภทบุคลากร เพศ และวันที่เริ่มงานก่อน
+                      เพื่อแสดงประเภทลาและสิทธิ์ที่ตรงกับพนักงาน
+                    </p>
+                  ) : leaveBalanceOptions.length === 0 ? (
+                    <p className="text-sm text-slate-600">
+                      ไม่พบสิทธิ์วันลาที่กำหนดไว้สำหรับข้อมูลพนักงานนี้
+                    </p>
+                  ) : (
+                    <div className="space-y-5">
+                      <p className="mb-4 text-sm text-slate-600">
+                        กรอกเฉพาะยอดที่ต้องการกำหนดเอง
+                        ระบบจะใช้ค่าเริ่มต้นในช่องที่เว้นว่าง
+                      </p>
+                      <section className="rounded-xl border border-slate-200 bg-white p-4">
+                        <h4 className="mb-3 text-sm font-semibold text-slate-800">
+                          วันลาคงเหลือ
+                        </h4>
+                        {renderLeaveBalanceFields(remainingBalanceOptions, false)}
+                      </section>
+                      <section className="rounded-xl border border-slate-200 bg-white p-4">
+                        <h4 className="mb-1 text-sm font-semibold text-slate-800">
+                          วันที่ใช้ไปแล้ว
+                        </h4>
+                        <p className="mb-3 text-xs text-slate-500">
+                          สำหรับประเภทลาที่นับจำนวนโดยไม่หักวันลาคงเหลือ
+                        </p>
+                        {renderLeaveBalanceFields(usedDaysOptions, true)}
+                      </section>
+                    </div>
+                  )}
+                </div>
+              </details>
             </section>
 
             {/* Submit */}

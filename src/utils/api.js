@@ -53,6 +53,7 @@ export const apiEndpoints = {
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,
+  adminLeaveBalanceOptions: `${BASE_URL}/admin/users/leave-balance-options`,
   getUserByIdAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   updateUserByIdAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   deleteUserByAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
