@@ -69,7 +69,7 @@ export default function AddUser() {
         setPersonnelTypes(ptRes.data.data);
         const emp = empRes.data.data ?? ["ACADEMIC", "SUPPORT"];
         setEmploymentTypes(emp.map((e) => ({ value: e, label: e })));
-      } catch (err) {
+      } catch {
         notifyError("Error", "โหลดข้อมูล lookup ล้มเหลว");
       }
     };
@@ -83,7 +83,12 @@ export default function AddUser() {
 
   const handleFileChange = (e) => setSelectedFile(e.target.files[0]);
 
-  const renderDropdown = (label, name, options) => (
+  const renderDropdown = (
+    label,
+    name,
+    options,
+    { required = true, optional = false, onChange = handleChange } = {},
+  ) => (
     <div className="mb-4">
       <label className="block text-sm font-medium mb-1 text-slate-800">
         {label}
@@ -92,12 +97,12 @@ export default function AddUser() {
         <select
           name={name}
           value={formData[name]}
-          onChange={handleChange}
-          required
+          onChange={onChange}
+          required={required}
           className="appearance-none w-full border border-slate-300 rounded-xl px-4 py-2 bg-white text-slate-900 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
         >
-          <option value="" disabled>
-            -- เลือก{label} --
+          <option value="" disabled={!optional}>
+            {optional ? `-- ไม่เลือก${label} --` : `-- เลือก${label} --`}
           </option>
           {options.map((opt) => (
             <option key={opt.value || opt.id} value={opt.value || opt.id}>
@@ -112,6 +117,32 @@ export default function AddUser() {
       </div>
     </div>
   );
+
+  const handleOrganizationChange = (e) => {
+    const organizationId = e.target.value;
+    setFormData((prev) => {
+      const selectedDepartment = departments.find(
+        (department) => String(department.id) === String(prev.departmentId),
+      );
+      const departmentMatchesOrganization =
+        !organizationId ||
+        !selectedDepartment ||
+        String(selectedDepartment.organizationId) === String(organizationId);
+
+      return {
+        ...prev,
+        organizationId,
+        ...(departmentMatchesOrganization ? {} : { departmentId: "" }),
+      };
+    });
+  };
+
+  const filteredDepartments = formData.organizationId
+    ? departments.filter(
+        (department) =>
+          String(department.organizationId) === String(formData.organizationId),
+      )
+    : departments;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -295,14 +326,22 @@ export default function AddUser() {
                   })),
                 )}
                 {renderDropdown(
-                  "แผนก",
-                  "departmentId",
-                  departments.map((d) => ({ value: d.id, label: d.name })),
-                )}
-                {renderDropdown(
                   "องค์กร",
                   "organizationId",
                   organizations.map((o) => ({ value: o.id, label: o.name })),
+                  {
+                    required: false,
+                    optional: true,
+                    onChange: handleOrganizationChange,
+                  },
+                )}
+                {renderDropdown(
+                  "แผนก",
+                  "departmentId",
+                  filteredDepartments.map((d) => ({
+                    value: d.id,
+                    label: d.name,
+                  })),
                 )}
                 {renderDropdown(
                   "ประเภทพนักงาน",
