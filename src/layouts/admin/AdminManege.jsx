@@ -8,6 +8,7 @@ import {
   FaFileSignature,
   FaUserShield,
   FaUserCheck,
+  FaBalanceScale,
 } from "react-icons/fa";
 
 import UserManageContent from "../../components/admin/manage/UserManageContent";
@@ -17,6 +18,7 @@ import HolidayManageContent from "../../components/admin/manage/HolidayManageCon
 import ApproverManageContent from "../../components/admin/manage/ApproverManageContent";
 import AddOtherRequest from "./AddOtherRequest";
 import ProxyApprovalManagement from "./ProxyApprovalManagement";
+import LeaveBalanceManagement from "./LeaveBalanceManagement";
 export default function ManagementPage() {
   const location = useLocation();
 
@@ -46,6 +48,7 @@ export default function ManagementPage() {
     { id: "holidays", label: "จัดการวันหยุด", icon: <FaCalendarAlt /> },
     { id: "leaveRequests", label: "บันทึกคำขอการลา", icon: <FaFileSignature /> },
     { id: "proxy", label: "จัดการการมอบอำนาจ", icon: <FaUserShield /> },
+    { id: "leaveBalance", label: "จัดการยอดวันลา", icon: <FaBalanceScale /> },
   ];
 
   // =========================
@@ -95,6 +98,9 @@ export default function ManagementPage() {
       case "proxy":
         return <ProxyApprovalManagement />;
 
+      case "leaveBalance":
+        return <LeaveBalanceManagement embedded />;
+
       default:
         return null;
     }
@@ -127,7 +133,7 @@ export default function ManagementPage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-3xl shadow-sm border overflow-hidden mb-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

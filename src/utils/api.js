@@ -53,6 +53,13 @@ export const apiEndpoints = {
   updateUser: (id) => `${BASE_URL}/auth/users/${id}`,
   // admin
   createUserByAdmin: `${BASE_URL}/admin/users`,
+  adminLeaveBalanceOptions: `${BASE_URL}/admin/users/leave-balance-options`,
+  adminLeaveBalanceManagementOptions: `${BASE_URL}/admin/leave-balance-management/options`,
+  adminLeaveBalanceManagementUsers: `${BASE_URL}/admin/leave-balance-management/users`,
+  adminLeaveBalanceInitializeMissing: `${BASE_URL}/admin/leave-balance-management/initialize`,
+  adminLeaveBalanceBulkAdjust: `${BASE_URL}/admin/leave-balance-management/adjust`,
+  adminLeaveBalanceAdjust: (id) =>
+    `${BASE_URL}/admin/leave-balance-management/balances/${id}`,
   getUserByIdAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   updateUserByIdAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
   deleteUserByAdmin: (id) => `${BASE_URL}/admin/users/${id}`,
