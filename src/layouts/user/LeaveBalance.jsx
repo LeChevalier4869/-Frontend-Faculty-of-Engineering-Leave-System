@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Briefcase,
   HeartPulse,
@@ -46,9 +46,12 @@ export default function LeaveBalancePage() {
 
   const visibleEntitlements = useMemo(() => {
     const filtered = filterLeaveBalancesBySex(entitlements, user?.sex);
-    // ดึงปีปัจจุบันจากข้อมูลที่กรองแล้ว
-    const currentYear = filtered.length > 0 ? filtered[0]?.year : null;
-    return { data: filtered, year: currentYear };
+    const years = [...new Set(
+      filtered
+        .map((item) => Number(item?.year))
+        .filter((year) => Number.isInteger(year)),
+    )].sort((a, b) => b - a);
+    return { data: filtered, years };
   }, [entitlements, user?.sex]);
 
   // แบ่งกลุ่ม: (1) ยื่นเองในระบบได้ (ลาป่วย/ลากิจ/ลาพักผ่อน)
@@ -408,10 +411,10 @@ export default function LeaveBalancePage() {
           <p className="text-sm md:text-base text-slate-600">
             ตรวจสอบสิทธิการลาทั้งหมดของคุณในแต่ละประเภทการลา
           </p>
-          {visibleEntitlements.year && (
+          {visibleEntitlements.years.length > 0 && (
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 shadow-sm">
               <span className="text-xs font-medium text-emerald-700">
-                ปี {visibleEntitlements.year}
+                ปีงบประมาณในข้อมูล: {visibleEntitlements.years.join(", ")}
               </span>
             </div>
           )}

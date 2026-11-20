@@ -49,6 +49,8 @@ const AuditLogManagement = () => {
     'ASSIGN_HEAD': 'แต่งตั้งหัวหน้าสาขา',
     'APPROVER_ASSIGN': 'แต่งตั้งผู้อนุมัติ',
     'APPROVER_VACATE': 'ปลดผู้อนุมัติ',
+    'LEAVE_BALANCE_MANUAL_ADJUST': 'ปรับแก้ยอดวันลา',
+    'LEAVE_BALANCE_INITIALIZE': 'สร้างยอดวันลาจาก Rank',
     // Leave Request Actions
     'ADMIN_CANCEL_LEAVE_REQUEST': 'แอดมินยกเลิกคำขอลา',
     'LEAVE_REQUEST_REJECTED': 'ปฏิเสธคำขอลา',
@@ -88,6 +90,7 @@ const AuditLogManagement = () => {
   // Entity type translations
   const entityTypeTranslations = {
     'LeaveRequest': 'คำขอลา',
+    'LeaveBalance': 'ยอดวันลา',
     'User': 'ผู้ใช้',
     'UserAction': 'การกระทำผู้ใช้',
     'Department': 'แผนก',
@@ -111,13 +114,17 @@ const AuditLogManagement = () => {
     remarks: 'หมายเหตุ',
     comment: 'ความเห็น',
     // ผู้ใช้
-    userId: 'ผู้ใช้', userName: 'ผู้ใช้', user: 'ผู้ใช้',
+    userId: 'รหัสผู้ใช้', userName: 'ผู้ใช้', user: 'ผู้ใช้',
     prefixName: 'คำนำหน้า', firstName: 'ชื่อ', lastName: 'นามสกุล',
     email: 'อีเมล', phone: 'เบอร์โทร', position: 'ตำแหน่ง', sex: 'เพศ',
     employmentType: 'ประเภทการจ้าง', hireDate: 'วันที่เริ่มงาน',
     department: 'แผนก', personnelType: 'ประเภทบุคลากร', roles: 'บทบาท',
     // การลา
-    leaveTypeId: 'ประเภทการลา', leaveTypeName: 'ประเภทการลา', leaveType: 'ประเภทการลา',
+    balanceId: 'รหัสยอดวันลา', leaveTypeId: 'รหัสประเภทการลา',
+    leaveTypeName: 'ประเภทการลา', leaveType: 'ประเภทการลา',
+    rankId: 'รหัส Rank', rankName: 'Rank',
+    maxDays: 'สิทธิ์วันลาสูงสุด', remainingDays: 'วันลาคงเหลือ',
+    usedDays: 'วันที่ใช้ไปแล้ว', pendingDays: 'วันที่รออนุมัติ',
     requestedDays: 'จำนวนวันที่ขอ', totalDays: 'จำนวนวันรวม', thisTimeDays: 'จำนวนวันลาครั้งนี้',
     documentNumber: 'เลขที่เอกสาร', startDate: 'วันที่เริ่ม', endDate: 'วันที่สิ้นสุด',
     approverId: 'ผู้อนุมัติ', approverLevel: 'ระดับผู้อนุมัติ', rejectedBy: 'ผู้ปฏิเสธ',
@@ -400,30 +407,59 @@ const AuditLogManagement = () => {
     if (data.oldData && data.newData) {
       const keys = [...new Set([...Object.keys(data.oldData), ...Object.keys(data.newData)])]
         .filter((k) => JSON.stringify(data.oldData[k]) !== JSON.stringify(data.newData[k]));
-      if (keys.length === 0) return null;
+      const contextFields = [
+        'userName',
+        'userId',
+        'balanceId',
+        'leaveTypeName',
+        'leaveTypeId',
+        'rankName',
+        'rankId',
+        'year',
+      ];
       return (
-        <div>
-          <label className="mb-1 block text-xs font-medium text-slate-500">การเปลี่ยนแปลง</label>
-          <div className="overflow-hidden rounded-lg border border-slate-200">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-3 py-2 font-semibold">ฟิลด์</th>
-                  <th className="px-3 py-2 font-semibold">เดิม</th>
-                  <th className="px-3 py-2 font-semibold">ใหม่</th>
-                </tr>
-              </thead>
-              <tbody>
-                {keys.map((k) => (
-                  <tr key={k} className="border-t border-slate-100">
-                    <td className="px-3 py-2 font-medium text-slate-700">{labelForKey(k)}</td>
-                    <td className="px-3 py-2 text-rose-600 line-through decoration-rose-300">{displayValue(k, data.oldData[k])}</td>
-                    <td className="px-3 py-2 text-emerald-700">{displayValue(k, data.newData[k])}</td>
-                  </tr>
+        <div className="space-y-3">
+          {contextFields.some((key) => data[key] != null) && (
+            <dl className="grid grid-cols-1 gap-x-4 gap-y-1 rounded-lg border border-slate-200 bg-white p-3 text-sm sm:grid-cols-2">
+              {contextFields
+                .filter((key) => data[key] != null)
+                .map((key) => (
+                  <div key={key} className="flex gap-2">
+                    <dt className="shrink-0 text-slate-500">{labelForKey(key)}:</dt>
+                    <dd className="min-w-0 break-words text-slate-800">
+                      {displayValue(key, data[key])}
+                    </dd>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+            </dl>
+          )}
+          {keys.length > 0 ? (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">การเปลี่ยนแปลง</label>
+              <div className="overflow-hidden rounded-lg border border-slate-200">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">ฟิลด์</th>
+                      <th className="px-3 py-2 font-semibold">เดิม</th>
+                      <th className="px-3 py-2 font-semibold">ใหม่</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {keys.map((k) => (
+                      <tr key={k} className="border-t border-slate-100">
+                        <td className="px-3 py-2 font-medium text-slate-700">{labelForKey(k)}</td>
+                        <td className="px-3 py-2 text-rose-600 line-through decoration-rose-300">{displayValue(k, data.oldData[k])}</td>
+                        <td className="px-3 py-2 text-emerald-700">{displayValue(k, data.newData[k])}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">ไม่มีค่าที่เปลี่ยนแปลง</p>
+          )}
         </div>
       );
     }

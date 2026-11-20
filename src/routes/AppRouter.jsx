@@ -407,6 +407,10 @@ const userRouter = createBrowserRouter([
             )
           },
           {
+            path: "leave-balance-management",
+            element: <Navigate to="/admin/management?tab=leaveBalance" replace />
+          },
+          {
             path: "role-management",
             element: (
               <ProtectedRoute requiredRoles={['SUPER_ADMIN']}>

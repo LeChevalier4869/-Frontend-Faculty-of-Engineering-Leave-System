@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable react/prop-types */
+import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "../../utils/alert";
@@ -21,6 +22,8 @@ const Panel = ({ className = "", children }) => (
     {children}
   </div>
 );
+const balanceInputClass =
+  "mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100";
 
 const ROLE_LABEL_TH = {
   USER: "ผู้ใช้งานทั่วไป",
@@ -43,6 +46,14 @@ export default function UserInfo() {
   const [loading, setLoading] = useState(true);
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [leaveTypesMap, setLeaveTypesMap] = useState({});
+  const [editingBalance, setEditingBalance] = useState(null);
+  const [balanceForm, setBalanceForm] = useState({
+    rankId: "",
+    remainingDays: "",
+    usedDays: "",
+  });
+  const [balanceSaving, setBalanceSaving] = useState(false);
+  const currentUserRanks = user?.userRanks || [];
 
   const authHeader = () => {
     const token = localStorage.getItem("accessToken");
@@ -116,6 +127,108 @@ export default function UserInfo() {
   const formatDate = (iso) =>
     dayjs(iso).locale("th").format("DD/MM/YYYY HH:mm");
 
+  const openBalanceEditor = (balance) => {
+    const rankOptions = currentUserRanks
+      .map((userRank) => userRank.rank)
+      .filter(
+        (rank) =>
+          rank?.leaveTypeId === balance.leaveTypeId &&
+          rank.maxDays !== null &&
+          rank.maxDays !== undefined,
+      );
+    setEditingBalance(balance);
+    setBalanceForm({
+      rankId: rankOptions.length === 1 ? String(rankOptions[0].id) : "",
+      remainingDays: String(
+        balance.leaveType?.isNonDeductible ? 0 : balance.remainingDays ?? 0,
+      ),
+      usedDays: String(balance.usedDays ?? 0),
+    });
+  };
+
+  const selectedBalanceRank = currentUserRanks
+    .map((userRank) => userRank.rank)
+    .find((rank) => String(rank?.id) === String(balanceForm.rankId));
+  const editingBalanceIsNonDeductible =
+    editingBalance?.leaveType?.isNonDeductible === true ||
+    (selectedBalanceRank?.receiveDays === 0 &&
+      selectedBalanceRank?.isBalance === true);
+  const editingBalanceRankOptions = currentUserRanks
+    .map((userRank) => userRank.rank)
+    .filter(
+      (rank) =>
+        rank?.leaveTypeId === editingBalance?.leaveTypeId &&
+        rank.maxDays !== null &&
+        rank.maxDays !== undefined,
+    );
+
+  const handleSaveBalance = async (event) => {
+    event.preventDefault();
+    if (!editingBalance || !balanceForm.rankId) {
+      await Swal.fire(
+        "ไม่พบ Rank",
+        "ไม่สามารถแก้ไขยอดได้หากไม่พบสิทธิ์ Rank ที่ตรงกับประเภทลา",
+        "warning",
+      );
+      return;
+    }
+
+    const remainingDays = editingBalanceIsNonDeductible
+      ? 0
+      : Number(balanceForm.remainingDays);
+    const usedDays = Number(balanceForm.usedDays);
+    if (
+      !Number.isSafeInteger(remainingDays) ||
+      remainingDays < 0 ||
+      !Number.isSafeInteger(usedDays) ||
+      usedDays < 0
+    ) {
+      await Swal.fire(
+        "จำนวนวันไม่ถูกต้อง",
+        "กรอกจำนวนวันเป็นจำนวนเต็มตั้งแต่ 0 ขึ้นไป",
+        "warning",
+      );
+      return;
+    }
+
+    const confirmation = await Swal.fire({
+      title: "ยืนยันแก้ไขยอดวันลา?",
+      text: `ประเภทลา: ${editingBalance.leaveType?.name || ""}\nปีงบประมาณ: ${editingBalance.year}\nคงเหลือ: ${remainingDays} วัน · ใช้ไปแล้ว: ${usedDays} วัน\nระบบจะตรวจสอบสิทธิ์ Rank และยอดรออนุมัติก่อนบันทึก`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "ยืนยันแก้ไข",
+      cancelButtonText: "ยกเลิก",
+      confirmButtonColor: "#b45309",
+      reverseButtons: true,
+    });
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      setBalanceSaving(true);
+      await axios.put(
+        apiEndpoints.adminLeaveBalanceAdjust(editingBalance.id),
+        {
+          rankId: Number(balanceForm.rankId),
+          remainingDays,
+          usedDays,
+        },
+        authHeader(),
+      );
+      setEditingBalance(null);
+      await loadUser();
+      await Swal.fire("บันทึกสำเร็จ", "อัปเดตยอดวันลาเรียบร้อยแล้ว", "success");
+    } catch (error) {
+      console.error("ไม่สามารถแก้ไขยอดวันลา:", error);
+      await Swal.fire(
+        "แก้ไขไม่สำเร็จ",
+        error.response?.data?.message || "ไม่สามารถแก้ไขยอดวันลาได้",
+        "error",
+      );
+    } finally {
+      setBalanceSaving(false);
+    }
+  };
+
   const statusLabels = {
     APPROVED: "อนุมัติแล้ว",
     PENDING: "รออนุมัติ",
@@ -185,7 +298,7 @@ export default function UserInfo() {
     timesByType[lr.leaveTypeId] = (timesByType[lr.leaveTypeId] || 0) + 1;
   }
   // เรียงให้ประเภทหักวันลาปกติขึ้นก่อน แล้วประเภทไม่หักวันลาไว้ล่างสุด
-  const userRanks = [...(user.userRanks || [])].sort((a, b) => {
+  const userRanks = [...currentUserRanks].sort((a, b) => {
     const an = a.rank?.leaveType?.isNonDeductible ? 1 : 0;
     const bn = b.rank?.leaveType?.isNonDeductible ? 1 : 0;
     return an - bn;
@@ -194,6 +307,15 @@ export default function UserInfo() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-8 md:px-8 font-kanit text-slate-900">
       <div className="max-w-6xl mx-auto space-y-8">
+        <div className="flex justify-start">
+          <button
+            type="button"
+            onClick={goBack}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            ← กลับหน้าก่อน
+          </button>
+        </div>
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 shadow-sm">
@@ -325,13 +447,6 @@ export default function UserInfo() {
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <button
-              type="button"
-              onClick={goBack}
-              className="inline-block px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium transition"
-            >
-              ← ย้อนกลับ
-            </button>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
                 type="button"
@@ -390,6 +505,9 @@ export default function UserInfo() {
                   <th className="px-4 py-3 text-right text-[11px] uppercase tracking-[0.16em] font-semibold">
                     คงเหลือ
                   </th>
+                  <th className="px-4 py-3 text-center text-[11px] uppercase tracking-[0.16em] font-semibold">
+                    จัดการ
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -419,13 +537,22 @@ export default function UserInfo() {
                       <td className="px-4 py-3 text-right whitespace-nowrap font-semibold text-emerald-700">
                         {formatLeaveDaysByUnit(b.remainingDays, unit)}
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => openBalanceEditor(b)}
+                          className="rounded-lg border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                        >
+                          แก้ไขยอด
+                        </button>
+                      </td>
                     </tr>
                     );
                   })
                 ) : (
                   <tr>
                     <td
-                      colSpan="6"
+                      colSpan="7"
                       className="text-center py-6 text-sm text-slate-500"
                     >
                       ไม่มีข้อมูล
@@ -453,13 +580,22 @@ export default function UserInfo() {
                   className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/60"
                 >
                   <span className="text-sm text-slate-700">{leaveName(b)}</span>
-                  <span className="text-sm text-slate-500 whitespace-nowrap">
-                    ลาไปแล้ว{" "}
-                    <span className="font-semibold text-slate-800">
-                      {formatLeaveDaysByUnit(b.usedDays, leaveUnitForMaxDays(b.maxDays))}
-                    </span>{" "}
-                    ({timesByType[b.leaveTypeId] || 0} ครั้ง)
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-slate-500 whitespace-nowrap">
+                      ลาไปแล้ว{" "}
+                      <span className="font-semibold text-slate-800">
+                        {formatLeaveDaysByUnit(b.usedDays, leaveUnitForMaxDays(b.maxDays))}
+                      </span>{" "}
+                      ({timesByType[b.leaveTypeId] || 0} ครั้ง)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => openBalanceEditor(b)}
+                      className="rounded-lg border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                    >
+                      แก้ไข
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -648,6 +784,147 @@ export default function UserInfo() {
           url={`/admin/audit-logs/user/${id}`}
           onClose={() => setShowAudit(false)}
         />
+      )}
+      {editingBalance && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !balanceSaving) {
+              setEditingBalance(null);
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-leave-balance-title"
+            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <h2 id="edit-leave-balance-title" className="text-xl font-semibold">
+              แก้ไขยอดวันลา: {editingBalance.leaveType?.name}
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              ปีงบประมาณ {editingBalance.year} · ยอดรออนุมัติ{" "}
+              {editingBalance.pendingDays ?? 0} วัน
+            </p>
+            <form onSubmit={handleSaveBalance} className="mt-5 space-y-4">
+              {editingBalanceRankOptions.length > 1 && (
+                <label className="block text-sm font-medium">
+                  Rank ที่ใช้ตรวจสิทธิ์
+                  <select
+                    required
+                    value={balanceForm.rankId}
+                    onChange={(event) =>
+                      setBalanceForm((previous) => ({
+                        ...previous,
+                        rankId: event.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900"
+                  >
+                    <option value="">-- เลือก Rank --</option>
+                    {editingBalanceRankOptions.map((rank) => (
+                      <option key={rank.id} value={rank.id}>
+                        {rank.rank} · สิทธิ์สูงสุด {rank.maxDays} วัน
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {selectedBalanceRank && !editingBalanceIsNonDeductible && (
+                <p className="rounded-lg bg-brand-50 p-3 text-sm text-brand-800">
+                  สิทธิ์สูงสุดตาม Rank: {selectedBalanceRank.maxDays} วัน
+                  (รวมยอดรออนุมัติแล้ว)
+                </p>
+              )}
+              {editingBalanceIsNonDeductible ? (
+                <>
+                  <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+                    ประเภทนี้นับวันที่ใช้ไปแล้วโดยไม่หักยอดคงเหลือ ยอดคงเหลือจะเป็น 0 วัน
+                  </p>
+                  <label className="block text-sm font-medium">
+                    วันที่ใช้ไปแล้ว
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      required
+                      value={balanceForm.usedDays}
+                      onChange={(event) =>
+                        setBalanceForm((previous) => ({
+                          ...previous,
+                          usedDays: event.target.value,
+                        }))
+                      }
+                      className={balanceInputClass}
+                      style={{ colorScheme: "light" }}
+                    />
+                  </label>
+                </>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block text-sm font-medium">
+                    วันลาคงเหลือ
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      required
+                      value={balanceForm.remainingDays}
+                      onChange={(event) =>
+                        setBalanceForm((previous) => ({
+                          ...previous,
+                          remainingDays: event.target.value,
+                        }))
+                      }
+                      className={balanceInputClass}
+                      style={{ colorScheme: "light" }}
+                    />
+                  </label>
+                  <label className="block text-sm font-medium">
+                    วันที่ใช้ไปแล้ว
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      required
+                      value={balanceForm.usedDays}
+                      onChange={(event) =>
+                        setBalanceForm((previous) => ({
+                          ...previous,
+                          usedDays: event.target.value,
+                        }))
+                      }
+                      className={balanceInputClass}
+                      style={{ colorScheme: "light" }}
+                    />
+                  </label>
+                </div>
+              )}
+              <p className="text-xs text-slate-500">
+                ค่าคงเหลือ + ใช้ไปแล้ว + รออนุมัติ ต้องไม่เกินสิทธิ์ตาม Rank
+              </p>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={balanceSaving}
+                  onClick={() => setEditingBalance(null)}
+                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm text-slate-700 disabled:opacity-50"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={balanceSaving || !balanceForm.rankId}
+                  className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {balanceSaving ? "กำลังบันทึก..." : "บันทึกยอด"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
